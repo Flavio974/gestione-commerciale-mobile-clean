@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test AI Integration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .pending { background-color: #fff3cd; color: #856404; }
+        button { padding: 10px 15px; margin: 5px; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test AI Integration</h1>
+    
+    <div class="test-section">
+        <h3>1. Test Backend Connectivity</h3>
+        <button onclick="testBackend()">Test Backend PHP</button>
+        <div id="backend-result" class="pending">In attesa di test...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Supabase Integration</h3>
+        <button onclick="testSupabase()">Test Supabase Connection</button>
+        <div id="supabase-result" class="pending">In attesa di test...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test AI Query</h3>
+        <button onclick="testAIQuery('openai')">Test OpenAI (GPT-3.5)</button>
+        <button onclick="testAIQuery('claude')">Test Claude (Sonnet)</button>
+        <div id="ai-result" class="pending">In attesa di test...</div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        // Simula configurazione Supabase per test
+        window.supabase = {
+            from: (table) => ({
+                select: () => ({
+                    order: () => ({
+                        limit: () => Promise.resolve({
+                            data: [
+                                { id: 1, name: 'Test Client', city: 'Torino', total_revenue: 15000 },
+                                { id: 2, name: 'Test Client 2', city: 'Milano', total_revenue: 12000 }
+                            ],
+                            error: null
+                        })
+                    })
+                })
+            })
+        };
+
+        async function testBackend() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'pending';
+            
+            try {
+                const response = await fetch('/api/claude-ai.php?test');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    resultDiv.textContent = '✅ Backend funzionante: ' + data.message;
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.textContent = '⚠️ Backend risponde ma con problemi: ' + JSON.stringify(data);
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ Errore backend: ' + error.message;
+                resultDiv.className = 'error';
+            }
+        }
+
+        async function testSupabase() {
+            const resultDiv = document.getElementById('supabase-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'pending';
+            
+            try {
+                // Carica il modulo Supabase AI Integration
+                if (typeof SupabaseAIIntegration === 'undefined') {
+                    await loadScript('/js/ai/supabase-ai-integration.js');
+                }
+                
+                const supabaseAI = new SupabaseAIIntegration();
+                const testData = await supabaseAI.getAllData();
+                
+                resultDiv.textContent = '✅ Supabase Integration OK. Dati: ' + JSON.stringify(testData).substring(0, 200) + '...';
+                resultDiv.className = 'success';
+            } catch (error) {
+                resultDiv.textContent = '❌ Errore Supabase: ' + error.message;
+                resultDiv.className = 'error';
+            }
+        }
+
+        async function testAIQuery(provider = 'openai') {
+            const resultDiv = document.getElementById('ai-result');
+            resultDiv.textContent = `Testing ${provider.toUpperCase()}...`;
+            resultDiv.className = 'pending';
+            
+            try {
+                const models = {
+                    openai: 'gpt-3.5-turbo',
+                    claude: 'claude-3-sonnet-20240229'
+                };
+                
+                const testQuery = {
+                    message: "Test query: quanti clienti ho in totale? Rispondi in italiano.",
+                    supabaseData: {
+                        summary: { totalClients: 2 },
+                        clients: [
+                            { name: 'Test Client 1', city: 'Torino' },
+                            { name: 'Test Client 2', city: 'Milano' }
+                        ]
+                    },
+                    model: models[provider]
+                };
+
+                const response = await fetch('/api/claude-ai.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testQuery)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.textContent = `✅ ${provider.toUpperCase()} Query OK (${data.model}). Risposta: ${data.response.substring(0, 200)}...`;
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.textContent = `❌ ${provider.toUpperCase()} Query fallita: ${data.error || 'Errore sconosciuto'}`;
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ Errore ${provider.toUpperCase()} Query: ${error.message}`;
+                resultDiv.className = 'error';
+            }
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Auto-run basic tests
+        window.addEventListener('load', () => {
+            console.log('🧪 Pagina di test caricata. Clicca i pulsanti per testare i componenti.');
+        });
+    </script>
+</body>
+</html>

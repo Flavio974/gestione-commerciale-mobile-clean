@@ -1,0 +1,13 @@
+{
+  "name": "netlify-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for Gestione Commerciale",
+  "main": "index.js",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
+    "openai": "^4.20.0"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}

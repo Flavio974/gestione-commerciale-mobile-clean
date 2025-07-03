@@ -1,0 +1,3508 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#457b9d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SmartComm">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167x167.png">
+  
+  <!-- Standard Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png">
+  
+  <!-- iOS specifici -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  
+  <title>Smart Commercial Assistant</title>
+  
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mobile.css">
+  
+  <!-- Component Styles -->
+  <link rel="stylesheet" href="css/base-components.css">
+  <link rel="stylesheet" href="css/timeline-components.css">
+  <link rel="stylesheet" href="css/modal-components.css">
+  <link rel="stylesheet" href="css/ui-components.css">
+  
+  <!-- Module Styles -->
+  <link rel="stylesheet" href="css/clients-module.css">
+  <link rel="stylesheet" href="css/orders-module.css">
+  <link rel="stylesheet" href="css/ordini.css">
+  <link rel="stylesheet" href="css/ddtft-module.css">
+  <link rel="stylesheet" href="css/products-module.css">
+  <link rel="stylesheet" href="css/percorsi-module.css">
+  <link rel="stylesheet" href="css/worksheet-module.css">
+  <link rel="stylesheet" href="css/worksheet.css">
+  <link rel="stylesheet" href="css/smart-assistant.css">
+  <link rel="stylesheet" href="css/ai-assistant-mobile-fix.css">
+  
+  <!-- TEST CSS iPhone INLINE -->
+  <style>
+    @media screen and (max-width: 390px) {
+      #ai-content input {
+        height: 60px !important;
+        font-size: 18px !important;
+        padding: 15px !important;
+      }
+      
+      /* Evidenzia la spiegazione modalità vocale su mobile */
+      .ai-config-item small {
+        font-size: 14px !important;
+        color: #007bff !important;
+        font-weight: 500 !important;
+        background: #f0f8ff;
+        padding: 8px;
+        border-radius: 4px;
+        border-left: 3px solid #007bff;
+      }
+      
+      /* MOBILE VOICE CONTROLS - Mostra solo su piccoli schermi */
+      .mobile-voice-controls {
+        display: block !important;
+      }
+      
+      /* DESKTOP CONTROLS - Nascondi su piccoli schermi */
+      .button-row-mobile {
+        display: none !important;
+      }
+      
+      /* INPUT OTTIMIZZATO MOBILE */
+      .ai-input-mobile {
+        -webkit-appearance: none !important;
+        font-size: 18px !important; /* Previene zoom iOS */
+      }
+    }
+  </style>
+  
+  <!-- Mobile Responsive -->
+  <link rel="stylesheet" href="css/mobile-responsive.css">
+  
+  <link rel="stylesheet" href="css/tables.css">
+  
+  <!-- External Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <!-- Fix inline per visibilità pulsanti -->
+  <style>
+    /* Fix globale per tutti i pulsanti */
+    button {
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+    
+    /* Fix specifico per modulo DDT/FT */
+    #ddtft-content button,
+    #ddtft-content .action-button,
+    #ddtft-content .btn,
+    #ddtft-content .filter-btn {
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      padding: 10px 20px !important;
+      border-radius: 5px !important;
+      cursor: pointer !important;
+      font-weight: 500 !important;
+      transition: all 0.3s ease !important;
+    }
+    
+    #ddtft-content .action-button:not(.action-button-danger) {
+      background-color: #007bff !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    #ddtft-content .action-button-danger {
+      background-color: #dc3545 !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    #ddtft-content .filter-btn {
+      background-color: white !important;
+      color: #495057 !important;
+      border: 1px solid #dee2e6 !important;
+    }
+    
+    #ddtft-content .filter-btn.active {
+      background-color: #007bff !important;
+      color: white !important;
+      border-color: #007bff !important;
+    }
+    
+    #ddtft-content .btn-primary {
+      background-color: #007bff !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    #ddtft-content .btn-secondary {
+      background-color: #6c757d !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    #ddtft-content .btn-icon {
+      padding: 8px 12px !important;
+      background-color: #f8f9fa !important;
+      color: #495057 !important;
+      border: 1px solid #dee2e6 !important;
+    }
+    
+    #ddtft-content .btn-delete {
+      background-color: #dc3545 !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    /* Modal overlay for DDT-FT export dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-overlay .modal-content {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-overlay .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-overlay .modal-header h3 {
+      margin: 0;
+      color: #333;
+    }
+    
+    .modal-overlay .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-overlay .close-btn:hover {
+      color: #333;
+    }
+    
+    .modal-overlay .modal-body {
+      padding: 20px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+    
+    .btn-warning {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    
+    .btn-warning:hover {
+      background-color: #e0a800;
+    }
+    
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+    
+    /* STILI AI ASSISTANT */
+    #ai-content {
+      padding: 20px;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    
+    .ai-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .ai-header h2 {
+      color: #457b9d;
+      margin-bottom: 10px;
+    }
+    
+    .ai-config {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .ai-config-item {
+      margin-bottom: 15px;
+    }
+    
+    .ai-config label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #495057;
+    }
+    
+    .ai-config input,
+    .ai-config select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .ai-chat-container {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .ai-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: #f8f9fa;
+    }
+    
+    .ai-message {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .ai-message.user {
+      justify-content: flex-end;
+    }
+    
+    .ai-message-content {
+      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 12px;
+      word-wrap: break-word;
+    }
+    
+    .ai-message.user .ai-message-content {
+      background: #457b9d;
+      color: white;
+    }
+    
+    .ai-message.assistant .ai-message-content {
+      background: white;
+      border: 1px solid #e9ecef;
+    }
+    
+    .ai-message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    .ai-message.user .ai-message-avatar {
+      background: #6c757d;
+      color: white;
+      order: 1;
+    }
+    
+    .ai-message.assistant .ai-message-avatar {
+      background: #28a745;
+      color: white;
+    }
+    
+    .ai-input-container {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #dee2e6;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .ai-input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 1px solid #ced4da;
+      border-radius: 20px;
+      font-size: 14px;
+      outline: none;
+    }
+    
+    .ai-input:focus {
+      border-color: #457b9d;
+    }
+    
+    .ai-send-btn {
+      padding: 10px 20px;
+      background: #457b9d;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    
+    .ai-send-btn:hover {
+      background: #326891;
+    }
+    
+    .ai-send-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    .ai-voice-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: #dc3545;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    
+    .ai-voice-btn:hover {
+      background: #c82333;
+    }
+    
+    .ai-voice-btn.recording {
+      background: #28a745;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+      }
+    }
+    
+    .ai-status {
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #6c757d;
+      text-align: center;
+    }
+    
+    .ai-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .ai-status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .ai-capabilities {
+      background: #e9ecef;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    
+    .ai-capabilities h4 {
+      margin-bottom: 10px;
+      color: #495057;
+    }
+    
+    .ai-capabilities ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .ai-capabilities li {
+      padding: 5px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    
+    .ai-capabilities li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #28a745;
+      font-weight: bold;
+    }
+    
+    .ai-thinking {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      color: #6c757d;
+      font-style: italic;
+    }
+    
+    .ai-thinking-dots {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .ai-thinking-dots span {
+      width: 8px;
+      height: 8px;
+      background: #6c757d;
+      border-radius: 50%;
+      animation: thinking 1.4s infinite;
+    }
+    
+    .ai-thinking-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    
+    .ai-thinking-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    
+    @keyframes thinking {
+      0%, 60%, 100% {
+        transform: translateY(0);
+      }
+      30% {
+        transform: translateY(-10px);
+      }
+    }
+    
+    /* Pulsanti rapidi */
+    .ai-quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 15px 0;
+    }
+    
+    .ai-quick-actions .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .ai-quick-actions .btn-sm:hover {
+      background-color: #457b9d;
+      color: white;
+      transform: translateY(-1px);
+    }
+    
+    /* Status indicators */
+    .ai-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .ai-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .ai-status.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    
+    .ai-status.warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    
+    .rate-limit-notice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .rate-limit-notice .btn {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .rate-limit-notice .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    
+    .rate-limit-notice .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .cost-warning {
+      background: #fff5f5;
+      border: 2px solid #e53e3e;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    
+    .cost-warning .btn {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+      margin: 2px;
+    }
+    
+    .cost-warning .btn-danger {
+      background-color: #e53e3e;
+      color: white;
+    }
+    
+    .cost-warning .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    /* Responsive per mobile */
+    @media (max-width: 768px) {
+      #ai-content {
+        padding: 10px;
+      }
+      
+      .ai-chat-container {
+        height: calc(100vh - 300px);
+      }
+      
+      .ai-message-content {
+        max-width: 85%;
+      }
+      
+      .ai-config {
+        padding: 15px;
+      }
+      
+      .ai-quick-actions {
+        justify-content: center;
+      }
+      
+      .ai-quick-actions .btn-sm {
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <!-- Header -->
+    <header id="app-header">
+      <h1>Gestione Commerciale Mobile</h1>
+      <div class="header-datetime">
+        <div id="dateDisplay" class="header-date">Caricamento data...</div>
+        <div id="staticClock" class="header-clock">--:--:--</div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav id="main-navigation" class="tabs">
+      <div id="tab-timeline" class="tab-link active" data-target="timeline-content">Timeline</div>
+      <div id="tab-data" class="tab-link" data-target="data-content">Gestione Dati</div>
+      <div id="tab-planner" class="tab-link" data-target="planner-content">Pianificazione</div>
+      <div id="tab-clients" class="tab-link" data-target="clients-content">Clienti</div>
+      <div id="tab-travels" class="tab-link" data-target="travels-content">Percorsi</div>
+      <div id="tab-worksheet" class="tab-link" data-target="worksheet-content">Foglio di Lavoro</div>
+      <div id="tab-orders" class="tab-link" data-target="orders-content">Ordini</div>
+      <div id="tab-ddtft" class="tab-link" data-target="ddtft-content">DDT e FT</div>
+      <div id="tab-smart" class="tab-link" data-target="smart-content">🎤 Smart Assistant</div>
+      <div id="tab-ai" class="tab-link" data-target="ai-content">🤖 AI Assistant</div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-content">
+      <!-- Timeline Tab -->
+      <div id="timeline-content" class="tab-content active">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Data Management Tab -->
+      <div id="data-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Planning Tab -->
+      <div id="planner-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Clients Tab -->
+      <div id="clients-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Routes Tab -->
+      <div id="travels-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Worksheet Tab -->
+      <div id="worksheet-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Orders Tab -->
+      <div id="orders-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- DDT/FT Tab -->
+      <div id="ddtft-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- SMART ASSISTANT TAB -->
+      <div id="smart-content" class="tab-content">
+        <!-- Contenuto Smart Assistant verrà caricato dinamicamente -->
+      </div>
+
+      <!-- NUOVO TAB AI -->
+      <div id="ai-content" class="tab-content">
+        <!-- Contenuto AI verrà caricato dinamicamente -->
+      </div>
+    </main>
+
+    <!-- Debug Info (hidden by default) -->
+    <div id="debug-info" style="display: none;"></div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="config/api-config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/api.js"></script>
+  <!-- Timeline Modules -->
+  <script src="js/timeline/timeline-config.js"></script>
+  <script src="js/timeline/timeline-utils.js"></script>
+  <script src="js/timeline/timeline-rendering.js"></script>
+  <script src="js/timeline/timeline-events.js"></script>
+  <script src="js/timeline/timeline-controls.js"></script>
+  <script src="js/timeline/timeline-core.js"></script>
+  
+  <!-- Configuration -->
+  <script src="config/supabase-config.js"></script>
+  
+  <!-- Supabase Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Supabase Configuration -->
+  <script>
+    window.SUPABASE_CONFIG = {
+      url: 'https://ibuwqihgdkinfmvxqfnq.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlidXdxaWhnZGtpbmZtdnhxZm5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMDk4NjEsImV4cCI6MjA2Njc4NTg2MX0.c-zsnXM-eqXnIZQXM9UwXlKhvDDcPsDSwqANZk0uDqY',
+      enableSync: true
+    };
+    
+    // Inizializza Supabase client
+    if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey) {
+      window.supabase = supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
+      console.log('✅ Supabase configurato correttamente');
+    }
+  </script>
+  
+  <!-- Utilities -->
+  <script src="js/utils/device-detector.js"></script>
+  
+  <!-- AI Modules -->
+  <script src="js/ai/ai-voice-manager.js"></script>
+  <script src="js/ai/ai-command-parser.js"></script>
+  
+  <!-- Clienti Modules -->
+  <script src="js/clienti-core.js"></script>
+  <script src="js/clienti-form.js"></script>
+  <script src="js/clienti-table.js"></script>
+  <script src="js/clienti-import-export.js"></script>
+  <script src="js/clienti-supabase-sync.js"></script>
+  <script src="js/clienti-utils.js"></script>
+  <!-- Ordini Modules -->
+  <script src="js/modules/ordini-parser.js"></script>
+  <!-- Nuovi moduli export modulari -->
+  <script src="js/modules/export/ordini-export-dialog.js"></script>
+  <script src="js/modules/export/ordini-export-dropbox.js"></script>
+  <script src="js/modules/export/ordini-export-venduto.js"></script>
+  <script src="js/modules/export/supabase-sync-venduto.js"></script>
+  <script src="js/modules/export/ordini-export-analytics.js"></script>
+  <script src="js/modules/export/ordini-export-file-io.js"></script>
+  <script src="js/modules/export/ordini-export-coordinator.js"></script>
+  <script src="js/modules/export/ordini-export-wrapper.js"></script>
+  <script src="js/modules/ordini-ui.js"></script>
+  <script src="js/ordini.js"></script>
+  <script src="js/prodotti.js"></script>
+  <!-- Percorsi Modules -->
+  <script src="js/percorsi-core.js"></script>
+  <script src="js/percorsi-import.js"></script>
+  <script src="js/percorsi-table.js"></script>
+  <script src="js/percorsi-crud.js"></script>
+  <script src="js/percorsi-utils.js"></script>
+  <!-- Worksheet Modules -->
+  <script src="js/worksheet-data.js"></script>
+  <script src="js/worksheet-ui.js"></script>
+  <script src="js/worksheet-itinerary.js"></script>
+  <script src="js/worksheet-core.js"></script>
+  <script src="js/worksheet-import.js"></script>
+  <script src="js/worksheet-view.js"></script>
+  <script src="js/worksheet-dragdrop.js"></script>
+  <script src="js/worksheet-filters.js"></script>
+  <!-- DDT/FT Modules -->
+  <!-- Configurazioni DDTFT (FASE 1 Refactoring) -->
+  <script src="js/config/ddtft-patterns.js"></script>
+  <script src="js/config/ddtft-mappings.js"></script>
+  <!-- Override parser DDT (deve essere caricato presto) -->
+  <script src="js/modules/ddtft/ddt-parser-override.js"></script>
+  <!-- Utilities semplici (Test refactoring sicuro) -->
+  <script src="js/utils/ddtft-simple-utils.js"></script>
+  <script src="js/utils/ddtft-parsing-utils.js"></script>
+  <script src="js/utils/ddtft-address-utils.js"></script>
+  <script src="js/utils/ddtft-product-utils.js"></script>
+  <script src="js/modules/ddtft/ui-dialogs.js"></script>
+  <script src="js/modules/ddtft/state-manager.js"></script>
+  <script src="js/modules/ddtft/sync-manager.js"></script>
+  <script src="js/modules/ddtft/document-parser.js?v=1.2"></script>
+  <script src="js/modules/ddtft-pdf-parser.js"></script>
+  <!-- Parser avanzato per layout a colonne PDF -->
+  <script src="js/parsers/ddtft-column-parser.js"></script>
+  <!-- Fix estrazione colonne DDV (deve essere caricato presto) -->
+  <script src="js/modules/ddtft/ddv-column-extraction-fix.js"></script>
+  <script src="js/modules/ddtft-import-export.js"></script>
+  
+  <!-- VERSIONE MODULARE - Carica prima le dipendenze -->
+  <!-- Configurazioni -->
+  <script src="js/config/ddtft-patterns.js"></script>
+  <script src="js/config/ddtft-mappings.js"></script>
+  
+  <!-- Utilities -->
+  <script src="js/utils/ddtft-parsing-utils.js"></script>
+  <script src="js/utils/ddtft-product-utils.js"></script>
+  <script src="js/utils/ddtft-address-utils.js"></script>
+  
+  <!-- Parsers base -->
+  <script src="js/parsers/base-extractor.js"></script>
+  <script src="js/extractors.js"></script>
+  
+  <!-- Parsers modulari -->
+  <script src="js/parsers/ddt-extractor-modular.js"></script>
+  <script src="js/parsers/fattura-extractor-modular.js"></script>
+  
+  <!-- Moduli core -->
+  <script src="js/modules/ddtft-pdf-parser.js"></script>
+  <script src="js/modules/ddtft/document-parser.js"></script>
+  
+  <!-- Nuovi moduli -->
+  <script src="js/validators/ddtft-validators.js"></script>
+  <script src="js/formatters/ddtft-formatters.js"></script>
+  <script src="js/core/ddtft-import-core.js"></script>
+  
+  <!-- File principale modulare (sostituisce ddtft-import.js) -->
+  <script src="js/ddtft-import-modular.js?v=1.0"></script>
+  
+  <!-- VECCHIA VERSIONE COMMENTATA -->
+  <!-- <script src="js/ddtft-import.js?v=4.4"></script> -->
+  <script src="js/modules/ddtft/number-formatter.js?v=1.1"></script>
+  <script src="js/modules/ddtft/export-excel.js?v=1.4"></script>
+  <script src="js/modules/ddtft-export-advanced.js?v=1.1"></script>
+  <script src="js/modules/ddtft/document-number-fix.js"></script>
+  <script src="js/ddtft-core.js?v=1.3"></script>
+  <script src="js/ddtft-create.js"></script>
+  <script src="js/ddtft-view.js"></script>
+  <script src="js/ddtft-filters.js"></script>
+  <script src="js/ddtft-utils.js"></script>
+  <script src="js/modules/ddtft/event-fix.js"></script>
+  <script src="js/modules/ddtft/export-compare-button.js"></script>
+  <script src="js/modules/ddtft/export-append.js"></script>
+  <script src="js/modules/ddtft/append-to-excel.js"></script>
+  
+  <!-- Fix SEMPLIFICATO per estrazione prodotti (DDT e Fatture) -->
+  <script src="js/modules/ddtft/simple-extraction-fix.js?v=1.2"></script>
+  
+  <!-- DEBUG per capire perché le fatture non funzionano -->
+  <script src="js/modules/ddtft/debug-fattura-fix.js?v=1.0"></script>
+  <!-- Fix estrazione metadati da PDF -->
+  <script src="js/modules/ddtft/metadata-extractor-fix.js"></script>
+  <!-- Fix estrazione unità di misura -->
+  <script src="js/modules/ddtft/unit-extraction-fix.js"></script>
+  <!-- Fix post-processing unità di misura -->
+  <script src="js/modules/ddtft/unit-post-process-fix.js"></script>
+  <!-- Fix riferimento ordine -->
+  <script src="js/modules/ddtft/order-reference-fix.js"></script>
+  <!-- Fix data ordine -->
+  <script src="js/modules/ddtft/order-date-fix.js"></script>
+  <!-- Fix ordine 507 specifico Alfieri -->
+  <script src="js/modules/ddtft/order-507-fix.js"></script>
+  <!-- Fix ordine fatture -->
+  <script src="js/modules/ddtft/fattura-order-fix.js"></script>
+  <!-- Fix specifico data ordine fatture -->
+  <script src="js/modules/ddtft/ft-order-date-specific-fix.js"></script>
+  <!-- Fix numero ordine fatture -->
+  <script src="js/modules/ddtft/ft-order-number-fix.js"></script>
+  <!-- Fix PRIORITARIO cliente TIBALDI (deve essere caricato PRIMA degli altri fix) -->
+  <script src="js/modules/ddtft/fattura-priority-fix.js"></script>
+  <!-- Fix parsing articoli (corregge i totali di riga) -->
+  <script src="js/modules/ddtft/articoli-parsing-fix.js"></script>
+  <!-- Fix completo fatture (temporaneamente disabilitato) -->
+  <!-- <script src="js/modules/ddtft/fattura-fix-complete.js"></script> -->
+  <!-- Fix metadati fatture -->
+  <script src="js/modules/ddtft/fattura-metadata-fix.js"></script>
+  <!-- Fix mappatura clienti -->
+  <script src="js/modules/ddtft/client-mapping-fix.js"></script>
+  <!-- Fix estrazione cliente dal testo -->
+  <script src="js/modules/ddtft/client-extractor-fix.js"></script>
+  <!-- Fix totali fatture -->
+  <script src="js/modules/ddtft/fattura-totals-fix.js"></script>
+  <!-- Fix avanzato totali fatture -->
+  <script src="js/modules/ddtft/fattura-totals-enhanced.js"></script>
+  <!-- Fix nome cliente fatture -->
+  <script src="js/modules/ddtft/client-name-fix.js"></script>
+  <!-- Fix finale fatture (deve essere l'ultimo) -->
+  <script src="js/modules/ddtft/fattura-final-fix.js"></script>
+  <!-- Fix ULTRA fatture (override completo) -->
+  <script src="js/modules/ddtft/fattura-ultra-fix.js"></script>
+  <!-- Debug estrazione cliente -->
+  <script src="js/modules/ddtft/debug-client-extraction.js"></script>
+  <!-- Fix specifico estrazione cliente fatture -->
+  <script src="js/modules/ddtft/fattura-cliente-fix.js"></script>
+  <!-- Fix totali articoli -->
+  <script src="js/modules/ddtft/articoli-totals-fix.js"></script>
+  <!-- Debug articoli -->
+  <script src="js/modules/ddtft/debug-articoli.js"></script>
+  <!-- Fix indirizzo di consegna -->
+  <script src="js/modules/ddtft/delivery-address-fix.js"></script>
+  <!-- Fix completo indirizzo di consegna (DDT + FT) -->
+  <script src="js/modules/ddtft/delivery-address-complete-fix.js"></script>
+  <!-- Fix specifico Luogo di consegna -->
+  <script src="js/modules/ddtft/luogo-consegna-fix.js"></script>
+  <!-- Fix ultra-specifico consegna -->
+  <script src="js/modules/ddtft/consegna-specifica-fix.js"></script>
+  <!-- Fix aliquote IVA -->
+  <script src="js/modules/ddtft/iva-fix.js"></script>
+  <!-- Fix specifico IVA articoli -->
+  <script src="js/modules/ddtft/iva-articoli-fix.js"></script>
+  <!-- Fix pattern IVA -->
+  <script src="js/modules/ddtft/iva-pattern-fix.js"></script>
+  <!-- Fix finale IVA -->
+  <script src="js/modules/ddtft/iva-finale-fix.js"></script>
+  <!-- Fix totali IVA -->
+  <script src="js/modules/ddtft/iva-totals-fix.js"></script>
+  <!-- Correzione finale IVA (deve essere l'ultimo) -->
+  <script src="js/modules/ddtft/iva-correction-final.js"></script>
+  <!-- Fix totale documento -->
+  <script src="js/modules/ddtft/totale-documento-fix.js"></script>
+  <!-- Fix totale DDT -->
+  <script src="js/modules/ddtft/ddt-totale-fix.js"></script>
+  <!-- Fix indirizzo basato su cliente -->
+  <script src="js/modules/ddtft/indirizzo-cliente-fix.js"></script>
+  <!-- Fix codice cliente e P.IVA -->
+  <script src="js/modules/ddtft/codice-piva-fix.js"></script>
+  <!-- Fix FINALE codice cliente (deve essere l'ultimo!) -->
+  <script src="js/modules/ddtft/codice-cliente-finale-fix.js"></script>
+  <!-- Debug codice e P.IVA -->
+  <script src="js/modules/ddtft/debug-codice-piva.js"></script>
+  <!-- Fix definitivo codice e P.IVA -->
+  <script src="js/modules/ddtft/estrazione-corretta-codice-piva.js"></script>
+  <!-- Fix estrazione da header per codice e P.IVA -->
+  <script src="js/modules/ddtft/estrazione-header-codice-piva.js"></script>
+  <!-- Fix estrazione dati documento (codice e P.IVA) -->
+  <script src="js/modules/ddtft/estrazione-dati-documento.js"></script>
+  <!-- Fix IVA specifica prodotti DDT -->
+  <script src="js/modules/ddtft/ddt-iva-specifica-prodotti.js"></script>
+  <!-- Fix estrazione avanzata DDT -->
+  <script src="js/modules/ddtft/ddt-extraction-fix.js"></script>
+  <!-- Debug struttura DDT -->
+  <script src="js/modules/ddtft/debug-ddt-structure.js"></script>
+  <!-- Fix cliente DDT -->
+  <script src="js/modules/ddtft/ddt-cliente-fix.js"></script>
+  <!-- Fix duplicazione nomi -->
+  <script src="js/modules/ddtft/fix-duplicazione-nomi.js"></script>
+  <!-- Parser completo DDT (caricato per ultimo per override definitivo) -->
+  <script src="js/modules/ddtft/ddt-parser-completo.js"></script>
+  <!-- Fix articoli DDT - DISABILITATI per usare il master fix -->
+  <!-- <script src="js/modules/ddtft/ddt-articoli-fix.js"></script> -->
+  <!-- <script src="js/modules/ddtft/ddt-articoli-pattern-fix.js"></script> -->
+  <!-- <script src="js/modules/ddtft/ddt-articoli-debug-fix.js"></script> -->
+  <!-- <script src="js/modules/ddtft/ddt-articoli-fix-sconto.js"></script> -->
+  <!-- <script src="js/modules/ddtft/ddt-articoli-final-fix.js"></script> -->
+  <!-- Fix FINALE indirizzo di consegna (DEVE essere l'ultimo in assoluto!) -->
+  <script src="js/modules/ddtft/delivery-address-final-fix.js"></script>
+  <script src="js/modules/ddtft/ftv-address-fix.js"></script>
+  <script src="js/modules/ddtft/ftv-piva-fix.js"></script>
+  
+  <!-- NUOVO SISTEMA ROBUSTO PER ESTRAZIONE INDIRIZZI -->
+  <!-- Carica l'estrattore robusto -->
+  <script src="js/extractors/address-extractor-robust.js"></script>
+  <!-- Integra nel sistema esistente -->
+  <script src="js/modules/ddtft/robust-address-integration.js"></script>
+  
+  <!-- SISTEMA PRECISO PER ESTRAZIONE INDIRIZZI (Maggiore precisione) -->
+  <!-- Carica l'estrattore preciso -->
+  <script src="js/extractors/precise-delivery-address-extractor.js"></script>
+  <!-- Integra nel sistema esistente -->
+  <script src="js/modules/ddtft/precise-address-integration.js"></script>
+  <!-- Miglioramenti specifici per DDV -->
+  <script src="js/modules/ddtft/ddv-precise-integration.js"></script>
+  <!-- Fix finale formattazione DDV -->
+  <script src="js/modules/ddtft/ddv-final-format-fix.js"></script>
+  <!-- Fix allineamento colonne DDV -->
+  <script src="js/modules/ddtft/ddv-column-alignment-fix.js"></script>
+  <!-- Fix correzione diretta indirizzi DDV -->
+  <script src="js/modules/ddtft/ddv-address-correction-fix.js"></script>
+  <!-- Fix basato su coordinate X -->
+  <script src="js/modules/ddtft/ddv-coordinate-based-fix.js"></script>
+  <!-- Fix specifico DONAC (DEVE essere l'ultimo!) -->
+  <script src="js/modules/ddtft/ddv-donac-specific-fix.js"></script>
+  <!-- Protezione indirizzo preciso -->
+  <script src="js/modules/ddtft/disable-robust-when-precise.js"></script>
+  <!-- Fix FINALE ASSOLUTO (DEVE essere veramente l'ultimo!) -->
+  <script src="js/modules/ddtft/force-correct-address-final.js"></script>
+  <!-- Fix visualizzazione tabella -->
+  <script src="js/modules/ddtft/fix-table-display.js"></script>
+  <!-- Fix visualizzazione dettagli -->
+  <script src="js/modules/ddtft/fix-view-display.js"></script>
+  <!-- IMPORTANTE: Rimuove tutti gli indirizzi forzati -->
+  <script src="js/modules/ddtft/remove-forced-addresses.js"></script>
+  <!-- Estrattore indirizzo REALE (deve essere l'ultimo!) -->
+  <script src="js/modules/ddtft/extract-real-address-only.js"></script>
+  <!-- Pulizia finale indirizzo consegna -->
+  <script src="js/modules/ddtft/clean-delivery-address-fix.js"></script>
+  
+  <!-- Fix DEFINITIVO articoli DDT (DEVE essere caricato per ULTIMO!) -->
+  <!-- <script src="js/modules/ddtft/ddt-articoli-correct-fix.js"></script> -->
+  <!-- <script src="js/modules/ddtft/ddt-articoli-universal-fix.js"></script> -->
+  <script src="js/modules/ddtft/ddt-articoli-master-fix.js"></script>
+  
+  <!-- Fix FINALE totali fatture -->
+  <script src="js/modules/ddtft/fattura-totals-final-fix.js"></script>
+  
+  <!-- Override FINALE ASSOLUTO totali fatture (DEVE essere l'ultimo!) -->
+  <script src="js/modules/ddtft/fattura-totals-override-final.js"></script>
+  
+  <!-- Fix DEFINITIVO totale documento fatture (DEVE essere VERAMENTE l'ultimo!) -->
+  <script src="js/modules/ddtft/fattura-totale-documento-fix-finale.js"></script>
+  
+  <!-- Fix numero documento NC -->
+  <script src="js/modules/ddtft/nc-number-fix.js"></script>
+  
+  <!-- Fix indirizzo consegna NC -->
+  <script src="js/modules/ddtft/nc-delivery-address-fix.js"></script>
+  
+  <!-- Fix specifico CORSO ROMANIA per NC -->
+  <script src="js/modules/ddtft/nc-corso-romania-fix.js"></script>
+  
+  <!-- Fix estrazione cliente NC (IMPORTANTE: deve essere caricato PRIMA del fix definitivo CORSO ROMANIA) -->
+  <script src="js/modules/ddtft/nc-client-extraction-fix.js"></script>
+  
+  <!-- Fix IVA e totali NC -->
+  <script src="js/modules/ddtft/nc-iva-totals-fix.js"></script>
+  
+  <!-- Fix pattern IVA specifici per NC -->
+  <script src="js/modules/ddtft/nc-iva-pattern-specific.js"></script>
+  
+  <!-- Fix DEFINITIVO CORSO ROMANIA per NC (deve essere l'ULTIMO!) -->
+  <script src="js/modules/ddtft/nc-corso-romania-ultimate-fix.js"></script>
+  
+  <!-- Fix FINALE per garantire dati corretti NC (deve essere caricato DOPO tutti gli altri fix NC) -->
+  <script src="js/modules/ddtft/nc-final-data-fix.js"></script>
+  
+  <!-- Fix DEFINITIVO DONAC VIA MARGARITA (confermato dall'utente) -->
+  <script src="js/modules/ddtft/donac-via-margarita-fix.js"></script>
+  
+  <!-- Fix duplicati Excel -->
+  <script src="js/modules/ddtft/excel-duplicate-fix.js"></script>
+  
+  <!-- Fix esportazione DDV -->
+  <script src="js/modules/ddtft/ddv-export-fix.js"></script>
+  
+  <!-- Fix preservazione descrizioni -->
+  <script src="js/modules/ddtft/preserve-descriptions-fix.js"></script>
+  
+  <!-- Fix preservazione parser DDV (DEVE essere caricato DOPO il master fix) -->
+  <script src="js/modules/ddtft/ddv-preserve-parser-fix.js"></script>
+  
+  <!-- Fix enforcement descrizioni export (DEVE essere l'ULTIMO!) -->
+  <script src="js/modules/ddtft/export-description-enforcement.js"></script>
+  
+  <!-- Fix DEFINITIVO export DDV (DEVE essere VERAMENTE l'ULTIMO!) -->
+  <script src="js/modules/ddtft/ddv-export-ultimate-fix.js"></script>
+  
+  <!-- Test (commentato in produzione) -->
+  <!-- <script src="test/test-robust-address-extractor.js"></script> -->
+  
+  <!-- PWA Service Worker -->
+  <script>
+    // Registra Service Worker per PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('✅ Service Worker registrato:', registration.scope);
+            
+            // Controlla aggiornamenti
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Nuovo service worker disponibile
+                  if (confirm('🔄 Nuova versione disponibile! Aggiornare?')) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    window.location.reload();
+                  }
+                }
+              });
+            });
+          })
+          .catch(error => {
+            console.error('❌ Service Worker registration failed:', error);
+          });
+      });
+      
+      // Rileva quando il service worker prende controllo
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+    }
+    
+    // Prompt installazione PWA
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('💾 PWA installabile rilevata');
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // Mostra pulsante installazione personalizzato se necessario
+      showInstallButton();
+    });
+    
+    function showInstallButton() {
+      // Crea un pulsante per installare l'app
+      if (!document.getElementById('installButton')) {
+        const installBtn = document.createElement('button');
+        installBtn.id = 'installButton';
+        installBtn.innerHTML = '📱 Installa App';
+        installBtn.style.cssText = `
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          z-index: 1000;
+          padding: 8px 12px;
+          background: #457b9d;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+        `;
+        
+        installBtn.addEventListener('click', async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const result = await deferredPrompt.userChoice;
+            console.log('🎯 PWA install result:', result);
+            deferredPrompt = null;
+            installBtn.remove();
+          }
+        });
+        
+        document.body.appendChild(installBtn);
+        
+        // Nascondi automaticamente dopo 10 secondi
+        setTimeout(() => {
+          if (installBtn.parentNode) {
+            installBtn.remove();
+          }
+        }, 10000);
+      }
+    }
+    
+    // Gestisci installazione completata
+    window.addEventListener('appinstalled', () => {
+      console.log('🎉 PWA installata con successo!');
+      const installBtn = document.getElementById('installButton');
+      if (installBtn) installBtn.remove();
+    });
+  </script>
+  
+  <!-- Supabase AI Integration -->
+  <script src="js/ai/supabase-ai-integration.js"></script>
+  
+  <!-- Smart Assistant Module -->
+  <script src="js/smart-assistant.js"></script>
+  
+  <!-- Keep Alive per Replit -->
+  <script src="js/keep-alive.js"></script>
+  
+  <!-- FlavioAIAssistant JavaScript con integrazione Supabase e Claude -->
+  <script>
+    // Classe per gestire l'AI Assistant con backend PHP e Supabase
+    class FlavioAIAssistant {
+      constructor() {
+        // Configurazione API backend - rileva automaticamente Netlify
+        const isNetlify = window.location.hostname.includes('netlify');
+        // Usa sempre l'URL di Replit per le API
+        const REPLIT_API_URL = 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev';
+        this.apiUrl = `${REPLIT_API_URL}/claude-ai.php`;
+        this.provider = localStorage.getItem('ai_provider') || 'claude';
+        this.model = localStorage.getItem('ai_model') || 'claude-sonnet-4-20250514';
+        this.messages = JSON.parse(localStorage.getItem('ai_chat_history') || '[]');
+        
+        // Integrazione Supabase
+        this.supabaseAI = new SupabaseAIIntegration();
+        
+        // Voice recognition
+        this.isListening = false;
+        this.recognition = null;
+        this.voiceEnabled = localStorage.getItem('voice_enabled') !== 'false'; // Default true
+        
+        // Usage tracking
+        this.dailyCost = 0;
+        this.monthlyCost = 0;
+        
+        // Rate limiting tracking
+        this.messageTimestamps = JSON.parse(localStorage.getItem('ai_message_timestamps') || '[]');
+        // Timer artificiali rimossi - gestione rate limit delegata al server
+        this.cleanOldTimestamps();
+        
+        // Inizializza il riconoscimento vocale se supportato
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          this.recognition = new SpeechRecognition();
+          this.recognition.continuous = false;
+          this.recognition.interimResults = false;
+          this.recognition.lang = 'it-IT';
+        }
+        
+        this.initializeUI();
+        this.setupVoiceIntegration();
+        this.testBackend();
+      }
+      
+      initializeUI() {
+        const aiContent = document.getElementById('ai-content');
+        if (!aiContent) return;
+        
+        aiContent.innerHTML = `
+          <div class="ai-header">
+            <h2>🤖 AI Assistant</h2>
+            <p>Il tuo assistente intelligente per la gestione commerciale - Powered by OpenAI & Claude</p>
+          </div>
+          
+          <div class="ai-config">
+            <h3>Configurazione</h3>
+            <div class="ai-config-item">
+              <label for="aiProvider">Provider AI:</label>
+              <select id="aiProvider" onchange="flavioAI.updateModelOptions()">
+                <option value="openai" ${this.provider === 'openai' ? 'selected' : ''}>OpenAI (GPT)</option>
+                <option value="claude" ${this.provider === 'claude' ? 'selected' : ''}>Anthropic Claude</option>
+              </select>
+            </div>
+            <div class="ai-config-item">
+              <label for="aiModel">Modello AI:</label>
+              <select id="aiModel">
+                <!-- Options will be populated by updateModelOptions() -->
+              </select>
+            </div>
+            <div class="ai-config-item">
+              <label>
+                <input type="checkbox" id="voiceEnabled" ${this.voiceEnabled ? 'checked' : ''}>
+                Modalità Vocale
+              </label>
+              <small style="color: #666; display: block; margin-top: 5px;">
+                📱 Attiva input vocale e risposte parlate automatiche
+              </small>
+            </div>
+            <div class="ai-config-item" id="wakeWordSection" style="display: none; background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #ffc107;">
+              <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 16px;">
+                🚗 MODALITÀ GUIDA - Ascolto Continuo
+              </h4>
+              <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                <input type="checkbox" id="wakeWordEnabled" style="margin-right: 10px; transform: scale(1.2);">
+                <span style="font-weight: bold;">Attiva ascolto continuo dell'app</span>
+              </label>
+              <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong style="color: #28a745;">🎯 Parola d'ordine:</strong> 
+                <span id="currentWakeWord" style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold;">Ehi Assistant</span>
+              </div>
+              <div style="margin-top: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #495057;">Personalizza parola d'ordine:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="text" id="wakeWordInput" placeholder="Ehi iPhone" 
+                         style="flex: 1; padding: 8px; border: 2px solid #28a745; border-radius: 5px; font-size: 14px;">
+                  <button onclick="flavioAI.updateWakeWord()" 
+                          style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">
+                    Aggiorna
+                  </button>
+                </div>
+              </div>
+              <small style="color: #6c757d; display: block; margin-top: 10px; font-style: italic;">
+                ⚠️ Funziona solo quando l'app è aperta e visibile
+              </small>
+            </div>
+            <div class="ai-config-item">
+              <label>Status Backend:</label>
+              <span id="backendStatus" class="ai-status">Verifica in corso...</span>
+            </div>
+            <div class="ai-config-item">
+              <label>Costi utilizzo:</label>
+              <div>
+                Oggi: €<span id="dailyCost">0.00</span> | 
+                Mese: €<span id="monthlyCost">0.00</span>
+              </div>
+            </div>
+            <div class="ai-config-item">
+              <label>Messaggi inviati:</label>
+              <div>
+                Ultimo minuto: <span id="messagesPerMinute">0</span> | 
+                Oggi: <span id="messagesToday">0</span>
+              </div>
+            </div>
+            <!-- Timer artificiali rimossi per evitare blocchi -->
+            <button class="btn btn-primary" onclick="flavioAI.saveConfig()">Salva Configurazione</button>
+            <button class="btn btn-secondary" onclick="flavioAI.clearHistory()">Cancella Cronologia</button>
+            <button class="btn btn-warning" onclick="flavioAI.refreshSupabaseData()">Aggiorna Dati</button>
+          </div>
+          
+          <div id="aiStatus" class="ai-status" style="display: none;"></div>
+          
+          <!-- Pulsanti rapidi -->
+          <div class="ai-quick-actions" style="margin: 15px 0;">
+            <button class="btn btn-sm btn-secondary" onclick="flavioAI.quickQuery('fatturato')">
+              <i class="fas fa-chart-line"></i> Fatturato
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick="flavioAI.quickQuery('clienti-torino')">
+              <i class="fas fa-map-marker-alt"></i> Clienti Torino
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick="flavioAI.quickQuery('ordini-sospeso')">
+              <i class="fas fa-clock"></i> Ordini Sospesi
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick="flavioAI.quickQuery('appuntamenti')">
+              <i class="fas fa-calendar"></i> Appuntamenti
+            </button>
+          </div>
+          
+          <!-- AREA CONTROLLI VOCALI MOBILE -->
+          <div class="mobile-voice-controls" id="mobileVoiceControls" style="display: none; padding: 15px; border-radius: 8px; margin: 15px 0; border: 3px solid #17a2b8;">
+            <!-- STATUS INDICATOR -->
+            <div id="voiceStatusIndicator" style="text-align: center; margin-bottom: 15px; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+              🔇 MODALITÀ VOCALE DISATTIVA
+            </div>
+            <h4 style="margin: 0 0 15px 0; color: #17a2b8; text-align: center;">
+              🎤 CONTROLLI VOCALI
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+              ${this.recognition ? `
+                <button class="mobile-voice-btn" id="mobileVoiceBtn" onclick="
+                  console.log('🎤 MOBILE: Pulsante microfono cliccato!');
+                  window.MobileVoiceController.startVoiceInput();
+                " style="background: #28a745; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                  <i class="fas fa-microphone" id="mobileVoiceIcon" style="font-size: 24px;"></i>
+                  <span id="mobileVoiceText">PARLA</span>
+                </button>
+              ` : ''}
+              <button class="mobile-stop-btn" id="mobileStopBtn" onclick="
+                console.log('🔇 MOBILE: Pulsante STOP cliccato');
+                window.speechSynthesis.cancel();
+                if (window.AIVoiceManager && window.AIVoiceManager.state.isListening) {
+                  window.AIVoiceManager.stopListening();
+                }
+                if (window.flavioAI && window.flavioAI.stopSpeaking) {
+                  window.flavioAI.stopSpeaking();
+                }
+              " style="background: #dc3545; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                <i class="fas fa-stop-circle" style="font-size: 24px;"></i>
+                <span>STOP</span>
+              </button>
+            </div>
+            <div style="text-align: center; font-size: 12px; color: #6c757d;">
+              📱 Pulsanti ottimizzati per iPhone/iPad
+            </div>
+          </div>
+          
+          <div class="ai-chat-container">
+            <div class="ai-messages" id="aiMessages">
+              ${this.renderMessages()}
+            </div>
+            
+            <!-- INPUT CHAT RIDISEGNATO PER MOBILE -->
+            <div class="ai-input-container-mobile">
+              <div class="input-row-mobile">
+                <input 
+                  type="text" 
+                  class="ai-input-mobile" 
+                  id="aiInput" 
+                  placeholder="Scrivi la tua domanda qui..."
+                  onkeypress="if(event.key === 'Enter') flavioAI.sendMessage()"
+                  style="width: 100%; padding: 15px; font-size: 18px; border: 2px solid #007bff; border-radius: 8px; margin-bottom: 10px;"
+                >
+              </div>
+              <div class="button-row-mobile" style="display: flex; gap: 10px;">
+                ${this.recognition ? `
+                  <button class="desktop-voice-btn" id="voiceBtn" onclick="
+                    if (window.AIVoiceManager) {
+                      window.AIVoiceManager.toggle();
+                    } else {
+                      window.flavioAI.toggleVoice();
+                    }
+                  " style="flex: 1; background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; cursor: pointer;">
+                    <i class="fas fa-microphone"></i> Parla
+                  </button>
+                ` : ''}
+                <button class="desktop-stop-btn" id="stopSpeechBtn" onclick="
+                  window.speechSynthesis.cancel();
+                  if (window.AIVoiceManager && window.AIVoiceManager.state.isListening) {
+                    window.AIVoiceManager.stopListening();
+                  }
+                  if (window.flavioAI && window.flavioAI.stopSpeaking) {
+                    window.flavioAI.stopSpeaking();
+                  }
+                " style="flex: 1; background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; cursor: pointer;">
+                  <i class="fas fa-stop-circle"></i> Stop
+                </button>
+                <button class="ai-send-btn" id="sendBtn" onclick="flavioAI.sendMessage()" 
+                        style="flex: 2; background: #007bff; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                  <i class="fas fa-paper-plane"></i> Invia
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="ai-capabilities">
+            <h4>Cosa posso fare con i tuoi dati Supabase:</h4>
+            <ul>
+              <li>Analizzare fatturato e vendite per periodo</li>
+              <li>Cercare clienti per zona geografica</li>
+              <li>Monitorare ordini in sospeso e da evadere</li>
+              <li>Verificare documenti DDT e fatture</li>
+              <li>Controllare appuntamenti e timeline</li>
+              <li>Fornire statistiche e trend di vendita</li>
+              <li>Suggerire azioni commerciali basate sui dati</li>
+            </ul>
+          </div>
+        `;
+        
+        // Setup voice recognition handlers
+        if (this.recognition) {
+          this.recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('aiInput').value = transcript;
+            
+            // Marca come input vocale per forzare risposta parlata
+            window.currentInputIsVoice = true;
+            console.log('🎤 RICONOSCIMENTO VOCALE: Impostato flag per risposta parlata');
+            
+            this.sendMessage(true); // Passa true per isVoiceInput
+          };
+          
+          this.recognition.onerror = (event) => {
+            console.error('Errore riconoscimento vocale:', event.error);
+            this.showStatus('Errore nel riconoscimento vocale', 'error');
+            this.stopListening();
+          };
+          
+          this.recognition.onend = () => {
+            this.stopListening();
+          };
+        }
+        
+        // Popola le opzioni del modello inizialmente
+        this.updateModelOptions();
+        
+        // Aggiorna contatori messaggi all'avvio
+        this.updateMessageCounters();
+        
+        // Timer preventivo rimosso definitivamente
+      }
+      
+      // Aggiorna le opzioni del modello in base al provider selezionato
+      updateModelOptions() {
+        const providerSelect = document.getElementById('aiProvider');
+        const modelSelect = document.getElementById('aiModel');
+        
+        if (!providerSelect || !modelSelect) return;
+        
+        const provider = providerSelect.value;
+        
+        const models = {
+          openai: [
+            { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Economico + 128K contesto)' },
+            { value: 'gpt-4o', label: 'GPT-4o (128K contesto - CONSIGLIATO)' },
+            { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (128K contesto)' },
+            { value: 'gpt-3.5-turbo-16k', label: 'GPT-3.5 Turbo 16K (Solo 16K)' },
+            { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (Solo 16K - Troppo piccolo)' }
+          ],
+          claude: [
+            { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Veloce & Economico)' },
+            { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus (Potente v3)' },
+            { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (Veloce)' },
+            { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (DEFAULT)' },
+            { value: 'claude-3-7-sonnet-20250115', label: '⭐ Claude 3.7 Sonnet (Se disponibile)' },
+            { value: 'claude-sonnet-4-20250514', label: '🚀 Claude Sonnet 4 (Nuovissimo)' },
+            { value: 'claude-opus-4-20250514', label: '🔥 Claude Opus 4 (SUPREMO!)' }
+          ]
+        };
+        
+        // Cancella opzioni esistenti
+        modelSelect.innerHTML = '';
+        
+        // Aggiungi nuove opzioni
+        models[provider].forEach(model => {
+          const option = document.createElement('option');
+          option.value = model.value;
+          option.textContent = model.label;
+          option.selected = model.value === this.model;
+          modelSelect.appendChild(option);
+        });
+        
+        // Se il modello corrente non è disponibile per il nuovo provider, seleziona il primo
+        if (!models[provider].find(m => m.value === this.model)) {
+          this.model = models[provider][0].value;
+          modelSelect.value = this.model;
+        }
+      }
+      
+      renderMessages() {
+        return this.messages.map(msg => `
+          <div class="ai-message ${msg.role}">
+            ${msg.role === 'user' ? '' : '<div class="ai-message-avatar">AI</div>'}
+            <div class="ai-message-content">${this.escapeHtml(msg.content)}</div>
+            ${msg.role === 'user' ? '<div class="ai-message-avatar">Tu</div>' : ''}
+          </div>
+        `).join('');
+      }
+      
+      escapeHtml(text) {
+        const map = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+      }
+      
+      // Funzione per rilevare e filtrare richieste di percorsi
+      detectRouteRequest(message) {
+        const msg = message.toLowerCase();
+        console.log('🔍 Analisi messaggio per route:', msg);
+        
+        // Pattern per richieste di tempo di viaggio - FIXED: usiamo (.+?) invece di ([^a]+?)
+        const routePatterns = [
+          /quanto.*tempo.*da\s+(.+?)\s+a\s+(.+?)[\?\.]?$/,
+          /tempo.*da\s+(.+?)\s+a\s+(.+?)[\?\.]?$/,
+          /spostarmi.*da\s+(.+?)\s+a\s+(.+?)[\?\.]?$/,
+          /percorso.*da\s+(.+?)\s+a\s+(.+?)[\?\.]?$/,
+          // Pattern più flessibili per domande brevi
+          /^e.*da\s+(.+?)\s+a\s+(.+?)[\?\.]?$/,
+          /^da\s+(.+?)\s+a\s+(.+?)[\?\.]?$/,
+          /\bda\s+(.+?)\s+a\s+(.+?)[\?\.]?$/
+        ];
+        
+        for (let pattern of routePatterns) {
+          const match = msg.match(pattern);
+          console.log('🔍 Testing pattern:', pattern, 'Match:', match);
+          if (match) {
+            const result = {
+              isRouteRequest: true,
+              partenza: match[1].trim(),
+              arrivo: match[2].trim()
+            };
+            console.log('✅ Route detected:', result);
+            return result;
+          }
+        }
+        
+        console.log('❌ No route pattern matched');
+        return { isRouteRequest: false };
+      }
+      
+      // Funzione per cercare percorso specifico nei dati
+      findSpecificRoute(partenza, arrivo, percorsiData) {
+        if (!percorsiData || !Array.isArray(percorsiData)) return null;
+        
+        const partenzaNorm = partenza.toLowerCase().trim();
+        const arrivoNorm = arrivo.toLowerCase().trim();
+        
+        console.log('🔍 Cerco percorso:', partenzaNorm, '→', arrivoNorm);
+        console.log('📍 Percorsi disponibili:', percorsiData.length);
+        
+        // Debug: mostra alcuni percorsi di esempio
+        if (percorsiData.length > 0) {
+          console.log('📍 Primi 5 percorsi nel DB:');
+          percorsiData.slice(0, 5).forEach((p, i) => {
+            console.log(`  ${i+1}. "${p.partenza}" → "${p.arrivo}" (${p.minuti} min)`);
+          });
+        }
+        
+        // Funzione helper per verificare corrispondenza flessibile e robusta
+        const matchesLocation = (location, target) => {
+          const loc = location.toLowerCase().trim();
+          const tgt = target.toLowerCase().trim();
+          
+          console.log('🔍 Matching:', `"${loc}"`, 'vs', `"${tgt}"`);
+          
+          // 1. CORRISPONDENZA ESATTA (priorità massima)
+          if (loc === tgt) {
+            console.log('✅ Match esatto');
+            return true;
+          }
+          
+          // 2. MATCHING SPECIFICO PER NOMI COMPLETI (priorità alta)
+          // Lista di matching specifici per evitare false corrispondenze
+          const specificMatches = {
+            'essemme conad montegrosso': ['essemme conad montegrosso'],
+            'essemme': ['essemme conad montegrosso'],
+            'alfieri mattino': ['alfieri mattino'],
+            'alfieri sera': ['alfieri sera'],
+            'alfieri': ['alfieri mattino', 'alfieri sera'],
+            'donac': ['donac conad cuneo', 'donac s.r.l.'],
+            'new vision cassine': ['new vision conad cassine'],
+            'new vision castellazzo': ['new vision conad castellazzo bormida'],
+            'olimpia conad': ['olimpia conad costigliole'],
+            'gabrielis corso francia': ['gabrielis conad corso francia'],
+            'gabrielis corso susa': ['gabrielis conad corso susa'],
+            'gld conad': ['gld conad via tarino']
+          };
+          
+          // Controlla se c'è un match specifico
+          for (const [key, values] of Object.entries(specificMatches)) {
+            if (tgt.includes(key)) {
+              for (const value of values) {
+                if (loc.includes(value)) {
+                  console.log(`✅ Match specifico: ${key} → ${value}`);
+                  return true;
+                }
+              }
+            }
+          }
+          
+          // 3. CONTENIMENTO BIDIREZIONALE (priorità media)
+          if (loc.includes(tgt) || tgt.includes(loc)) {
+            console.log('✅ Match per contenimento');
+            return true;
+          }
+          
+          // 4. MATCHING PER PAROLE CHIAVE SIGNIFICATIVE (priorità bassa)
+          const cleanLoc = loc.replace(/\b(il|la|lo|gli|le|di|da|in|con|su|per|tra|fra|s\.r\.l\.|srl|conad|via|corso)\b/g, '').trim();
+          const cleanTgt = tgt.replace(/\b(il|la|lo|gli|le|di|da|in|con|su|per|tra|fra|s\.r\.l\.|srl|conad|via|corso)\b/g, '').trim();
+          
+          const locWords = cleanLoc.split(/\s+/).filter(w => w.length > 2);
+          const tgtWords = cleanTgt.split(/\s+/).filter(w => w.length > 2);
+          
+          if (locWords.length === 0 || tgtWords.length === 0) {
+            console.log('❌ No match - parole insufficienti dopo pulizia');
+            return false;
+          }
+          
+          // Conta le parole che matchano
+          const matches = tgtWords.filter(word => 
+            locWords.some(locWord => 
+              (locWord.length > 3 && word.length > 3) && 
+              (locWord.includes(word) || word.includes(locWord))
+            )
+          );
+          
+          const matchRatio = matches.length / tgtWords.length;
+          console.log('📊 Match ratio:', matchRatio, 'matches:', matches, 'locWords:', locWords, 'tgtWords:', tgtWords);
+          
+          // Soglia più alta per evitare false corrispondenze
+          if (matchRatio >= 0.8 && matches.length >= 2) {
+            console.log('✅ Match per ratio parole (alta precisione)');
+            return true;
+          }
+          
+          console.log('❌ No match');
+          return false;
+        };
+        
+        // Cerca percorso diretto
+        let found = percorsiData.find(p => {
+          const pStart = p.partenza || '';
+          const pEnd = p.arrivo || '';
+          return matchesLocation(pStart, partenzaNorm) && matchesLocation(pEnd, arrivoNorm);
+        });
+        
+        if (found) {
+          console.log('✅ Percorso diretto trovato:', found.partenza, '→', found.arrivo, '=', found.minuti, 'min');
+          return found;
+        }
+        
+        // Se non trovato, cerca percorso inverso
+        found = percorsiData.find(p => {
+          const pStart = p.partenza || '';
+          const pEnd = p.arrivo || '';
+          return matchesLocation(pStart, arrivoNorm) && matchesLocation(pEnd, partenzaNorm);
+        });
+        
+        if (found) {
+          console.log('✅ Percorso inverso trovato:', found.partenza, '→', found.arrivo, '=', found.minuti, 'min');
+          return found;
+        }
+        
+        console.log('❌ Percorso non trovato');
+        
+        // Debug: mostra alcuni percorsi che contengono parole chiave
+        const debugRoutes = percorsiData.filter(p => {
+          const pStr = `${p.partenza} ${p.arrivo}`.toLowerCase();
+          return pStr.includes('alfieri') || pStr.includes('essemme');
+        }).slice(0, 5);
+        
+        console.log('🔍 Percorsi debug con parole chiave:', debugRoutes);
+        
+        return null;
+      }
+
+      async sendMessage(isVoiceInput = false) {
+        // Forza modalità vocale se input è arrivato tramite microfono mobile
+        if (window.currentInputIsVoice) {
+          isVoiceInput = true;
+          console.log('🎤 INPUT VOCALE RILEVATO - Risposta parlata garantita!');
+        }
+        
+        console.log('🔍 sendMessage chiamato con isVoiceInput:', isVoiceInput);
+        console.log('🔍 DEBUG TTS: speechSynthesis disponibile?', 'speechSynthesis' in window);
+        const input = document.getElementById('aiInput');
+        const message = input.value.trim();
+        if (!message) return;
+        
+        console.log(`🎯 MODELLO ATTIVO: ${this.model} - PROVIDER: ${this.provider}`);
+        console.log(`🔍 MESSAGGIO ANALIZZATO: "${message}"`);
+        
+        // Traccia il messaggio
+        this.trackMessage();
+        
+        // Aggiungi messaggio utente
+        this.messages.push({ role: 'user', content: message });
+        this.updateChat();
+        input.value = '';
+        
+        // Mostra indicatore di caricamento
+        this.showThinking();
+        
+        try {
+          // NUOVA LOGICA: Analizza se è una richiesta di percorso
+          const routeRequest = this.detectRouteRequest(message);
+          console.log('🛣️ Analisi richiesta percorso:', routeRequest);
+          
+          // Raccogli dati da Supabase (forza refresh)
+          this.showStatus('Recupero dati da Supabase...', 'info');
+          const supabaseData = await this.supabaseAI.getAllData(true); // true = forza refresh
+          
+          let formattedData;
+          
+          if (routeRequest.isRouteRequest) {
+            // CASO SPECIALE: Richiesta di percorso - PRIORITÀ ASSOLUTA
+            console.log('🎯 Richiesta percorso specifica, filtro dati...');
+            console.log('🔍 Cerco percorso:', routeRequest.partenza, '→', routeRequest.arrivo);
+            console.log('📍 Percorsi disponibili:', supabaseData.percorsi?.length || 0);
+            
+            const specificRoute = this.findSpecificRoute(
+              routeRequest.partenza, 
+              routeRequest.arrivo, 
+              supabaseData.percorsi
+            );
+            
+            if (specificRoute) {
+              console.log('✅ Percorso trovato:', specificRoute);
+              formattedData = {
+                richiesta: 'tempo_di_viaggio',
+                percorso: {
+                  partenza: specificRoute.partenza,
+                  arrivo: specificRoute.arrivo,
+                  minuti: specificRoute.minuti,
+                  km: specificRoute.km
+                },
+                messaggio: `Il tempo di viaggio da ${specificRoute.partenza} a ${specificRoute.arrivo} è di ${specificRoute.minuti} minuti.`
+              };
+              
+              // SKIP tutto il resto del processing per richieste di percorso
+              console.log('🚀 Invio richiesta percorso ottimizzata...');
+              
+              const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  message: message,
+                  supabaseData: formattedData,
+                  model: this.model,
+                  history: this.messages.slice(-4),
+                  isVoiceInput: isVoiceInput
+                })
+              });
+              
+              const result = await response.json();
+              
+              if (result.response) {
+                this.messages.push({ role: 'assistant', content: result.response });
+                this.updateChat();
+                this.hideThinking();
+                
+                if (isVoiceInput && this.voiceManager) {
+                  this.voiceManager.speak(result.response);
+                }
+                return;
+              } else {
+                throw new Error(result.error || 'Errore nella risposta API');
+              }
+            } else {
+              console.log('❌ Percorso non trovato');
+              formattedData = {
+                richiesta: 'tempo_di_viaggio',
+                percorso: null,
+                messaggio: `Non ho trovato il percorso da ${routeRequest.partenza} a ${routeRequest.arrivo} nel database.`
+              };
+              
+              // Anche per percorsi non trovati, skip il processing normale
+              const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  message: message,
+                  supabaseData: formattedData,
+                  model: this.model,
+                  history: this.messages.slice(-4),
+                  isVoiceInput: isVoiceInput
+                })
+              });
+              
+              const result = await response.json();
+              
+              if (result.response) {
+                this.messages.push({ role: 'assistant', content: result.response });
+                this.updateChat();
+                this.hideThinking();
+                
+                if (isVoiceInput && this.voiceManager) {
+                  this.voiceManager.speak(result.response);
+                }
+                return;
+              } else {
+                throw new Error(result.error || 'Errore nella risposta API');
+              }
+            }
+          } else {
+            // CASO NORMALE: Altre richieste - usa sistema esistente
+            formattedData = this.supabaseAI.formatForAI();
+            
+            // Controllo dimensioni payload
+            let payloadSize = JSON.stringify(formattedData).length;
+            console.log('📊 Dimensione payload:', Math.round(payloadSize / 1024), 'KB');
+            
+            // Se troppo grande, usa versione semplificata
+            if (payloadSize > 400000) { // 400KB = ~100K token
+              console.log('🔄 Payload troppo grande, uso versione semplificata');
+              formattedData = this.supabaseAI.formatForAI_Simple();
+              payloadSize = JSON.stringify(formattedData).length;
+              console.log('📊 Dimensione payload ridotta:', Math.round(payloadSize / 1024), 'KB');
+            }
+          }
+          
+          // Calcolo dimensioni payload per tutte le richieste
+          const payloadSize = JSON.stringify(formattedData).length;
+          console.log('📊 Dimensione payload finale:', Math.round(payloadSize / 1024), 'KB');
+          
+          // 🛡️ PROTEZIONI ANTI-SPRECO CREDITI
+          const needsOrderData = this.messageNeedsOrderData(message);
+          const payloadSizeKB = Math.round(payloadSize / 1024);
+          
+          // PROTEZIONE 1: Controllo dimensioni payload
+          if (payloadSizeKB > 300) { // Max 300KB
+            this.showCostWarning(payloadSizeKB, needsOrderData);
+            if (!this.costWarningAccepted) {
+              this.hideThinking();
+              this.messages.pop();
+              input.value = message;
+              return;
+            }
+          }
+          
+          // PROTEZIONE 2: Sistema unificato di filtraggio intelligente
+          console.log('🤖 ANALISI INTELLIGENTE QUERY...');
+          const queryInfo = this.detectQueryType(message);
+          
+          let finalData;
+          
+          if (queryInfo.needsData || needsOrderData) {
+            console.log(`🎯 Query richiede dati: ${queryInfo.dataTypes.join(', ')}`);
+            console.log(`🔍 Filtri rilevati:`, queryInfo.filters);
+            
+            // Usa il nuovo sistema di filtraggio unificato
+            finalData = this.applyIntelligentFilters(formattedData, queryInfo);
+            
+            // Se il payload è ancora troppo grande per GPT-3.5
+            const tempSize = JSON.stringify(finalData).length;
+            if (this.model === 'gpt-3.5-turbo' && tempSize > 60000) { // ~15K token
+              console.warn('⚠️ Payload ancora troppo grande per GPT-3.5, applico ulteriori riduzioni');
+              finalData = this.getMinimalStats(formattedData);
+            }
+          } else {
+            console.log('💬 Query conversazionale - uso dati minimi');
+            finalData = this.getMinimalStats(formattedData);
+          }
+          
+          // PROTEZIONE 3: Log costo effettivo e controllo limiti modello
+          const finalPayloadKB = Math.round(JSON.stringify(finalData).length / 1024);
+          const finalTokens = finalPayloadKB * 4; // Approssimazione: 1KB ≈ 4 token
+          
+          console.log(`💰 PAYLOAD FINALE: ${finalPayloadKB}KB (~${finalTokens} token) - Costo stimato: $${this.estimateCost(finalPayloadKB)}`);
+          
+          // CONTROLLO LIMITE SPECIFICO PER MODELLO
+          if (this.model === 'gpt-3.5-turbo' && finalTokens > 15000) {
+            console.error(`❌ Payload troppo grande per GPT-3.5 Turbo: ${finalTokens} token (limite: 16K)`);
+            this.hideThinking();
+            this.showStatus(`❌ Payload troppo grande per GPT-3.5 (${finalTokens} token). Passa a GPT-4o o riduci la richiesta.`, 'error');
+            this.messages.pop();
+            input.value = message;
+            return;
+          }
+          
+          // Reset warning per prossima query
+          this.costWarningAccepted = false;
+          
+          // DEBUG: Log dei dati Supabase per verificare il contenuto
+          console.log('🔍 DEBUG SUPABASE: Raw data:', supabaseData);
+          console.log('🔍 DEBUG SUPABASE: Formatted data:', formattedData);
+          console.log('🔍 DEBUG TIMELINE: Timeline events:', formattedData.allEvents);
+          
+          // Chiama backend PHP
+          const response = await fetch(this.apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: message,
+              supabaseData: finalData,
+              model: this.model,
+              history: this.messages.slice(-10), // Ultimi 10 messaggi per contesto
+              isVoiceInput: isVoiceInput // Flag per distinguere input vocale
+            })
+          });
+          
+          if (!response.ok) {
+            // Gestione speciale per rate limit (429)
+            if (response.status === 429 && this.provider === 'claude') {
+              this.hideThinking();
+              this.showStatus(`⚠️ Rate limit Claude raggiunto. Vuoi passare a GPT?`, 'warning');
+              this.showQuickSwitchToGPT();
+              this.messages.pop();
+              input.value = message;
+              return;
+            }
+            
+            // DEBUG dettagliato per altri errori
+            let errorDetails = '';
+            try {
+              const errorResponse = await response.text();
+              console.error('🔍 DEBUG ERRORE:', {
+                status: response.status,
+                statusText: response.statusText,
+                response: errorResponse,
+                payloadSize: JSON.stringify(finalData).length,
+                message: message
+              });
+              
+              // Mostra dettagli payload se troppo grande
+              if (JSON.stringify(finalData).length > 1000000) { // 1MB
+                errorDetails = ' (Payload troppo grande: ' + Math.round(JSON.stringify(finalData).length / 1024) + 'KB)';
+              }
+            } catch (e) {
+              console.error('🔍 Errore nel debug:', e);
+            }
+            
+            this.hideThinking();
+            this.showStatus(`Errore API (${response.status})${errorDetails}. Riprova quando vuoi.`, 'error');
+            
+            // Rimuovi l'ultimo messaggio utente per poterlo reinviare
+            this.messages.pop();
+            input.value = message;
+            return;
+          }
+          
+          const data = await response.json();
+          
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          
+          // Rimuovi indicatore di caricamento
+          this.hideThinking();
+          
+          // Aggiungi risposta AI
+          this.messages.push({ role: 'assistant', content: data.response });
+          this.updateChat();
+          
+          // Aggiorna costi
+          if (data.usage) {
+            this.dailyCost = data.usage.daily_cost || 0;
+            this.monthlyCost = data.usage.monthly_cost || 0;
+            this.updateCostDisplay();
+          }
+          
+          // Salva cronologia
+          localStorage.setItem('ai_chat_history', JSON.stringify(this.messages.slice(-50)));
+          
+          // Timer preventivo rimosso definitivamente
+          
+          // Text-to-speech se input vocale o modalità mobile vocale
+          const shouldSpeak = isVoiceInput || window.currentInputIsVoice;
+          console.log('🔍 DEBUG TTS: isVoiceInput =', isVoiceInput, ', currentInputIsVoice =', window.currentInputIsVoice, ', shouldSpeak =', shouldSpeak);
+          
+          if (shouldSpeak && 'speechSynthesis' in window) {
+            console.log('🔊 RISPOSTA VOCALE ATTIVATA - Input era vocale!');
+            // FERMA tutte le sintesi vocali in corso (incluso Voice Manager)
+            console.log('🔊 FERMANDO tutte le sintesi vocali precedenti...');
+            window.speechSynthesis.cancel();
+            
+            console.log('🔊 Attivando TTS per input vocale:', data.response.substring(0, 50) + '...');
+            const utterance = new SpeechSynthesisUtterance(data.response);
+            utterance.lang = 'it-IT';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            // Debug della sintesi vocale
+            utterance.onerror = (e) => {
+              console.error('🔊 ERRORE TTS:', e);
+            };
+            
+            // Log quando inizia a parlare
+            utterance.onstart = () => {
+              console.log('🔊 TTS iniziato - pulsante STOP sempre disponibile');
+            };
+            
+            // Log quando finisce
+            utterance.onend = () => {
+              console.log('🔇 TTS terminato - pulsante STOP rimane disponibile');
+            };
+            
+            console.log('🔊 Chiamando speechSynthesis.speak()...');
+            window.speechSynthesis.speak(utterance);
+            
+            // Debug stato sintesi dopo 1 secondo
+            setTimeout(() => {
+              console.log('🔊 DEBUG stato sintesi dopo 1s:', {
+                speaking: window.speechSynthesis.speaking,
+                pending: window.speechSynthesis.pending,
+                paused: window.speechSynthesis.paused
+              });
+            }, 1000);
+            
+          } else if (!shouldSpeak) {
+            console.log('📝 Input testuale - nessun TTS (shouldSpeak:', shouldSpeak, ')');
+          } else {
+            console.log('🔊 TTS non attivato - speechSynthesis non disponibile');
+          }
+          
+          // Reset flag e UI mobile dopo risposta
+          if (window.currentInputIsVoice) {
+            console.log('🔄 Reset flag input vocale e UI mobile');
+            window.currentInputIsVoice = false;
+            
+            // Aggiorna UI mobile controller
+            setTimeout(() => {
+              if (window.MobileVoiceController) {
+                window.MobileVoiceController.stopVoiceInput();
+              }
+            }, 1000); // Aspetta un po' che inizi il TTS
+          }
+          
+          this.showStatus('Risposta ricevuta', 'success');
+          
+        } catch (error) {
+          console.error('Errore AI:', error);
+          this.hideThinking();
+          this.showStatus('Errore: ' + error.message, 'error');
+          
+          // Fallback response
+          this.messages.push({ 
+            role: 'assistant', 
+            content: 'Mi dispiace, si è verificato un errore. Verifica che il backend sia configurato correttamente o riprova più tardi.' 
+          });
+          this.updateChat();
+        }
+      }
+      
+      // Test backend connectivity
+      async testBackend() {
+        try {
+          const isNetlify = window.location.hostname.includes('netlify');
+          let response;
+          let data;
+          
+          if (isNetlify) {
+            // Su Netlify, testa la function (supporta GET per test)
+            response = await fetch(this.apiUrl);
+            if (!response.ok) {
+              // Se fallisce, usa simulazione
+              response = await fetch('/api/claude-ai.json');
+              data = await response.json();
+              data.simulated = true;
+            } else {
+              data = { status: 'ok', message: 'Netlify Functions attive' };
+            }
+          } else {
+            // Testa sempre l'API Replit
+            response = await fetch(this.apiUrl + '?test');
+            try {
+              data = await response.json();
+            } catch (error) {
+              console.error('Errore test API:', error);
+              data = null;
+            }
+          }
+          
+          if (data && data.status === 'ok') {
+            this.updateBackendStatus('✅ Backend API attivo', 'success');
+          } else {
+            this.updateBackendStatus('⚠️ Backend API non disponibile', 'error');
+          }
+        } catch (error) {
+          this.updateBackendStatus('❌ Backend non raggiungibile: ' + error.message, 'error');
+        }
+      }
+      
+      // Aggiorna display status backend
+      updateBackendStatus(message, type) {
+        const statusEl = document.getElementById('backendStatus');
+        if (statusEl) {
+          statusEl.textContent = message;
+          statusEl.className = `ai-status ${type}`;
+        }
+      }
+      
+      // Aggiorna display costi
+      updateCostDisplay() {
+        const dailyEl = document.getElementById('dailyCost');
+        const monthlyEl = document.getElementById('monthlyCost');
+        
+        if (dailyEl) dailyEl.textContent = this.dailyCost.toFixed(2);
+        if (monthlyEl) monthlyEl.textContent = this.monthlyCost.toFixed(2);
+        
+        // Aggiorna anche i contatori messaggi
+        this.updateMessageCounters();
+      }
+      
+      // Traccia un nuovo messaggio
+      trackMessage() {
+        const now = Date.now();
+        this.messageTimestamps.push(now);
+        this.cleanOldTimestamps();
+        this.saveMessageTimestamps();
+        this.updateMessageCounters();
+      }
+      
+      // Pulisce timestamp vecchi (oltre 24 ore)
+      cleanOldTimestamps() {
+        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+        this.messageTimestamps = this.messageTimestamps.filter(ts => ts > oneDayAgo);
+      }
+      
+      // Salva timestamp in localStorage
+      saveMessageTimestamps() {
+        localStorage.setItem('ai_message_timestamps', JSON.stringify(this.messageTimestamps));
+      }
+      
+      // Aggiorna contatori messaggi
+      updateMessageCounters() {
+        const now = Date.now();
+        const oneMinuteAgo = now - (60 * 1000);
+        const oneDayAgo = now - (24 * 60 * 60 * 1000);
+        
+        const messagesLastMinute = this.messageTimestamps.filter(ts => ts > oneMinuteAgo).length;
+        const messagesToday = this.messageTimestamps.filter(ts => ts > oneDayAgo).length;
+        
+        const minuteEl = document.getElementById('messagesPerMinute');
+        const todayEl = document.getElementById('messagesToday');
+        
+        if (minuteEl) minuteEl.textContent = messagesLastMinute;
+        if (todayEl) todayEl.textContent = messagesToday;
+      }
+      
+      // Timer artificiali rimossi - causavano più problemi che benefici
+      
+      // Timer preventivo rimosso definitivamente
+      
+      // checkPreventiveTimer rimosso definitivamente
+      
+      // Integrazione con Voice Manager
+      setupVoiceIntegration() {
+        // Ascolta messaggi dal Voice Manager
+        window.addEventListener('aiVoiceCommand', (event) => {
+          const { command } = event.detail;
+          console.log('Comando vocale ricevuto:', command);
+          
+          // Imposta il comando nell'input e invia come vocale
+          const input = document.getElementById('aiInput');
+          if (input) {
+            input.value = command;
+            this.sendMessage(true); // true = input vocale
+          }
+        });
+        
+        console.log('✅ Integrazione Voice Manager configurata');
+      }
+      
+      
+      // Query rapide predefinite
+      async quickQuery(type) {
+        const queries = {
+          'fatturato': 'Qual è il fatturato totale di questo mese? Mostra anche un confronto con il mese precedente usando i dati storici.',
+          'clienti-torino': 'Mostrami tutti i clienti della zona di Torino e provincia con i relativi fatturati.',
+          'ordini-sospeso': 'Ci sono ordini in sospeso da evadere? Mostrami i dettagli e le priorità.',
+          'appuntamenti': 'Quali appuntamenti ho in programma questa settimana? Mostra timeline e priorità.',
+          'analisi-vendite': 'Analizza i trend di vendita utilizzando i dati storici degli ordini. Mostra prodotti più venduti e performance per cliente.',
+          'storico-clienti': 'Mostra un riepilogo dei migliori clienti basato sui dati storici, con fatturato totale e frequenza ordini.'
+        };
+        
+        const query = queries[type];
+        if (query) {
+          document.getElementById('aiInput').value = query;
+          this.sendMessage();
+        }
+      }
+      
+      // Forza refresh dati Supabase
+      async refreshSupabaseData() {
+        this.showStatus('Aggiornamento dati Supabase...', 'info');
+        try {
+          await this.supabaseAI.getAllData(true); // Force refresh
+          this.showStatus('Dati aggiornati con successo!', 'success');
+        } catch (error) {
+          this.showStatus('Errore aggiornamento dati: ' + error.message, 'error');
+        }
+      }
+      
+      showThinking() {
+        const messagesContainer = document.getElementById('aiMessages');
+        const thinkingDiv = document.createElement('div');
+        thinkingDiv.id = 'aiThinking';
+        thinkingDiv.className = 'ai-thinking';
+        thinkingDiv.innerHTML = `
+          <div class="ai-message-avatar">AI</div>
+          <div class="ai-thinking-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span>Sto pensando...</span>
+        `;
+        messagesContainer.appendChild(thinkingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+      
+      hideThinking() {
+        const thinkingDiv = document.getElementById('aiThinking');
+        if (thinkingDiv) {
+          thinkingDiv.remove();
+        }
+      }
+      
+      updateChat() {
+        const messagesContainer = document.getElementById('aiMessages');
+        messagesContainer.innerHTML = this.renderMessages();
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+      
+      saveConfig() {
+        const provider = document.getElementById('aiProvider').value;
+        const model = document.getElementById('aiModel').value;
+        const voiceEnabled = document.getElementById('voiceEnabled').checked;
+        
+        this.provider = provider;
+        this.model = model;
+        this.voiceEnabled = voiceEnabled;
+        
+        localStorage.setItem('ai_provider', provider);
+        localStorage.setItem('ai_model', model);
+        localStorage.setItem('voice_enabled', voiceEnabled);
+        
+        this.showStatus(`Configurazione salvata: ${provider.toUpperCase()} ${model}`, 'success');
+      }
+      
+      clearHistory() {
+        if (confirm('Sei sicuro di voler cancellare tutta la cronologia chat?')) {
+          this.messages = [];
+          localStorage.removeItem('ai_chat_history');
+          this.updateChat();
+          this.showStatus('Cronologia cancellata', 'success');
+        }
+      }
+      
+      stopSpeaking() {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          console.log('🔇 Sintesi vocale fermata tramite pulsante STOP');
+          this.showStatus('Riproduzione vocale interrotta', 'info');
+        } else {
+          console.log('⚠️ speechSynthesis non disponibile');
+        }
+      }
+      
+      toggleVoice() {
+        if (!this.recognition) return;
+        
+        if (this.isListening) {
+          this.stopListening();
+        } else {
+          this.startListening();
+        }
+      }
+      
+      startListening() {
+        // Rimuovo il controllo voiceEnabled per permettere sempre l'input vocale
+        
+        this.isListening = true;
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+          voiceBtn.classList.add('recording');
+        }
+        
+        this.recognition.start();
+        this.showStatus('In ascolto...', 'success');
+      }
+      
+      stopListening() {
+        this.isListening = false;
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+          voiceBtn.classList.remove('recording');
+        }
+        
+        if (this.recognition) {
+          this.recognition.stop();
+        }
+      }
+      
+      showStatus(message, type = 'info') {
+        const statusDiv = document.getElementById('aiStatus');
+        if (statusDiv) {
+          statusDiv.textContent = message;
+          statusDiv.className = `ai-status ${type}`;
+          statusDiv.style.display = 'block';
+          
+          setTimeout(() => {
+            statusDiv.style.display = 'none';
+          }, 5000);
+        }
+      }
+      
+      showQuickSwitchToGPT() {
+        const statusDiv = document.getElementById('aiStatus');
+        if (statusDiv) {
+          statusDiv.innerHTML = `
+            <div class="rate-limit-notice">
+              <span>⚠️ Rate limit Claude raggiunto</span>
+              <button class="btn btn-sm btn-primary" onclick="flavioAI.switchToGPT()" style="margin-left: 10px;">
+                🚀 Passa a GPT-3.5 Turbo
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="this.parentElement.parentElement.style.display='none'" style="margin-left: 5px;">
+                ✕ Chiudi
+              </button>
+            </div>
+          `;
+          statusDiv.className = 'ai-status warning';
+          statusDiv.style.display = 'block';
+        }
+      }
+      
+      switchToGPT() {
+        // Cambia automaticamente a GPT
+        document.getElementById('aiProvider').value = 'openai';
+        this.updateModelOptions();
+        document.getElementById('aiModel').value = 'gpt-4o-mini';
+        this.saveConfig();
+        
+        this.showStatus('✅ Passato a GPT-4o Mini! Ora puoi fare più domande.', 'success');
+      }
+      
+      messageNeedsOrderData(message) {
+        const msg = message.toLowerCase();
+        
+        // Parole che indicano bisogno di dati ordini/prodotti
+        const dataKeywords = [
+          'quanti', 'quanto', 'venduto', 'venduti', 'fatturato', 'incasso',
+          'prodotto', 'prodotti', 'agnolotti', 'ordine', 'ordini',
+          'cliente', 'clienti', 'top', 'migliore', 'peggiore',
+          'totale', 'somma', 'numero', 'lista', 'elenco',
+          'analisi', 'statistica', 'report', 'dati', 'importo', 'valore'
+        ];
+        
+        // Nomi clienti specifici - aggiungere altri quando necessario
+        const clientNames = [
+          'boreale', 'marotta', 'rossini', 'alfieri', 'spa', 'srl', 'snc'
+        ];
+        
+        // Parole conversazionali che NON richiedono dati
+        const conversationalKeywords = [
+          'ciao', 'salve', 'buongiorno', 'buonasera', 'come stai',
+          'come va', 'tutto bene', 'grazie', 'prego', 'aiuto',
+          'tempo', 'oggi', 'domani', 'quando', 'dove', 'perché'
+        ];
+        
+        // Controlla se menziona un cliente specifico
+        const hasClientName = clientNames.some(name => msg.includes(name));
+        
+        // Se contiene parole conversazionali e nessuna parola di dati
+        const hasConversational = conversationalKeywords.some(word => msg.includes(word));
+        const hasDataRequest = dataKeywords.some(word => msg.includes(word));
+        
+        if (hasConversational && !hasDataRequest && !hasClientName) {
+          return false; // Messaggio conversazionale
+        }
+        
+        if (hasDataRequest || hasClientName) {
+          return true; // Richiede dati
+        }
+        
+        // Default: se messaggio corto probabilmente conversazionale
+        return message.length > 20;
+      }
+      
+      // 🎯 NUOVO: Rileva se messaggio richiede dati di cliente specifico
+      getSpecificClientFromMessage(message) {
+        const msg = message.toLowerCase();
+        
+        // Lista clienti principali da cercare nel messaggio
+        const clientPatterns = [
+          { pattern: 'boreale', name: 'BOREALE SRL' },
+          { pattern: 'marotta', name: 'MAROTTA SRL' },
+          { pattern: 'rossini', name: 'ROSSINI & C.' },
+          { pattern: 'alfieri', name: 'ALFIERI' }
+        ];
+        
+        for (const client of clientPatterns) {
+          if (msg.includes(client.pattern)) {
+            console.log(`🎯 Cliente specifico rilevato: ${client.name}`);
+            return client.name;
+          }
+        }
+        
+        return null; // Nessun cliente specifico trovato
+      }
+      
+      // 🎯 NUOVO: Filtra dati ordini per cliente specifico
+      filterOrdersForClient(supabaseData, clientName) {
+        console.log(`🔍 Filtraggio ordini per cliente: ${clientName}`);
+        
+        // Accedi ai dati raw direttamente dalla cache di Supabase
+        const rawHistoricalData = this.supabaseAI.cache?.historicalOrders;
+        
+        if (!rawHistoricalData?.sampleData || rawHistoricalData.sampleData.length === 0) {
+          console.warn('⚠️ Nessun dato storico disponibile per filtraggio nella cache');
+          return supabaseData;
+        }
+        
+        const allOrders = rawHistoricalData.sampleData;
+        console.log(`📊 Record totali prima del filtro: ${allOrders.length}`);
+        
+        // Filtra solo ordini del cliente specificato (case-insensitive)
+        const clientOrders = allOrders.filter(order => 
+          order.cliente && order.cliente.toUpperCase().includes(clientName.toUpperCase())
+        );
+        
+        console.log(`🎯 Record filtrati per ${clientName}: ${clientOrders.length}`);
+        
+        if (clientOrders.length === 0) {
+          console.warn(`⚠️ Nessun ordine trovato per cliente: ${clientName}`);
+          // Ritorna dati minimi se non trova il cliente
+          return {
+            summary: supabaseData.summary,
+            note: `Nessun ordine trovato per cliente: ${clientName}`
+          };
+        }
+        
+        // Ricalcola statistiche solo per questo cliente
+        const clientStats = this.calculateClientSpecificStats(clientOrders, clientName);
+        
+        // Costruisci payload ottimizzato per il cliente specifico
+        const filteredData = {
+          summary: {
+            ...supabaseData.summary,
+            note: `Dati filtrati per cliente: ${clientName}`
+          },
+          clientSpecific: {
+            clientName: clientName,
+            totalOrders: clientStats.numeroOrdini,
+            totalRevenue: clientStats.totalImporto,
+            orderDetails: clientOrders.slice(0, 50), // Max 50 righe per evitare overflow
+            topOrders: clientStats.topOrdini,
+            summary: `${clientStats.numeroOrdini} ordini trovati per ${clientName} con fatturato totale di €${clientStats.totalImporto.toFixed(2)}`
+          }
+        };
+        
+        const filteredSize = JSON.stringify(filteredData).length;
+        console.log(`📦 Payload filtrato: ${Math.round(filteredSize / 1024)}KB (vs originale: ${Math.round(JSON.stringify(supabaseData).length / 1024)}KB)`);
+        
+        return filteredData;
+      }
+      
+      // 🎯 NUOVO: Calcola statistiche per cliente specifico
+      calculateClientSpecificStats(clientOrders, clientName) {
+        const ordiniMap = new Map();
+        let totalImporto = 0;
+        
+        // Raggruppa per numero ordine e calcola totali
+        clientOrders.forEach(row => {
+          const numeroOrdine = row.numero_ordine;
+          const importo = parseFloat(row.importo) || 0;
+          totalImporto += importo;
+          
+          if (!numeroOrdine) return;
+          
+          if (ordiniMap.has(numeroOrdine)) {
+            const existing = ordiniMap.get(numeroOrdine);
+            existing.totaleImporto += importo;
+            existing.righe.push({
+              prodotto: row.prodotto || 'N/A',
+              quantita: parseFloat(row.quantita) || 0,
+              importo: importo
+            });
+          } else {
+            ordiniMap.set(numeroOrdine, {
+              numeroOrdine: numeroOrdine,
+              cliente: row.cliente,
+              totaleImporto: importo,
+              dataConsegna: row.data_consegna || 'N/A',
+              righe: [{
+                prodotto: row.prodotto || 'N/A',
+                quantita: parseFloat(row.quantita) || 0,
+                importo: importo
+              }]
+            });
+          }
+        });
+        
+        const topOrdini = Array.from(ordiniMap.values())
+          .sort((a, b) => b.totaleImporto - a.totaleImporto)
+          .slice(0, 5); // Top 5 ordini
+        
+        return {
+          totalImporto: totalImporto,
+          numeroOrdini: ordiniMap.size,
+          topOrdini: topOrdini
+        };
+      }
+      
+      // 🛡️ PROTEZIONE COSTI: Stima costo query
+      estimateCost(payloadKB) {
+        const tokens = payloadKB * 4; // Approssimazione: 1KB ≈ 4 token
+        let costPer1kTokens;
+        
+        // Costi approssimativi per 1K token (input)
+        switch(this.model) {
+          case 'claude-sonnet-4-20250514': costPer1kTokens = 0.015; break;
+          case 'claude-3-5-sonnet-20241022': costPer1kTokens = 0.003; break;
+          case 'gpt-4o': costPer1kTokens = 0.0025; break;
+          case 'gpt-4o-mini': costPer1kTokens = 0.00015; break;
+          case 'gpt-3.5-turbo': costPer1kTokens = 0.0015; break;
+          default: costPer1kTokens = 0.002;
+        }
+        
+        return ((tokens / 1000) * costPer1kTokens).toFixed(4);
+      }
+      
+      // 🛡️ PROTEZIONE COSTI: Warning payload grandi
+      showCostWarning(payloadKB, needsOrderData) {
+        const estimatedCost = this.estimateCost(payloadKB);
+        const statusDiv = document.getElementById('aiStatus');
+        
+        if (statusDiv) {
+          statusDiv.innerHTML = `
+            <div class="cost-warning">
+              <span style="color: #d63384; font-weight: bold;">⚠️ ATTENZIONE COSTI!</span><br>
+              <span>Payload: ${payloadKB}KB (~$${estimatedCost} per questa query)</span><br>
+              <span>Motivo: ${needsOrderData ? 'Query richiede dati completi' : 'Payload inaspettatamente grande'}</span><br>
+              <button class="btn btn-sm btn-danger" onclick="flavioAI.costWarningAccepted = true; flavioAI.sendMessage()" style="margin: 5px;">
+                💸 Procedi ($${estimatedCost})
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="this.parentElement.parentElement.style.display='none'" style="margin: 5px;">
+                🛡️ Annulla
+              </button>
+            </div>
+          `;
+          statusDiv.className = 'ai-status warning';
+          statusDiv.style.display = 'block';
+        }
+      }
+      
+      // 🚀 SISTEMA UNIFICATO DI QUERY INTELLIGENTE
+      detectQueryType(message) {
+        const msg = message.toLowerCase();
+        const queryInfo = {
+          needsData: false,
+          dataTypes: [],
+          filters: {}
+        };
+        
+        // 1. RILEVA PRODOTTI
+        const productKeywords = ['prodotto', 'prodotti', 'articolo', 'articoli', 'prezzo', 'costo', 'listino', 'catalogo', 'stock', 'magazzino', 'disponibilit'];
+        const productNames = [
+          'agnolotti', 'ravioli', 'tagliatelle', 'gnocchi', 'lasagne', 'tortellini',
+          'pasta', 'sugo', 'rag\u00f9', 'pesto', 'salsa', 'condimento',
+          'fresco', 'fresca', 'surgelato', 'congelato'
+        ];
+        
+        if (productKeywords.some(k => msg.includes(k)) || productNames.some(n => msg.includes(n))) {
+          queryInfo.needsData = true;
+          queryInfo.dataTypes.push('products');
+          
+          // Cerca prodotto specifico
+          for (const product of productNames) {
+            if (msg.includes(product)) {
+              queryInfo.filters.productName = product;
+              console.log(`🎯 Prodotto specifico rilevato: ${product}`);
+              break;
+            }
+          }
+        }
+        
+        // 2. RILEVA PERCORSI/ITINERARI
+        const routeKeywords = ['percorso', 'percorsi', 'itinerario', 'viaggio', 'viaggi', 'tragitto', 'strada', 'km', 'chilometri', 'tempo', 'durata', 'minuti', 'ore'];
+        const cities = [
+          'torino', 'milano', 'genova', 'venezia', 'bologna', 'firenze', 'roma', 'napoli',
+          'alessandria', 'asti', 'cuneo', 'novara', 'vercelli', 'biella',
+          'alba', 'bra', 'ivrea', 'moncalieri', 'nichelino', 'rivoli'
+        ];
+        
+        if (routeKeywords.some(k => msg.includes(k)) || cities.some(c => msg.includes(c))) {
+          queryInfo.needsData = true;
+          queryInfo.dataTypes.push('routes');
+          
+          // Cerca citt\u00e0 specifiche
+          const foundCities = [];
+          for (const city of cities) {
+            if (msg.includes(city)) {
+              foundCities.push(city);
+            }
+          }
+          if (foundCities.length > 0) {
+            queryInfo.filters.cities = foundCities;
+            console.log(`🎯 Citt\u00e0 rilevate: ${foundCities.join(', ')}`);
+          }
+        }
+        
+        // 3. RILEVA CLIENTI
+        const clientKeywords = ['cliente', 'clienti', 'azienda', 'aziende', 'societ\u00e0', 'ditta', 'negozio', 'punto vendita'];
+        const clientNames = ['boreale', 'marotta', 'rossini', 'alfieri'];
+        const zones = ['nord', 'sud', 'est', 'ovest', 'centro', 'periferia'];
+        
+        if (clientKeywords.some(k => msg.includes(k)) || clientNames.some(n => msg.includes(n))) {
+          queryInfo.needsData = true;
+          queryInfo.dataTypes.push('clients');
+          
+          // Cerca cliente specifico
+          const specificClient = this.getSpecificClientFromMessage(message);
+          if (specificClient) {
+            queryInfo.filters.clientName = specificClient;
+          }
+          
+          // Cerca zona specifica
+          for (const zone of zones) {
+            if (msg.includes(zone)) {
+              queryInfo.filters.zone = zone;
+              console.log(`🎯 Zona rilevata: ${zone}`);
+              break;
+            }
+          }
+          
+          // Cerca citt\u00e0 per clienti
+          for (const city of cities) {
+            if (msg.includes(city)) {
+              queryInfo.filters.clientCity = city;
+              console.log(`🎯 Citt\u00e0 cliente rilevata: ${city}`);
+              break;
+            }
+          }
+        }
+        
+        // 4. RILEVA QUERY STATISTICHE (non servono dati dettagliati)
+        const statsKeywords = ['quanti', 'quanto', 'totale', 'somma', 'media', 'statistiche', 'report', 'analisi'];
+        if (statsKeywords.some(k => msg.includes(k)) && !queryInfo.filters.productName && !queryInfo.filters.clientName) {
+          queryInfo.needsData = false; // Solo aggregati
+          queryInfo.dataTypes.push('statistics');
+          console.log('📊 Query statistica rilevata - uso solo aggregati');
+        }
+        
+        console.log('🔍 ANALISI QUERY:', queryInfo);
+        return queryInfo;
+      }
+      
+      // 🎯 FILTRO UNIFICATO PER TUTTI I TIPI DI DATI
+      applyIntelligentFilters(supabaseData, queryInfo) {
+        if (!queryInfo.needsData || queryInfo.dataTypes.includes('statistics')) {
+          console.log('📊 Query non richiede dati dettagliati - uso solo statistiche');
+          return this.getMinimalStats(supabaseData);
+        }
+        
+        let filteredData = {
+          summary: supabaseData.summary,
+          queryType: queryInfo.dataTypes.join(', '),
+          filters: queryInfo.filters
+        };
+        
+        // FILTRA PRODOTTI
+        if (queryInfo.dataTypes.includes('products') && supabaseData.products) {
+          console.log('🛍️ Filtro prodotti attivo');
+          if (queryInfo.filters.productName) {
+            // Filtra per nome prodotto
+            const filtered = supabaseData.products.filter(p => 
+              p.nome?.toLowerCase().includes(queryInfo.filters.productName)
+            );
+            filteredData.products = filtered.slice(0, 20); // Max 20 prodotti
+            console.log(`✅ Prodotti filtrati: ${filtered.length} trovati`);
+          } else {
+            // Se non c'\u00e8 filtro specifico, invia top prodotti
+            filteredData.products = supabaseData.products.slice(0, 10);
+          }
+        }
+        
+        // FILTRA PERCORSI
+        if (queryInfo.dataTypes.includes('routes') && supabaseData.percorsi) {
+          console.log('🗺️ Filtro percorsi attivo');
+          if (queryInfo.filters.cities && queryInfo.filters.cities.length > 0) {
+            // Filtra per citt\u00e0
+            const filtered = supabaseData.percorsi.filter(p => {
+              const partenza = p.partenza?.toLowerCase() || '';
+              const arrivo = p.arrivo?.toLowerCase() || '';
+              return queryInfo.filters.cities.some(city => 
+                partenza.includes(city) || arrivo.includes(city)
+              );
+            });
+            filteredData.percorsi = filtered.slice(0, 20); // Max 20 percorsi
+            console.log(`✅ Percorsi filtrati: ${filtered.length} trovati`);
+          } else {
+            // Top percorsi pi\u00f9 lunghi
+            const sorted = [...supabaseData.percorsi].sort((a, b) => (b.km || 0) - (a.km || 0));
+            filteredData.percorsi = sorted.slice(0, 10);
+          }
+        }
+        
+        // FILTRA CLIENTI
+        if (queryInfo.dataTypes.includes('clients') && supabaseData.clients) {
+          console.log('👥 Filtro clienti attivo');
+          if (queryInfo.filters.clientName) {
+            // Cliente specifico gi\u00e0 gestito da filterOrdersForClient
+            return this.filterOrdersForClient(supabaseData, queryInfo.filters.clientName);
+          } else if (queryInfo.filters.clientCity || queryInfo.filters.zone) {
+            // Filtra per citt\u00e0 o zona
+            const filtered = supabaseData.clients.filter(c => {
+              if (queryInfo.filters.clientCity) {
+                return c.citta?.toLowerCase().includes(queryInfo.filters.clientCity);
+              }
+              if (queryInfo.filters.zone) {
+                return c.zona?.toLowerCase().includes(queryInfo.filters.zone);
+              }
+              return true;
+            });
+            filteredData.clients = filtered.slice(0, 30); // Max 30 clienti
+            console.log(`✅ Clienti filtrati: ${filtered.length} trovati`);
+          } else {
+            // Top clienti
+            filteredData.clients = supabaseData.clients.slice(0, 20);
+          }
+        }
+        
+        const finalSize = JSON.stringify(filteredData).length;
+        console.log(`📦 PAYLOAD OTTIMIZZATO: ${Math.round(finalSize / 1024)}KB`);
+        
+        return filteredData;
+      }
+      
+      // 📊 DATI MINIMI PER QUERY STATISTICHE
+      getMinimalStats(supabaseData) {
+        return {
+          summary: {
+            totalClients: supabaseData.summary?.totalClients || 0,
+            totalOrders: supabaseData.historicalOrders?.statistics?.numeroOrdini || 0,
+            totalRevenue: supabaseData.historicalOrders?.statistics?.totalImporto || 0,
+            totalProducts: supabaseData.products?.length || 0,
+            totalRoutes: supabaseData.percorsi?.length || 0,
+            lastUpdate: supabaseData.summary?.lastUpdate || 'sconosciuto'
+          },
+          topStatistics: {
+            topClients: supabaseData.historicalOrders?.statistics?.topClienti?.slice(0, 3) || [],
+            topProducts: supabaseData.historicalOrders?.statistics?.topProdotti?.slice(0, 3) || [],
+            topOrders: supabaseData.historicalOrders?.statistics?.topOrdini?.slice(0, 3) || []
+          }
+        };
+      }
+      
+      // Metodi per il sistema di navigazione
+      onEnter() {
+        console.log('🤖 AI Assistant tab attivato');
+        // Refresh dati Supabase quando si entra nel tab
+        if (this.supabaseAI) {
+          this.supabaseAI.getAllData(false); // Usa cache se disponibile
+        }
+      }
+      
+      onLeave() {
+        console.log('🤖 AI Assistant tab disattivato');
+        // Ferma riconoscimento vocale se attivo
+        if (this.isListening) {
+          this.stopListening();
+        }
+      }
+    }
+    
+    // Inizializza l'AI Assistant quando il DOM è pronto
+    let flavioAI;
+    
+    // Espone la classe a livello globale per il sistema di navigazione
+    window.FlavioAIAssistant = null;
+    window.flavioAI = null;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      // Inizializza AI Assistant IMMEDIATAMENTE
+      console.log('🚀 Inizializzazione AI Assistant...');
+      flavioAI = new FlavioAIAssistant();
+      // Espone l'istanza globalmente per il sistema di navigazione
+      window.FlavioAIAssistant = flavioAI;
+      window.flavioAI = flavioAI; // Per Voice Manager
+      console.log('✅ AI Assistant disponibile globalmente');
+      
+      // Configura integrazione con Voice Manager
+      if (window.AIVoiceManager) {
+        console.log('✅ Integrazione Voice Manager configurata');
+      }
+    });
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('✅ SW registered: ', registration);
+            
+            // Chiedi permesso per le notifiche
+            if ('Notification' in window && Notification.permission === 'default') {
+              Notification.requestPermission().then(permission => {
+                console.log('🔔 Notification permission:', permission);
+              });
+            }
+          })
+          .catch((registrationError) => {
+            console.log('❌ SW registration failed: ', registrationError);
+          });
+
+        // Ascolta messaggi dal Service Worker
+        navigator.serviceWorker.addEventListener('message', event => {
+          const { type, data } = event.data;
+          
+          switch (type) {
+            case 'COMPLETE_TASK':
+              // Completa il task tramite Smart Assistant
+              if (window.SmartAssistant) {
+                if (data.taskType === 'call') {
+                  window.SmartAssistant.completeCall(data.taskId);
+                } else if (data.taskType === 'whatsapp') {
+                  window.SmartAssistant.completeWhatsapp(data.taskId);
+                } else {
+                  window.SmartAssistant.completeTask(data.taskId);
+                }
+              }
+              break;
+              
+            case 'POSTPONE_REMINDER':
+              // Programma nuovo promemoria
+              if (window.SmartAssistant) {
+                window.SmartAssistant.scheduleReminder(data.taskId, data.delayMinutes);
+              }
+              break;
+          }
+        });
+      });
+    }
+  </script>
+
+  <!-- 🎤 WAKE WORD SYSTEM - Ascolto continuo per guidare -->
+  <script>
+    // Sistema Wake Word per AI Assistant
+    window.WakeWordSystem = {
+      recognition: null,
+      isListening: false,
+      wakeWord: localStorage.getItem('ai_wake_word') || null,
+      isEnabled: false,
+      continuous: true,
+      deviceType: null,
+      
+      init() {
+        // Auto-rileva device e imposta wake word
+        this.detectDevice();
+        this.setDeviceSpecificWakeWord();
+        
+        // Controlla supporto browser
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+          console.warn('⚠️ Wake Word: Speech Recognition non supportato');
+          return false;
+        }
+        
+        // Inizializza riconoscimento vocale
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.recognition = new SpeechRecognition();
+        
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.lang = 'it-IT';
+        
+        // Eventi
+        this.recognition.onresult = (event) => {
+          this.handleSpeechResult(event);
+        };
+        
+        this.recognition.onerror = (event) => {
+          console.error('🎤 Wake Word Error:', event.error);
+          if (event.error === 'not-allowed') {
+            this.showPermissionError();
+          } else {
+            // Riavvia automaticamente se errore
+            setTimeout(() => {
+              if (this.isEnabled) this.start();
+            }, 2000);
+          }
+        };
+        
+        this.recognition.onend = () => {
+          console.log('🔄 Wake Word: Recognition ended, restarting...');
+          if (this.isEnabled) {
+            setTimeout(() => this.start(), 1000);
+          }
+        };
+        
+        // Setup UI
+        this.setupUI();
+        
+        console.log('✅ Wake Word System inizializzato');
+        console.log('📱 Device rilevato:', this.deviceType, '- Wake word:', this.wakeWord);
+        return true;
+      },
+      
+      detectDevice() {
+        const userAgent = navigator.userAgent;
+        
+        if (userAgent.includes('iPad')) {
+          this.deviceType = 'iPad';
+        } else if (userAgent.includes('iPhone')) {
+          this.deviceType = 'iPhone';
+        } else if (userAgent.includes('Android')) {
+          this.deviceType = userAgent.includes('Mobile') ? 'Android Phone' : 'Android Tablet';
+        } else {
+          this.deviceType = 'Desktop';
+        }
+        
+        console.log('📱 Device rilevato:', this.deviceType);
+      },
+      
+      setDeviceSpecificWakeWord() {
+        // Se non è mai stata impostata, usa quella specifica del device
+        if (!this.wakeWord) {
+          switch (this.deviceType) {
+            case 'iPad':
+              this.wakeWord = 'ehi ipad';
+              break;
+            case 'iPhone':
+              this.wakeWord = 'ehi iphone';
+              break;
+            case 'Android Phone':
+              this.wakeWord = 'ehi android';
+              break;
+            case 'Android Tablet':
+              this.wakeWord = 'ehi tablet';
+              break;
+            default:
+              this.wakeWord = 'ehi assistant';
+          }
+          
+          // Salva la wake word specifica
+          localStorage.setItem('ai_wake_word', this.wakeWord);
+          console.log('🎯 Wake word impostata per', this.deviceType + ':', this.wakeWord);
+        }
+      },
+      
+      setupUI() {
+        // Mostra sezione wake word quando modalità vocale è attiva
+        const voiceCheckbox = document.getElementById('voiceEnabled');
+        const wakeWordSection = document.getElementById('wakeWordSection');
+        const wakeWordCheckbox = document.getElementById('wakeWordEnabled');
+        const currentWakeWordSpan = document.getElementById('currentWakeWord');
+        const wakeWordInput = document.getElementById('wakeWordInput');
+        
+        if (voiceCheckbox && wakeWordSection) {
+          voiceCheckbox.addEventListener('change', () => {
+            wakeWordSection.style.display = voiceCheckbox.checked ? 'block' : 'none';
+            if (!voiceCheckbox.checked && this.isEnabled) {
+              this.stop();
+              wakeWordCheckbox.checked = false;
+            }
+          });
+          
+          // Mostra subito se voice è già attiva
+          if (voiceCheckbox.checked) {
+            wakeWordSection.style.display = 'block';
+          }
+        }
+        
+        if (wakeWordCheckbox) {
+          wakeWordCheckbox.addEventListener('change', () => {
+            if (wakeWordCheckbox.checked) {
+              this.enable();
+            } else {
+              this.disable();
+            }
+          });
+        }
+        
+        if (currentWakeWordSpan) {
+          currentWakeWordSpan.textContent = this.wakeWord;
+        }
+        
+        if (wakeWordInput) {
+          wakeWordInput.value = this.wakeWord;
+        }
+      },
+      
+      enable() {
+        if (!this.recognition) {
+          alert('⚠️ Riconoscimento vocale non supportato dal browser');
+          return;
+        }
+        
+        this.isEnabled = true;
+        this.start();
+        this.updateStatus('🎤 Ascolto continuo ATTIVO - Di\' "' + this.wakeWord + '" per attivare');
+        console.log('🚀 Wake Word abilitato:', this.wakeWord);
+      },
+      
+      disable() {
+        this.isEnabled = false;
+        this.stop();
+        this.updateStatus('🔇 Ascolto continuo DISATTIVATO');
+        console.log('🛑 Wake Word disabilitato');
+      },
+      
+      start() {
+        if (!this.recognition || this.isListening) return;
+        
+        try {
+          this.isListening = true;
+          this.recognition.start();
+          console.log('🎤 Wake Word: In ascolto per "' + this.wakeWord + '"');
+        } catch (error) {
+          console.error('❌ Wake Word start error:', error);
+          this.isListening = false;
+        }
+      },
+      
+      stop() {
+        if (!this.recognition || !this.isListening) return;
+        
+        try {
+          this.isListening = false;
+          this.recognition.stop();
+          console.log('🛑 Wake Word: Fermato');
+        } catch (error) {
+          console.error('❌ Wake Word stop error:', error);
+        }
+      },
+      
+      handleSpeechResult(event) {
+        let transcript = '';
+        
+        // Combina tutti i risultati
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript.toLowerCase();
+        }
+        
+        console.log('🎤 Wake Word: Ascoltato:', transcript);
+        
+        // Verifica se contiene wake word
+        if (transcript.includes(this.wakeWord.toLowerCase())) {
+          console.log('🎯 Wake Word RILEVATO!');
+          this.triggerAIAssistant();
+        }
+      },
+      
+      triggerAIAssistant() {
+        // Visual feedback
+        this.updateStatus('🎯 WAKE WORD RILEVATO! Attivando AI Assistant...', 'success');
+        
+        // Suono di conferma (opzionale)
+        this.playConfirmSound();
+        
+        // Attiva AI Assistant dopo breve pausa
+        setTimeout(() => {
+          if (window.flavioAI) {
+            console.log('🤖 Attivando AI Assistant...');
+            
+            // Se ha il metodo per voice input diretto
+            if (window.flavioAI.startListening) {
+              window.flavioAI.startListening();
+            } else if (window.AIVoiceManager) {
+              window.AIVoiceManager.toggle();
+            } else {
+              // Fallback: simula click pulsante microfono
+              const voiceBtn = document.getElementById('voiceBtn');
+              if (voiceBtn) {
+                voiceBtn.click();
+              }
+            }
+            
+            this.updateStatus('🎤 AI Assistant attivo - Parla ora!');
+          } else {
+            console.error('❌ AI Assistant non trovato');
+            this.updateStatus('❌ AI Assistant non disponibile');
+          }
+        }, 500);
+      },
+      
+      playConfirmSound() {
+        // Suono di conferma semplice
+        try {
+          const context = new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = context.createOscillator();
+          const gainNode = context.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(context.destination);
+          
+          oscillator.frequency.value = 800;
+          gainNode.gain.setValueAtTime(0.3, context.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.2);
+          
+          oscillator.start(context.currentTime);
+          oscillator.stop(context.currentTime + 0.2);
+        } catch (error) {
+          console.log('🔇 Suono di conferma non disponibile');
+        }
+      },
+      
+      updateWakeWord(newWakeWord) {
+        if (newWakeWord && newWakeWord.length > 2) {
+          this.wakeWord = newWakeWord.toLowerCase();
+          localStorage.setItem('ai_wake_word', this.wakeWord);
+          
+          const currentWakeWordSpan = document.getElementById('currentWakeWord');
+          if (currentWakeWordSpan) {
+            currentWakeWordSpan.textContent = this.wakeWord;
+          }
+          
+          this.updateStatus('✅ Parola d\'ordine aggiornata: "' + this.wakeWord + '"');
+          console.log('✅ Wake word aggiornata:', this.wakeWord);
+        }
+      },
+      
+      updateStatus(message, type = 'info') {
+        if (window.flavioAI && window.flavioAI.showStatus) {
+          window.flavioAI.showStatus(message, type);
+        } else {
+          console.log('📢 Wake Word Status:', message);
+        }
+      },
+      
+      showPermissionError() {
+        alert('🚫 Permesso microfono negato!\n\nPer usare l\'ascolto continuo:\n1. Clicca sull\'icona del lucchetto nella barra degli indirizzi\n2. Consenti l\'accesso al microfono\n3. Ricarica la pagina');
+      },
+      
+      // Metodo per Siri Shortcuts
+      activateViaShortcut() {
+        console.log('🎯 Siri Shortcut attivato!');
+        
+        // Visual feedback
+        this.updateStatus('🎯 SIRI SHORTCUT ATTIVATO! Preparando assistente...', 'success');
+        
+        // Suono di conferma
+        this.playConfirmSound();
+        
+        // Attiva AI Assistant dopo breve pausa
+        setTimeout(() => {
+          if (window.flavioAI) {
+            console.log('🤖 Attivando AI Assistant via Siri...');
+            
+            // Assicurati che sia in modalità vocale
+            const voiceCheckbox = document.getElementById('voiceEnabled');
+            if (voiceCheckbox && !voiceCheckbox.checked) {
+              voiceCheckbox.checked = true;
+              window.flavioAI.voiceEnabled = true;
+            }
+            
+            // Attiva il riconoscimento vocale
+            if (window.flavioAI.startListening) {
+              window.flavioAI.startListening();
+            } else if (window.AIVoiceManager) {
+              window.AIVoiceManager.toggle();
+            } else {
+              // Fallback: simula click pulsante microfono
+              const voiceBtn = document.getElementById('voiceBtn');
+              if (voiceBtn) {
+                voiceBtn.click();
+              }
+            }
+            
+            this.updateStatus('🎤 AI Assistant attivo via Siri - Parla ora!');
+          } else {
+            console.error('❌ AI Assistant non trovato');
+            this.updateStatus('❌ AI Assistant non disponibile');
+          }
+        }, 800);
+      }
+    };
+    
+    // Estendi AI Assistant con wake word
+    if (window.flavioAI) {
+      window.flavioAI.updateWakeWord = function() {
+        const wakeWordInput = document.getElementById('wakeWordInput');
+        if (wakeWordInput && wakeWordInput.value.trim()) {
+          window.WakeWordSystem.updateWakeWord(wakeWordInput.value.trim());
+        }
+      };
+    }
+    
+    // Sistema Siri Shortcuts
+    window.SiriShortcuts = {
+      deviceType: null,
+      
+      init() {
+        this.detectDevice();
+        this.setupShortcutDetection();
+        this.showShortcutInstructions();
+        console.log('✅ Siri Shortcuts System inizializzato per:', this.deviceType);
+      },
+      
+      detectDevice() {
+        const userAgent = navigator.userAgent;
+        
+        if (userAgent.includes('iPad')) {
+          this.deviceType = 'iPad';
+        } else if (userAgent.includes('iPhone')) {
+          this.deviceType = 'iPhone';
+        } else if (userAgent.includes('Android')) {
+          this.deviceType = 'Android';
+        } else {
+          this.deviceType = 'Desktop';
+        }
+      },
+      
+      setupShortcutDetection() {
+        // Rileva se l'app è stata aperta tramite Siri Shortcut
+        const urlParams = new URLSearchParams(window.location.search);
+        const siriActivated = urlParams.get('siri') === 'true' || urlParams.get('shortcut') === 'true';
+        
+        if (siriActivated) {
+          console.log('🎯 App aperta tramite Siri Shortcut!');
+          
+          // Aspetta che tutto sia caricato
+          setTimeout(() => {
+            if (window.WakeWordSystem) {
+              window.WakeWordSystem.activateViaShortcut();
+            }
+          }, 3000);
+        }
+        
+        // Esponi funzione globale per shortcut manuali
+        window.activateCommercialAssistant = () => {
+          if (window.WakeWordSystem) {
+            window.WakeWordSystem.activateViaShortcut();
+          }
+        };
+      },
+      
+      showShortcutInstructions() {
+        // Aggiungi istruzioni nell'interfaccia
+        setTimeout(() => {
+          const aiConfig = document.querySelector('.ai-config');
+          if (aiConfig && (this.deviceType === 'iPad' || this.deviceType === 'iPhone')) {
+            const shortcutInfo = document.createElement('div');
+            shortcutInfo.className = 'ai-config-item';
+            shortcutInfo.style.cssText = 'background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #28a745;';
+            
+            const deviceName = this.deviceType;
+            const shortcutPhrase = `Commerciale ${deviceName}`;
+            
+            shortcutInfo.innerHTML = `
+              <h4 style="margin: 0 0 10px 0; color: #28a745;">
+                🎯 Siri Shortcut per ${deviceName}
+              </h4>
+              <p style="margin: 5px 0; font-size: 14px;">
+                <strong>Comando:</strong> "Ehi Siri, ${shortcutPhrase}"
+              </p>
+              <p style="margin: 5px 0; font-size: 12px; color: #666;">
+                🚗 Perfetto per guidare - funziona anche quando l'app è chiusa!
+              </p>
+              <button onclick="window.SiriShortcuts.showSetupInstructions()" 
+                      style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-size: 12px; cursor: pointer; margin-top: 8px;">
+                📱 Come configurare Siri Shortcut
+              </button>
+            `;
+            
+            aiConfig.appendChild(shortcutInfo);
+          }
+        }, 3000);
+      },
+      
+      showSetupInstructions() {
+        const deviceName = this.deviceType;
+        const shortcutPhrase = `Commerciale ${deviceName}`;
+        const currentUrl = window.location.href;
+        
+        alert(`🎯 CONFIGURAZIONE SIRI SHORTCUT\n\n1. Apri app "Comandi Rapidi" (Shortcuts)\n2. Tocca "+" per nuovo comando\n3. Aggiungi azione "Apri URL"\n4. Inserisci URL: ${currentUrl}?siri=true\n5. Registra frase: "${shortcutPhrase}"\n6. Salva il comando\n\n🚗 Ora puoi dire: "Ehi Siri, ${shortcutPhrase}" in qualsiasi momento!`);
+      }
+    };
+    
+    // Controller vocale mobile
+    window.MobileVoiceController = {
+      isVoiceMode: false,
+      isListening: false,
+      isWakeWordActive: false,
+      
+      init() {
+        this.updateUI();
+        this.setupVoiceEvents();
+        console.log('✅ Mobile Voice Controller inizializzato');
+      },
+      
+      setupVoiceEvents() {
+        // Monitora cambio modalità vocale
+        const voiceCheckbox = document.getElementById('voiceEnabled');
+        if (voiceCheckbox) {
+          voiceCheckbox.addEventListener('change', () => {
+            this.isVoiceMode = voiceCheckbox.checked;
+            this.updateUI();
+          });
+          this.isVoiceMode = voiceCheckbox.checked;
+        }
+        
+        // Monitora wake word
+        const wakeWordCheckbox = document.getElementById('wakeWordEnabled');
+        if (wakeWordCheckbox) {
+          wakeWordCheckbox.addEventListener('change', () => {
+            this.isWakeWordActive = wakeWordCheckbox.checked;
+            this.updateUI();
+          });
+        }
+      },
+      
+      updateUI() {
+        const statusIndicator = document.getElementById('voiceStatusIndicator');
+        const mobileControls = document.getElementById('mobileVoiceControls');
+        
+        if (!statusIndicator) return;
+        
+        // Aggiorna colore di sfondo dei controlli
+        if (mobileControls) {
+          if (this.isVoiceMode) {
+            mobileControls.style.background = this.isWakeWordActive ? '#d4edda' : '#fff3cd';
+            mobileControls.style.borderColor = this.isWakeWordActive ? '#28a745' : '#ffc107';
+          } else {
+            mobileControls.style.background = '#f8d7da';
+            mobileControls.style.borderColor = '#dc3545';
+          }
+        }
+        
+        // Aggiorna indicatore di stato
+        if (this.isListening) {
+          statusIndicator.innerHTML = '🎤 STO ASCOLTANDO...';
+          statusIndicator.style.background = '#28a745';
+          statusIndicator.style.color = 'white';
+          statusIndicator.style.animation = 'pulse 1s infinite';
+        } else if (this.isWakeWordActive) {
+          statusIndicator.innerHTML = '🚗 MODALITÀ AUTO ATTIVA - Pronto per comando vocale';
+          statusIndicator.style.background = '#28a745';
+          statusIndicator.style.color = 'white';
+          statusIndicator.style.animation = 'none';
+        } else if (this.isVoiceMode) {
+          statusIndicator.innerHTML = '🎤 MODALITÀ VOCALE ATTIVA - Premi PARLA per iniziare';
+          statusIndicator.style.background = '#ffc107';
+          statusIndicator.style.color = '#212529';
+          statusIndicator.style.animation = 'none';
+        } else {
+          statusIndicator.innerHTML = '🔇 MODALITÀ VOCALE DISATTIVA - Attiva per usare la voce';
+          statusIndicator.style.background = '#dc3545';
+          statusIndicator.style.color = 'white';
+          statusIndicator.style.animation = 'none';
+        }
+      },
+      
+      startVoiceInput() {
+        if (!this.isVoiceMode) {
+          alert('⚠️ Prima attiva la Modalità Vocale nelle impostazioni!');
+          return;
+        }
+        
+        console.log('🎤 Avvio input vocale con risposta parlata garantita');
+        
+        // Marca come input vocale per forzare risposta parlata
+        window.currentInputIsVoice = true;
+        
+        this.isListening = true;
+        this.updateUI();
+        
+        // Aggiorna pulsante
+        const btn = document.getElementById('mobileVoiceBtn');
+        const icon = document.getElementById('mobileVoiceIcon');
+        const text = document.getElementById('mobileVoiceText');
+        
+        if (btn) {
+          btn.style.background = '#dc3545';
+          btn.onclick = () => this.stopVoiceInput();
+        }
+        if (icon) icon.className = 'fas fa-stop';
+        if (text) text.textContent = 'STOP';
+        
+        // Avvia riconoscimento
+        if (window.flavioAI && window.flavioAI.startListening) {
+          window.flavioAI.startListening();
+        } else if (window.AIVoiceManager) {
+          window.AIVoiceManager.toggle();
+        }
+      },
+      
+      stopVoiceInput() {
+        console.log('🔇 Fermo input vocale');
+        
+        this.isListening = false;
+        this.updateUI();
+        
+        // Ripristina pulsante
+        const btn = document.getElementById('mobileVoiceBtn');
+        const icon = document.getElementById('mobileVoiceIcon');
+        const text = document.getElementById('mobileVoiceText');
+        
+        if (btn) {
+          btn.style.background = '#28a745';
+          btn.onclick = () => this.startVoiceInput();
+        }
+        if (icon) icon.className = 'fas fa-microphone';
+        if (text) text.textContent = 'PARLA';
+        
+        // Ferma riconoscimento
+        if (window.flavioAI && window.flavioAI.stopListening) {
+          window.flavioAI.stopListening();
+        }
+        
+        // Reset flag
+        window.currentInputIsVoice = false;
+      }
+    };
+    
+    // CSS per animazione pulse
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Inizializza quando DOM è pronto
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        window.WakeWordSystem.init();
+        window.SiriShortcuts.init();
+        window.MobileVoiceController.init();
+      }, 2000); // Aspetta che AI Assistant sia pronto
+    });
+  </script>
+
+</body>
+</html>

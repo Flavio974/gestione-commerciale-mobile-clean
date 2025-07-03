@@ -1,0 +1,129 @@
+/* Fix AI Assistant per iPhone e schermi piccoli */
+@media screen and (max-width: 390px) {
+  /* Fix input area AI Assistant */
+  #ai-content .chat-input {
+    position: fixed;
+    bottom: 70px; /* Sopra la navbar */
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background: white;
+    border-top: 1px solid #ddd;
+    z-index: 100;
+  }
+  
+  #ai-content .chat-input input {
+    width: 100% !important;
+    height: 50px !important;
+    font-size: 16px !important; /* Previene zoom su iPhone */
+    padding: 12px !important;
+    border-radius: 25px !important;
+    border: 2px solid #007bff !important;
+    box-sizing: border-box !important;
+  }
+  
+  #ai-content .chat-messages {
+    padding-bottom: 140px !important; /* Spazio per input + navbar */
+    height: calc(100vh - 200px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+  }
+  
+  #ai-content button {
+    height: 50px !important;
+    min-width: 50px !important;
+    font-size: 20px !important;
+  }
+  
+  /* Fix per textarea se usata */
+  #ai-content textarea {
+    width: 100% !important;
+    min-height: 50px !important;
+    max-height: 120px !important;
+    font-size: 16px !important;
+    resize: vertical !important;
+    padding: 12px !important;
+  }
+}
+
+/* Fix per DESKTOP - nascondi controlli mobile */
+@media screen and (min-width: 391px) {
+  .mobile-voice-controls {
+    display: none !important;
+  }
+  
+  .button-row-mobile {
+    display: flex !important;
+  }
+}
+
+/* Fix generale per tutti gli smartphone */
+@media screen and (max-width: 768px) {
+  #ai-content .chat-container {
+    height: calc(100vh - 140px) !important;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  #ai-content .chat-header {
+    flex-shrink: 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  #ai-content .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px;
+  }
+  
+  #ai-content .chat-input {
+    flex-shrink: 0;
+    padding: 10px;
+    background: white;
+    border-top: 1px solid #ddd;
+  }
+  
+  #ai-content .message {
+    max-width: 85% !important;
+    word-wrap: break-word !important;
+    margin-bottom: 10px;
+  }
+  
+  /* MOBILE: Input area dedicata e fissa */
+  .ai-input-container-mobile {
+    position: fixed !important;
+    bottom: 70px !important; /* Sopra navbar */
+    left: 10px !important;
+    right: 10px !important;
+    background: white !important;
+    padding: 15px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+    z-index: 1000 !important;
+    border: 2px solid #007bff !important;
+  }
+  
+  /* MOBILE: Controlli vocali sempre visibili */
+  .mobile-voice-controls {
+    display: block !important;
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    right: 10px !important;
+    z-index: 1001 !important;
+  }
+  
+  /* MOBILE: Messaggi con spazio per controlli */
+  #ai-content .ai-messages {
+    padding-top: 120px !important; /* Spazio per controlli vocali */
+    padding-bottom: 200px !important; /* Spazio per input */
+  }
+  
+  /* MOBILE: Nascondi controlli desktop */
+  .button-row-mobile {
+    display: none !important;
+  }
+}

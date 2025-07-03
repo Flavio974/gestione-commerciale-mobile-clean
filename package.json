@@ -1,0 +1,31 @@
+{
+  "name": "gestione-commerciale-mobile",
+  "version": "1.0.0",
+  "description": "Smart Commercial Assistant - Progressive Web App with Netlify Functions",
+  "main": "index.html",
+  "scripts": {
+    "build": "cd functions && npm install",
+    "start": "netlify dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
+    "openai": "^4.20.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "repository": {
+    "url": "https://github.com/Flavio974/smart-commercial-mobile.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "netlify",
+    "functions",
+    "pwa",
+    "ai",
+    "assistant"
+  ]
+}

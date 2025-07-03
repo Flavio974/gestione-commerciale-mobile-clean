@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug AI Functions</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug AI Functions</h1>
+    
+    <button onclick="runTests()">🧪 Esegui Test</button>
+    <div id="results"></div>
+    
+    <script>
+        async function runTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            
+            const isNetlify = window.location.hostname.includes('netlify');
+            
+            // Test 1: Ambiente
+            addResult('Ambiente', `
+                Hostname: ${window.location.hostname}
+                È Netlify: ${isNetlify}
+                URL base: ${window.location.origin}
+            `);
+            
+            // Test 2: Claude AI endpoint
+            try {
+                const claudeUrl = isNetlify ? '/.netlify/functions/claude-ai' : '/api/claude-ai.php';
+                addResult('Claude AI URL', claudeUrl);
+                
+                const response = await fetch(claudeUrl + (isNetlify ? '' : '?test'));
+                const data = await response.json();
+                addResult('Claude AI Response', JSON.stringify(data, null, 2), response.ok);
+            } catch (e) {
+                addResult('Claude AI Error', e.message, false);
+            }
+            
+            // Test 3: Speech to Text endpoint
+            try {
+                const sttUrl = isNetlify ? '/.netlify/functions/speech-to-text' : '/api/speech-to-text.php';
+                addResult('STT URL', sttUrl);
+                
+                // Test OPTIONS (CORS)
+                const optionsResponse = await fetch(sttUrl, { method: 'OPTIONS' });
+                addResult('STT CORS Test', `Status: ${optionsResponse.status}`, optionsResponse.ok);
+            } catch (e) {
+                addResult('STT Error', e.message, false);
+            }
+            
+            // Test 4: Verifica file di fallback
+            try {
+                const fallbackResponse = await fetch('/api/claude-ai.json');
+                const fallbackData = await fallbackResponse.json();
+                addResult('Fallback JSON', JSON.stringify(fallbackData, null, 2), true);
+            } catch (e) {
+                addResult('Fallback Error', e.message, false);
+            }
+        }
+        
+        function addResult(title, content, success = true) {
+            const div = document.createElement('div');
+            div.className = `test ${success ? 'success' : 'error'}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${content}</pre>
+            `;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        // Auto-run on load
+        window.onload = () => {
+            setTimeout(runTests, 1000);
+        };
+    </script>
+</body>
+</html>

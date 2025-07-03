@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crea Icone PWA Smart Assistant</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 15px 30px; font-size: 18px; margin: 10px; background: #457b9d; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .done { background: #28a745; }
+        #status { margin: 20px 0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🎤 Crea Icone PWA Smart Assistant</h1>
+    <p>Questo tool crea automaticamente tutte le icone ottimizzate per iPhone/iPad.</p>
+    
+    <button onclick="createAllIcons()">🚀 CREA TUTTE LE ICONE</button>
+    <div id="status"></div>
+    
+    <script>
+        function setStatus(msg) {
+            document.getElementById('status').innerHTML = msg;
+        }
+        
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Sfondo gradiente blu professionale
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#457b9d');
+            gradient.addColorStop(1, '#1d3557');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Cerchio bianco centrale
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.32, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Microfono corpo principale
+            ctx.fillStyle = '#1d3557';
+            const micWidth = size * 0.1;
+            const micHeight = size * 0.18;
+            const x = size/2 - micWidth/2;
+            const y = size/2 - micHeight/2 - size*0.02;
+            
+            // Corpo cilindrico
+            ctx.fillRect(x, y, micWidth, micHeight);
+            
+            // Griglia microfono
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            for(let i = 0; i < 3; i++) {
+                ctx.fillRect(x + micWidth*0.15, y + micHeight*0.25 + i*micHeight*0.2, micWidth*0.7, micHeight*0.1);
+            }
+            
+            // Stand
+            ctx.fillStyle = '#1d3557';
+            ctx.fillRect(size/2 - size*0.015, size/2 + micHeight/2 - size*0.02, size*0.03, size*0.08);
+            
+            // Base
+            ctx.fillRect(size/2 - size*0.06, size/2 + micHeight/2 + size*0.06, size*0.12, size*0.025);
+            
+            // Onde sonore decorative
+            ctx.strokeStyle = 'rgba(69,123,157,0.6)';
+            ctx.lineWidth = size * 0.012;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.42, -0.4, 0.4);
+            ctx.stroke();
+            
+            ctx.strokeStyle = 'rgba(69,123,157,0.4)';
+            ctx.lineWidth = size * 0.008;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.48, -0.6, 0.6);
+            ctx.stroke();
+            
+            return canvas;
+        }
+        
+        function downloadIcon(canvas, filename) {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        function createAllIcons() {
+            setStatus('🔄 Creando icone ottimizzate...');
+            
+            // Icone essenziali per PWA mobile
+            const icons = [
+                { size: 72, name: 'icon-72x72.png' },
+                { size: 96, name: 'icon-96x96.png' },
+                { size: 128, name: 'icon-128x128.png' },
+                { size: 144, name: 'icon-144x144.png' },
+                { size: 152, name: 'icon-152x152.png' },
+                { size: 167, name: 'icon-167x167.png' },
+                { size: 180, name: 'apple-touch-icon.png' },
+                { size: 192, name: 'icon-192x192.png' },
+                { size: 384, name: 'icon-384x384.png' },
+                { size: 512, name: 'icon-512x512.png' },
+                { size: 32, name: 'favicon-32x32.png' }
+            ];
+            
+            let completed = 0;
+            
+            icons.forEach((icon, index) => {
+                setTimeout(() => {
+                    const canvas = createIcon(icon.size);
+                    downloadIcon(canvas, icon.name);
+                    completed++;
+                    
+                    setStatus(`📱 Icona ${completed}/${icons.length} - ${icon.name}`);
+                    
+                    if (completed === icons.length) {
+                        setTimeout(() => {
+                            setStatus(`✅ COMPLETATO! ${icons.length} icone create. Vai nella cartella Download e sposta tutti i file PNG nella cartella icons/ del progetto.`);
+                            document.querySelector('button').textContent = '✅ ICONE CREATE!';
+                            document.querySelector('button').className = 'done';
+                        }, 500);
+                    }
+                }, index * 200);
+            });
+        }
+    </script>
+</body>
+</html>

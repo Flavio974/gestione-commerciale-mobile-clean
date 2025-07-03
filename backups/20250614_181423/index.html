@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#457b9d">
+  <title>Gestione Commerciale - Mobile</title>
+  
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mobile.css">
+  
+  <!-- Component Styles -->
+  <link rel="stylesheet" href="css/base-components.css">
+  <link rel="stylesheet" href="css/timeline-components.css">
+  <link rel="stylesheet" href="css/modal-components.css">
+  <link rel="stylesheet" href="css/ui-components.css">
+  
+  <!-- Module Styles -->
+  <link rel="stylesheet" href="css/clients-module.css">
+  <link rel="stylesheet" href="css/orders-module.css">
+  <link rel="stylesheet" href="css/ordini.css">
+  <link rel="stylesheet" href="css/ddtft-module.css">
+  <link rel="stylesheet" href="css/products-module.css">
+  <link rel="stylesheet" href="css/percorsi-module.css">
+  <link rel="stylesheet" href="css/worksheet-module.css">
+  <link rel="stylesheet" href="css/worksheet.css">
+  
+  <link rel="stylesheet" href="css/tables.css">
+  
+  <!-- External Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <!-- Fix inline per visibilità pulsanti -->
+  <style>
+    /* Fix globale per tutti i pulsanti */
+    button {
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+    
+    /* Fix specifico per modulo DDT/FT */
+    #ddtft-content button,
+    #ddtft-content .action-button,
+    #ddtft-content .btn,
+    #ddtft-content .filter-btn {
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      padding: 10px 20px !important;
+      border-radius: 5px !important;
+      cursor: pointer !important;
+      font-weight: 500 !important;
+      transition: all 0.3s ease !important;
+    }
+    
+    #ddtft-content .action-button:not(.action-button-danger) {
+      background-color: #007bff !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    #ddtft-content .action-button-danger {
+      background-color: #dc3545 !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    #ddtft-content .filter-btn {
+      background-color: white !important;
+      color: #495057 !important;
+      border: 1px solid #dee2e6 !important;
+    }
+    
+    #ddtft-content .filter-btn.active {
+      background-color: #007bff !important;
+      color: white !important;
+      border-color: #007bff !important;
+    }
+    
+    #ddtft-content .btn-primary {
+      background-color: #007bff !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    #ddtft-content .btn-secondary {
+      background-color: #6c757d !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    #ddtft-content .btn-icon {
+      padding: 8px 12px !important;
+      background-color: #f8f9fa !important;
+      color: #495057 !important;
+      border: 1px solid #dee2e6 !important;
+    }
+    
+    #ddtft-content .btn-delete {
+      background-color: #dc3545 !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    /* Modal overlay for DDT-FT export dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-overlay .modal-content {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-overlay .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-overlay .modal-header h3 {
+      margin: 0;
+      color: #333;
+    }
+    
+    .modal-overlay .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-overlay .close-btn:hover {
+      color: #333;
+    }
+    
+    .modal-overlay .modal-body {
+      padding: 20px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+    
+    .btn-warning {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    
+    .btn-warning:hover {
+      background-color: #e0a800;
+    }
+    
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <!-- Header -->
+    <header id="app-header">
+      <h1>Gestione Commerciale Mobile</h1>
+      <div class="header-datetime">
+        <div id="dateDisplay" class="header-date">Caricamento data...</div>
+        <div id="staticClock" class="header-clock">--:--:--</div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav id="main-navigation" class="tabs">
+      <div id="tab-timeline" class="tab-link active" data-target="timeline-content">Timeline</div>
+      <div id="tab-data" class="tab-link" data-target="data-content">Gestione Dati</div>
+      <div id="tab-planner" class="tab-link" data-target="planner-content">Pianificazione</div>
+      <div id="tab-clients" class="tab-link" data-target="clients-content">Clienti</div>
+      <div id="tab-travels" class="tab-link" data-target="travels-content">Percorsi</div>
+      <div id="tab-worksheet" class="tab-link" data-target="worksheet-content">Foglio di Lavoro</div>
+      <div id="tab-orders" class="tab-link" data-target="orders-content">Ordini</div>
+      <div id="tab-ddtft" class="tab-link" data-target="ddtft-content">DDT e FT</div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-content">
+      <!-- Timeline Tab -->
+      <div id="timeline-content" class="tab-content active">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Data Management Tab -->
+      <div id="data-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Planning Tab -->
+      <div id="planner-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Clients Tab -->
+      <div id="clients-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Routes Tab -->
+      <div id="travels-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Worksheet Tab -->
+      <div id="worksheet-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- Orders Tab -->
+      <div id="orders-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- DDT/FT Tab -->
+      <div id="ddtft-content" class="tab-content">
+        <!-- Content will be loaded dynamically -->
+      </div>
+    </main>
+
+    <!-- Debug Info (hidden by default) -->
+    <div id="debug-info" style="display: none;"></div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="config/api-config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/api.js"></script>
+  <!-- Timeline Modules -->
+  <script src="js/timeline/timeline-config.js"></script>
+  <script src="js/timeline/timeline-utils.js"></script>
+  <script src="js/timeline/timeline-rendering.js"></script>
+  <script src="js/timeline/timeline-events.js"></script>
+  <script src="js/timeline/timeline-controls.js"></script>
+  <script src="js/timeline/timeline-core.js"></script>
+  <!-- Clienti Modules -->
+  <script src="js/clienti-core.js"></script>
+  <script src="js/clienti-form.js"></script>
+  <script src="js/clienti-table.js"></script>
+  <script src="js/clienti-import-export.js"></script>
+  <script src="js/clienti-utils.js"></script>
+  <!-- Ordini Modules -->
+  <script src="js/modules/ordini-parser.js"></script>
+  <!-- Moduli export commentati - usando versione inline con le modifiche -->
+  <!--
+  <script src="js/modules/ordini-export-utils.js"></script>
+  <script src="js/modules/ordini-export-core.js"></script>
+  <script src="js/modules/ordini-export-venduto.js"></script>
+  <script src="js/modules/ordini-export-validation.js"></script>
+  <script src="js/modules/ordini-export-ui.js"></script>
+  <script src="js/modules/ordini-export.js"></script>
+  -->
+  <script src="js/ordini-export-inline.js"></script>
+  <script src="js/modules/ordini-ui.js"></script>
+  <script src="js/ordini.js"></script>
+  <script src="js/prodotti.js"></script>
+  <!-- Percorsi Modules -->
+  <script src="js/percorsi-core.js"></script>
+  <script src="js/percorsi-import.js"></script>
+  <script src="js/percorsi-table.js"></script>
+  <script src="js/percorsi-crud.js"></script>
+  <script src="js/percorsi-utils.js"></script>
+  <!-- Worksheet Modules -->
+  <script src="js/worksheet-data.js"></script>
+  <script src="js/worksheet-ui.js"></script>
+  <script src="js/worksheet-itinerary.js"></script>
+  <script src="js/worksheet-core.js"></script>
+  <script src="js/worksheet-import.js"></script>
+  <script src="js/worksheet-view.js"></script>
+  <script src="js/worksheet-dragdrop.js"></script>
+  <script src="js/worksheet-filters.js"></script>
+  <!-- DDT/FT Modules -->
+  <!-- Configurazioni DDTFT (FASE 1 Refactoring) -->
+  <script src="js/config/ddtft-patterns.js"></script>
+  <script src="js/config/ddtft-mappings.js"></script>
+  <!-- Utilities semplici (Test refactoring sicuro) -->
+  <script src="js/utils/ddtft-simple-utils.js"></script>
+  <script src="js/utils/ddtft-parsing-utils.js"></script>
+  <script src="js/utils/ddtft-address-utils.js"></script>
+  <script src="js/utils/ddtft-product-utils.js"></script>
+  <script src="js/modules/ddtft/ui-dialogs.js"></script>
+  <script src="js/modules/ddtft/state-manager.js"></script>
+  <script src="js/modules/ddtft/sync-manager.js"></script>
+  <script src="js/modules/ddtft/document-parser.js"></script>
+  <script src="js/modules/ddtft-pdf-parser.js"></script>
+  <!-- Parser avanzato per layout a colonne PDF -->
+  <script src="js/parsers/ddtft-column-parser.js"></script>
+  <script src="js/modules/ddtft-import-export.js"></script>
+  <script src="js/ddtft-import.js?v=2.0"></script>
+  <!-- Extractor modulare (caricato DOPO l'originale) -->
+  <script src="js/parsers/ddt-extractor-modular.js"></script>
+  <script src="js/parsers/ddt-extractor-test.js"></script>
+  <script src="js/parsers/fattura-extractor-modular.js"></script>
+  <script src="js/parsers/fattura-extractor-test.js"></script>
+  <script src="js/modules/ddtft/fattura-client-fix.js"></script>
+  <script src="js/modules/ddtft/fattura-parser-enhanced.js"></script>
+  <script src="js/modules/ddtft/number-formatter.js"></script>
+  <script src="js/modules/ddtft/export-excel.js"></script>
+  <script src="js/modules/ddtft-export-advanced.js"></script>
+  <script src="js/modules/ddtft/document-number-fix.js"></script>
+  <script src="js/ddtft-core.js"></script>
+  <script src="js/ddtft-create.js"></script>
+  <script src="js/ddtft-view.js"></script>
+  <script src="js/ddtft-filters.js"></script>
+  <script src="js/ddtft-utils.js"></script>
+  <script src="js/modules/ddtft/event-fix.js"></script>
+</body>
+</html>

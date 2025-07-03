@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test CORS Replit</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        pre { background: #f0f0f0; padding: 10px; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Test CORS Replit</h1>
+    
+    <button onclick="testGET()">Test GET</button>
+    <button onclick="testPOST()">Test POST</button>
+    <button onclick="testOPTIONS()">Test OPTIONS (Preflight)</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const REPLIT_URL = 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev';
+        
+        async function testGET() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<pre>Testing GET request...</pre>';
+            
+            try {
+                const response = await fetch(`${REPLIT_URL}/api/claude-ai.php?test=1`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                console.log('Response headers:', response.headers);
+                const text = await response.text();
+                console.log('Response text:', text);
+                
+                result.innerHTML = `<pre class="success">GET Success!
+Status: ${response.status}
+Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}
+Body: ${text}</pre>`;
+            } catch (error) {
+                result.innerHTML = `<pre class="error">GET Error: ${error.message}</pre>`;
+                console.error('GET Error:', error);
+            }
+        }
+        
+        async function testPOST() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<pre>Testing POST request...</pre>';
+            
+            try {
+                const response = await fetch(`${REPLIT_URL}/api/claude-ai.php`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ test: true })
+                });
+                
+                const text = await response.text();
+                console.log('POST Response:', text);
+                
+                result.innerHTML = `<pre class="success">POST Success!
+Status: ${response.status}
+Body: ${text}</pre>`;
+            } catch (error) {
+                result.innerHTML = `<pre class="error">POST Error: ${error.message}</pre>`;
+                console.error('POST Error:', error);
+            }
+        }
+        
+        async function testOPTIONS() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<pre>Testing OPTIONS request...</pre>';
+            
+            try {
+                const response = await fetch(`${REPLIT_URL}/api/claude-ai.php`, {
+                    method: 'OPTIONS',
+                    mode: 'cors',
+                    headers: {
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+                
+                result.innerHTML = `<pre class="success">OPTIONS Success!
+Status: ${response.status}
+CORS Headers:
+- Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}
+- Access-Control-Allow-Methods: ${response.headers.get('Access-Control-Allow-Methods')}
+- Access-Control-Allow-Headers: ${response.headers.get('Access-Control-Allow-Headers')}</pre>`;
+            } catch (error) {
+                result.innerHTML = `<pre class="error">OPTIONS Error: ${error.message}</pre>`;
+                console.error('OPTIONS Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

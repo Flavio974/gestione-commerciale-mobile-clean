@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test iPad CORS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            font-family: Arial; 
+            padding: 20px; 
+            font-size: 18px;
+        }
+        button { 
+            padding: 20px 40px; 
+            margin: 10px; 
+            font-size: 18px;
+            cursor: pointer; 
+        }
+        #result { 
+            margin-top: 20px; 
+            padding: 20px; 
+            background: #f0f0f0; 
+            border-radius: 10px; 
+            word-break: break-all;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Test iPad CORS - Replit API</h1>
+    
+    <p class="info">URL Replit: https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev</p>
+    
+    <button onclick="testSimpleGET()">1. Test GET Semplice</button>
+    <button onclick="testPOSTWithJSON()">2. Test POST con JSON</button>
+    <button onclick="testPOSTWithBase64()">3. Test POST con Base64</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const REPLIT_URL = 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev';
+        
+        function showResult(html) {
+            document.getElementById('result').innerHTML = html + '<br><small>' + new Date().toLocaleTimeString() + '</small>';
+        }
+        
+        async function testSimpleGET() {
+            showResult('<div class="info">Testing GET semplice...</div>');
+            
+            try {
+                console.log('Inizio test GET...');
+                const response = await fetch(`${REPLIT_URL}/claude-ai.php?test=1`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                console.log('Response:', response);
+                const text = await response.text();
+                console.log('Text:', text);
+                
+                showResult(`<div class="success">✅ GET Success!<br>
+                Status: ${response.status}<br>
+                Response: ${text.substring(0, 200)}...</div>`);
+            } catch (error) {
+                console.error('Errore:', error);
+                showResult(`<div class="error">❌ GET Error: ${error.message}<br>
+                Type: ${error.name}<br>
+                Stack: ${error.stack}</div>`);
+            }
+        }
+        
+        async function testPOSTWithJSON() {
+            showResult('<div class="info">Testing POST con JSON...</div>');
+            
+            try {
+                const testData = {
+                    test: true,
+                    message: "Test from iPad",
+                    timestamp: Date.now()
+                };
+                
+                console.log('Invio POST:', testData);
+                
+                const response = await fetch(`${REPLIT_URL}/claude-ai.php`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                console.log('Response:', response);
+                const text = await response.text();
+                console.log('Text:', text);
+                
+                let jsonData;
+                try {
+                    jsonData = JSON.parse(text);
+                } catch {
+                    jsonData = text;
+                }
+                
+                showResult(`<div class="success">✅ POST Success!<br>
+                Status: ${response.status}<br>
+                Response: ${typeof jsonData === 'object' ? JSON.stringify(jsonData, null, 2) : text.substring(0, 200)}</div>`);
+            } catch (error) {
+                console.error('Errore:', error);
+                showResult(`<div class="error">❌ POST Error: ${error.message}<br>
+                Type: ${error.name}</div>`);
+            }
+        }
+        
+        async function testPOSTWithBase64() {
+            showResult('<div class="info">Testing POST con audio Base64...</div>');
+            
+            try {
+                // Simula un piccolo audio base64
+                const fakeAudio = "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+                
+                const response = await fetch(`${REPLIT_URL}/speech-to-text.php`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        audio: fakeAudio
+                    })
+                });
+                
+                const text = await response.text();
+                console.log('Response text:', text);
+                
+                showResult(`<div class="success">✅ Audio POST Success!<br>
+                Status: ${response.status}<br>
+                Response: ${text.substring(0, 200)}</div>`);
+            } catch (error) {
+                console.error('Errore:', error);
+                showResult(`<div class="error">❌ Audio POST Error: ${error.message}</div>`);
+            }
+        }
+        
+        // Test automatico all'avvio
+        window.onload = function() {
+            showResult('<div class="info">iPad/Safari detected: ' + 
+                      (navigator.userAgent.includes('iPad') || navigator.userAgent.includes('Safari')) + 
+                      '<br>User Agent: ' + navigator.userAgent + '</div>');
+        };
+    </script>
+</body>
+</html>

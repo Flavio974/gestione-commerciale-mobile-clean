@@ -1,0 +1,388 @@
+/* Table Styles */
+
+/* Input fields in tables */
+.table-container input[type="time"] {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  width: 100%;
+  min-width: 80px;
+  background: white;
+}
+
+.table-container input[type="time"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(69, 123, 157, 0.2);
+}
+
+.table-container input[type="time"]:hover {
+  border-color: #999;
+}
+
+/* Base Table Styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  background-color: #f1f5f9;
+  color: var(--accent);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+tbody tr {
+  transition: var(--transition);
+}
+
+tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Table Container */
+.table-container {
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  margin-bottom: 1.5rem;
+  max-height: 500px;
+  position: relative;
+}
+
+/* Data Table Specific */
+.data-table {
+  font-size: 0.875rem;
+}
+
+.data-table th,
+.data-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sortable Headers */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 1.5rem;
+}
+
+.sortable:hover {
+  background-color: #e2e8f0;
+}
+
+.sort-icon {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.sortable.asc .sort-icon::after {
+  content: ' ↑';
+  color: var(--accent);
+}
+
+.sortable.desc .sort-icon::after {
+  content: ' ↓';
+  color: var(--accent);
+}
+
+/* Table Actions */
+td.actions {
+  white-space: nowrap;
+  text-align: center;
+}
+
+td.actions button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  margin: 0 0.125rem;
+}
+
+/* Checkbox Column */
+th:first-child,
+td:first-child {
+  width: 40px;
+  text-align: center;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Draggable Rows */
+.draggable-row {
+  cursor: move;
+  transition: all 0.3s ease;
+}
+
+.draggable-row.dragging {
+  opacity: 0.5;
+  background-color: #e3f2fd;
+}
+
+.draggable-row.drag-over {
+  border-top: 3px solid var(--info);
+}
+
+.drag-handle {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  width: 30px;
+  text-align: center;
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Table Filters */
+.table-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.table-filters input,
+.table-filters select {
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #999;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Text alignment utilities */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* Table Scroll Controls */
+.table-scroll-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.scroll-button {
+  padding: 0.5rem 0.75rem;
+  background-color: var(--info);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.scroll-button:hover {
+  background-color: darken(var(--info), 10%);
+}
+
+.scroll-button:active {
+  transform: scale(0.95);
+}
+
+/* Preview Tables */
+.preview-table {
+  font-size: 0.8rem;
+}
+
+.preview-table th,
+.preview-table td {
+  padding: 0.5rem;
+}
+
+/* Responsive Tables */
+@media (max-width: 767px) {
+  /* Make table scrollable horizontally */
+  .table-container {
+    max-height: 400px;
+  }
+  
+  table {
+    min-width: 600px;
+  }
+  
+  /* Hide less important columns on mobile */
+  .hide-mobile {
+    display: none;
+  }
+  
+  /* Reduce padding on mobile */
+  th, td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  /* Stack table filters vertically */
+  .table-filters {
+    flex-direction: column;
+  }
+  
+  .table-filters input,
+  .table-filters select {
+    width: 100%;
+  }
+}
+
+/* Special Table States */
+tr.has-real-event td {
+  background-color: rgba(233, 249, 238, 0.5);
+}
+
+tr.selected {
+  background-color: #e3f2fd;
+}
+
+tr.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Table Loading State */
+.table-loading {
+  position: relative;
+  min-height: 200px;
+}
+
+.table-loading::after {
+  content: 'Caricamento...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 500;
+  color: #999;
+}
+
+/* Table Pagination */
+.table-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 0.5rem;
+}
+
+.pagination-button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: var(--txt-main);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pagination-button:hover {
+  background-color: #f8f9fa;
+  border-color: var(--accent);
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-button.active {
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* Export Table Styles */
+.export-table {
+  margin-top: 1rem;
+}
+
+.export-table th {
+  background-color: #4472C4;
+  color: white;
+  font-weight: bold;
+  border: 1px solid #4472C4;
+}
+
+.export-table td {
+  border: 1px solid #D9D9D9;
+}
+
+/* Inline Editing */
+.editable-cell {
+  cursor: text;
+  position: relative;
+}
+
+.editable-cell:hover {
+  background-color: #fffbf0;
+}
+
+.editable-cell input {
+  border: 1px solid var(--accent);
+  padding: 0.25rem;
+  width: 100%;
+  font-size: inherit;
+}
+
+/* Real-time Input in Tables */
+.real-time-input {
+  padding: 0.25rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  width: 100%;
+}
+
+.real-time-input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+}

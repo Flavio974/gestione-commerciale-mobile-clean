@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Formati Percorsi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Test Formati Nomi Location in Percorsi</h1>
+    <div id="results"></div>
+
+    <script>
+        // Configurazione Supabase
+        const supabaseUrl = 'https://ibuwqihgdkinfmvxqfnq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlidXdxaWhnZGtpbmZtdnhxZm5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMDk4NjEsImV4cCI6MjA2Njc4NTg2MX0.c-zsnXM-eqXnIZQXM9UwXlKhvDDcPsDSwqANZk0uDqY';
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        async function testPercorsiFormats() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Caricamento...</p>';
+            
+            try {
+                // Query per trovare tutte le location uniche
+                const { data: percorsi, error } = await supabase
+                    .from('percorsi')
+                    .select('partenza, arrivo');
+                
+                if (error) {
+                    console.error('Errore query:', error);
+                    resultsDiv.innerHTML = `<p style="color: red;">Errore: ${error.message}</p>`;
+                    return;
+                }
+                
+                console.log('Percorsi trovati:', percorsi.length);
+                
+                // Estrai tutte le location uniche
+                const locations = new Set();
+                percorsi.forEach(p => {
+                    if (p.partenza) locations.add(p.partenza);
+                    if (p.arrivo) locations.add(p.arrivo);
+                });
+                
+                const locationArray = Array.from(locations).sort();
+                
+                // Cerca specificamente Alfieri e Essemme/Conad
+                const alfieriLocations = locationArray.filter(loc => 
+                    loc.toLowerCase().includes('alfier'));
+                const esseммeLocations = locationArray.filter(loc => 
+                    loc.toLowerCase().includes('essemme') || 
+                    loc.toLowerCase().includes('conad'));
+                
+                let html = `
+                    <h2>Risultati Analisi Location Names</h2>
+                    <p><strong>Totale percorsi:</strong> ${percorsi.length}</p>
+                    <p><strong>Location uniche:</strong> ${locationArray.length}</p>
+                    
+                    <h3>🔍 Location contenenti "Alfieri":</h3>
+                    <ul>
+                        ${alfieriLocations.map(loc => `<li><code>${loc}</code></li>`).join('')}
+                    </ul>
+                    
+                    <h3>🔍 Location contenenti "Essemme" o "Conad":</h3>
+                    <ul>
+                        ${esseммeLocations.map(loc => `<li><code>${loc}</code></li>`).join('')}
+                    </ul>
+                    
+                    <h3>📊 Tutte le Location (primi 50):</h3>
+                    <ul>
+                        ${locationArray.slice(0, 50).map(loc => `<li><code>${loc}</code></li>`).join('')}
+                    </ul>
+                    
+                    <h3>🔍 Esempi di Percorsi con Alfieri:</h3>
+                    <ul>
+                `;
+                
+                // Trova percorsi specifici con Alfieri
+                const alfieriPercorsi = percorsi.filter(p => 
+                    (p.partenza && p.partenza.toLowerCase().includes('alfier')) ||
+                    (p.arrivo && p.arrivo.toLowerCase().includes('alfier'))
+                ).slice(0, 10);
+                
+                alfieriPercorsi.forEach(p => {
+                    html += `<li><code>${p.partenza}</code> → <code>${p.arrivo}</code></li>`;
+                });
+                
+                html += `</ul>`;
+                
+                resultsDiv.innerHTML = html;
+                
+                // Log per debug
+                console.log('Location Alfieri:', alfieriLocations);
+                console.log('Location Essemme/Conad:', esseммeLocations);
+                console.log('Primi 20 location:', locationArray.slice(0, 20));
+                
+            } catch (error) {
+                console.error('Errore:', error);
+                resultsDiv.innerHTML = `<p style="color: red;">Errore: ${error.message}</p>`;
+            }
+        }
+        
+        // Avvia il test quando la pagina è caricata
+        document.addEventListener('DOMContentLoaded', testPercorsiFormats);
+    </script>
+</body>
+</html>

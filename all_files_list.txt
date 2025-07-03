@@ -1,0 +1,384 @@
+./CHANGELOG_FIXES.md                                             46 righe
+./CHANGELOG_FIXES.md:Zone.Identifier                              0 righe
+./CHANGELOG_FIXES.md:Zone.Identifier:Zone.Identifier              0 righe
+./CHIARIMENTO_KG.md                                              30 righe
+./CHIARIMENTO_KG.md:Zone (2).Identifier                           0 righe
+./CHIARIMENTO_KG.md:Zone (2).Identifier:Zone.Identifier           0 righe
+./CHIARIMENTO_KG.md:Zone.Identifier                               0 righe
+./CORREZIONE_CALCOLO_SM_EXCEL.md                                 42 righe
+./CORREZIONE_CALCOLO_SM_EXCEL.md:Zone (2).Identifier              0 righe
+./CORREZIONE_CALCOLO_SM_EXCEL.md:Zone (2).Identifier:Zone.Identifier      0 righe
+./CORREZIONE_CALCOLO_SM_EXCEL.md:Zone.Identifier                  0 righe
+./CORREZIONE_IVA_TOTALI.md                                       57 righe
+./CORREZIONE_IVA_TOTALI.md:Zone (2).Identifier                    0 righe
+./CORREZIONE_IVA_TOTALI.md:Zone (2).Identifier:Zone.Identifier      0 righe
+./CORREZIONE_IVA_TOTALI.md:Zone.Identifier                        0 righe
+./FILE_ANALYSIS_REPORT.md                                       138 righe
+./FIX_COMPLETO_FINALE.md                                        135 righe
+./FIX_COMPLETO_FINALE.md:Zone (2).Identifier                      0 righe
+./FIX_COMPLETO_FINALE.md:Zone (2).Identifier:Zone.Identifier      0 righe
+./FIX_COMPLETO_FINALE.md:Zone.Identifier                          0 righe
+./FIX_IMPLEMENTATI_COMPLETI.md                                  211 righe
+./FIX_IMPLEMENTATI_COMPLETI.md:Zone (2).Identifier                0 righe
+./FIX_IMPLEMENTATI_COMPLETI.md:Zone (2).Identifier:Zone.Identifier      0 righe
+./FIX_IMPLEMENTATI_COMPLETI.md:Zone.Identifier                    0 righe
+./FIX_INDIRIZZI_P.ZA.md                                         102 righe
+./FIX_INDIRIZZI_P.ZA.md:Zone (2).Identifier                       0 righe
+./FIX_INDIRIZZI_P.ZA.md:Zone (2).Identifier:Zone.Identifier       0 righe
+./FIX_INDIRIZZI_P.ZA.md:Zone.Identifier                           0 righe
+./FIX_PRECISIONE_INDIRIZZI.md                                   168 righe
+./FIX_PRECISIONE_INDIRIZZI.md:Zone.Identifier                     0 righe
+./FIX_PRECISIONE_INDIRIZZI.md:Zone.Identifier:Zone.Identifier      0 righe
+./IMPROVEMENTS_LUOGO_FIX.txt                                     63 righe
+./IMPROVEMENTS_LUOGO_FIX.txt:Zone.Identifier                      0 righe
+./IMPROVEMENTS_LUOGO_FIX.txt:Zone.Identifier:Zone.Identifier      0 righe
+./IMPROVEMENTS_SUMMARY.md                                        89 righe
+./IMPROVEMENTS_SUMMARY.md:Zone.Identifier                         0 righe
+./IMPROVEMENTS_SUMMARY.md:Zone.Identifier:Zone.Identifier         0 righe
+./NOTA_IMPORTANTE_TOTALI.md                                      33 righe
+./NOTA_IMPORTANTE_TOTALI.md:Zone.Identifier                       0 righe
+./NOTA_IMPORTANTE_TOTALI.md:Zone.Identifier:Zone.Identifier       0 righe
+./RIEPILOGO_CORREZIONI_SISTEMA_ORDINI.md                        110 righe
+./RIEPILOGO_CORREZIONI_SISTEMA_ORDINI.md:Zone (2).Identifier      0 righe
+./RIEPILOGO_CORREZIONI_SISTEMA_ORDINI.md:Zone (2).Identifier:Zone.Identifier      0 righe
+./RIEPILOGO_CORREZIONI_SISTEMA_ORDINI.md:Zone.Identifier          0 righe
+./all_files_list.txt                                              0 righe
+./config/api-config.js                                          163 righe
+./config/api-config.js:Zone.Identifier                            0 righe
+./config/api-config.js:Zone.Identifier:Zone.Identifier            0 righe
+./css/base-components.css                                       633 righe
+./css/base-components.css:Zone (2).Identifier                     0 righe
+./css/base-components.css:Zone (2).Identifier:Zone.Identifier      0 righe
+./css/base-components.css:Zone.Identifier                         0 righe
+./css/clients-module.css                                        403 righe
+./css/clients-module.css:Zone.Identifier                          0 righe
+./css/clients-module.css:Zone.Identifier:Zone.Identifier          0 righe
+./css/components.css.backup                                    1666 righe
+./css/components.css.backup:Zone.Identifier                       0 righe
+./css/components.css.backup:Zone.Identifier:Zone.Identifier       0 righe
+./css/main.css                                                  468 righe
+./css/main.css:Zone.Identifier                                    0 righe
+./css/main.css:Zone.Identifier:Zone.Identifier                    0 righe
+./css/mobile.css                                                257 righe
+./css/mobile.css:Zone (2).Identifier                              0 righe
+./css/mobile.css:Zone (2).Identifier:Zone.Identifier              0 righe
+./css/mobile.css:Zone.Identifier                                  0 righe
+./css/modal-components.css                                      359 righe
+./css/modal-components.css:Zone (2).Identifier                    0 righe
+./css/modal-components.css:Zone (2).Identifier:Zone.Identifier      0 righe
+./css/modal-components.css:Zone.Identifier                        0 righe
+./css/orders-module.css                                         290 righe
+./css/orders-module.css:Zone (2).Identifier                       0 righe
+./css/orders-module.css:Zone (2).Identifier:Zone.Identifier       0 righe
+./css/orders-module.css:Zone.Identifier                           0 righe
+./css/ordini.css                                                746 righe
+./css/ordini.css:Zone (2).Identifier                              0 righe
+./css/ordini.css:Zone (2).Identifier:Zone.Identifier              0 righe
+./css/ordini.css:Zone.Identifier                                  0 righe
+./css/percorsi-module.css                                       213 righe
+./css/percorsi-module.css:Zone.Identifier                         0 righe
+./css/percorsi-module.css:Zone.Identifier:Zone.Identifier         0 righe
+./css/products-module.css                                       338 righe
+./css/products-module.css:Zone.Identifier                         0 righe
+./css/products-module.css:Zone.Identifier:Zone.Identifier         0 righe
+./css/tables.css                                                387 righe
+./css/tables.css:Zone.Identifier                                  0 righe
+./css/tables.css:Zone.Identifier:Zone.Identifier                  0 righe
+./css/timeline-components.css                                   416 righe
+./css/timeline-components.css:Zone (2).Identifier                 0 righe
+./css/timeline-components.css:Zone (2).Identifier:Zone.Identifier      0 righe
+./css/timeline-components.css:Zone.Identifier                     0 righe
+./css/ui-components.css                                         321 righe
+./css/ui-components.css:Zone (2).Identifier                       0 righe
+./css/ui-components.css:Zone (2).Identifier:Zone.Identifier       0 righe
+./css/ui-components.css:Zone.Identifier                           0 righe
+./css/worksheet-module.css                                      265 righe
+./css/worksheet-module.css:Zone (2).Identifier                    0 righe
+./css/worksheet-module.css:Zone (2).Identifier:Zone.Identifier      0 righe
+./css/worksheet-module.css:Zone.Identifier                        0 righe
+./css/worksheet.css                                             591 righe
+./css/worksheet.css:Zone (2).Identifier                           0 righe
+./css/worksheet.css:Zone (2).Identifier:Zone.Identifier           0 righe
+./css/worksheet.css:Zone.Identifier                               0 righe
+./debug-calcoli-ordini.html                                     239 righe
+./debug-calcoli-ordini.html:Zone (2).Identifier                   0 righe
+./debug-calcoli-ordini.html:Zone (2).Identifier:Zone.Identifier      0 righe
+./debug-calcoli-ordini.html:Zone.Identifier                       0 righe
+./debug-import-loading.html                                     196 righe
+./debug-import-loading.html:Zone.Identifier                       0 righe
+./debug-import-loading.html:Zone.Identifier:Zone.Identifier       0 righe
+./docs/README.md                                                219 righe
+./docs/README.md:Zone.Identifier                                  0 righe
+./docs/README.md:Zone.Identifier:Zone.Identifier                  0 righe
+./docs/structure.md                                             379 righe
+./docs/structure.md:Zone.Identifier                               0 righe
+./docs/structure.md:Zone.Identifier:Zone.Identifier               0 righe
+./esempio_percorsi.html                                         205 righe
+./esempio_percorsi.html:Zone (2).Identifier                       0 righe
+./esempio_percorsi.html:Zone (2).Identifier:Zone.Identifier       0 righe
+./esempio_percorsi.html:Zone.Identifier                           0 righe
+./fix-ordini-export.html                                         51 righe
+./fix-ordini-export.html:Zone.Identifier                          0 righe
+./fix-ordini-export.html:Zone.Identifier:Zone.Identifier          0 righe
+./index.html                                                    235 righe
+./index.html:Zone (2).Identifier                                  0 righe
+./index.html:Zone (2).Identifier:Zone.Identifier                  0 righe
+./index.html:Zone.Identifier                                      0 righe
+./js/api.js                                                     377 righe
+./js/api.js:Zone.Identifier                                       0 righe
+./js/api.js:Zone.Identifier:Zone.Identifier                       0 righe
+./js/app.js                                                     369 righe
+./js/app.js:Zone (2).Identifier                                   0 righe
+./js/app.js:Zone (2).Identifier:Zone.Identifier                   0 righe
+./js/app.js:Zone.Identifier                                       0 righe
+./js/clienti-core.js                                            450 righe
+./js/clienti-core.js:Zone.Identifier                              0 righe
+./js/clienti-core.js:Zone.Identifier:Zone.Identifier              0 righe
+./js/clienti-form.js                                            180 righe
+./js/clienti-form.js:Zone (2).Identifier                          0 righe
+./js/clienti-form.js:Zone (2).Identifier:Zone.Identifier          0 righe
+./js/clienti-form.js:Zone.Identifier                              0 righe
+./js/clienti-import-export.js                                   243 righe
+./js/clienti-import-export.js:Zone.Identifier                     0 righe
+./js/clienti-import-export.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/clienti-table.js                                           123 righe
+./js/clienti-table.js:Zone (2).Identifier                         0 righe
+./js/clienti-table.js:Zone (2).Identifier:Zone.Identifier         0 righe
+./js/clienti-table.js:Zone.Identifier                             0 righe
+./js/clienti-utils.js                                            40 righe
+./js/clienti-utils.js:Zone (2).Identifier                         0 righe
+./js/clienti-utils.js:Zone (2).Identifier:Zone.Identifier         0 righe
+./js/clienti-utils.js:Zone.Identifier                             0 righe
+./js/clienti.js.backup                                         1013 righe
+./js/clienti.js.backup:Zone.Identifier                            0 righe
+./js/clienti.js.backup:Zone.Identifier:Zone.Identifier            0 righe
+./js/ddtft-core.js                                              760 righe
+./js/ddtft-core.js:Zone (2).Identifier                            0 righe
+./js/ddtft-core.js:Zone (2).Identifier:Zone.Identifier            0 righe
+./js/ddtft-core.js:Zone.Identifier                                0 righe
+./js/ddtft-create.js                                            293 righe
+./js/ddtft-create.js:Zone.Identifier                              0 righe
+./js/ddtft-create.js:Zone.Identifier:Zone.Identifier              0 righe
+./js/ddtft-filters.js                                           194 righe
+./js/ddtft-filters.js:Zone.Identifier                             0 righe
+./js/ddtft-filters.js:Zone.Identifier:Zone.Identifier             0 righe
+./js/ddtft-import.js                                           5404 righe
+./js/ddtft-import.js.backup                                    6260 righe
+./js/ddtft-import.js.backup:Zone.Identifier                       0 righe
+./js/ddtft-import.js.backup:Zone.Identifier:Zone.Identifier       0 righe
+./js/ddtft-import.js:Zone (2).Identifier                          0 righe
+./js/ddtft-import.js:Zone (2).Identifier:Zone.Identifier          0 righe
+./js/ddtft-import.js:Zone.Identifier                              0 righe
+./js/ddtft-utils.js                                             135 righe
+./js/ddtft-utils.js:Zone.Identifier                               0 righe
+./js/ddtft-utils.js:Zone.Identifier:Zone.Identifier               0 righe
+./js/ddtft-view.js                                              256 righe
+./js/ddtft-view.js:Zone (2).Identifier                            0 righe
+./js/ddtft-view.js:Zone (2).Identifier:Zone.Identifier            0 righe
+./js/ddtft-view.js:Zone.Identifier                                0 righe
+./js/ddtft.js.backup                                           1282 righe
+./js/ddtft.js.backup:Zone (2).Identifier                          0 righe
+./js/ddtft.js.backup:Zone (2).Identifier:Zone.Identifier          0 righe
+./js/ddtft.js.backup:Zone.Identifier                              0 righe
+./js/extractors.js                                              583 righe
+./js/extractors.js:Zone.Identifier                                0 righe
+./js/extractors.js:Zone.Identifier:Zone.Identifier                0 righe
+./js/modules/ddtft/README.md                                     54 righe
+./js/modules/ddtft/address-utils.js                             409 righe
+./js/modules/ddtft/ddt-extractor.js                            1475 righe
+./js/modules/ddtft/document-parser.js                           550 righe
+./js/modules/ddtft/export-excel.js                              609 righe
+./js/modules/ddtft/fattura-extractor.js                        2718 righe
+./js/modules/ddtft/index.js                                     213 righe
+./js/modules/ddtft/pdf-extractor.js                             115 righe
+./js/modules/ddtft/ui-dialogs.js                                339 righe
+./js/modules/ddtft/utils.js                                     137 righe
+./js/modules/ordini-export-core.js                              290 righe
+./js/modules/ordini-export-core.js:Zone (2).Identifier            0 righe
+./js/modules/ordini-export-core.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-export-core.js:Zone.Identifier                0 righe
+./js/modules/ordini-export-ui.js                                504 righe
+./js/modules/ordini-export-ui.js:Zone (2).Identifier              0 righe
+./js/modules/ordini-export-ui.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-export-ui.js:Zone.Identifier                  0 righe
+./js/modules/ordini-export-utils.js                             201 righe
+./js/modules/ordini-export-utils.js:Zone.Identifier               0 righe
+./js/modules/ordini-export-utils.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-export-validation.js                        346 righe
+./js/modules/ordini-export-validation.js:Zone (2).Identifier      0 righe
+./js/modules/ordini-export-validation.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-export-validation.js:Zone.Identifier          0 righe
+./js/modules/ordini-export-venduto.js                           562 righe
+./js/modules/ordini-export-venduto.js:Zone.Identifier             0 righe
+./js/modules/ordini-export-venduto.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-export.js                                   227 righe
+./js/modules/ordini-export.js:Zone (2).Identifier                 0 righe
+./js/modules/ordini-export.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-export.js:Zone.Identifier                     0 righe
+./js/modules/ordini-parser-fixed.js                             616 righe
+./js/modules/ordini-parser-fixed.js:Zone (2).Identifier           0 righe
+./js/modules/ordini-parser-fixed.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-parser-fixed.js:Zone.Identifier               0 righe
+./js/modules/ordini-parser.backup.js                           1321 righe
+./js/modules/ordini-parser.backup.js:Zone.Identifier              0 righe
+./js/modules/ordini-parser.backup.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-parser.js                                   863 righe
+./js/modules/ordini-parser.js:Zone (2).Identifier                 0 righe
+./js/modules/ordini-parser.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/modules/ordini-parser.js:Zone.Identifier                     0 righe
+./js/modules/ordini-ui.js                                       693 righe
+./js/modules/ordini-ui.js:Zone.Identifier                         0 righe
+./js/modules/ordini-ui.js:Zone.Identifier:Zone.Identifier         0 righe
+./js/navigation.js                                              299 righe
+./js/navigation.js:Zone (2).Identifier                            0 righe
+./js/navigation.js:Zone (2).Identifier:Zone.Identifier            0 righe
+./js/navigation.js:Zone.Identifier                                0 righe
+./js/ordini-export-inline.js                                    563 righe
+./js/ordini-export-inline.js:Zone.Identifier                      0 righe
+./js/ordini-export-inline.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/ordini.js                                                  635 righe
+./js/ordini.js:Zone.Identifier                                    0 righe
+./js/ordini.js:Zone.Identifier:Zone.Identifier                    0 righe
+./js/percorsi-core.js                                           311 righe
+./js/percorsi-core.js:Zone (2).Identifier                         0 righe
+./js/percorsi-core.js:Zone (2).Identifier:Zone.Identifier         0 righe
+./js/percorsi-core.js:Zone.Identifier                             0 righe
+./js/percorsi-crud.js                                           234 righe
+./js/percorsi-crud.js:Zone.Identifier                             0 righe
+./js/percorsi-crud.js:Zone.Identifier:Zone.Identifier             0 righe
+./js/percorsi-import.js                                         243 righe
+./js/percorsi-import.js:Zone.Identifier                           0 righe
+./js/percorsi-import.js:Zone.Identifier:Zone.Identifier           0 righe
+./js/percorsi-table.js                                          181 righe
+./js/percorsi-table.js:Zone (2).Identifier                        0 righe
+./js/percorsi-table.js:Zone (2).Identifier:Zone.Identifier        0 righe
+./js/percorsi-table.js:Zone.Identifier                            0 righe
+./js/percorsi-utils.js                                           63 righe
+./js/percorsi-utils.js:Zone.Identifier                            0 righe
+./js/percorsi-utils.js:Zone.Identifier:Zone.Identifier            0 righe
+./js/percorsi.js                                               1031 righe
+./js/percorsi.js:Zone.Identifier                                  0 righe
+./js/percorsi.js:Zone.Identifier:Zone.Identifier                  0 righe
+./js/prodotti.js                                                594 righe
+./js/prodotti.js:Zone (2).Identifier                              0 righe
+./js/prodotti.js:Zone (2).Identifier:Zone.Identifier              0 righe
+./js/prodotti.js:Zone.Identifier                                  0 righe
+./js/timeline.js.backup                                        1484 righe
+./js/timeline.js.backup:Zone (2).Identifier                       0 righe
+./js/timeline.js.backup:Zone (2).Identifier:Zone.Identifier       0 righe
+./js/timeline.js.backup:Zone.Identifier                           0 righe
+./js/timeline/timeline-config.js                                 53 righe
+./js/timeline/timeline-config.js:Zone.Identifier                  0 righe
+./js/timeline/timeline-config.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/timeline/timeline-controls.js                              410 righe
+./js/timeline/timeline-controls.js.backup                       444 righe
+./js/timeline/timeline-controls.js.backup:Zone.Identifier         0 righe
+./js/timeline/timeline-controls.js.backup:Zone.Identifier:Zone.Identifier      0 righe
+./js/timeline/timeline-controls.js:Zone.Identifier                0 righe
+./js/timeline/timeline-controls.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/timeline/timeline-core.js                                  590 righe
+./js/timeline/timeline-core.js:Zone (2).Identifier                0 righe
+./js/timeline/timeline-core.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/timeline/timeline-core.js:Zone.Identifier                    0 righe
+./js/timeline/timeline-events.js                                515 righe
+./js/timeline/timeline-events.js:Zone.Identifier                  0 righe
+./js/timeline/timeline-events.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/timeline/timeline-rendering.js                             422 righe
+./js/timeline/timeline-rendering.js:Zone (2).Identifier           0 righe
+./js/timeline/timeline-rendering.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/timeline/timeline-rendering.js:Zone.Identifier               0 righe
+./js/timeline/timeline-utils.js                                 102 righe
+./js/timeline/timeline-utils.js:Zone.Identifier                   0 righe
+./js/timeline/timeline-utils.js:Zone.Identifier:Zone.Identifier      0 righe
+./js/utils.js                                                   333 righe
+./js/utils.js:Zone (2).Identifier                                 0 righe
+./js/utils.js:Zone (2).Identifier:Zone.Identifier                 0 righe
+./js/utils.js:Zone.Identifier                                     0 righe
+./js/worksheet-core.js                                          376 righe
+./js/worksheet-core.js:Zone.Identifier                            0 righe
+./js/worksheet-core.js:Zone.Identifier:Zone.Identifier            0 righe
+./js/worksheet-data.js                                          440 righe
+./js/worksheet-data.js:Zone (2).Identifier                        0 righe
+./js/worksheet-data.js:Zone (2).Identifier:Zone.Identifier        0 righe
+./js/worksheet-data.js:Zone.Identifier                            0 righe
+./js/worksheet-dragdrop.js                                       68 righe
+./js/worksheet-dragdrop.js:Zone.Identifier                        0 righe
+./js/worksheet-dragdrop.js:Zone.Identifier:Zone.Identifier        0 righe
+./js/worksheet-filters.js                                       121 righe
+./js/worksheet-filters.js:Zone (2).Identifier                     0 righe
+./js/worksheet-filters.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/worksheet-filters.js:Zone.Identifier                         0 righe
+./js/worksheet-import.js                                        408 righe
+./js/worksheet-import.js:Zone (2).Identifier                      0 righe
+./js/worksheet-import.js:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/worksheet-import.js:Zone.Identifier                          0 righe
+./js/worksheet-itinerary.js                                     552 righe
+./js/worksheet-itinerary.js:Zone.Identifier                       0 righe
+./js/worksheet-itinerary.js:Zone.Identifier:Zone.Identifier       0 righe
+./js/worksheet-ui.js                                            545 righe
+./js/worksheet-ui.js:Zone (2).Identifier                          0 righe
+./js/worksheet-ui.js:Zone (2).Identifier:Zone.Identifier          0 righe
+./js/worksheet-ui.js:Zone.Identifier                              0 righe
+./js/worksheet-view.js                                          670 righe
+./js/worksheet-view.js:Zone.Identifier                            0 righe
+./js/worksheet-view.js:Zone.Identifier:Zone.Identifier            0 righe
+./js/worksheet.js.backup                                       1327 righe
+./js/worksheet.js.backup:Zone (2).Identifier                      0 righe
+./js/worksheet.js.backup:Zone (2).Identifier:Zone.Identifier      0 righe
+./js/worksheet.js.backup:Zone.Identifier                          0 righe
+./test-alfieri-filter.html                                      166 righe
+./test-alfieri-filter.html:Zone.Identifier                        0 righe
+./test-alfieri-filter.html:Zone.Identifier:Zone.Identifier        0 righe
+./test-alfieri-filter.js                                         56 righe
+./test-alfieri-filter.js:Zone.Identifier                          0 righe
+./test-alfieri-filter.js:Zone.Identifier:Zone.Identifier          0 righe
+./test-brand-extraction.html                                    315 righe
+./test-brand-extraction.html:Zone (2).Identifier                  0 righe
+./test-brand-extraction.html:Zone (2).Identifier:Zone.Identifier      0 righe
+./test-brand-extraction.html:Zone.Identifier                      0 righe
+./test-client-extraction.html                                    42 righe
+./test-client-extraction.html:Zone (2).Identifier                 0 righe
+./test-client-extraction.html:Zone (2).Identifier:Zone.Identifier      0 righe
+./test-client-extraction.html:Zone.Identifier                     0 righe
+./test-delivery-address.html                                    352 righe
+./test-delivery-address.html:Zone (2).Identifier                  0 righe
+./test-delivery-address.html:Zone (2).Identifier:Zone.Identifier      0 righe
+./test-delivery-address.html:Zone.Identifier                      0 righe
+./test-extract-improvements.html                                318 righe
+./test-extract-improvements.html:Zone.Identifier                  0 righe
+./test-extract-improvements.html:Zone.Identifier:Zone.Identifier      0 righe
+./test-fix-complete.html                                        381 righe
+./test-fix-complete.html:Zone.Identifier                          0 righe
+./test-fix-complete.html:Zone.Identifier:Zone.Identifier          0 righe
+./test-fix-completo-finale.html                                 446 righe
+./test-fix-completo-finale.html:Zone (2).Identifier               0 righe
+./test-fix-completo-finale.html:Zone (2).Identifier:Zone.Identifier      0 righe
+./test-fix-completo-finale.html:Zone.Identifier                   0 righe
+./test-ft-extraction.html                                       379 righe
+./test-ft-extraction.html:Zone.Identifier                         0 righe
+./test-ft-extraction.html:Zone.Identifier:Zone.Identifier         0 righe
+./test-import-fixed.html                                        213 righe
+./test-import-fixed.html:Zone (2).Identifier                      0 righe
+./test-import-fixed.html:Zone (2).Identifier:Zone.Identifier      0 righe
+./test-import-fixed.html:Zone.Identifier                          0 righe
+./test-improvements.js                                           71 righe
+./test-improvements.js:Zone (2).Identifier                        0 righe
+./test-improvements.js:Zone (2).Identifier:Zone.Identifier        0 righe
+./test-improvements.js:Zone.Identifier                            0 righe
+./test-la-mandria-arudi.html                                    381 righe
+./test-la-mandria-arudi.html:Zone.Identifier                      0 righe
+./test-la-mandria-arudi.html:Zone.Identifier:Zone.Identifier      0 righe
+./test-piemonte-carni.html                                      266 righe
+./test-piemonte-carni.html:Zone.Identifier                        0 righe
+./test-piemonte-carni.html:Zone.Identifier:Zone.Identifier        0 righe
+./test-precision-addresses.html                                 346 righe
+./test-precision-addresses.html:Zone.Identifier                   0 righe
+./test-precision-addresses.html:Zone.Identifier:Zone.Identifier      0 righe
+./test-refactoring.html                                         157 righe
+./test-standardization.html                                     373 righe
+./test-standardization.html:Zone.Identifier                       0 righe
+./test-standardization.html:Zone.Identifier:Zone.Identifier       0 righe
+./test-ui-dialogs.html                                          127 righe
+./test.html                                                     269 righe
+./test.html:Zone.Identifier                                       0 righe
+./test.html:Zone.Identifier:Zone.Identifier                       0 righe

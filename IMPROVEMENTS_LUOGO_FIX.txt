@@ -1,0 +1,64 @@
+MIGLIORAMENTI ESTRAZIONE CLIENTE - FIX "LUOGO"
+==============================================
+
+PROBLEMA ORIGINALE:
+------------------
+Il sistema estraeva "Luogo" invece del nome cliente corretto quando:
+1. Il PDF aveva un layout a due colonne con "Spett.le" e "Luogo di consegna" sulla stessa riga
+2. Il template PDF era vuoto (senza nome cliente dopo "Spett.le")
+3. Il cliente non era presente nelle mappature hardcoded
+
+SOLUZIONI IMPLEMENTATE:
+----------------------
+
+1. GESTIONE LAYOUT A DUE COLONNE
+   - Rileva automaticamente quando "Spett.le" e "Luogo di consegna" sono sulla stessa riga
+   - Estrae il nome cliente dalla colonna sinistra sotto "Spett.le"
+   - Gestisce tabulazioni e spazi multipli tra colonne
+
+2. ESTRAZIONE DA "LUOGO DI CONSEGNA"
+   - Se il nome cliente è presente dopo "Luogo di consegna:", lo estrae correttamente
+   - Esempio: "Luogo di consegna: MAROTTA S.R.L." → estrae "MAROTTA S.R.L."
+
+3. RICERCA NELLE SEZIONI ODV
+   - Cerca il nome cliente all'interno delle sezioni ODV del documento
+   - Identifica pattern di nomi aziende (S.R.L., S.P.A., ecc.) e ditte individuali
+
+4. MIGLIORAMENTO ESTRAZIONE MULTI-RIGA
+   - Gestisce nomi clienti su più righe (es. "PIEMONTE CARNI" + "di CALDERA MASSIMO & C. S.A.S.")
+   - Riconosce quando continuare la lettura (es. dopo "&", "E", "DI")
+   - Si ferma correttamente agli indirizzi (VIA, CORSO, ecc.)
+
+5. VALIDAZIONE ROBUSTA
+   - Scarta risultati non validi come solo "Luogo"
+   - Ignora testi di avvertenza ("Attenzione!!", "Controllare la merce")
+   - Verifica lunghezza minima del nome estratto
+
+COME FUNZIONA ORA:
+-----------------
+1. Prima tenta l'estrazione standard (DESTINATARIO, CLIENTE, ecc.)
+2. Se trova layout a due colonne, usa logica speciale
+3. Altrimenti usa estrazione multi-riga dopo "Spett.le"
+4. Se ancora non trova, cerca in "Luogo di consegna:" e sezioni ODV
+5. NON dipende più dalle mappature hardcoded per la maggior parte dei casi
+
+FILE MODIFICATI:
+---------------
+- js/ddtft-import.js: 
+  * extractClientName() - Logica principale migliorata
+  * extractClientFromContent() - Ricerca avanzata nelle sezioni ODV
+  * extractTextFromPdf() - Migliorata gestione colonne nel PDF
+
+TEST:
+-----
+- test-extract-improvements.html: Test completo di tutti i casi
+- test-piemonte-carni.html: Test specifico caso PIEMONTE CARNI
+
+NOTA PER IL FUTURO:
+------------------
+Se un nuovo cliente continua a mostrare "Luogo", verificare:
+1. Il layout del PDF (potrebbe avere un formato diverso)
+2. I log di debug per capire cosa viene estratto
+3. Aggiungere eventualmente nuovi pattern di riconoscimento
+
+Il sistema ora è molto più robusto e non richiede mappature hardcoded per funzionare!

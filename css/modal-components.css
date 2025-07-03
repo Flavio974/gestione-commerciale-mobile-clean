@@ -1,0 +1,360 @@
+/* Modal Components Styles */
+
+/* Alert Components */
+.alert {
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+}
+
+.alert-info {
+  color: #004085;
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+}
+
+.alert h5 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.alert ul {
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+}
+
+.alert p.mb-0 {
+  margin-bottom: 0;
+}
+
+/* Import Steps */
+.import-step {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.import-step h4 {
+  color: #007bff;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+/* Document import specific */
+#documentImportConfirm {
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+}
+
+#documentImportConfirm .alert-info {
+  margin-bottom: 0;
+}
+
+/* Modal Component */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 1.25rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e5e9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--txt-main);
+}
+
+.modal-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e1e5e9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+}
+
+.close-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+/* Modal Sizes */
+.modal-content.modal-sm {
+  max-width: 400px;
+}
+
+.modal-content.modal-lg {
+  max-width: 800px;
+}
+
+.modal-content.modal-xl {
+  max-width: 1200px;
+}
+
+/* Dropdown Component */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+.dropdown-toggle::after {
+  content: '▼';
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.dropdown.open .dropdown-toggle::after {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  display: none;
+  margin-top: 0.25rem;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown.open .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--txt-main);
+  text-decoration: none;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+  color: var(--accent);
+}
+
+.dropdown-divider {
+  height: 0;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  border-top: 1px solid #e1e5e9;
+}
+
+/* Tooltip Component */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 100;
+}
+
+.tooltip:hover .tooltip-text {
+  opacity: 1;
+}
+
+.tooltip-text::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+}
+
+/* Tooltip positions */
+.tooltip-top .tooltip-text {
+  bottom: 125%;
+  top: auto;
+}
+
+.tooltip-bottom .tooltip-text {
+  top: 125%;
+  bottom: auto;
+}
+
+.tooltip-bottom .tooltip-text::after {
+  top: auto;
+  bottom: 100%;
+  border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
+}
+
+.tooltip-left .tooltip-text {
+  right: 125%;
+  left: auto;
+  bottom: 50%;
+  transform: translateY(50%);
+}
+
+.tooltip-left .tooltip-text::after {
+  right: auto;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-color: transparent transparent transparent rgba(0, 0, 0, 0.8);
+}
+
+.tooltip-right .tooltip-text {
+  left: 125%;
+  right: auto;
+  bottom: 50%;
+  transform: translateY(50%);
+}
+
+.tooltip-right .tooltip-text::after {
+  left: auto;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-color: transparent rgba(0, 0, 0, 0.8) transparent transparent;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 95%;
+    max-height: 95vh;
+    margin: 1rem;
+  }
+  
+  .modal-header {
+    padding: 1rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .modal-footer {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .dropdown-menu {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .tooltip-text {
+    display: none;
+  }
+}

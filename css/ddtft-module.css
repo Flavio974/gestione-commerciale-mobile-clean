@@ -1,0 +1,586 @@
+/**
+ * Stili specifici per il modulo DDT e Fatture
+ * Basato su ordini.css ma con tema blu
+ */
+
+/* Container principale */
+.ddtft-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header con statistiche */
+.ddtft-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.ddtft-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+}
+
+.ddtft-stats {
+  background-color: #f8f9fa;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #495057;
+}
+
+/* Barra azioni */
+.ddtft-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Sezione import */
+#documentsImportSection {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.import-step {
+  margin-bottom: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.import-step h4 {
+  color: #007bff;
+  margin-bottom: 15px;
+}
+
+/* Progress bar */
+#documentProcessingProgress {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Container progress bar */
+.progress-container {
+  background-color: #e9ecef;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  margin: 15px 0;
+}
+
+/* Progress bar BLU con effetto strisce animate */
+#documentProgressBar {
+  height: 20px;
+  background-color: #007bff; /* BLU invece del verde */
+  border-radius: 8px;
+  transition: width 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Strisce diagonali animate */
+#documentProgressBar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-image: linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, .2) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, .2) 50%,
+    rgba(255, 255, 255, .2) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 50px 50px;
+  animation: move 2s linear infinite;
+}
+
+@keyframes move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+/* Testo progress */
+#documentProgressText {
+  text-align: center;
+  margin-top: 10px;
+  font-weight: bold;
+  color: #495057;
+}
+
+#currentDocumentFileText {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* Lista file in elaborazione */
+#documentFileProcessingList {
+  background-color: white;
+  font-size: 14px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Animazione per ogni file item - con effetto barra di progresso */
+.file-processing-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+  min-height: 45px;
+  animation: slideInFade 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform: translateX(-30px) scale(0.95);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Barra di riempimento dietro il contenuto */
+.file-processing-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+/* Stati con barre colorate - tema blu */
+.file-processing-item.processing::before {
+  width: 50%;
+  background: linear-gradient(90deg, #fffde7 0%, #fff9c4 100%);
+  animation: processingPulse 2s ease-in-out infinite;
+}
+
+.file-processing-item.success::before {
+  width: 100%;
+  background: linear-gradient(90deg, #e8f5e9 0%, #c8e6c9 100%);
+}
+
+.file-processing-item.error::before {
+  width: 100%;
+  background: linear-gradient(90deg, #ffebee 0%, #ffcdd2 100%);
+}
+
+.file-processing-item.warning::before {
+  width: 100%;
+  background: linear-gradient(90deg, #fffde7 0%, #fff9c4 100%);
+}
+
+@keyframes processingPulse {
+  0%, 100% { width: 30%; }
+  50% { width: 70%; }
+}
+
+/* Contenuto sopra la barra */
+.file-processing-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Wrapper per il contenuto del file */
+.file-content-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+@keyframes slideInFade {
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Bordo sinistro per indicare lo stato */
+.file-processing-item {
+  border-left: 4px solid #6c757d;
+}
+
+.file-processing-item.success {
+  border-left-color: #28a745;
+}
+
+.file-processing-item.error {
+  border-left-color: #dc3545;
+}
+
+.file-processing-item.warning {
+  border-left-color: #ffc107;
+}
+
+.file-processing-item.processing {
+  border-left-color: #007bff;
+}
+
+/* Hover effect */
+.file-processing-item:hover {
+  transform: translateX(3px) scale(1.01);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Icone animate */
+.file-icon {
+  font-size: 20px;
+  margin-right: 12px;
+  display: inline-block;
+  animation: iconFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform: scale(0.8);
+  opacity: 0;
+}
+
+@keyframes iconFadeIn {
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Spinner per file in elaborazione */
+.file-processing-item.processing .file-icon::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 123, 255, 0.2);
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Nome file */
+.file-name {
+  flex: 1;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+/* Status message */
+.file-status {
+  font-size: 13px;
+  color: #34495e;
+  margin-left: 10px;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+/* Testo più scuro quando completato */
+.file-processing-item.success .file-name,
+.file-processing-item.success .file-status {
+  color: #1b5e20;
+}
+
+.file-processing-item.error .file-name,
+.file-processing-item.error .file-status {
+  color: #b71c1c;
+}
+
+.file-processing-item.warning .file-name,
+.file-processing-item.warning .file-status {
+  color: #f57f17;
+}
+
+/* Animazione staggered per elementi multipli */
+.file-processing-item:nth-child(1) { animation-delay: 0.05s; }
+.file-processing-item:nth-child(2) { animation-delay: 0.1s; }
+.file-processing-item:nth-child(3) { animation-delay: 0.15s; }
+.file-processing-item:nth-child(4) { animation-delay: 0.2s; }
+.file-processing-item:nth-child(5) { animation-delay: 0.25s; }
+.file-processing-item:nth-child(6) { animation-delay: 0.3s; }
+.file-processing-item:nth-child(7) { animation-delay: 0.35s; }
+.file-processing-item:nth-child(8) { animation-delay: 0.4s; }
+.file-processing-item:nth-child(n+9) { animation-delay: 0.45s; }
+
+/* Transizione fluida quando cambia stato */
+.file-processing-item.processing {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.file-processing-item.success,
+.file-processing-item.error,
+.file-processing-item.warning {
+  animation: statusChange 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes statusChange {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Area debug DDT/FT */
+#documentDebugArea {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+#documentDebugArea h5 {
+  margin: 0 0 10px 0;
+  color: #007bff; /* Blu invece del rosso */
+  font-weight: bold;
+  font-size: 14px;
+}
+
+#documentDebugContent {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* Tabella DDT/FT */
+.ddtft-table-container {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 20px;
+}
+
+.ddtft-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ddtft-table thead {
+  background-color: #f8f9fa;
+}
+
+.ddtft-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 14px;
+}
+
+.ddtft-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+}
+
+.ddtft-table tbody tr:hover {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease;
+}
+
+/* Badge tipo documento */
+.doc-type-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.doc-type-badge.ddt {
+  background-color: #28a745;
+  color: white;
+}
+
+.doc-type-badge.ft {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Animazioni generali */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Filtri DDT/FT */
+.ddtft-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  background-color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.filter-btn:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.filter-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.search-input {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+/* Preview section */
+.preview-section {
+  margin-top: 20px;
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.preview-table th {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  text-align: left;
+  font-weight: 600;
+}
+
+.preview-table td {
+  padding: 10px;
+  border: 1px solid #dee2e6;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .ddtft-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .ddtft-stats {
+    margin-top: 10px;
+  }
+  
+  .ddtft-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .action-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .ddtft-table {
+    font-size: 12px;
+  }
+  
+  .ddtft-table th,
+  .ddtft-table td {
+    padding: 8px;
+  }
+  
+  /* Nascondi alcune colonne su mobile */
+  .ddtft-table th:nth-child(5),
+  .ddtft-table td:nth-child(5),
+  .ddtft-table th:nth-child(6),
+  .ddtft-table td:nth-child(6),
+  .ddtft-table th:nth-child(7),
+  .ddtft-table td:nth-child(7) {
+    display: none;
+  }
+}
+
+/* Alert e notifiche */
+.alert {
+  padding: 12px 20px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+}
+
+.alert-info {
+  background-color: #e3f2fd;
+  border-color: #bbdefb;
+  color: #0d47a1;
+}
+
+.alert-success {
+  background-color: #e8f5e9;
+  border-color: #c8e6c9;
+  color: #1b5e20;
+}
+
+.alert-warning {
+  background-color: #fffde7;
+  border-color: #fff9c4;
+  color: #f57f17;
+}
+
+.alert-error {
+  background-color: #ffebee;
+  border-color: #ffcdd2;
+  color: #b71c1c;
+}

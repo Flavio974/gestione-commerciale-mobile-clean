@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Syntax Test</title>
+</head>
+<body>
+    <h1>AI Page Syntax Test</h1>
+    <div id="result"></div>
+    
+    <script src="js/ai/supabase-ai-integration.js"></script>
+    <script>
+        // Test the FlavioAIAssistant class definition from index.html
+        class TestAIAssistant {
+            showCostWarning(payloadKB, needsOrderData) {
+                const estimatedCost = 0.05;
+                const statusDiv = document.getElementById('result');
+                
+                if (statusDiv) {
+                    statusDiv.innerHTML = `
+                        <div>
+                            <span>Test: Template literal working correctly</span><br>
+                            <span>Payload: ${payloadKB}KB</span><br>
+                            <span>Cost: $${estimatedCost}</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Test initialization
+        try {
+            const testAI = new TestAIAssistant();
+            testAI.showCostWarning(100, true);
+            console.log('✅ Syntax test passed - template literals working');
+        } catch (error) {
+            console.error('❌ Syntax error:', error);
+            document.getElementById('result').innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+        }
+    </script>
+</body>
+</html>

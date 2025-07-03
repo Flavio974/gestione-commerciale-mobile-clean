@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Navigation Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 15px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Navigation Fix</h1>
+    
+    <div class="test-section">
+        <h3>Test Navigation System</h3>
+        <button onclick="testNavigation()">Test Tab AI</button>
+        <div id="nav-result" class="info">Clicca per testare la navigazione...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Files</h3>
+        <button onclick="testFiles()">Verifica File</button>
+        <div id="files-result" class="info">Clicca per verificare i file...</div>
+    </div>
+
+    <script>
+        async function testNavigation() {
+            const resultDiv = document.getElementById('nav-result');
+            resultDiv.textContent = 'Testing navigation...';
+            resultDiv.className = 'info';
+            
+            try {
+                // Simula il sistema di navigazione
+                const tabs = ['timeline', 'data', 'planner', 'clients', 'travels', 'worksheet', 'orders', 'ddtft', 'ai'];
+                const aiIncluded = tabs.includes('ai');
+                
+                if (aiIncluded) {
+                    resultDiv.textContent = '✅ Tab AI incluso nel sistema di navigazione';
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.textContent = '❌ Tab AI non trovato nel sistema di navigazione';
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ Errore test navigazione: ' + error.message;
+                resultDiv.className = 'error';
+            }
+        }
+
+        async function testFiles() {
+            const resultDiv = document.getElementById('files-result');
+            resultDiv.textContent = 'Testing files...';
+            resultDiv.className = 'info';
+            
+            const files = [
+                '/js/navigation.js',
+                '/js/ai/supabase-ai-integration.js',
+                '/api/claude-ai.php',
+                '/icons/icon-32x32.png'
+            ];
+            
+            let results = [];
+            
+            for (const file of files) {
+                try {
+                    const response = await fetch(file, { method: 'HEAD' });
+                    results.push(`${file}: ${response.ok ? '✅' : '❌'}`);
+                } catch (error) {
+                    results.push(`${file}: ❌ (${error.message})`);
+                }
+            }
+            
+            resultDiv.innerHTML = results.join('<br>');
+            
+            const allOk = results.every(r => r.includes('✅'));
+            resultDiv.className = allOk ? 'success' : 'error';
+        }
+
+        // Auto-test navigation al caricamento
+        window.addEventListener('load', () => {
+            console.log('🧪 Test page loaded');
+            testNavigation();
+        });
+    </script>
+</body>
+</html>

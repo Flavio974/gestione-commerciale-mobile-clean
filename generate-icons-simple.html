@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generatore Icone PWA Smart Assistant</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .icon-preview { margin: 10px; display: inline-block; }
+        canvas { border: 1px solid #ddd; margin: 5px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🎤 Generatore Icone Smart Assistant</h1>
+    <button onclick="generateAllIcons()">Genera Tutte le Icone</button>
+    <button onclick="downloadZip()">📦 Download ZIP</button>
+    
+    <div id="preview"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script>
+        const iconFiles = {};
+        
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Sfondo gradiente
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#457b9d');
+            gradient.addColorStop(1, '#1d3557');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Cerchio bianco
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.35, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Microfono corpo
+            ctx.fillStyle = '#1d3557';
+            const micWidth = size * 0.12;
+            const micHeight = size * 0.2;
+            const x = size/2 - micWidth/2;
+            const y = size/2 - micHeight/2;
+            
+            // Corpo principale
+            ctx.fillRect(x, y, micWidth, micHeight);
+            
+            // Linee griglia
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            for(let i = 0; i < 4; i++) {
+                ctx.fillRect(x + micWidth*0.1, y + micHeight*0.2 + i*micHeight*0.15, micWidth*0.8, micHeight*0.08);
+            }
+            
+            // Stand
+            ctx.fillStyle = '#1d3557';
+            ctx.fillRect(size/2 - size*0.02, size/2 + micHeight/2, size*0.04, size*0.08);
+            
+            // Base
+            ctx.fillRect(size/2 - size*0.08, size/2 + micHeight/2 + size*0.08, size*0.16, size*0.03);
+            
+            // Onde sonore
+            ctx.strokeStyle = 'rgba(69,123,157,0.6)';
+            ctx.lineWidth = size * 0.015;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.45, -0.5, 0.5);
+            ctx.stroke();
+            
+            ctx.strokeStyle = 'rgba(69,123,157,0.4)';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.52, -0.7, 0.7);
+            ctx.stroke();
+            
+            return canvas;
+        }
+        
+        function generateAllIcons() {
+            const sizes = [72, 96, 128, 144, 152, 167, 180, 192, 384, 512];
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '<h3>Icone Generate:</h3>';
+            
+            sizes.forEach(size => {
+                const canvas = createIcon(size);
+                
+                // Aggiungi preview
+                const div = document.createElement('div');
+                div.className = 'icon-preview';
+                div.innerHTML = `<div>${size}x${size}</div>`;
+                div.appendChild(canvas);
+                preview.appendChild(div);
+                
+                // Salva per download
+                canvas.toBlob(blob => {
+                    iconFiles[`icon-${size}x${size}.png`] = blob;
+                });
+                
+                // Download singolo
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = `Download ${size}x${size}`;
+                downloadBtn.onclick = () => {
+                    canvas.toBlob(blob => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `icon-${size}x${size}.png`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    });
+                };
+                div.appendChild(downloadBtn);
+            });
+            
+            // Speciali per iOS
+            createSpecialIcons();
+        }
+        
+        function createSpecialIcons() {
+            // Favicon
+            const favicon = createIcon(32);
+            favicon.toBlob(blob => {
+                iconFiles['favicon-32x32.png'] = blob;
+            });
+            
+            // Apple touch icon 
+            const apple = createIcon(180);
+            apple.toBlob(blob => {
+                iconFiles['apple-touch-icon.png'] = blob;
+            });
+        }
+        
+        function downloadZip() {
+            const zip = new JSZip();
+            const folder = zip.folder("icons");
+            
+            Object.keys(iconFiles).forEach(filename => {
+                folder.file(filename, iconFiles[filename]);
+            });
+            
+            zip.generateAsync({type:"blob"}).then(content => {
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'smart-assistant-icons.zip';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // Auto-genera al caricamento
+        window.onload = () => {
+            setTimeout(generateAllIcons, 500);
+        };
+    </script>
+</body>
+</html>

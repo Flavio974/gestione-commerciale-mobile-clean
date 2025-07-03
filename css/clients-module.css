@@ -1,0 +1,404 @@
+/* Clients Module Styles */
+
+.clients-module {
+  padding: 1rem;
+}
+
+.clients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.clients-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.clients-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Form Styles */
+.client-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-section {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  margin-bottom: 1rem;
+}
+
+.form-section h4 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.address-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* Table Styles */
+.clients-table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  width: 100%;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+/* Scrollbar styles */
+.clients-table-container::-webkit-scrollbar {
+  height: 10px;
+}
+
+.clients-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+.clients-table-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.clients-table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.clients-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.clients-table thead {
+  background-color: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.clients-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.clients-table tbody tr {
+  border-bottom: 1px solid #dee2e6;
+  transition: background-color 0.2s;
+}
+
+.clients-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.clients-table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+/* Day badges */
+.day-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.day-badge.close-day {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.day-badge.avoid-day {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+/* Time badges */
+.time-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.time-badge.mattina {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.time-badge.pomeriggio {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+.time-badge.sera {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+}
+
+/* Visit frequency badge */
+.frequency-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Sticky actions column */
+.clients-table td.actions {
+  position: sticky;
+  right: 0;
+  background-color: white;
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.clients-table th:last-child {
+  position: sticky;
+  right: 0;
+  background-color: #f8f9fa;
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+  z-index: 11;
+}
+
+/* Button styles in table */
+.clients-table .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 0 0.1rem;
+}
+
+.clients-table .btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.clients-table .btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .clients-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .clients-actions {
+    width: 100%;
+  }
+
+  .clients-actions button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .client-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .address-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clients-table {
+    font-size: 0.8rem;
+  }
+
+  .clients-table th,
+  .clients-table td {
+    padding: 0.5rem;
+  }
+
+  /* Hide less important columns on mobile */
+  .clients-table th:nth-child(n+8),
+  .clients-table td:nth-child(n+8) {
+    display: none;
+  }
+}
+
+/* Priority styles (matching worksheet module) */
+.priority-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.priority-1 {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.priority-2 {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+.priority-3 {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Edit modal specific styles */
+#editClientModal .modal-content {
+  max-width: 800px;
+}
+
+#editClientModal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Import dialog styles */
+#importDialog {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  overflow: auto;
+}
+
+#importDialog .modal-content {
+  position: relative;
+  background-color: white;
+  margin: 5% auto;
+  padding: 0;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s;
+}
+
+#importDialog .modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#importDialog .modal-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+#importDialog .close {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #aaa;
+  transition: color 0.2s;
+}
+
+#importDialog .close:hover {
+  color: #000;
+}
+
+#importDialog .info-box {
+  background-color: #e7f3ff;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--primary-color);
+}
+
+#importDialog .modal-footer {
+  display: flex !important;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+#importDialog .modal-footer button {
+  display: inline-block !important;
+  visibility: visible !important;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+#importDialog .modal-footer button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#confirmImport {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+#confirmImport:hover {
+  background-color: #0056b3 !important;
+}
+
+#cancelImport {
+  background-color: #6c757d !important;
+  color: white !important;
+}
+
+#cancelImport:hover {
+  background-color: #545b62 !important;
+}
+
+/* Make file input more accessible */
+#importFile {
+  cursor: pointer;
+}
+
+#importFile:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Mobile responsiveness for import dialog */
+@media (max-width: 768px) {
+  #importDialog .modal-content {
+    margin: 2% auto;
+    width: 95%;
+    max-width: none;
+  }
+  
+  #importDialog .info-box div {
+    grid-template-columns: 1fr !important;
+  }
+}

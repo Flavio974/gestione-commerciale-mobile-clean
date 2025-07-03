@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Test DDT Fix</title>
+</head>
+<body>
+    <h1>Test DDT Fix</h1>
+    <p>Ricarica la pagina principale e prova a importare entrambi i DDT:</p>
+    <ol>
+        <li>DDT 5023 (con colonna sconto%) - dovrebbe mostrare:
+            <ul>
+                <li>060041 AGNOLOTTI: €1.90 x 120 = €193.80</li>
+                <li>Altri articoli con prezzi corretti</li>
+            </ul>
+        </li>
+        <li>DDT 5024 (senza colonna sconto%) - dovrebbe mostrare:
+            <ul>
+                <li>060027 TAJARIN: €1.93 x 24 = €46.32</li>
+                <li>090015 AMARETTI: €4.20 x 25 = €105.00</li>
+            </ul>
+        </li>
+    </ol>
+    <p>Il fix ora rileva automaticamente il formato e usa il pattern corretto per ciascuno.</p>
+</body>
+</html>

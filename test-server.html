@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Server AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Server Locale</h1>
+    
+    <div class="test info">
+        <h3>Status Server</h3>
+        <p>Se vedi questa pagina, il server è attivo! ✅</p>
+        <p><strong>URL:</strong> <span id="currentUrl"></span></p>
+    </div>
+    
+    <div class="test">
+        <h3>Test Backend PHP</h3>
+        <button onclick="testBackend()">Test API Backend</button>
+        <div id="backend-result">Clicca per testare...</div>
+    </div>
+    
+    <div class="test">
+        <h3>Test AI Assistant</h3>
+        <button onclick="testAI()">Test AI Query</button>
+        <div id="ai-result">Clicca per testare...</div>
+    </div>
+    
+    <div class="test">
+        <h3>Navigazione</h3>
+        <a href="/">← Torna all'app principale</a><br>
+        <a href="/test-ai-integration.html">Test integrazione AI</a><br>
+        <a href="/test-navigation-fix.html">Test navigazione</a>
+    </div>
+
+    <script>
+        // Mostra URL corrente
+        document.getElementById('currentUrl').textContent = window.location.href;
+        
+        async function testBackend() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'info';
+            
+            try {
+                const response = await fetch('/api/claude-ai.php?test');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    resultDiv.textContent = '✅ Backend PHP funziona: ' + data.message;
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.textContent = '⚠️ Backend risponde ma con problemi: ' + JSON.stringify(data);
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ Errore backend: ' + error.message;
+                resultDiv.className = 'error';
+                
+                // Suggerimento
+                if (error.message.includes('fetch')) {
+                    resultDiv.innerHTML += '<br><br>💡 <strong>Suggerimento:</strong> Assicurati che PHP sia installato e configurato nel server.';
+                }
+            }
+        }
+        
+        async function testAI() {
+            const resultDiv = document.getElementById('ai-result');
+            resultDiv.textContent = 'Testing AI...';
+            resultDiv.className = 'info';
+            
+            try {
+                const testQuery = {
+                    message: "Ciao, questo è un test. Rispondi brevemente in italiano.",
+                    supabaseData: { summary: { totalClients: 0 } },
+                    model: 'claude-3-sonnet-20240229'
+                };
+                
+                const response = await fetch('/api/claude-ai.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testQuery)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.textContent = '✅ AI funziona! Risposta: ' + data.response.substring(0, 100) + '...';
+                    resultDiv.className = 'success';
+                } else {
+                    resultDiv.textContent = '❌ AI non funziona: ' + (data.error || 'Errore sconosciuto');
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                resultDiv.textContent = '❌ Errore AI: ' + error.message;
+                resultDiv.className = 'error';
+            }
+        }
+        
+        // Auto-test al caricamento
+        window.addEventListener('load', () => {
+            console.log('🧪 Test server page loaded');
+            setTimeout(testBackend, 1000);
+        });
+    </script>
+</body>
+</html>

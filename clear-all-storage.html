@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulizia Storage - Gestione Commerciale</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #c82333;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Pulizia Completa Storage</h1>
+        
+        <div class="warning">
+            <strong>⚠️ ATTENZIONE:</strong> Questa operazione cancellerà TUTTI i dati salvati nell'applicazione, inclusi:
+            <ul>
+                <li>Tutti i documenti DDT e Fatture</li>
+                <li>Tutti i clienti salvati</li>
+                <li>Tutte le impostazioni personalizzate</li>
+                <li>Tutti i dati temporanei</li>
+            </ul>
+            <strong>Questa operazione NON può essere annullata!</strong>
+        </div>
+
+        <button class="btn" onclick="clearAllStorage()">
+            🗑️ Elimina TUTTI i dati
+        </button>
+        <button class="btn btn-secondary" onclick="window.close()">
+            ❌ Annulla
+        </button>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        function clearAllStorage() {
+            if (!confirm('Sei SICURO di voler eliminare TUTTI i dati?\n\nQuesta azione NON può essere annullata!')) {
+                return;
+            }
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<h3>Pulizia in corso...</h3>';
+
+            try {
+                // Raccogli informazioni prima della pulizia
+                const localStorageKeys = Object.keys(localStorage);
+                const sessionStorageKeys = Object.keys(sessionStorage);
+                
+                let report = '<h3>📊 Report Pulizia Storage</h3>';
+                report += '<p><strong>Data:</strong> ' + new Date().toLocaleString('it-IT') + '</p>';
+                
+                // localStorage
+                report += '<h4>localStorage (' + localStorageKeys.length + ' elementi)</h4>';
+                if (localStorageKeys.length > 0) {
+                    report += '<pre>';
+                    localStorageKeys.forEach(key => {
+                        const value = localStorage.getItem(key);
+                        const preview = value && value.length > 100 ? value.substring(0, 100) + '...' : value;
+                        report += `- ${key}: ${preview}\n`;
+                    });
+                    report += '</pre>';
+                }
+
+                // sessionStorage
+                report += '<h4>sessionStorage (' + sessionStorageKeys.length + ' elementi)</h4>';
+                if (sessionStorageKeys.length > 0) {
+                    report += '<pre>';
+                    sessionStorageKeys.forEach(key => {
+                        const value = sessionStorage.getItem(key);
+                        const preview = value && value.length > 100 ? value.substring(0, 100) + '...' : value;
+                        report += `- ${key}: ${preview}\n`;
+                    });
+                    report += '</pre>';
+                }
+
+                // Esegui la pulizia
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // Verifica
+                const localStorageAfter = Object.keys(localStorage).length;
+                const sessionStorageAfter = Object.keys(sessionStorage).length;
+
+                report += '<div class="success">';
+                report += '<h4>✅ Pulizia Completata!</h4>';
+                report += '<ul>';
+                report += '<li>localStorage: ' + localStorageKeys.length + ' elementi rimossi</li>';
+                report += '<li>sessionStorage: ' + sessionStorageKeys.length + ' elementi rimossi</li>';
+                report += '<li>Totale elementi rimossi: ' + (localStorageKeys.length + sessionStorageKeys.length) + '</li>';
+                report += '</ul>';
+                
+                if (localStorageAfter === 0 && sessionStorageAfter === 0) {
+                    report += '<p><strong>✅ Tutti gli storage sono ora vuoti!</strong></p>';
+                } else {
+                    report += '<p><strong>⚠️ Attenzione:</strong> Alcuni elementi potrebbero non essere stati rimossi.</p>';
+                }
+                report += '</div>';
+
+                resultsDiv.innerHTML = report;
+
+                // Log anche nella console
+                console.log('=== PULIZIA STORAGE COMPLETATA ===');
+                console.log('localStorage elementi rimossi:', localStorageKeys.length);
+                console.log('sessionStorage elementi rimossi:', sessionStorageKeys.length);
+                console.log('Chiavi localStorage rimosse:', localStorageKeys);
+                console.log('Chiavi sessionStorage rimosse:', sessionStorageKeys);
+
+            } catch (error) {
+                resultsDiv.innerHTML = '<div class="warning"><strong>❌ Errore durante la pulizia:</strong> ' + error.message + '</div>';
+                console.error('Errore durante la pulizia dello storage:', error);
+            }
+        }
+
+        // Mostra informazioni iniziali
+        window.onload = function() {
+            console.log('=== STATO ATTUALE STORAGE ===');
+            console.log('localStorage elementi:', Object.keys(localStorage).length);
+            console.log('sessionStorage elementi:', Object.keys(sessionStorage).length);
+            console.log('Chiavi localStorage:', Object.keys(localStorage));
+            console.log('Chiavi sessionStorage:', Object.keys(sessionStorage));
+        };
+    </script>
+</body>
+</html>

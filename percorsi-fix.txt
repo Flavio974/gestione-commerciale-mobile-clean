@@ -1,0 +1,32 @@
+CORREZIONE IMPORTANTE PER I PERCORSI:
+
+I percorsi nel sistema sono tra CLIENTI, non tra città!
+
+Esempi di record percorsi:
+- Partenza: "BOREALE SRL"
+- Arrivo: "MAROTTA SRL"  
+- Tempo: 15 minuti
+- Distanza: 12 km
+
+Il sistema attuale cerca città (Milano, Torino, ecc.) ma dovrebbe cercare nomi clienti.
+
+MODIFICHE NECESSARIE:
+
+1. Nel rilevamento percorsi (detectQueryType):
+   - Cercare nomi clienti invece di città
+   - Pattern tipo "da Boreale a Marotta"
+   - Pattern tipo "percorso Boreale Rossini"
+
+2. Nel filtraggio percorsi (applyIntelligentFilters):
+   - Filtrare per clienti menzionati
+   - Supportare percorsi bidirezionali (A→B o B→A)
+
+3. Esempi query da supportare:
+   - "Quanto tempo da Boreale a Marotta?"
+   - "Percorso tra Rossini e Alfieri"
+   - "Distanza da Boreale a tutti i clienti"
+
+BENEFICI:
+- Query "percorsi Boreale" → solo ~10 percorsi invece di 666
+- Risposte precise per tragitti tra clienti specifici
+- Risparmio 98%+ sui costi API

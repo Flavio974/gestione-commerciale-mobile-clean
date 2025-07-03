@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PWA Smart Assistant</title>
+    <style>
+        body { font-family: Arial; padding: 20px; line-height: 1.6; }
+        .test-item { margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .status { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test PWA Smart Assistant</h1>
+    <p>Questa pagina testa tutte le funzionalità PWA prima del deploy.</p>
+    
+    <button onclick="runAllTests()">🚀 Esegui Tutti i Test</button>
+    <button onclick="clearResults()">🗑️ Pulisci Risultati</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(test, status, message) {
+            const div = document.createElement('div');
+            div.className = `test-item ${status}`;
+            div.innerHTML = `
+                <h3>${test}</h3>
+                <p class="status">${status.toUpperCase()}: ${message}</p>
+            `;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            results.innerHTML = '';
+        }
+        
+        async function runAllTests() {
+            clearResults();
+            
+            // Test 1: Manifest PWA
+            try {
+                const response = await fetch('/manifest.json');
+                const manifest = await response.json();
+                if (manifest.name && manifest.icons && manifest.icons.length > 0) {
+                    addResult('📱 Manifest PWA', 'success', `App: ${manifest.name}, ${manifest.icons.length} icone`);
+                } else {
+                    addResult('📱 Manifest PWA', 'error', 'Manifest incompleto');
+                }
+            } catch (e) {
+                addResult('📱 Manifest PWA', 'error', 'Manifest non trovato');
+            }
+            
+            // Test 2: Service Worker
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        addResult('🔧 Service Worker', 'success', 'Registrato e attivo');
+                    } else {
+                        addResult('🔧 Service Worker', 'warning', 'Non registrato');
+                    }
+                } catch (e) {
+                    addResult('🔧 Service Worker', 'error', e.message);
+                }
+            } else {
+                addResult('🔧 Service Worker', 'error', 'Non supportato');
+            }
+            
+            // Test 3: Notifiche
+            if ('Notification' in window) {
+                const permission = Notification.permission;
+                if (permission === 'granted') {
+                    addResult('🔔 Notifiche', 'success', 'Permesso concesso');
+                } else if (permission === 'default') {
+                    addResult('🔔 Notifiche', 'warning', 'Permesso non richiesto');
+                } else {
+                    addResult('🔔 Notifiche', 'error', 'Permesso negato');
+                }
+            } else {
+                addResult('🔔 Notifiche', 'error', 'Non supportate');
+            }
+            
+            // Test 4: Cache Storage
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    if (cacheNames.length > 0) {
+                        addResult('💾 Cache Storage', 'success', `${cacheNames.length} cache attive`);
+                    } else {
+                        addResult('💾 Cache Storage', 'warning', 'Nessuna cache');
+                    }
+                } catch (e) {
+                    addResult('💾 Cache Storage', 'error', e.message);
+                }
+            } else {
+                addResult('💾 Cache Storage', 'error', 'Non supportato');
+            }
+            
+            // Test 5: LocalStorage
+            try {
+                const testKey = 'pwa-test';
+                localStorage.setItem(testKey, 'test');
+                const value = localStorage.getItem(testKey);
+                localStorage.removeItem(testKey);
+                
+                if (value === 'test') {
+                    addResult('💾 LocalStorage', 'success', 'Funzionante');
+                } else {
+                    addResult('💾 LocalStorage', 'error', 'Non funzionante');
+                }
+            } catch (e) {
+                addResult('💾 LocalStorage', 'error', e.message);
+            }
+            
+            // Test 6: Smart Assistant
+            if (window.SmartAssistant) {
+                addResult('🎤 Smart Assistant', 'success', 'Caricato correttamente');
+            } else {
+                addResult('🎤 Smart Assistant', 'error', 'Non caricato');
+            }
+            
+            // Test 7: MediaRecorder (per note vocali)
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    addResult('🎙️ MediaRecorder', 'success', 'Microfono accessibile');
+                } catch (e) {
+                    addResult('🎙️ MediaRecorder', 'warning', 'Permesso microfono richiesto');
+                }
+            } else {
+                addResult('🎙️ MediaRecorder', 'error', 'Non supportato');
+            }
+            
+            // Test 8: HTTPS
+            if (location.protocol === 'https:' || location.hostname === 'localhost') {
+                addResult('🔒 HTTPS', 'success', 'Connessione sicura');
+            } else {
+                addResult('🔒 HTTPS', 'error', 'HTTP non sicuro - PWA richiede HTTPS');
+            }
+            
+            // Test 9: Icone
+            testIcons();
+            
+            // Test 10: API Endpoints
+            testAPIEndpoints();
+        }
+        
+        async function testIcons() {
+            const iconSizes = [152, 192, 512];
+            let iconsFound = 0;
+            
+            for (const size of iconSizes) {
+                try {
+                    const response = await fetch(`/icons/icon-${size}x${size}.png`);
+                    if (response.ok) iconsFound++;
+                } catch (e) {
+                    // Ignora errori
+                }
+            }
+            
+            if (iconsFound === iconSizes.length) {
+                addResult('🎨 Icone PWA', 'success', `Tutte le ${iconSizes.length} icone trovate`);
+            } else if (iconsFound > 0) {
+                addResult('🎨 Icone PWA', 'warning', `${iconsFound}/${iconSizes.length} icone trovate`);
+            } else {
+                addResult('🎨 Icone PWA', 'error', 'Nessuna icona trovata');
+            }
+        }
+        
+        async function testAPIEndpoints() {
+            const endpoints = [
+                '/api/speech-to-text.php',
+                '/api/claude-ai.php'
+            ];
+            
+            let workingEndpoints = 0;
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, { method: 'HEAD' });
+                    if (response.status !== 404) workingEndpoints++;
+                } catch (e) {
+                    // Ignora errori di rete
+                }
+            }
+            
+            if (workingEndpoints === endpoints.length) {
+                addResult('🌐 API Endpoints', 'success', 'Tutti gli endpoint raggiungibili');
+            } else if (workingEndpoints > 0) {
+                addResult('🌐 API Endpoints', 'warning', `${workingEndpoints}/${endpoints.length} endpoint raggiungibili`);
+            } else {
+                addResult('🌐 API Endpoints', 'error', 'Nessun endpoint raggiungibile');
+            }
+        }
+        
+        // Test notifica demo
+        function testNotification() {
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    new Notification('🧪 Test PWA', {
+                        body: 'Notifica di test funzionante!',
+                        icon: '/icons/icon-192x192.png'
+                    });
+                } else {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            new Notification('🧪 Test PWA', {
+                                body: 'Notifica di test funzionante!',
+                                icon: '/icons/icon-192x192.png'
+                            });
+                        }
+                    });
+                }
+            }
+        }
+        
+        // Auto-run test on load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+    
+    <hr>
+    <h2>🎯 Test Manuali</h2>
+    <button onclick="testNotification()">🔔 Test Notifica</button>
+    <button onclick="window.SmartAssistant && window.SmartAssistant.showNotification('Test OK!', 'success')">📱 Test Notifica In-App</button>
+    
+    <h3>📋 Checklist Pre-Deploy</h3>
+    <ul>
+        <li>✅ Tutti i test sopra sono SUCCESS o WARNING</li>
+        <li>✅ Icone generate (vai su <a href="generate-icons-simple.html">generate-icons-simple.html</a>)</li>
+        <li>✅ Service Worker registrato</li>
+        <li>✅ Manifest valido</li>
+        <li>✅ HTTPS funzionante (automatico su Netlify)</li>
+        <li>✅ Smart Assistant caricato</li>
+    </ul>
+    
+    <h3>🚀 Prossimi Passi</h3>
+    <ol>
+        <li><strong>Genera icone</strong>: <a href="generate-icons-simple.html">Clicca qui</a></li>
+        <li><strong>Testa tutto</strong>: Assicurati che tutti i test passino</li>
+        <li><strong>Deploy</strong>: Segui le istruzioni in <code>DEPLOY-NETLIFY.md</code></li>
+        <li><strong>Test mobile</strong>: Prova su iPhone/iPad reale</li>
+    </ol>
+</body>
+</html>

@@ -1,0 +1,154 @@
+==================================================================
+FILE LINE COUNT REPORT - GestioneCommerciale-Mobile
+Generated on: Sun Jun  8 19:24:10 CEST 2025
+==================================================================
+
+SUMMARY BY FILE TYPE
+==================================================================
+*.js               74 files     39988 lines
+*.html              2 files       375 lines
+*.css              14 files      5687 lines
+*.md               13 files      1899 lines
+*.txt               3 files       458 lines
+------------------------------------------------------------------
+TOTAL             106 files     48407 lines
+
+
+DETAILED FILE LISTING BY DIRECTORY
+==================================================================
+
+📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile
+────────────────────────────────────────────────────────────
+  fix-invoice-products.js                               117 lines
+  index.html                                            235 lines
+  test-ftv-parser.html                                  140 lines
+  ANALISI_COMPLETA_FILE.md                              233 lines
+  FILE_ANALYSIS_REPORT.md                               138 lines
+  FIX_COMPLETO_FINALE.md                                135 lines
+  FIX_IMPLEMENTATI_COMPLETI.md                          211 lines
+  FIX_INDIRIZZI_P.ZA.md                                 102 lines
+  FIX_PRECISIONE_INDIRIZZI.md                           168 lines
+  FTV_PARSER_FIX_SUMMARY.md                              52 lines
+  IMPROVEMENTS_SUMMARY.md                                89 lines
+  IMPROVEMENTS_LUOGO_FIX.txt                             63 lines
+  all_files_list.txt                                    384 lines
+  file_line_count_report.txt                             34 lines
+
+  📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile/config
+  ────────────────────────────────────────────────────────────
+    api-config.js                                         163 lines
+
+  📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile/css
+  ────────────────────────────────────────────────────────────
+    base-components.css                                   633 lines
+    clients-module.css                                    403 lines
+    main.css                                              468 lines
+    mobile.css                                            257 lines
+    modal-components.css                                  359 lines
+    orders-module.css                                     290 lines
+    ordini.css                                            746 lines
+    percorsi-module.css                                   213 lines
+    products-module.css                                   338 lines
+    tables.css                                            387 lines
+    timeline-components.css                               416 lines
+    ui-components.css                                     321 lines
+    worksheet-module.css                                  265 lines
+    worksheet.css                                         591 lines
+
+  📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile/docs
+  ────────────────────────────────────────────────────────────
+    FIX-DDT-ADDRESS.md                                     65 lines
+    README.md                                             219 lines
+    structure.md                                          379 lines
+
+  📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile/js
+  ────────────────────────────────────────────────────────────
+    api.js                                                377 lines
+    app.js                                                369 lines
+    clienti-core.js                                       450 lines
+    clienti-form.js                                       180 lines
+    clienti-import-export.js                              243 lines
+    clienti-table.js                                      123 lines
+    clienti-utils.js                                       40 lines
+    ddtft-core.js                                         760 lines
+    ddtft-create.js                                       293 lines
+    ddtft-filters.js                                      194 lines
+    ddtft-import.js                                      6315 lines
+    ddtft-utils.js                                        135 lines
+    ddtft-view.js                                         256 lines
+    extractors.js                                         583 lines
+    navigation.js                                         299 lines
+    ordini-export-inline.js                               563 lines
+    ordini.js                                             635 lines
+    percorsi-core.js                                      311 lines
+    percorsi-crud.js                                      234 lines
+    percorsi-import.js                                    243 lines
+    percorsi-table.js                                     181 lines
+    percorsi-utils.js                                      63 lines
+    percorsi.js                                          1031 lines
+    prodotti.js                                           594 lines
+    utils.js                                              333 lines
+    worksheet-core.js                                     376 lines
+    worksheet-data.js                                     440 lines
+    worksheet-dragdrop.js                                  68 lines
+    worksheet-filters.js                                  121 lines
+    worksheet-import.js                                   408 lines
+    worksheet-itinerary.js                                552 lines
+    worksheet-ui.js                                       545 lines
+    worksheet-view.js                                     670 lines
+
+    📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile/js/modules
+    ────────────────────────────────────────────────────────────
+      ordini-export-core.js                                 290 lines
+      ordini-export-ui.js                                   504 lines
+      ordini-export-utils.js                                201 lines
+      ordini-export-validation.js                           346 lines
+      ordini-export-venduto.js                              562 lines
+      ordini-export.js                                      227 lines
+      ordini-parser-fixed.js                                616 lines
+      ordini-parser.js                                      863 lines
+      ordini-ui.js                                          693 lines
+
+      📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile/js/modules/ddtft
+      ────────────────────────────────────────────────────────────
+        address-utils.js                                      533 lines
+        ddt-extractor.js                                     1915 lines
+        document-parser.js                                    550 lines
+        export-excel.js                                       609 lines
+        fattura-extractor-fixed.js                            159 lines
+        fattura-extractor-improved.js                         220 lines
+        fattura-extractor-new.js                              119 lines
+        fattura-extractor.js                                 3026 lines
+        index.js                                              213 lines
+        pdf-extractor.js                                      115 lines
+        ui-dialogs.js                                         339 lines
+        utils.js                                              137 lines
+        README.md                                              54 lines
+
+      📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile/js/modules/ddtft.backup.20250608_145143
+      ────────────────────────────────────────────────────────────
+        address-utils.js                                      533 lines
+        ddt-extractor.js                                     1510 lines
+        document-parser.js                                    550 lines
+        export-excel.js                                       609 lines
+        fattura-extractor-fixed.js                            159 lines
+        fattura-extractor-improved.js                         220 lines
+        fattura-extractor-new.js                              119 lines
+        fattura-extractor.js                                 2890 lines
+        index.js                                              213 lines
+        pdf-extractor.js                                      115 lines
+        ui-dialogs.js                                         339 lines
+        utils.js                                              137 lines
+        README.md                                              54 lines
+
+    📁 /home/flavio2025/Desktop/GestioneCommerciale-Mobile/js/timeline
+    ────────────────────────────────────────────────────────────
+      timeline-config.js                                     53 lines
+      timeline-controls.js                                  410 lines
+      timeline-core.js                                      590 lines
+      timeline-events.js                                    515 lines
+      timeline-rendering.js                                 422 lines
+      timeline-utils.js                                     102 lines
+
+==================================================================
+Report generated successfully!

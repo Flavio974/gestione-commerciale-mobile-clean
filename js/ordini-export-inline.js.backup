@@ -1,0 +1,1267 @@
+/**
+ * Ordini Export Module - Versione Inline
+ * Questo file contiene le funzioni essenziali per l'export
+ */
+
+(function() {
+  'use strict';
+  
+  // Definisci OrdiniExport globalmente
+  window.OrdiniExport = {
+    /**
+     * Funzione principale per esportare ordini in Excel
+     */
+    exportOrdersToExcel: function(orders) {
+      console.log('🚀 INIZIO EXPORT EXCEL');
+      try {
+        // Mostra dialog con opzioni di esportazione
+        this.showExportDialog(orders);
+      } catch (e) {
+        console.error('Errore durante l\'esportazione:', e);
+        alert('Errore durante l\'esportazione: ' + e.message);
+      }
+    },
+    
+    /**
+     * Mostra il dialog con le opzioni di esportazione
+     */
+    showExportDialog: function(orders) {
+      // Crea il dialog modale
+      const modal = document.createElement('div');
+      modal.id = 'exportDialogModal';
+      modal.className = 'modal';
+      modal.style.cssText = 'display: block; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
+      
+      const modalContent = document.createElement('div');
+      modalContent.className = 'modal-content';
+      modalContent.style.cssText = 'background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 8px;';
+      
+      modalContent.innerHTML = `
+        <span class="close" onclick="window.OrdiniExport.closeExportDialog()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+        <h3 style="margin-top: 0;">Esportazione Ordini</h3>
+        <p>Seleziona la modalità di esportazione:</p>
+        
+        <div style="margin: 20px 0;">
+          <button class="btn btn-primary" onclick="window.OrdiniExport.handleExportOrdini()" style="width: 100%; margin-bottom: 10px; padding: 10px;">
+            📊 Esporta file ORDINI.xlsx
+            <br><small>Per Dropbox: CARTELLA_MIA_APPLICAZIONE\ORDINI</small>
+          </button>
+          
+          <button class="btn btn-success" onclick="window.OrdiniExport.handleExportVenduto()" style="width: 100%; margin-bottom: 10px; padding: 10px;">
+            📋 Aggiorna file VENDUTO.xlsx
+            <br><small>File permanente con storico vendite</small>
+          </button>
+          
+          <button class="btn btn-info" onclick="window.OrdiniExport.handleExportNew()" style="width: 100%; padding: 10px;">
+            📄 Esporta in nuovo file
+            <br><small>File con data odierna</small>
+          </button>
+        </div>
+        
+        <p style="font-size: 12px; color: #666; margin-top: 15px;">
+          <strong>Nota:</strong> Dopo il download, salva il file ORDINI.xlsx in:<br>
+          <code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px;">C:\\Users\\FLAVIO\\Dropbox\\2025\\CARTELLA_MIA_APPLICAZIONE\\ORDINI</code>
+        </p>
+        
+        <button class="btn btn-secondary" onclick="window.OrdiniExport.closeExportDialog()">
+          ❌ Annulla
+        </button>
+      `;
+      
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+      
+      // Salva riferimento agli ordini per l'export
+      this._ordersToExport = orders;
+    },
+    
+    /**
+     * Chiude il dialog di export
+     */
+    closeExportDialog: function() {
+      const modal = document.getElementById('exportDialogModal');
+      if (modal) {
+        document.body.removeChild(modal);
+      }
+    },
+    
+    /**
+     * Gestione export file ORDINI per Dropbox
+     */
+    handleExportOrdini: function() {
+      this.closeExportDialog();
+      this.exportToOrdiniFile(this._ordersToExport);
+    },
+    
+    /**
+     * Gestione export in nuovo file
+     */
+    handleExportNew: function() {
+      this.closeExportDialog();
+      this.exportToNewFile(this._ordersToExport);
+    },
+    
+    /**
+     * Gestione export nel file VENDUTO
+     */
+    handleExportVenduto: function() {
+      this.closeExportDialog();
+      
+      // Mostra dialog per caricare il file VENDUTO esistente
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.cssText = 'display: block; position: fixed; z-index: 1002; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
+      
+      const modalContent = document.createElement('div');
+      modalContent.className = 'modal-content';
+      modalContent.style.cssText = 'background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px;';
+      
+      modalContent.innerHTML = `
+        <h3>📋 Aggiornamento File VENDUTO</h3>
+        
+        <div style="margin: 20px 0; padding: 15px; background-color: #e7f3ff; border-radius: 5px;">
+          <h4 style="margin-top: 0; color: #0066cc;">Per confrontare i dati:</h4>
+          <p>1. Carica il file VENDUTO.xlsx esistente per verificare i duplicati</p>
+          <p>2. Oppure procedi senza confronto (usa solo la memoria del browser)</p>
+        </div>
+        
+        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+          <input type="file" id="vendutoCompareFile" accept=".xlsx" style="display: none;" onchange="window.OrdiniExport.compareAndExportVenduto(this.files[0])">
+          
+          <button class="btn btn-primary" onclick="document.getElementById('vendutoCompareFile').click()" style="padding: 10px;">
+            📁 Carica file VENDUTO.xlsx per confronto
+            <br><small>Confronta con il file reale prima di aggiungere nuovi dati</small>
+          </button>
+          
+          <button class="btn btn-warning" onclick="document.querySelector('.modal').remove(); window.OrdiniExport.exportToVendutoFile(window.OrdiniExport._ordersToExport);" style="padding: 10px;">
+            🔄 Procedi senza confronto
+            <br><small>Usa solo la memoria del browser</small>
+          </button>
+          
+          <button class="btn btn-secondary" onclick="document.querySelector('.modal').remove()" style="padding: 10px;">
+            ❌ Annulla
+          </button>
+        </div>
+      `;
+      
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+    },
+    
+    /**
+     * Export nel file ORDINI per Dropbox
+     */
+    exportToOrdiniFile: function(orders) {
+      try {
+        if (!window.XLSX) {
+          alert('Libreria XLSX non caricata. Ricaricare la pagina.');
+          return;
+        }
+        
+        // Prepara i dati
+        const data = [];
+        
+        // Header
+        data.push([
+          'Numero Ordine',
+          'Data Ordine',
+          'Tipo Documento',
+          'Numero documento',
+          'Data Documento',
+          'Codice Cliente',
+          'Descrizione Cliente',
+          'Indirizzo di Consegna',
+          'P.Iva',
+          'Codice Prodotto',
+          'Descrizione Prodotto',
+          'Pezzi',
+          'Prezzo Unitario',
+          'Sconto (%)',
+          'S.M.',
+          'Importo'
+        ]);
+        
+        // Dati ordini
+        let totale = 0;
+        let righeEsportate = 0;
+        
+        orders.forEach(order => {
+          if (order.products && order.products.length > 0) {
+            order.products.forEach(product => {
+              const quantity = parseFloat((product.quantity || '0').toString().replace(',', '.')) || 0;
+              const unitPrice = parseFloat((product.unitPrice || product.price || '0').toString().replace(',', '.')) || 0;
+              const sm = parseFloat((product.sm || '0').toString().replace(',', '.')) || 0;
+              const discount = parseFloat((product.discount || '0').toString().replace(',', '.').replace('%', '')) || 0;
+              
+              // Calcola importo
+              let quantitaEffettiva = quantity - sm;
+              if (quantitaEffettiva < 0) quantitaEffettiva = 0;
+              
+              let importo = quantitaEffettiva * unitPrice;
+              if (discount > 0) {
+                importo = importo * (1 - discount / 100);
+              }
+              
+              totale += importo;
+              righeEsportate++;
+              
+              // Pulisci l'indirizzo rimuovendo il nome del cliente se presente
+              let cleanAddress = order.deliveryAddress || order.address || '';
+              if (cleanAddress && order.clientName) {
+                // Rimuovi il nome del cliente dall'inizio dell'indirizzo
+                const clientNamePattern = new RegExp('^' + order.clientName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i');
+                cleanAddress = cleanAddress.replace(clientNamePattern, '').trim();
+              }
+              
+              data.push([
+                order.orderNumber || '',      // 1. Numero Ordine
+                order.orderDate || '',        // 2. Data Ordine
+                'ORDINE',                     // 3. Tipo Documento
+                '',                           // 4. Numero documento
+                order.orderDate || '',        // 5. Data Documento
+                order.clientCode || '',       // 6. Codice Cliente
+                order.clientName || '',       // 7. Descrizione Cliente
+                cleanAddress,                 // 8. Indirizzo di Consegna
+                order.vatNumber || '',        // 9. P.Iva
+                product.code || '',           // 10. Codice Prodotto
+                product.description || '',    // 11. Descrizione Prodotto
+                quantity,                     // 12. Pezzi
+                unitPrice,                    // 13. Prezzo Unitario
+                discount || 0,                // 14. Sconto (%)
+                sm || 0,                      // 15. S.M.
+                importo                       // 16. Importo
+              ]);
+            });
+          }
+        });
+        
+        // Crea workbook
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Larghezza colonne
+        ws['!cols'] = [
+          {wch: 15}, // Numero Ordine
+          {wch: 12}, // Data Ordine
+          {wch: 12}, // Tipo Documento
+          {wch: 15}, // Numero documento
+          {wch: 12}, // Data Documento
+          {wch: 12}, // Codice Cliente
+          {wch: 35}, // Descrizione Cliente
+          {wch: 40}, // Indirizzo di Consegna
+          {wch: 15}, // P.Iva
+          {wch: 15}, // Codice Prodotto
+          {wch: 50}, // Descrizione Prodotto
+          {wch: 10}, // Pezzi
+          {wch: 15}, // Prezzo Unitario
+          {wch: 10}, // Sconto (%)
+          {wch: 12}, // S.M.
+          {wch: 15}  // Importo
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, ws, 'Ordini');
+        
+        // Salva file con nome fisso ORDINI.xlsx
+        XLSX.writeFile(wb, 'ORDINI.xlsx');
+        
+        // Mostra messaggio con istruzioni
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.cssText = 'display: block; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        modalContent.style.cssText = 'background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px;';
+        
+        modalContent.innerHTML = `
+          <h3 style="color: #28a745;">✅ Export Completato!</h3>
+          <div style="margin: 20px 0;">
+            <p><strong>File creato:</strong> ORDINI.xlsx</p>
+            <p><strong>Ordini esportati:</strong> ${orders.length}</p>
+            <p><strong>Righe totali:</strong> ${righeEsportate}</p>
+            <p><strong>Totale importo:</strong> €${totale.toFixed(2)}</p>
+          </div>
+          
+          <div style="margin: 20px 0; padding: 15px; background-color: #e7f3ff; border-radius: 5px;">
+            <h4 style="margin-top: 0; color: #0066cc;">📁 Salva il file in Dropbox:</h4>
+            <p style="margin: 10px 0;">1. Il file ORDINI.xlsx è stato scaricato nella cartella Download</p>
+            <p style="margin: 10px 0;">2. Sposta o copia il file in:</p>
+            <code style="display: block; background: #f0f0f0; padding: 10px; border-radius: 3px; margin: 10px 0;">
+              C:\\\\Users\\\\FLAVIO\\\\Dropbox\\\\2025\\\\CARTELLA_MIA_APPLICAZIONE\\\\ORDINI
+            </code>
+            <p style="margin: 10px 0;">3. Sostituisci il file esistente se richiesto</p>
+          </div>
+          
+          <button class="btn btn-primary" onclick="this.closest('.modal').remove()">OK</button>
+        `;
+        
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+      } catch (e) {
+        console.error('Errore durante l\'esportazione:', e);
+        alert('Errore durante l\'esportazione: ' + e.message);
+      }
+    },
+    
+    /**
+     * Export nel file VENDUTO permanente
+     */
+    exportToVendutoFile: function(orders) {
+      try {
+        if (!window.XLSX) {
+          alert('Libreria XLSX non caricata. Ricaricare la pagina.');
+          return;
+        }
+        
+        // Prepara i dati dei nuovi ordini
+        const newData = [];
+        let totaleNuovo = 0;
+        
+        orders.forEach(order => {
+          if (order.products && order.products.length > 0) {
+            order.products.forEach(product => {
+              const quantity = parseFloat((product.quantity || '0').toString().replace(',', '.')) || 0;
+              const unitPrice = parseFloat((product.unitPrice || product.price || '0').toString().replace(',', '.')) || 0;
+              const sm = parseFloat((product.sm || '0').toString().replace(',', '.')) || 0;
+              const discount = parseFloat((product.discount || '0').toString().replace(',', '.').replace('%', '')) || 0;
+              
+              // Calcola importo
+              let quantitaEffettiva = quantity - sm;
+              if (quantitaEffettiva < 0) quantitaEffettiva = 0;
+              
+              let importo = quantitaEffettiva * unitPrice;
+              if (discount > 0) {
+                importo = importo * (1 - discount / 100);
+              }
+              
+              totaleNuovo += importo;
+              
+              // Pulisci l'indirizzo rimuovendo il nome del cliente se presente
+              let cleanAddress = order.deliveryAddress || order.address || '';
+              if (cleanAddress && order.clientName) {
+                // Rimuovi il nome del cliente dall'inizio dell'indirizzo
+                const clientNamePattern = new RegExp('^' + order.clientName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i');
+                cleanAddress = cleanAddress.replace(clientNamePattern, '').trim();
+              }
+              
+              newData.push([
+                order.orderNumber || '',
+                order.orderDate || '',
+                order.clientName || '',
+                cleanAddress,
+                order.vatNumber || '',
+                order.deliveryDate || '',
+                product.code || '',
+                product.description || '',
+                quantity,
+                unitPrice,
+                sm || 0,
+                discount || 0,
+                importo
+              ]);
+            });
+          }
+        });
+        
+        // Recupera dati esistenti
+        let existingData = [];
+        const savedVenduto = localStorage.getItem('vendutoFileData');
+        if (savedVenduto) {
+          try {
+            existingData = JSON.parse(savedVenduto);
+          } catch (e) {
+            console.error('Errore nel caricamento dati esistenti:', e);
+          }
+        }
+        
+        // Controlla duplicati
+        const existingKeys = new Set();
+        existingData.forEach(row => {
+          if (row && row.length > 6) {
+            existingKeys.add(`${row[0]}_${row[6]}`);
+          }
+        });
+        
+        const duplicates = [];
+        const uniqueNewData = [];
+        
+        newData.forEach(row => {
+          const key = `${row[0]}_${row[6]}`;
+          if (existingKeys.has(key)) {
+            duplicates.push({
+              orderNumber: row[0],
+              productCode: row[6],
+              client: row[2],
+              description: row[7]
+            });
+          } else {
+            uniqueNewData.push(row);
+          }
+        });
+        
+        // Se ci sono duplicati, mostra dialog con opzioni
+        if (duplicates.length > 0) {
+          const modal = document.createElement('div');
+          modal.className = 'modal';
+          modal.style.cssText = 'display: block; position: fixed; z-index: 1002; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
+          
+          const modalContent = document.createElement('div');
+          modalContent.className = 'modal-content';
+          modalContent.style.cssText = 'background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; border-radius: 8px;';
+          
+          modalContent.innerHTML = `
+            <h3 style="color: #dc3545;">⚠️ Attenzione: Dati già presenti</h3>
+            
+            <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px;">
+              <p style="margin: 0; color: #856404;">
+                <strong>${duplicates.length}</strong> prodotti su ${newData.length} sono già presenti nella memoria del browser.
+              </p>
+              <p style="margin: 10px 0 0 0; color: #856404;">
+                <strong>Nota:</strong> Questi dati potrebbero non essere ancora nel file VENDUTO.xlsx reale.
+              </p>
+            </div>
+            
+            <div style="margin: 20px 0;">
+              <h4>Cosa vuoi fare?</h4>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-primary" onclick="(function(){
+                  window.OrdiniExport._proceedWithUniqueOnly = true;
+                  document.querySelector('.modal').remove();
+                  window.OrdiniExport._continueVendutoExport();
+                })()" style="padding: 10px;">
+                  ✅ Aggiungi solo i ${uniqueNewData.length} prodotti nuovi
+                  <br><small>Evita duplicati nella memoria</small>
+                </button>
+                
+                <button class="btn btn-warning" onclick="(function(){
+                  window.OrdiniExport._proceedWithAll = true;
+                  document.querySelector('.modal').remove();
+                  window.OrdiniExport._continueVendutoExport();
+                })()" style="padding: 10px;">
+                  🔄 Aggiungi tutti i ${newData.length} prodotti
+                  <br><small>Includi anche quelli già in memoria</small>
+                </button>
+                
+                <button class="btn btn-danger" onclick="(function(){
+                  if(confirm('Questo cancellerà tutti i dati salvati nella memoria del browser. Sei sicuro?')) {
+                    localStorage.removeItem('vendutoFileData');
+                    alert('Memoria cancellata. Ora puoi riesportare tutti i dati.');
+                    document.querySelector('.modal').remove();
+                  }
+                })()" style="padding: 10px;">
+                  🗑️ Cancella memoria e ricomincia
+                  <br><small>Rimuove tutti i dati dalla memoria del browser</small>
+                </button>
+                
+                <button class="btn btn-secondary" onclick="document.querySelector('.modal').remove()" style="padding: 10px;">
+                  ❌ Annulla operazione
+                </button>
+              </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 10px; background-color: #e7f3ff; border-radius: 5px;">
+              <p style="margin: 0; font-size: 14px; color: #0066cc;">
+                <strong>Suggerimento:</strong> Se il file VENDUTO.xlsx reale è vuoto o desincronizzato, 
+                puoi cancellare la memoria del browser e riesportare tutti i dati.
+              </p>
+            </div>
+          `;
+          
+          modal.appendChild(modalContent);
+          document.body.appendChild(modal);
+          
+          // Salva i dati per l'uso successivo
+          this._vendutoTempData = {
+            newData: newData,
+            uniqueNewData: uniqueNewData,
+            existingData: existingData
+          };
+          
+          return;
+        }
+        
+        // Combina i dati
+        const allData = [...existingData, ...newData];
+        
+        // Salva nel localStorage
+        localStorage.setItem('vendutoFileData', JSON.stringify(allData));
+        
+        // Crea il file Excel
+        const wb = XLSX.utils.book_new();
+        const wsData = [
+          // Header
+          ['N° Ordine', 'Data Ordine', 'Cliente', 'Indirizzo Consegna', 'P.IVA', 
+           'Data Consegna', 'Codice Prodotto', 'Prodotto', 'Quantità', 
+           'Prezzo Unitario', 'S.M.', 'Sconto %', 'Importo'],
+          ...allData
+        ];
+        
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        // Larghezza colonne
+        ws['!cols'] = [
+          {wch: 15}, {wch: 12}, {wch: 30}, {wch: 40}, {wch: 15},
+          {wch: 12}, {wch: 12}, {wch: 40}, {wch: 8}, {wch: 12},
+          {wch: 8}, {wch: 8}, {wch: 12}
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, ws, 'VENDUTO');
+        
+        // Salva file
+        XLSX.writeFile(wb, 'VENDUTO.xlsx');
+        
+        // Calcola totali
+        let grandTotal = 0;
+        allData.forEach(row => {
+          grandTotal += parseFloat(row[12]) || 0;
+        });
+        
+        // Mostra risultati
+        alert(`File VENDUTO aggiornato!\n\n` +
+              `Righe totali nel file: ${allData.length}\n` +
+              `Nuove righe aggiunte: ${newData.length}\n` +
+              `Totale complessivo: €${grandTotal.toFixed(2)}`);
+        
+      } catch (e) {
+        console.error('Errore durante l\'aggiornamento VENDUTO:', e);
+        alert('Errore durante l\'aggiornamento VENDUTO: ' + e.message);
+      }
+    },
+    
+    /**
+     * Visualizza il contenuto del file VENDUTO
+     */
+    viewVendutoContent: function() {
+      console.log('📋 Visualizzazione contenuto file VENDUTO...');
+      
+      // Recupera dati dal localStorage
+      const savedVenduto = localStorage.getItem('vendutoFileData');
+      if (!savedVenduto) {
+        alert('Il file VENDUTO è vuoto. Nessun dato salvato.');
+        return;
+      }
+      
+      try {
+        const data = JSON.parse(savedVenduto);
+        
+        // Crea modal per visualizzare i dati
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.cssText = 'display: block; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        modalContent.style.cssText = 'background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; border-radius: 8px;';
+        
+        // Analizza i dati
+        const stats = this.analyzeVendutoData(data);
+        const ordersArray = Array.from(stats.ordersMap.values());
+        ordersArray.sort((a, b) => b.date.localeCompare(a.date));
+        
+        modalContent.innerHTML = `
+          <span class="close" onclick="this.closest('.modal').remove()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+          <h3>📋 Contenuto File VENDUTO</h3>
+          
+          <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+            <h4 style="margin-top: 0;">Riepilogo Generale</h4>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+              <div><strong>Righe totali:</strong> ${data.length}</div>
+              <div><strong>Ordini:</strong> ${stats.ordersMap.size}</div>
+              <div><strong>Clienti diversi:</strong> ${stats.uniqueClients.size}</div>
+              <div><strong>Prodotti diversi:</strong> ${stats.uniqueProducts.size}</div>
+              <div><strong>Quantità totale:</strong> ${stats.totalQuantity.toFixed(0)}</div>
+              <div><strong>Importo totale:</strong> €${stats.totalAmount.toFixed(2)}</div>
+            </div>
+          </div>
+          
+          <div style="margin: 20px 0;">
+            <h4>Ultimi 10 Ordini</h4>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background-color: #f8f9fa;">
+                  <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">N° Ordine</th>
+                  <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Data</th>
+                  <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Cliente</th>
+                  <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">Prodotti</th>
+                  <th style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">Importo</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${ordersArray.slice(0, 10).map(order => `
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">${order.orderNumber}</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">${order.date}</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">${order.client}</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">${order.products}</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">€${order.totalAmount.toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ${ordersArray.length > 10 ? `<p style="margin-top: 10px; color: #666;">...e altri ${ordersArray.length - 10} ordini</p>` : ''}
+          </div>
+          
+          <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+            Chiudi
+          </button>
+        `;
+        
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+      } catch (e) {
+        console.error('Errore nel caricamento dati VENDUTO:', e);
+        alert('Errore nel caricamento del file VENDUTO');
+      }
+    },
+    
+    /**
+     * Analizza i dati del file VENDUTO
+     */
+    analyzeVendutoData: function(data) {
+      const stats = {
+        ordersMap: new Map(),
+        totalAmount: 0,
+        totalQuantity: 0,
+        uniqueProducts: new Set(),
+        uniqueClients: new Set()
+      };
+      
+      data.forEach(row => {
+        const orderNum = row[0];
+        const client = row[2];
+        const productCode = row[6];
+        const quantity = parseFloat(row[8]) || 0;
+        const amount = parseFloat(row[12]) || 0;
+        const orderDate = row[1];
+        
+        // Aggrega per ordine
+        if (!stats.ordersMap.has(orderNum)) {
+          stats.ordersMap.set(orderNum, {
+            orderNumber: orderNum,
+            client: client,
+            date: orderDate,
+            products: 0,
+            totalAmount: 0
+          });
+        }
+        
+        const orderInfo = stats.ordersMap.get(orderNum);
+        orderInfo.products++;
+        orderInfo.totalAmount += amount;
+        
+        // Statistiche globali
+        stats.totalAmount += amount;
+        stats.totalQuantity += quantity;
+        stats.uniqueProducts.add(productCode);
+        stats.uniqueClients.add(client);
+      });
+      
+      return stats;
+    },
+    
+    /**
+     * Mostra dialog per sincronizzazione
+     */
+    showSyncDialog: function() {
+      const modal = document.createElement('div');
+      modal.id = 'syncDialogModal';
+      modal.className = 'modal';
+      modal.style.cssText = 'display: block; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
+      
+      const modalContent = document.createElement('div');
+      modalContent.className = 'modal-content';
+      modalContent.style.cssText = 'background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px;';
+      
+      modalContent.innerHTML = `
+        <span class="close" onclick="window.OrdiniExport.closeSyncDialog()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+        <h3 style="margin-top: 0;">🔄 Sincronizzazione File VENDUTO</h3>
+        
+        <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+          <h4 style="margin-top: 0;">Stato attuale:</h4>
+          <p>Il file VENDUTO contiene attualmente <strong>${this.getVendutoCount()} righe</strong>.</p>
+        </div>
+        
+        <div style="margin: 20px 0;">
+          <h4>Operazioni disponibili:</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn btn-info" onclick="window.OrdiniExport.viewVendutoContent(); window.OrdiniExport.closeSyncDialog()" style="padding: 10px 20px;">
+              👁️ Visualizza contenuto VENDUTO
+            </button>
+            
+            <button class="btn btn-warning" onclick="if(confirm('Sei sicuro di voler cancellare tutto il contenuto del file VENDUTO?')) { localStorage.removeItem('vendutoFileData'); alert('File VENDUTO cancellato con successo!'); window.OrdiniExport.closeSyncDialog(); location.reload(); }" style="padding: 10px 20px;">
+              🗑️ Cancella file VENDUTO
+            </button>
+            
+            <input type="file" id="vendutoImportFile" accept=".xlsx" style="display: none;" onchange="window.OrdiniExport.importVendutoFromFile(this.files[0])">
+            <button class="btn btn-primary" onclick="document.getElementById('vendutoImportFile').click()" style="padding: 10px 20px;">
+              📁 Importa file VENDUTO.xlsx esistente
+            </button>
+          </div>
+        </div>
+        
+        <div style="margin: 20px 0; padding: 15px; background-color: #e7f3ff; border-radius: 5px;">
+          <h5 style="margin-top: 0; color: #0066cc;">ℹ️ Informazioni:</h5>
+          <ul style="margin: 0; padding-left: 20px; color: #666;">
+            <li><strong>Visualizza:</strong> Mostra il contenuto attuale del file VENDUTO</li>
+            <li><strong>Cancella:</strong> Rimuove tutti i dati salvati (usare con cautela)</li>
+            <li><strong>Importa:</strong> Carica un file VENDUTO.xlsx esistente per sincronizzare i dati</li>
+          </ul>
+        </div>
+        
+        <button class="btn btn-secondary" onclick="window.OrdiniExport.closeSyncDialog()">
+          Chiudi
+        </button>
+      `;
+      
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+    },
+    
+    /**
+     * Chiude il dialog di sincronizzazione
+     */
+    closeSyncDialog: function() {
+      const modal = document.getElementById('syncDialogModal');
+      if (modal) {
+        document.body.removeChild(modal);
+      }
+    },
+    
+    /**
+     * Ottiene il conteggio righe VENDUTO
+     */
+    getVendutoCount: function() {
+      try {
+        const savedVenduto = localStorage.getItem('vendutoFileData');
+        if (savedVenduto) {
+          return JSON.parse(savedVenduto).length;
+        }
+      } catch (e) {
+        console.error('Errore nel conteggio VENDUTO:', e);
+      }
+      return 0;
+    },
+    
+    /**
+     * Confronta e esporta nel file VENDUTO
+     */
+    compareAndExportVenduto: function(file) {
+      if (!file) return;
+      
+      // Chiudi il modal corrente
+      const modal = document.querySelector('.modal');
+      if (modal) modal.remove();
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, {type: 'array'});
+          
+          // Cerca il foglio VENDUTO
+          const sheetName = workbook.SheetNames.find(name => name.toUpperCase() === 'VENDUTO') || workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          
+          // Converti in array
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
+          
+          if (jsonData.length > 1) {
+            // Rimuovi header
+            const fileData = jsonData.slice(1);
+            
+            // Ora procedi con l'export usando i dati del file reale
+            this._exportToVendutoWithComparison(fileData);
+          } else {
+            alert('Il file VENDUTO caricato è vuoto. Procedo con export normale.');
+            this.exportToVendutoFile(this._ordersToExport);
+          }
+        } catch (error) {
+          console.error('Errore durante la lettura del file:', error);
+          alert('Errore durante la lettura del file: ' + error.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    },
+    
+    /**
+     * Export nel file VENDUTO con confronto dati reali
+     */
+    _exportToVendutoWithComparison: function(realFileData) {
+      try {
+        // Prepara i dati dei nuovi ordini
+        const newData = [];
+        let totaleNuovo = 0;
+        
+        this._ordersToExport.forEach(order => {
+          if (order.products && order.products.length > 0) {
+            order.products.forEach(product => {
+              const quantity = parseFloat((product.quantity || '0').toString().replace(',', '.')) || 0;
+              const unitPrice = parseFloat((product.unitPrice || product.price || '0').toString().replace(',', '.')) || 0;
+              const sm = parseFloat((product.sm || '0').toString().replace(',', '.')) || 0;
+              const discount = parseFloat((product.discount || '0').toString().replace(',', '.').replace('%', '')) || 0;
+              
+              // Calcola importo
+              let quantitaEffettiva = quantity - sm;
+              if (quantitaEffettiva < 0) quantitaEffettiva = 0;
+              
+              let importo = quantitaEffettiva * unitPrice;
+              if (discount > 0) {
+                importo = importo * (1 - discount / 100);
+              }
+              
+              totaleNuovo += importo;
+              
+              // Pulisci l'indirizzo
+              let cleanAddress = order.deliveryAddress || order.address || '';
+              if (cleanAddress && order.clientName) {
+                const clientNamePattern = new RegExp('^' + order.clientName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i');
+                cleanAddress = cleanAddress.replace(clientNamePattern, '').trim();
+              }
+              
+              newData.push([
+                order.orderNumber || '',
+                order.orderDate || '',
+                order.clientName || '',
+                cleanAddress,
+                order.vatNumber || '',
+                order.deliveryDate || '',
+                product.code || '',
+                product.description || '',
+                quantity,
+                unitPrice,
+                sm || 0,
+                discount || 0,
+                importo
+              ]);
+            });
+          }
+        });
+        
+        // Controlla duplicati con i dati del FILE REALE
+        const realFileKeys = new Set();
+        realFileData.forEach(row => {
+          if (row && row.length > 6) {
+            realFileKeys.add(`${row[0]}_${row[6]}`);
+          }
+        });
+        
+        const duplicates = [];
+        const uniqueNewData = [];
+        
+        newData.forEach(row => {
+          const key = `${row[0]}_${row[6]}`;
+          if (realFileKeys.has(key)) {
+            duplicates.push({
+              orderNumber: row[0],
+              productCode: row[6],
+              client: row[2],
+              description: row[7],
+              amount: row[12]
+            });
+          } else {
+            uniqueNewData.push(row);
+          }
+        });
+        
+        // Mostra dialog con risultati del confronto
+        this._showComparisonDialog(realFileData, newData, duplicates, uniqueNewData);
+        
+      } catch (error) {
+        console.error('Errore durante il confronto:', error);
+        alert('Errore durante il confronto: ' + error.message);
+      }
+    },
+    
+    /**
+     * Mostra dialog con risultati del confronto
+     */
+    _showComparisonDialog: function(realFileData, newData, duplicates, uniqueNewData) {
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.cssText = 'display: block; position: fixed; z-index: 1002; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
+      
+      const modalContent = document.createElement('div');
+      modalContent.className = 'modal-content';
+      modalContent.style.cssText = 'background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 8px;';
+      
+      // Calcola totali
+      let duplicatesTotalAmount = 0;
+      duplicates.forEach(dup => {
+        duplicatesTotalAmount += parseFloat(dup.amount) || 0;
+      });
+      
+      modalContent.innerHTML = `
+        <h3>📊 Risultato Confronto con File VENDUTO Reale</h3>
+        
+        <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+          <h4 style="margin-top: 0;">Riepilogo:</h4>
+          <p><strong>File VENDUTO esistente:</strong> ${realFileData.length} righe</p>
+          <p><strong>Nuovi dati da aggiungere:</strong> ${newData.length} righe</p>
+          <p><strong>Duplicati trovati:</strong> ${duplicates.length} righe</p>
+          <p><strong>Dati univoci da aggiungere:</strong> ${uniqueNewData.length} righe</p>
+        </div>
+        
+        ${duplicates.length > 0 ? `
+          <div style="margin: 20px 0;">
+            <h4>⚠️ Prodotti già presenti nel file VENDUTO:</h4>
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead style="position: sticky; top: 0; background-color: #f8f9fa;">
+                  <tr>
+                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">N° Ordine</th>
+                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Codice</th>
+                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: left;">Cliente</th>
+                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">Importo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${duplicates.slice(0, 20).map(dup => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #dee2e6;">${dup.orderNumber}</td>
+                      <td style="padding: 8px; border: 1px solid #dee2e6;">${dup.productCode}</td>
+                      <td style="padding: 8px; border: 1px solid #dee2e6;">${dup.client}</td>
+                      <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">€${parseFloat(dup.amount).toFixed(2)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              ${duplicates.length > 20 ? `<p style="padding: 10px; margin: 0; color: #666;">...e altri ${duplicates.length - 20} duplicati</p>` : ''}
+            </div>
+            <p style="margin-top: 10px; color: #dc3545;">
+              <strong>Valore totale duplicati:</strong> €${duplicatesTotalAmount.toFixed(2)}
+            </p>
+          </div>
+        ` : ''}
+        
+        <div style="margin: 20px 0;">
+          <h4>Cosa vuoi fare?</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            ${uniqueNewData.length > 0 ? `
+              <button class="btn btn-primary" onclick="window.OrdiniExport._proceedWithFileComparison('unique')" style="padding: 10px;">
+                ✅ Aggiungi solo i ${uniqueNewData.length} prodotti nuovi
+                <br><small>Evita duplicati già presenti nel file</small>
+              </button>
+            ` : ''}
+            
+            <button class="btn btn-warning" onclick="window.OrdiniExport._proceedWithFileComparison('all')" style="padding: 10px;">
+              🔄 Aggiungi tutti i ${newData.length} prodotti
+              <br><small>Includi anche i duplicati</small>
+            </button>
+            
+            <button class="btn btn-info" onclick="window.OrdiniExport._proceedWithFileComparison('replace')" style="padding: 10px;">
+              🔁 Sostituisci tutto il contenuto
+              <br><small>Crea un nuovo file VENDUTO con solo questi dati</small>
+            </button>
+            
+            <button class="btn btn-secondary" onclick="document.querySelector('.modal').remove()" style="padding: 10px;">
+              ❌ Annulla
+            </button>
+          </div>
+        </div>
+      `;
+      
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+      
+      // Salva i dati per l'uso successivo
+      this._fileComparisonData = {
+        realFileData: realFileData,
+        newData: newData,
+        uniqueNewData: uniqueNewData
+      };
+    },
+    
+    /**
+     * Procedi dopo il confronto con il file
+     */
+    _proceedWithFileComparison: function(mode) {
+      if (!this._fileComparisonData) return;
+      
+      const { realFileData, newData, uniqueNewData } = this._fileComparisonData;
+      let finalData = [];
+      
+      switch(mode) {
+        case 'unique':
+          // Aggiungi solo i dati univoci
+          finalData = [...realFileData, ...uniqueNewData];
+          break;
+        case 'all':
+          // Aggiungi tutti i nuovi dati
+          finalData = [...realFileData, ...newData];
+          break;
+        case 'replace':
+          // Sostituisci tutto con i nuovi dati
+          finalData = newData;
+          break;
+      }
+      
+      // Aggiorna localStorage
+      localStorage.setItem('vendutoFileData', JSON.stringify(finalData));
+      
+      // Crea il file Excel
+      const wb = XLSX.utils.book_new();
+      const wsData = [
+        // Header
+        ['N° Ordine', 'Data Ordine', 'Cliente', 'Indirizzo Consegna', 'P.IVA', 
+         'Data Consegna', 'Codice Prodotto', 'Prodotto', 'Quantità', 
+         'Prezzo Unitario', 'S.M.', 'Sconto %', 'Importo'],
+        ...finalData
+      ];
+      
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Larghezza colonne
+      ws['!cols'] = [
+        {wch: 15}, {wch: 12}, {wch: 30}, {wch: 40}, {wch: 15},
+        {wch: 12}, {wch: 12}, {wch: 40}, {wch: 8}, {wch: 12},
+        {wch: 8}, {wch: 8}, {wch: 12}
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, 'VENDUTO');
+      
+      // Salva file
+      XLSX.writeFile(wb, 'VENDUTO.xlsx');
+      
+      // Calcola totali
+      let grandTotal = 0;
+      finalData.forEach(row => {
+        grandTotal += parseFloat(row[12]) || 0;
+      });
+      
+      // Chiudi modal
+      const modal = document.querySelector('.modal');
+      if (modal) modal.remove();
+      
+      // Mostra risultati
+      let message = '';
+      switch(mode) {
+        case 'unique':
+          message = `Aggiunte ${uniqueNewData.length} righe univoche`;
+          break;
+        case 'all':
+          message = `Aggiunte ${newData.length} righe (inclusi duplicati)`;
+          break;
+        case 'replace':
+          message = `File sostituito con ${newData.length} righe`;
+          break;
+      }
+      
+      alert(`File VENDUTO aggiornato!\n\n${message}\nRighe totali nel file: ${finalData.length}\nTotale complessivo: €${grandTotal.toFixed(2)}`);
+      
+      // Pulisci dati temporanei
+      this._fileComparisonData = null;
+    },
+    
+    /**
+     * Importa file VENDUTO da file Excel
+     */
+    importVendutoFromFile: function(file) {
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, {type: 'array'});
+          
+          // Cerca il foglio VENDUTO
+          const sheetName = workbook.SheetNames.find(name => name.toUpperCase() === 'VENDUTO') || workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          
+          // Converti in array
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
+          
+          if (jsonData.length > 1) {
+            // Rimuovi header
+            const dataRows = jsonData.slice(1);
+            
+            // Salva nel localStorage
+            localStorage.setItem('vendutoFileData', JSON.stringify(dataRows));
+            
+            alert(`File VENDUTO importato con successo!\n\nRighe importate: ${dataRows.length}`);
+            window.OrdiniExport.closeSyncDialog();
+            location.reload();
+          } else {
+            alert('Il file selezionato non contiene dati validi.');
+          }
+        } catch (error) {
+          console.error('Errore durante l\'importazione:', error);
+          alert('Errore durante l\'importazione del file: ' + error.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    },
+    
+    /**
+     * Continua l'export del file VENDUTO dopo la scelta dell'utente
+     */
+    _continueVendutoExport: function() {
+      if (!this._vendutoTempData) return;
+      
+      const { newData, uniqueNewData, existingData } = this._vendutoTempData;
+      let dataToAdd = newData;
+      
+      // Determina quali dati aggiungere in base alla scelta dell'utente
+      if (this._proceedWithUniqueOnly) {
+        dataToAdd = uniqueNewData;
+      }
+      
+      // Combina i dati
+      const allData = [...existingData, ...dataToAdd];
+      
+      // Salva nel localStorage
+      localStorage.setItem('vendutoFileData', JSON.stringify(allData));
+      
+      // Crea il file Excel
+      const wb = XLSX.utils.book_new();
+      const wsData = [
+        // Header
+        ['N° Ordine', 'Data Ordine', 'Cliente', 'Indirizzo Consegna', 'P.IVA', 
+         'Data Consegna', 'Codice Prodotto', 'Prodotto', 'Quantità', 
+         'Prezzo Unitario', 'S.M.', 'Sconto %', 'Importo'],
+        ...allData
+      ];
+      
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Larghezza colonne
+      ws['!cols'] = [
+        {wch: 15}, {wch: 12}, {wch: 30}, {wch: 40}, {wch: 15},
+        {wch: 12}, {wch: 12}, {wch: 40}, {wch: 8}, {wch: 12},
+        {wch: 8}, {wch: 8}, {wch: 12}
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, 'VENDUTO');
+      
+      // Salva file
+      XLSX.writeFile(wb, 'VENDUTO.xlsx');
+      
+      // Calcola totali
+      let grandTotal = 0;
+      allData.forEach(row => {
+        grandTotal += parseFloat(row[12]) || 0;
+      });
+      
+      // Mostra risultati
+      alert(`File VENDUTO aggiornato!\n\n` +
+            `Righe totali nel file: ${allData.length}\n` +
+            `Nuove righe aggiunte: ${dataToAdd.length}\n` +
+            `Totale complessivo: €${grandTotal.toFixed(2)}`);
+      
+      // Pulisci i dati temporanei
+      this._vendutoTempData = null;
+      this._proceedWithUniqueOnly = false;
+      this._proceedWithAll = false;
+    },
+    
+    /**
+     * Export in un nuovo file Excel
+     */
+    exportToNewFile: function(orders) {
+      try {
+        if (!window.XLSX) {
+          alert('Libreria XLSX non caricata. Ricaricare la pagina.');
+          return;
+        }
+        
+        // Prepara i dati
+        const data = [];
+        
+        // Header
+        data.push([
+          'N° Ordine',
+          'Data Ordine',
+          'Cliente',
+          'Indirizzo Consegna',
+          'P.IVA',
+          'Data Consegna',
+          'Codice Prodotto',
+          'Prodotto',
+          'Quantità',
+          'Prezzo Unitario',
+          'S.M.',
+          'Sconto %',
+          'Importo'
+        ]);
+        
+        // Dati ordini
+        let totale = 0;
+        let righeEsportate = 0;
+        
+        orders.forEach(order => {
+          if (order.products && order.products.length > 0) {
+            order.products.forEach(product => {
+              const quantity = parseFloat((product.quantity || '0').toString().replace(',', '.')) || 0;
+              const unitPrice = parseFloat((product.unitPrice || product.price || '0').toString().replace(',', '.')) || 0;
+              const sm = parseFloat((product.sm || '0').toString().replace(',', '.')) || 0;
+              const discount = parseFloat((product.discount || '0').toString().replace(',', '.').replace('%', '')) || 0;
+              
+              // Calcola importo
+              let quantitaEffettiva = quantity - sm;
+              if (quantitaEffettiva < 0) quantitaEffettiva = 0;
+              
+              let importo = quantitaEffettiva * unitPrice;
+              if (discount > 0) {
+                importo = importo * (1 - discount / 100);
+              }
+              
+              totale += importo;
+              righeEsportate++;
+              
+              // Pulisci l'indirizzo rimuovendo il nome del cliente se presente
+              let cleanAddress = order.deliveryAddress || order.address || '';
+              if (cleanAddress && order.clientName) {
+                // Rimuovi il nome del cliente dall'inizio dell'indirizzo
+                const clientNamePattern = new RegExp('^' + order.clientName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'i');
+                cleanAddress = cleanAddress.replace(clientNamePattern, '').trim();
+              }
+              
+              data.push([
+                order.orderNumber || '',
+                order.orderDate || '',
+                order.clientName || '',
+                cleanAddress,
+                order.vatNumber || '',
+                order.deliveryDate || '',
+                product.code || '',
+                product.description || '',
+                quantity,
+                unitPrice,
+                sm || 0,
+                discount || 0,
+                importo
+              ]);
+            });
+          }
+        });
+        
+        // Crea workbook
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Larghezza colonne
+        ws['!cols'] = [
+          {wch: 15}, {wch: 12}, {wch: 30}, {wch: 40}, {wch: 15},
+          {wch: 12}, {wch: 12}, {wch: 40}, {wch: 8}, {wch: 12},
+          {wch: 8}, {wch: 8}, {wch: 12}
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, ws, 'Ordini');
+        
+        // Salva file
+        const fileName = `Ordini_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        
+        alert(`Export completato!\n\nOrdini esportati: ${orders.length}\nRighe totali: ${righeEsportate}\nTotale importo: €${totale.toFixed(2)}`);
+        
+      } catch (e) {
+        console.error('Errore durante l\'esportazione:', e);
+        alert('Errore durante l\'esportazione: ' + e.message);
+      }
+    }
+  };
+  
+  console.log('✅ OrdiniExport caricato e disponibile globalmente');
+})();

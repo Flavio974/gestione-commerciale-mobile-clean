@@ -1,0 +1,258 @@
+/* Mobile Specific Styles */
+
+/* Touch-friendly elements */
+@media (hover: none) and (pointer: coarse) {
+  button, .button, .tab-link {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  input, select, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Mobile Navigation */
+@media (max-width: 767px) {
+  /* Horizontal scrollable tabs */
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    background-color: #f1f5f9;
+    border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tab-link {
+    flex: 0 0 auto;
+    padding: 1rem;
+    white-space: nowrap;
+    min-width: 100px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  /* Mobile Forms */
+  .form-row {
+    margin-bottom: 1rem;
+  }
+  
+  .form-col-2,
+  .form-col-3,
+  .form-col-4 {
+    flex-direction: column;
+  }
+  
+  .form-col-2 > div,
+  .form-col-3 > div,
+  .form-col-4 > div {
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile Tables */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    min-width: 600px;
+  }
+  
+  /* Mobile Buttons */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  
+  .controls button {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 120px;
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Mobile Timeline */
+  #timelineContainer {
+    height: 50px !important;
+    touch-action: pan-x pan-y;
+  }
+  
+  /* Mobile Cards */
+  .card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile Modals */
+  .modal-content {
+    margin: 5% 1rem;
+    width: calc(100% - 2rem);
+    max-width: none;
+  }
+  
+  /* Action buttons in mobile */
+  .action-button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Mobile specific utilities */
+  .mobile-only {
+    display: block;
+  }
+  
+  .desktop-only {
+    display: none;
+  }
+  
+  /* Improve touch targets */
+  .checkbox-container {
+    padding: 0.5rem 0;
+  }
+  
+  .checkbox-container input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.75rem;
+  }
+  
+  /* Mobile search */
+  input[type="search"],
+  input[type="text"][placeholder*="Cerca"] {
+    padding-left: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cpath d='m21 21-4.35-4.35'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 0.75rem center;
+    background-size: 20px 20px;
+  }
+}
+
+/* Landscape Mode Adjustments */
+@media (max-width: 767px) and (orientation: landscape) {
+  #app-header {
+    padding: 0.5rem;
+  }
+  
+  #app-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .tabs {
+    padding: 0;
+  }
+  
+  .tab-link {
+    padding: 0.75rem 1rem;
+  }
+  
+  #timelineContainer {
+    height: 50px !important;
+  }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 375px) {
+  body {
+    font-size: 14px;
+  }
+  
+  button, .button {
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
+  }
+  
+  .tab-link {
+    font-size: 0.8rem;
+    min-width: 80px;
+    padding: 0.75rem 0.5rem;
+  }
+  
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.1rem; }
+}
+
+/* iOS Specific Fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific styles */
+  input, select, textarea {
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+  
+  input[type="date"],
+  input[type="time"] {
+    min-height: 44px;
+  }
+}
+
+/* Android Specific Fixes */
+@media (hover: none) and (pointer: coarse) and (-webkit-min-device-pixel-ratio: 1.5) {
+  /* Android specific styles */
+  * {
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+  }
+}
+
+/* Pull to Refresh Prevention */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Sticky Footer for Mobile */
+@media (max-width: 767px) {
+  .mobile-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-around;
+    z-index: 100;
+  }
+  
+  .mobile-footer button {
+    flex: 1;
+    margin: 0 0.25rem;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  /* Adjust main content to account for footer */
+  #main-content {
+    padding-bottom: 4rem;
+  }
+}
+
+/* Performance Optimizations */
+@media (max-width: 767px) {
+  /* Reduce animations on mobile */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+  
+  /* Hardware acceleration for scrolling */
+  .table-container,
+  .tabs,
+  #timelineContainer {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnosi 404 API Claude</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 20px;
+            background-color: #1a1a1a;
+            color: #0f0;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #0f0;
+            background-color: #000;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .info { color: #ff0; }
+        button {
+            background-color: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0a0;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnosi Completa Problema 404 API Claude</h1>
+    
+    <div class="test">
+        <h2>1. Informazioni Ambiente</h2>
+        <pre id="environment"></pre>
+    </div>
+    
+    <div class="test">
+        <h2>2. Test Connettività Server</h2>
+        <button onclick="testServerConnectivity()">Esegui Test Server</button>
+        <pre id="server-test"></pre>
+    </div>
+    
+    <div class="test">
+        <h2>3. Test Percorsi API</h2>
+        <button onclick="testAllPaths()">Test Tutti i Percorsi</button>
+        <pre id="path-test"></pre>
+    </div>
+    
+    <div class="test">
+        <h2>4. Test Metodi HTTP</h2>
+        <button onclick="testHttpMethods()">Test Metodi HTTP</button>
+        <pre id="method-test"></pre>
+    </div>
+    
+    <div class="test">
+        <h2>5. Test Headers e CORS</h2>
+        <button onclick="testHeaders()">Test Headers</button>
+        <pre id="header-test"></pre>
+    </div>
+    
+    <div class="test">
+        <h2>6. Diagnosi Finale e Soluzione</h2>
+        <button onclick="runCompleteDiagnosis()">Esegui Diagnosi Completa</button>
+        <pre id="diagnosis"></pre>
+    </div>
+
+    <script>
+        // Funzioni di utilità per logging
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toISOString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            element.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+        }
+
+        // 1. Mostra informazioni ambiente
+        function showEnvironment() {
+            const env = {
+                'User Agent': navigator.userAgent,
+                'Location': {
+                    'href': window.location.href,
+                    'protocol': window.location.protocol,
+                    'host': window.location.host,
+                    'hostname': window.location.hostname,
+                    'port': window.location.port || '(default)',
+                    'pathname': window.location.pathname,
+                    'origin': window.location.origin
+                },
+                'Document': {
+                    'readyState': document.readyState,
+                    'domain': document.domain,
+                    'referrer': document.referrer || '(none)'
+                }
+            };
+            
+            document.getElementById('environment').innerHTML = JSON.stringify(env, null, 2);
+        }
+
+        // 2. Test connettività server
+        async function testServerConnectivity() {
+            const id = 'server-test';
+            document.getElementById(id).innerHTML = '';
+            
+            // Test root
+            try {
+                log(id, 'Testing server root...');
+                const response = await fetch('/');
+                log(id, `Root response: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+            } catch (e) {
+                log(id, `Root test failed: ${e.message}`, 'error');
+            }
+            
+            // Test favicon (sempre presente)
+            try {
+                log(id, 'Testing static file (favicon)...');
+                const response = await fetch('/favicon.ico');
+                log(id, `Favicon response: ${response.status}`, response.status < 400 ? 'success' : 'info');
+            } catch (e) {
+                log(id, `Favicon test failed: ${e.message}`, 'error');
+            }
+        }
+
+        // 3. Test tutti i possibili percorsi per l'API
+        async function testAllPaths() {
+            const id = 'path-test';
+            document.getElementById(id).innerHTML = '';
+            
+            const paths = [
+                '/api/claude-ai.php',
+                'api/claude-ai.php',
+                './api/claude-ai.php',
+                'http://localhost:8000/api/claude-ai.php',
+                `${window.location.origin}/api/claude-ai.php`,
+                '/api/claude-ai.json',
+                '/claude-ai.php'
+            ];
+            
+            for (const path of paths) {
+                try {
+                    log(id, `Testing: ${path}`);
+                    const response = await fetch(path, { method: 'HEAD' });
+                    log(id, `  → ${response.status} ${response.statusText}`, response.status < 400 ? 'success' : 'error');
+                } catch (e) {
+                    log(id, `  → Network error: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        // 4. Test metodi HTTP
+        async function testHttpMethods() {
+            const id = 'method-test';
+            document.getElementById(id).innerHTML = '';
+            
+            const methods = ['GET', 'POST', 'OPTIONS', 'HEAD'];
+            const url = '/api/claude-ai.php';
+            
+            for (const method of methods) {
+                try {
+                    log(id, `Testing ${method} ${url}`);
+                    const options = { method };
+                    if (method === 'POST') {
+                        options.headers = { 'Content-Type': 'application/json' };
+                        options.body = JSON.stringify({ test: true });
+                    }
+                    const response = await fetch(url, options);
+                    log(id, `  → ${response.status} ${response.statusText}`, response.status < 400 ? 'success' : 'error');
+                    
+                    // Mostra headers di risposta
+                    if (response.headers.get('Access-Control-Allow-Origin')) {
+                        log(id, `  → CORS: ${response.headers.get('Access-Control-Allow-Origin')}`, 'info');
+                    }
+                } catch (e) {
+                    log(id, `  → Error: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        // 5. Test headers e CORS
+        async function testHeaders() {
+            const id = 'header-test';
+            document.getElementById(id).innerHTML = '';
+            
+            try {
+                log(id, 'Testing CORS preflight...');
+                const response = await fetch('/api/claude-ai.php', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+                
+                log(id, `Preflight response: ${response.status}`);
+                
+                const headers = [
+                    'Access-Control-Allow-Origin',
+                    'Access-Control-Allow-Methods',
+                    'Access-Control-Allow-Headers',
+                    'Content-Type',
+                    'X-Powered-By'
+                ];
+                
+                headers.forEach(header => {
+                    const value = response.headers.get(header);
+                    if (value) {
+                        log(id, `${header}: ${value}`, 'success');
+                    }
+                });
+            } catch (e) {
+                log(id, `Header test failed: ${e.message}`, 'error');
+            }
+        }
+
+        // 6. Diagnosi completa
+        async function runCompleteDiagnosis() {
+            const id = 'diagnosis';
+            document.getElementById(id).innerHTML = '';
+            
+            log(id, '=== DIAGNOSI COMPLETA ===\n', 'info');
+            
+            // Test 1: File esiste sul server?
+            try {
+                const response = await fetch('/api/claude-ai.php', { method: 'HEAD' });
+                if (response.status === 404) {
+                    log(id, '❌ PROBLEMA IDENTIFICATO: File non trovato (404)', 'error');
+                    log(id, '\nPOSSIBILI CAUSE:', 'info');
+                    log(id, '1. Il server PHP non è stato avviato dalla directory corretta', 'error');
+                    log(id, '2. Il file api/claude-ai.php non esiste nel percorso relativo al server', 'error');
+                    log(id, '3. Problemi di routing o configurazione del server', 'error');
+                    
+                    log(id, '\nSOLUZIONE:', 'success');
+                    log(id, '1. Ferma il server PHP corrente (Ctrl+C)', 'success');
+                    log(id, '2. Naviga alla directory del progetto:', 'success');
+                    log(id, '   cd /home/flavio2025/Desktop/GestioneCommerciale-Mobile', 'success');
+                    log(id, '3. Riavvia il server PHP:', 'success');
+                    log(id, '   php -S localhost:8000', 'success');
+                    log(id, '4. Oppure usa lo script:', 'success');
+                    log(id, '   ./start-server.sh', 'success');
+                } else if (response.status === 405) {
+                    log(id, '✅ File trovato! Il server risponde correttamente', 'success');
+                    log(id, 'ℹ️  Status 405 è normale per richieste HEAD/GET', 'info');
+                    
+                    // Test POST
+                    const postResponse = await fetch('/api/claude-ai.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: 'test', isVoiceInput: false })
+                    });
+                    
+                    if (postResponse.ok) {
+                        log(id, '✅ API funzionante! Risponde correttamente alle richieste POST', 'success');
+                    } else {
+                        log(id, `⚠️  API risponde con status ${postResponse.status}`, 'error');
+                    }
+                } else {
+                    log(id, `⚠️  Status inaspettato: ${response.status}`, 'error');
+                }
+            } catch (e) {
+                log(id, `❌ Errore di rete: ${e.message}`, 'error');
+                log(id, 'Il server potrebbe non essere in esecuzione', 'error');
+            }
+            
+            // Verifica directory di lavoro del server
+            log(id, '\n=== VERIFICA CONFIGURAZIONE SERVER ===', 'info');
+            log(id, `Server dovrebbe essere accessibile su: http://localhost:8000`, 'info');
+            log(id, `API dovrebbe rispondere su: http://localhost:8000/api/claude-ai.php`, 'info');
+        }
+
+        // Esegui test iniziali
+        window.onload = () => {
+            showEnvironment();
+        };
+    </script>
+</body>
+</html>

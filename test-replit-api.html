@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Replit</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        #result { margin-top: 20px; padding: 20px; background: #f0f0f0; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Test API Replit</h1>
+    
+    <button onclick="testDirect()">Test Diretto Replit</button>
+    <button onclick="testWithProxy()">Test con Proxy CORS</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const REPLIT_URL = 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev';
+        
+        async function testDirect() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing diretto...';
+            
+            try {
+                const response = await fetch(`${REPLIT_URL}/api/claude-ai.php?test=1`);
+                const data = await response.json();
+                result.innerHTML = `<div class="success">✅ Successo! Risposta: ${JSON.stringify(data, null, 2)}</div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Errore: ${error.message}</div>`;
+            }
+        }
+        
+        async function testWithProxy() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing con proxy...';
+            
+            try {
+                // Usa un proxy CORS pubblico
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const response = await fetch(`${proxyUrl}${REPLIT_URL}/api/claude-ai.php?test=1`);
+                const data = await response.json();
+                result.innerHTML = `<div class="success">✅ Successo con proxy! Risposta: ${JSON.stringify(data, null, 2)}</div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Errore: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

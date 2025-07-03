@@ -1,0 +1,233 @@
+/* Percorsi Module Styles */
+
+.percorsi-container {
+  padding: 1rem;
+}
+
+.percorsi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.percorsi-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.import-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: var(--border-radius);
+}
+
+.date-input {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+}
+
+.percorsi-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.percorsi-filter-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  color: #333;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.percorsi-filter-btn:hover {
+  background: #f8f9fa;
+}
+
+.percorsi-filter-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.percorsi-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.percorsi-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.percorsi-table th,
+.percorsi-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.percorsi-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.percorsi-table tr:hover {
+  background: #f8f9fa;
+}
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.sortable-header:hover {
+  color: var(--accent);
+}
+
+.sort-icon {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
+.sortable-header:hover .sort-icon {
+  opacity: 1;
+}
+
+.sortable-header.sorted-asc .sort-icon {
+  content: '↑';
+  opacity: 1;
+  color: var(--accent);
+}
+
+.sortable-header.sorted-desc .sort-icon {
+  content: '↓';
+  opacity: 1;
+  color: var(--accent);
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.gps-cell {
+  font-size: 0.75rem;
+  color: #666;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chiave-univoca {
+  font-size: 0.75rem;
+  color: #666;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+}
+
+/* Sovrascrive gli stili esistenti per header con nomi lunghi */
+.percorsi-table th {
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999;
+  padding: 2rem;
+  font-style: italic;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .percorsi-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .percorsi-actions {
+    width: 100%;
+  }
+  
+  .import-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+  }
+  
+  .date-input {
+    width: 100%;
+  }
+  
+  .percorsi-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .percorsi-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .percorsi-table {
+    font-size: 0.9rem;
+  }
+  
+  .percorsi-table th,
+  .percorsi-table td {
+    padding: 0.5rem;
+  }
+}

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Refresh - Gestione Commerciale</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Force Refresh & Cache Clear</h1>
+        
+        <div class="info">
+            <strong>ℹ️ Info:</strong> Questa pagina ti aiuta a forzare il refresh completo dell'applicazione e svuotare la cache per assicurarti di usare l'ultima versione del codice.
+        </div>
+
+        <h2>1. Cache del Browser</h2>
+        <button class="btn" onclick="clearCache()">
+            🗑️ Svuota Cache Browser
+        </button>
+        <button class="btn" onclick="hardRefresh()">
+            🔄 Hard Refresh
+        </button>
+
+        <h2>2. Storage Locale</h2>
+        <button class="btn btn-danger" onclick="clearLocalStorage()">
+            🗑️ Svuota localStorage
+        </button>
+        <button class="btn btn-danger" onclick="clearSessionStorage()">
+            🗑️ Svuota sessionStorage
+        </button>
+        <button class="btn btn-danger" onclick="clearAllStorage()">
+            🗑️ Svuota TUTTO lo Storage
+        </button>
+
+        <h2>3. Verifica Versioni Script</h2>
+        <button class="btn" onclick="checkScriptVersions()">
+            🔍 Controlla Versioni Script
+        </button>
+
+        <h2>4. Test Export Excel</h2>
+        <button class="btn" onclick="testExcelExport()">
+            📊 Test Export Excel DDT/FT
+        </button>
+
+        <div id="results" class="success"></div>
+
+        <h2>5. Debug Info</h2>
+        <pre id="debugInfo"></pre>
+    </div>
+
+    <script>
+        // Mostra info debug all'avvio
+        window.onload = function() {
+            updateDebugInfo();
+        };
+
+        function updateDebugInfo() {
+            const debug = document.getElementById('debugInfo');
+            let info = '=== DEBUG INFO ===\n';
+            info += 'URL: ' + window.location.href + '\n';
+            info += 'User Agent: ' + navigator.userAgent + '\n';
+            info += 'localStorage items: ' + Object.keys(localStorage).length + '\n';
+            info += 'sessionStorage items: ' + Object.keys(sessionStorage).length + '\n';
+            info += '\n=== MODULI CARICATI ===\n';
+            info += 'DDTFTModule: ' + (typeof window.DDTFTModule !== 'undefined' ? '✅' : '❌') + '\n';
+            info += 'DDTFTExportExcel: ' + (typeof window.DDTFTExportExcel !== 'undefined' ? '✅' : '❌') + '\n';
+            info += 'DDTFTImport: ' + (typeof window.DDTFTImport !== 'undefined' ? '✅' : '❌') + '\n';
+            info += 'XLSX: ' + (typeof window.XLSX !== 'undefined' ? '✅' : '❌') + '\n';
+            debug.textContent = info;
+        }
+
+        function showResult(message, isError = false) {
+            const results = document.getElementById('results');
+            results.style.display = 'block';
+            results.className = isError ? 'error' : 'success';
+            results.innerHTML = '<strong>' + (isError ? '❌ ' : '✅ ') + '</strong>' + message;
+            updateDebugInfo();
+        }
+
+        function clearCache() {
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                    });
+                    showResult('Cache del browser svuotata!');
+                });
+            } else {
+                showResult('Il browser non supporta la gestione della cache. Usa Ctrl+Shift+R', true);
+            }
+        }
+
+        function hardRefresh() {
+            showResult('Eseguo hard refresh...');
+            setTimeout(() => {
+                location.reload(true);
+            }, 1000);
+        }
+
+        function clearLocalStorage() {
+            const count = Object.keys(localStorage).length;
+            localStorage.clear();
+            showResult(`localStorage svuotato! Rimossi ${count} elementi.`);
+        }
+
+        function clearSessionStorage() {
+            const count = Object.keys(sessionStorage).length;
+            sessionStorage.clear();
+            showResult(`sessionStorage svuotato! Rimossi ${count} elementi.`);
+        }
+
+        function clearAllStorage() {
+            const localCount = Object.keys(localStorage).length;
+            const sessionCount = Object.keys(sessionStorage).length;
+            localStorage.clear();
+            sessionStorage.clear();
+            showResult(`Tutto lo storage svuotato! Rimossi ${localCount + sessionCount} elementi totali.`);
+        }
+
+        function checkScriptVersions() {
+            const scripts = document.querySelectorAll('script[src]');
+            let report = '<h3>Versioni Script Caricate:</h3><ul>';
+            
+            scripts.forEach(script => {
+                if (script.src.includes('.js')) {
+                    const url = new URL(script.src);
+                    const path = url.pathname;
+                    const version = url.search ? url.search : 'no version';
+                    if (path.includes('ddtft') || path.includes('export')) {
+                        report += `<li><strong>${path}</strong>: ${version}</li>`;
+                    }
+                }
+            });
+            
+            report += '</ul>';
+            
+            // Controlla specificamente export-excel.js
+            const exportScript = Array.from(scripts).find(s => s.src.includes('export-excel.js'));
+            if (exportScript) {
+                report += `<p><strong>export-excel.js URL:</strong> ${exportScript.src}</p>`;
+            }
+            
+            showResult(report);
+        }
+
+        function testExcelExport() {
+            // Crea dati di test
+            const testData = [{
+                id: 'test_1',
+                type: 'ddt',
+                documentNumber: '4521',
+                orderNumber: '6475',
+                date: '19/05/2025',
+                clientCode: '20322',
+                clientName: 'DONAC S.R.L.',
+                deliveryAddress: 'VIA SALUZZO, 65 12038 SAVIGLIANO CN',
+                vatNumber: '04064060041',
+                items: [{
+                    code: '60039',
+                    description: 'GNOCCHETTI PATATE FRESCHE COTTE A',
+                    quantity: 12,
+                    price: 1.73,
+                    discount: 0,
+                    sm: 0,
+                    total: 20.76
+                }]
+            }];
+
+            console.log('=== TEST EXPORT EXCEL ===');
+            console.log('Test data:', testData);
+
+            if (window.DDTFTExportExcel && window.DDTFTExportExcel.exportToExcel) {
+                try {
+                    // Log delle intestazioni che dovrebbero essere usate
+                    console.log('Esecuzione export con DDTFTExportExcel.exportToExcel...');
+                    window.DDTFTExportExcel.exportToExcel(testData, 'TEST-DDT-FT.xlsx');
+                    showResult('Export test eseguito! Controlla il file scaricato e la console per i log.');
+                } catch (error) {
+                    showResult('Errore durante il test: ' + error.message, true);
+                    console.error('Errore test export:', error);
+                }
+            } else {
+                showResult('Modulo DDTFTExportExcel non trovato!', true);
+                console.error('DDTFTExportExcel:', window.DDTFTExportExcel);
+            }
+        }
+    </script>
+</body>
+</html>
