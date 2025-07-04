@@ -1235,9 +1235,12 @@
       constructor() {
         // Configurazione API backend - rileva automaticamente Netlify
         const isNetlify = window.location.hostname.includes('netlify');
-        // Usa sempre l'URL di Replit per le API
-        const REPLIT_API_URL = 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev';
-        this.apiUrl = `${REPLIT_API_URL}/claude-ai.php`;
+        if (isNetlify) {
+          this.apiUrl = '/api/claude-ai';
+        } else {
+          const REPLIT_API_URL = 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev';
+          this.apiUrl = `${REPLIT_API_URL}/claude-ai.php`;
+        }
         this.provider = localStorage.getItem('ai_provider') || 'claude';
         this.model = localStorage.getItem('ai_model') || 'claude-sonnet-4-20250514';
         this.messages = JSON.parse(localStorage.getItem('ai_chat_history') || '[]');
