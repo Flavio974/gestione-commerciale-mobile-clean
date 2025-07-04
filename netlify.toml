@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  command = "cd functions && npm install && cd .. && echo 'Force deploy functions'"
+  command = "npm install --prefix functions"
   functions = "functions"
 
 [build.environment]
