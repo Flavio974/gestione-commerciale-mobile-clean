@@ -122,14 +122,29 @@ class AIVoiceManagerV2 {
 
     selectBestVoice() {
         const voices = this.synthesis.getVoices();
+        console.log('🎤 Voci disponibili:', voices.map(v => `${v.name} (${v.lang})`));
         
-        // Priorità: voci italiane femminili Google
-        const priorities = [
-            { lang: 'it-IT', name: 'Google italiano' },
-            { lang: 'it-IT', name: 'Microsoft Elsa' },
-            { lang: 'it-IT', name: 'Alice' },
-            { lang: 'it-IT', name: '' } // Qualsiasi voce italiana
-        ];
+        // Priorità specifiche per dispositivo
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        
+        let priorities;
+        if (isIOS) {
+            // Priorità per iPad/iPhone
+            priorities = [
+                { lang: 'it-IT', name: 'Alice' },
+                { lang: 'it-IT', name: 'Federica' },
+                { lang: 'it-IT', name: 'Luca' },
+                { lang: 'it-IT', name: '' } // Qualsiasi voce italiana
+            ];
+        } else {
+            // Priorità per desktop
+            priorities = [
+                { lang: 'it-IT', name: 'Google italiano' },
+                { lang: 'it-IT', name: 'Microsoft Elsa' },
+                { lang: 'it-IT', name: 'Alice' },
+                { lang: 'it-IT', name: '' } // Qualsiasi voce italiana
+            ];
+        }
 
         for (const priority of priorities) {
             const voice = voices.find(v => 
@@ -139,9 +154,18 @@ class AIVoiceManagerV2 {
             
             if (voice) {
                 this.ttsConfig.voice = voice;
-                console.log('Voce TTS selezionata:', voice.name);
-                break;
+                console.log('✅ Voce TTS selezionata:', voice.name, 'per', isIOS ? 'iOS' : 'Desktop');
+                return;
             }
+        }
+        
+        // Fallback: prima voce italiana disponibile
+        const italianVoice = voices.find(v => v.lang.startsWith('it'));
+        if (italianVoice) {
+            this.ttsConfig.voice = italianVoice;
+            console.log('⚠️ Fallback voce italiana:', italianVoice.name);
+        } else {
+            console.log('❌ Nessuna voce italiana trovata');
         }
     }
 
@@ -217,6 +241,11 @@ class AIVoiceManagerV2 {
                     Usa wake word in auto
                 </label>
             </div>
+            <div class="control-group">
+                <button id="test-tts-btn" style="padding: 8px 16px; background: #007AFF; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    🔊 Test Audio
+                </button>
+            </div>
         `;
         
         // Assembla UI
@@ -278,6 +307,15 @@ class AIVoiceManagerV2 {
         this.elements.wakeWordToggle.addEventListener('change', (e) => {
             this.useWakeWord = e.target.checked;
         });
+        
+        // Pulsante test TTS
+        const testTtsBtn = document.getElementById('test-tts-btn');
+        if (testTtsBtn) {
+            testTtsBtn.addEventListener('click', () => {
+                console.log('🧪 Test TTS richiesto');
+                this.speak('Test audio funzionante. Questo è un test della sintesi vocale su iPad.');
+            });
+        }
     }
 
     toggleListening() {
@@ -419,6 +457,8 @@ class AIVoiceManagerV2 {
 
     async speak(text) {
         return new Promise((resolve) => {
+            console.log('🔊 Avvio TTS per:', text);
+            
             // Cancella code precedenti
             this.synthesis.cancel();
             
@@ -431,26 +471,60 @@ class AIVoiceManagerV2 {
             
             if (this.ttsConfig.voice) {
                 utterance.voice = this.ttsConfig.voice;
+                console.log('🎤 Voce selezionata:', this.ttsConfig.voice.name);
+            }
+            
+            // Fix specifico per iPad/iOS
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS) {
+                console.log('📱 Dispositivo iOS rilevato - Applicando fix TTS');
+                // Su iOS, a volte bisogna aspettare che il synthesis sia pronto
+                if (this.synthesis.speaking) {
+                    this.synthesis.cancel();
+                    // Piccola pausa per iOS
+                    setTimeout(() => this.synthesis.speak(utterance), 100);
+                } else {
+                    this.synthesis.speak(utterance);
+                }
+            } else {
+                this.synthesis.speak(utterance);
             }
             
             // Eventi
             utterance.onstart = () => {
+                console.log('🔊 TTS avviato');
                 this.updateUIState('speaking');
             };
             
             utterance.onend = () => {
+                console.log('🔊 TTS terminato');
                 this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
                 resolve();
             };
             
             utterance.onerror = (event) => {
-                console.error('Errore TTS:', event);
+                console.error('❌ Errore TTS:', event);
                 this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
+                
+                // Fallback per iOS: prova a riavviare dopo errore
+                if (isIOS && event.error === 'network') {
+                    console.log('🔄 Tentativo fallback TTS per iOS');
+                    setTimeout(() => {
+                        this.synthesis.cancel();
+                        this.synthesis.speak(utterance);
+                    }, 500);
+                }
+                
                 resolve();
             };
             
-            // Avvia sintesi vocale
-            this.synthesis.speak(utterance);
+            // Timeout di sicurezza per iOS
+            setTimeout(() => {
+                if (this.synthesis.speaking) {
+                    console.log('⏰ Timeout TTS - force resolve');
+                    resolve();
+                }
+            }, 15000); // 15 secondi max
         });
     }
 
