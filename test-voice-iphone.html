@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Test Voice iPhone</title>
+    
+    <!-- Voice Controls V2 CSS -->
+    <link rel="stylesheet" href="css/voice-controls-v2.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        
+        .test-section {
+            margin-bottom: 25px;
+        }
+        
+        .test-section h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #FFD700;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #34C759;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #FF9500;
+            color: white;
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .device-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .status {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            min-height: 100px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Test Voice iPhone</h1>
+        
+        <div class="device-info">
+            <strong>Dispositivo:</strong> <span id="deviceInfo">Rilevamento...</span><br>
+            <strong>Schermo:</strong> <span id="screenInfo">-</span><br>
+            <strong>User Agent:</strong> <span id="userAgent">-</span>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎤 Test Voice Controls</h3>
+            <button class="btn btn-primary" onclick="testBasicFunctionality()">
+                Test Funzionalità Base
+            </button>
+            <button class="btn btn-success" onclick="testAutoMode()">
+                Test Modalità AUTO
+            </button>
+            <button class="btn btn-warning" onclick="testTTS()">
+                Test Text-to-Speech
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📏 Test UI Responsive</h3>
+            <button class="btn btn-primary" onclick="testUIElements()">
+                Verifica Elementi UI
+            </button>
+            <button class="btn btn-primary" onclick="testTouchTargets()">
+                Test Touch Targets
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔄 Test Orientamento</h3>
+            <button class="btn btn-primary" onclick="testPortrait()">
+                Test Portrait Mode
+            </button>
+            <button class="btn btn-primary" onclick="testLandscape()">
+                Test Landscape Mode
+            </button>
+        </div>
+        
+        <div class="status" id="status">
+            <div>✅ Test page caricata</div>
+            <div>📱 Clicca i pulsanti per iniziare i test</div>
+        </div>
+    </div>
+
+    <!-- Voice Manager V2 -->
+    <script src="js/ai/ai-voice-manager-v2.js"></script>
+    
+    <script>
+        // Rilevamento dispositivo
+        document.addEventListener('DOMContentLoaded', function() {
+            const userAgent = navigator.userAgent;
+            const isIPhone = /iPhone/.test(userAgent);
+            const isIPad = /iPad/.test(userAgent);
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+            
+            document.getElementById('deviceInfo').textContent = 
+                isIPhone ? 'iPhone' : 
+                isIPad ? 'iPad' : 
+                isIOS ? 'iOS Device' : 'Non-iOS';
+                
+            document.getElementById('screenInfo').textContent = 
+                `${window.innerWidth} x ${window.innerHeight}`;
+                
+            document.getElementById('userAgent').textContent = userAgent.substring(0, 50) + '...';
+            
+            log(`🔍 Dispositivo rilevato: ${isIPhone ? 'iPhone' : isIPad ? 'iPad' : 'Altro'}`);
+            log(`📐 Risoluzione: ${window.innerWidth}x${window.innerHeight}`);
+        });
+        
+        function log(message) {
+            const status = document.getElementById('status');
+            const div = document.createElement('div');
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            status.appendChild(div);
+            status.scrollTop = status.scrollHeight;
+        }
+        
+        function testBasicFunctionality() {
+            log('🧪 Test funzionalità base...');
+            
+            // Verifica presenza Voice Manager V2
+            if (window.AIVoiceManagerV2) {
+                log('✅ AIVoiceManagerV2 trovato');
+            } else {
+                log('❌ AIVoiceManagerV2 NON trovato');
+                return;
+            }
+            
+            // Verifica elementi UI
+            const voiceContainer = document.getElementById('voice-controls-v2');
+            if (voiceContainer) {
+                log('✅ Container controlli vocali presente');
+                
+                const micButton = document.getElementById('mic-button-v2');
+                const autoOnBtn = document.getElementById('auto-mode-on');
+                const autoOffBtn = document.getElementById('auto-mode-off');
+                
+                if (micButton) log('✅ Pulsante microfono presente');
+                else log('❌ Pulsante microfono MANCANTE');
+                
+                if (autoOnBtn && autoOffBtn) log('✅ Pulsanti AUTO presenti');
+                else log('❌ Pulsanti AUTO MANCANTI');
+                
+            } else {
+                log('❌ Container controlli vocali MANCANTE');
+            }
+        }
+        
+        function testAutoMode() {
+            log('🚗 Test modalità AUTO...');
+            
+            if (!window.AIVoiceManagerV2) {
+                log('❌ Voice Manager non disponibile');
+                return;
+            }
+            
+            const autoOnBtn = document.getElementById('auto-mode-on');
+            if (autoOnBtn) {
+                log('📱 Simulazione click AUTO ON...');
+                autoOnBtn.click();
+                setTimeout(() => {
+                    log('📱 Simulazione click AUTO OFF...');
+                    const autoOffBtn = document.getElementById('auto-mode-off');
+                    if (autoOffBtn) autoOffBtn.click();
+                }, 3000);
+            } else {
+                log('❌ Pulsante AUTO ON non trovato');
+            }
+        }
+        
+        function testTTS() {
+            log('🔊 Test Text-to-Speech...');
+            
+            const testBtn = document.getElementById('test-tts-btn');
+            if (testBtn) {
+                log('📱 Click su Test Audio...');
+                testBtn.click();
+            } else {
+                log('❌ Pulsante Test Audio non trovato');
+            }
+        }
+        
+        function testUIElements() {
+            log('📏 Verifica elementi UI per iPhone...');
+            
+            const container = document.getElementById('voice-controls-v2');
+            if (container) {
+                const rect = container.getBoundingClientRect();
+                log(`📐 Container posizione: ${rect.top}px top, ${rect.right}px right`);
+                log(`📏 Container dimensioni: ${rect.width}x${rect.height}px`);
+                
+                const micButton = document.getElementById('mic-button-v2');
+                if (micButton) {
+                    const micRect = micButton.getBoundingClientRect();
+                    log(`🎤 Microfono: ${micRect.width}x${micRect.height}px`);
+                }
+                
+                const autoButtons = document.querySelectorAll('.auto-button');
+                autoButtons.forEach((btn, i) => {
+                    const btnRect = btn.getBoundingClientRect();
+                    log(`🔘 Auto btn ${i+1}: ${btnRect.width}x${btnRect.height}px`);
+                });
+            }
+        }
+        
+        function testTouchTargets() {
+            log('👆 Test touch targets...');
+            
+            const buttons = document.querySelectorAll('#voice-controls-v2 button');
+            let passedTargets = 0;
+            
+            buttons.forEach((btn, i) => {
+                const rect = btn.getBoundingClientRect();
+                const size = Math.min(rect.width, rect.height);
+                
+                if (size >= 44) {
+                    log(`✅ Pulsante ${i+1}: ${size}px - OK (≥44px)`);
+                    passedTargets++;
+                } else {
+                    log(`⚠️ Pulsante ${i+1}: ${size}px - Piccolo (<44px)`);
+                }
+            });
+            
+            log(`📊 Touch targets: ${passedTargets}/${buttons.length} conformi`);
+        }
+        
+        function testPortrait() {
+            log('📱 Test Portrait mode...');
+            log(`🔄 Orientamento attuale: ${window.innerHeight > window.innerWidth ? 'Portrait' : 'Landscape'}`);
+            log(`📐 Dimensioni: ${window.innerWidth}x${window.innerHeight}`);
+            
+            // Verifica se i controlli sono visibili
+            const container = document.getElementById('voice-controls-v2');
+            if (container) {
+                const style = getComputedStyle(container);
+                log(`👁️ Container visible: ${style.display !== 'none'}`);
+                log(`📍 Flex direction: ${style.flexDirection}`);
+            }
+        }
+        
+        function testLandscape() {
+            log('🔄 Test Landscape mode...');
+            log('📱 Ruota il dispositivo in modalità landscape e osserva i cambiamenti');
+            log('🔍 I controlli dovrebbero riorganizzarsi orizzontalmente');
+        }
+        
+        // Monitor orientamento
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                log(`🔄 Orientamento cambiato: ${window.innerWidth}x${window.innerHeight}`);
+                testUIElements();
+            }, 100);
+        });
+        
+        // Monitor resize
+        window.addEventListener('resize', function() {
+            document.getElementById('screenInfo').textContent = 
+                `${window.innerWidth} x ${window.innerHeight}`;
+        });
+        
+        // Mock AI Assistant per i test
+        window.FlavioAIAssistant = {
+            async processCommand(message) {
+                log(`🤖 Comando ricevuto: "${message}"`);
+                return `Risposta di test per: ${message}`;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -188,9 +188,19 @@ class AIVoiceManagerV2 {
         const micButton = document.createElement('button');
         micButton.id = 'mic-button-v2';
         micButton.className = 'voice-button mic-button';
-        // Dimensioni diverse per PC e iPad
+        // Dimensioni diverse per PC, iPad e iPhone
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const iconSize = isIOS ? '48' : '72'; // 72px su PC, 48px su iPad
+        const isIPhone = /iPhone/.test(navigator.userAgent);
+        const isIPad = /iPad/.test(navigator.userAgent);
+        
+        let iconSize;
+        if (isIPhone) {
+            iconSize = '28'; // iPhone: più piccolo
+        } else if (isIPad) {
+            iconSize = '48'; // iPad: medio
+        } else {
+            iconSize = '72'; // Desktop: più grande
+        }
         
         micButton.innerHTML = `
             <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
@@ -262,13 +272,13 @@ class AIVoiceManagerV2 {
             </div>
             ${isIOS ? `
             <div class="control-group">
-                <button id="wake-word-button" style="padding: 8px 16px; background: #FF9500; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
+                <button id="wake-word-button" style="padding: ${isIPhone ? '6px 12px' : '8px 16px'}; background: #FF9500; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-size: ${isIPhone ? '12px' : '14px'};">
                     🎤 Wake Word: ON
                 </button>
             </div>
             ` : ''}
             <div class="control-group">
-                <button id="test-tts-btn" style="padding: 8px 16px; background: #007AFF; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                <button id="test-tts-btn" style="padding: ${isIPhone ? '6px 12px' : '8px 16px'}; background: #007AFF; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: ${isIPhone ? '12px' : '14px'};">
                     🔊 Test Audio
                 </button>
             </div>
@@ -316,9 +326,12 @@ class AIVoiceManagerV2 {
             this.updateAutoModeUI();
             this.updateWakeWordStatus();
             
-            // Mostra istruzioni per iPad
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            if (isIOS) {
+            // Mostra istruzioni per iOS
+            if (isIPhone) {
+                setTimeout(() => {
+                    this.showNotification('📱 Su iPhone: Clicca "🔊 Test Audio" per attivare le risposte vocali', 'info', 5000);
+                }, 2000);
+            } else if (isIPad) {
                 setTimeout(() => {
                     this.showNotification('📱 Su iPad: Clicca "🔊 Test Audio" per attivare le risposte vocali', 'info', 5000);
                 }, 2000);
