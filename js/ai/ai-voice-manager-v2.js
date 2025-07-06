@@ -15,6 +15,10 @@ class AIVoiceManagerV2 {
         this.lastSpeechTime = Date.now();
         this.ttsActivated = false; // Flag per tracciare attivazione TTS
         
+        // Stato UI collapsible per iPhone
+        this.isExpanded = false;
+        this.expandTimer = null;
+        
         // Configurazione TTS
         this.ttsConfig = {
             rate: 1.0,  // Velocità normale di default
@@ -184,6 +188,11 @@ class AIVoiceManagerV2 {
         container.id = 'voice-controls-v2';
         container.className = 'voice-controls-container';
         
+        // Aggiungi classe specifica per iPhone
+        if (isIPhone) {
+            container.classList.add('iphone-layout');
+        }
+        
         // Pulsante microfono principale
         const micButton = document.createElement('button');
         micButton.id = 'mic-button-v2';
@@ -288,12 +297,29 @@ class AIVoiceManagerV2 {
         autoModeContainer.appendChild(autoOnBtn);
         autoModeContainer.appendChild(autoOffBtn);
         
-        container.appendChild(micButton);
-        container.appendChild(autoModeContainer);
-        container.appendChild(statusIndicator);
-        container.appendChild(wakeWordStatus);
-        container.appendChild(transcriptionDisplay);
-        container.appendChild(controlsContainer);
+        // Su iPhone, wrapper per controlli collapsibili
+        if (isIPhone) {
+            const expandableControls = document.createElement('div');
+            expandableControls.id = 'expandable-controls';
+            expandableControls.className = 'expandable-controls collapsed';
+            
+            expandableControls.appendChild(autoModeContainer);
+            expandableControls.appendChild(statusIndicator);
+            expandableControls.appendChild(wakeWordStatus);
+            expandableControls.appendChild(transcriptionDisplay);
+            expandableControls.appendChild(controlsContainer);
+            
+            container.appendChild(micButton);
+            container.appendChild(expandableControls);
+        } else {
+            // Layout normale per iPad/Desktop
+            container.appendChild(micButton);
+            container.appendChild(autoModeContainer);
+            container.appendChild(statusIndicator);
+            container.appendChild(wakeWordStatus);
+            container.appendChild(transcriptionDisplay);
+            container.appendChild(controlsContainer);
+        }
         
         // Aggiungi al DOM
         if (document.body) {
@@ -329,7 +355,7 @@ class AIVoiceManagerV2 {
             // Mostra istruzioni per iOS
             if (isIPhone) {
                 setTimeout(() => {
-                    this.showNotification('📱 Su iPhone: Clicca "🔊 Test Audio" per attivare le risposte vocali', 'info', 5000);
+                    this.showNotification('📱 iPhone: Tap=Voce, Long Press=Controlli', 'info', 6000);
                 }, 2000);
             } else if (isIPad) {
                 setTimeout(() => {
@@ -342,13 +368,24 @@ class AIVoiceManagerV2 {
     }
 
     setupUIEvents() {
+        const isIPhone = /iPhone/.test(navigator.userAgent);
+        
         // Pulsante microfono
-        this.elements.micButton.addEventListener('click', () => {
+        this.elements.micButton.addEventListener('click', (e) => {
             this.activateTTS(); // Attiva TTS su interazione utente
-            if (!this.isAutoMode) {
+            
+            if (isIPhone && !this.isAutoMode) {
+                // Su iPhone: click normale per voice, long press per expand
+                this.toggleListening();
+            } else if (!this.isAutoMode) {
                 this.toggleListening();
             }
         });
+        
+        // Eventi specifici per iPhone
+        if (isIPhone) {
+            this.setupiPhoneEvents();
+        }
         
         // Pulsanti modalità auto
         this.elements.autoModeOnBtn.addEventListener('click', () => {
@@ -437,6 +474,104 @@ class AIVoiceManagerV2 {
                 this.speak('Audio attivato correttamente. Le risposte dell\'assistente saranno ora vocali.');
             });
         }
+    }
+
+    setupiPhoneEvents() {
+        console.log('📱 Setup eventi specifici iPhone...');
+        
+        // Long press sul microfono per espandere controlli
+        let pressTimer = null;
+        
+        this.elements.micButton.addEventListener('touchstart', (e) => {
+            pressTimer = setTimeout(() => {
+                console.log('📱 Long press rilevato - toggle controlli');
+                this.toggleExpandControls();
+            }, 800); // 800ms per long press
+        });
+        
+        this.elements.micButton.addEventListener('touchend', (e) => {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+        });
+        
+        this.elements.micButton.addEventListener('touchcancel', (e) => {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+        });
+        
+        // Click fuori per collassare (solo se espanso)
+        document.addEventListener('touchstart', (e) => {
+            if (this.isExpanded) {
+                const voiceContainer = document.getElementById('voice-controls-v2');
+                if (voiceContainer && !voiceContainer.contains(e.target)) {
+                    this.collapseControls();
+                }
+            }
+        });
+        
+        // Auto-collapse dopo 10 secondi
+        this.setupAutoCollapse();
+    }
+
+    toggleExpandControls() {
+        if (this.isExpanded) {
+            this.collapseControls();
+        } else {
+            this.expandControls();
+        }
+    }
+
+    expandControls() {
+        console.log('📱 Espansione controlli iPhone...');
+        this.isExpanded = true;
+        
+        const expandableControls = document.getElementById('expandable-controls');
+        if (expandableControls) {
+            expandableControls.classList.remove('collapsed');
+            expandableControls.classList.add('expanded');
+        }
+        
+        // Feedback visivo
+        this.showNotification('⚙️ Controlli espansi - Long press per chiudere', 'info', 3000);
+        
+        // Auto-collapse dopo 10 secondi
+        this.setupAutoCollapse();
+    }
+
+    collapseControls() {
+        console.log('📱 Collasso controlli iPhone...');
+        this.isExpanded = false;
+        
+        const expandableControls = document.getElementById('expandable-controls');
+        if (expandableControls) {
+            expandableControls.classList.remove('expanded');
+            expandableControls.classList.add('collapsed');
+        }
+        
+        // Cancella auto-collapse timer
+        if (this.expandTimer) {
+            clearTimeout(this.expandTimer);
+            this.expandTimer = null;
+        }
+    }
+
+    setupAutoCollapse() {
+        // Cancella timer precedente
+        if (this.expandTimer) {
+            clearTimeout(this.expandTimer);
+        }
+        
+        // Nuovo timer per auto-collapse
+        this.expandTimer = setTimeout(() => {
+            if (this.isExpanded) {
+                this.collapseControls();
+                this.showNotification('⏰ Controlli minimizzati automaticamente', 'info', 2000);
+            }
+        }, 10000); // 10 secondi
     }
 
     // Attiva TTS con interazione utente (richiesto da iOS)

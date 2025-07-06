@@ -112,8 +112,8 @@
             <button class="btn btn-primary" onclick="testBasicFunctionality()">
                 Test Funzionalità Base
             </button>
-            <button class="btn btn-success" onclick="testAutoMode()">
-                Test Modalità AUTO
+            <button class="btn btn-success" onclick="testCollapsibleUI()">
+                Test UI Collapsible
             </button>
             <button class="btn btn-warning" onclick="testTTS()">
                 Test Text-to-Speech
@@ -210,25 +210,36 @@
             }
         }
         
-        function testAutoMode() {
-            log('🚗 Test modalità AUTO...');
+        function testCollapsibleUI() {
+            log('📱 Test UI Collapsible per iPhone...');
             
             if (!window.AIVoiceManagerV2) {
                 log('❌ Voice Manager non disponibile');
                 return;
             }
             
-            const autoOnBtn = document.getElementById('auto-mode-on');
-            if (autoOnBtn) {
-                log('📱 Simulazione click AUTO ON...');
-                autoOnBtn.click();
-                setTimeout(() => {
-                    log('📱 Simulazione click AUTO OFF...');
-                    const autoOffBtn = document.getElementById('auto-mode-off');
-                    if (autoOffBtn) autoOffBtn.click();
-                }, 3000);
+            // Test stato iniziale
+            const expandableControls = document.getElementById('expandable-controls');
+            if (expandableControls) {
+                log(`✅ Controlli espandibili trovati`);
+                log(`📏 Stato iniziale: ${expandableControls.classList.contains('collapsed') ? 'Collapsed' : 'Expanded'}`);
+                
+                // Test espansione programmatica
+                if (window.AIVoiceManagerV2.expandControls) {
+                    log('📱 Test espansione programmatica...');
+                    window.AIVoiceManagerV2.expandControls();
+                    
+                    setTimeout(() => {
+                        log('📱 Test collasso programmatico...');
+                        window.AIVoiceManagerV2.collapseControls();
+                    }, 3000);
+                } else {
+                    log('❌ Metodi expand/collapse non disponibili');
+                }
+                
+                log('💡 Ora prova il LONG PRESS sul microfono manualmente!');
             } else {
-                log('❌ Pulsante AUTO ON non trovato');
+                log('❌ Controlli espandibili non trovati');
             }
         }
         
