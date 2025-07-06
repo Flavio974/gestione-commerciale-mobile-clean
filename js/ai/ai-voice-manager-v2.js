@@ -276,6 +276,14 @@ class AIVoiceManagerV2 {
         
         // Aggiorna stato iniziale UI
         this.updateAutoModeUI();
+        
+        // Mostra istruzioni per iPad
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+            setTimeout(() => {
+                this.showNotification('📱 Su iPad: Clicca "🔊 Test Audio" per attivare le risposte vocali', 'info', 5000);
+            }, 2000);
+        }
     }
 
     setupUIEvents() {
@@ -317,7 +325,14 @@ class AIVoiceManagerV2 {
             testTtsBtn.addEventListener('click', () => {
                 console.log('🧪 Test TTS richiesto');
                 this.activateTTS(); // Attiva TTS prima del test
-                this.speak('Test audio funzionante. Questo è un test della sintesi vocale su iPad.');
+                
+                // Su iOS, mostra conferma speciale
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (isIOS && !this.ttsActivated) {
+                    this.showNotification('✅ Audio attivato! Ora le risposte saranno vocali', 'success', 4000);
+                }
+                
+                this.speak('Audio attivato correttamente. Le risposte dell\'assistente saranno ora vocali.');
             });
         }
     }
@@ -553,14 +568,53 @@ class AIVoiceManagerV2 {
         });
     }
 
-    showNotification(message, type = 'info') {
+    showNotification(message, type = 'info', duration = 3000) {
         // Implementa notifiche visive
         console.log(`[${type.toUpperCase()}] ${message}`);
         
-        // Se esiste un sistema di notifiche nell'app, usalo
-        if (window.showToast) {
-            window.showToast(message, type);
+        // Crea notifica toast personalizzata
+        const existingToast = document.querySelector('.voice-toast');
+        if (existingToast) {
+            existingToast.remove();
         }
+        
+        const toast = document.createElement('div');
+        toast.className = 'voice-toast';
+        toast.innerHTML = message;
+        
+        // Stili in base al tipo
+        const colors = {
+            info: '#007AFF',
+            success: '#34C759',
+            warning: '#FF9500',
+            error: '#FF3B30'
+        };
+        
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${colors[type] || colors.info};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            z-index: 10000;
+            animation: slideUp 0.3s ease;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto-rimuovi dopo la durata specificata
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
     }
 }
 
