@@ -17,7 +17,10 @@ class RequestMiddleware {
         
         // Pattern regex per estrazione parametri
         this.patterns = {
+            // Pattern completo per "fatturato del cliente X"
             fatturato: /(?:fatturato|venduto|incasso).*?(?:con|di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
+            // Pattern semplice per "fatturato X"
+            fatturatoSemplice: /^(?:fatturato|venduto|incasso)\s+([A-Za-z\s]+?)(?:\?|$)/i,
             ordiniCliente: /(?:quanti|numero|numeri).*ordini.*?(?:con|di|del|da|cliente|per|anche)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
             ordiniGenerici: /^(?:numero|numeri).*(?:identificativo|ordini?).*\?*$/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
@@ -118,9 +121,15 @@ class RequestMiddleware {
         
         switch (requestType) {
             case 'fatturato':
-                const fatturatoMatch = input.match(this.patterns.fatturato);
+                let fatturatoMatch = input.match(this.patterns.fatturato);
                 if (fatturatoMatch) {
                     params.cliente = fatturatoMatch[1].trim();
+                } else {
+                    // Prova pattern semplice "fatturato X"
+                    fatturatoMatch = input.match(this.patterns.fatturatoSemplice);
+                    if (fatturatoMatch) {
+                        params.cliente = fatturatoMatch[1].trim();
+                    }
                 }
                 break;
                 
