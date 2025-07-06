@@ -148,7 +148,12 @@ class RequestMiddleware {
         
         try {
             const date = new Date(dateValue);
-            displayDate = date.toLocaleDateString('it-IT');
+            // Forza il formato GG/MM/AAAA italiano
+            displayDate = date.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
         } catch {
             displayDate = dateValue.toString();
         }
@@ -737,7 +742,12 @@ class RequestMiddleware {
     formatDate(dateValue) {
         try {
             const date = new Date(dateValue);
-            return date.toLocaleDateString('it-IT');
+            // Forza il formato GG/MM/AAAA italiano
+            return date.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
         } catch {
             return dateValue.toString();
         }
