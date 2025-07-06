@@ -512,8 +512,20 @@ class AIVoiceManagerV2 {
     }
 
     async speak(text) {
+        // Se esiste il manager iOS dedicato, usalo
+        if (window.iosTTSManager) {
+            console.log('🍎 Uso iOS TTS Manager dedicato');
+            try {
+                await window.iosTTSManager.speak(text);
+                return;
+            } catch (error) {
+                console.error('Errore iOS TTS Manager:', error);
+                // Fallback al metodo standard
+            }
+        }
+        
         return new Promise((resolve) => {
-            console.log('🔊 Avvio TTS per:', text);
+            console.log('🔊 Avvio TTS standard per:', text);
             
             // Verifica attivazione TTS per iOS
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
