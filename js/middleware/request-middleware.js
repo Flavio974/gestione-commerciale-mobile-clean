@@ -222,12 +222,14 @@ class RequestMiddleware {
             return 'fatturato';
         }
         
-        if (this.operativeKeywords.ordini.some(kw => inputLower.includes(kw))) {
-            return 'ordini';
+        // Controlla prima le richieste di data (più specifiche)
+        // Se contiene "data" o "quando" è probabilmente una richiesta di data
+        if (inputLower.includes('data') || inputLower.includes('quando')) {
+            return 'data';
         }
         
-        if (this.operativeKeywords.data.some(kw => inputLower.includes(kw))) {
-            return 'data';
+        if (this.operativeKeywords.ordini.some(kw => inputLower.includes(kw))) {
+            return 'ordini';
         }
         
         if (this.operativeKeywords.percorsi.some(kw => inputLower.includes(kw))) {
