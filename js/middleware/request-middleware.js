@@ -19,9 +19,13 @@ class RequestMiddleware {
         this.patterns = {
             fatturato: /(?:fatturato|venduto|incasso).*?(?:con|di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
             ordiniCliente: /(?:quanti|numero|numeri).*ordini.*?(?:con|di|del|da|cliente|per|anche)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
+            ordiniGenerici: /^(?:numero|numeri).*(?:identificativo|ordini?).*\?*$/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
             clientiZona: /clienti.*(?:in|nella|di|della)\s+([^?\n]+?)(?:\?|$)/i
         };
+        
+        // Memoria dell'ultimo cliente consultato per contesto
+        this.lastClientContext = null;
         
         console.log('🤖 RequestMiddleware inizializzato');
     }
@@ -124,6 +128,13 @@ class RequestMiddleware {
                 const ordiniMatch = input.match(this.patterns.ordiniCliente);
                 if (ordiniMatch) {
                     params.cliente = ordiniMatch[1].trim();
+                } else {
+                    // Controlla se è una richiesta generica sui numeri ordine
+                    const ordiniGenericiMatch = input.match(this.patterns.ordiniGenerici);
+                    if (ordiniGenericiMatch && this.lastClientContext) {
+                        params.cliente = this.lastClientContext;
+                        params.fromContext = true;
+                    }
                 }
                 break;
                 
@@ -209,6 +220,9 @@ class RequestMiddleware {
             const fatturato = ordiniCliente.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
             const nomeCliente = ordiniCliente[0].cliente;
             
+            // Salva nel contesto per richieste successive
+            this.lastClientContext = params.cliente;
+            
             // Conta ordini distinti usando numero_ordine
             const ordiniDistinti = new Set(
                 ordiniCliente.map(o => o.numero_ordine).filter(n => n && n !== null)
@@ -238,6 +252,9 @@ class RequestMiddleware {
     async countOrdini(params) {
         try {
             console.log('📊 MIDDLEWARE: Conteggio ordini per:', params.cliente);
+            if (params.fromContext) {
+                console.log('🔄 MIDDLEWARE: Usando contesto cliente precedente:', params.cliente);
+            }
             
             const supabaseData = await this.supabaseAI.getAllData();
             const ordini = supabaseData.historicalOrders?.sampleData || [];
@@ -268,6 +285,11 @@ class RequestMiddleware {
                 ordiniCliente.map(o => o.numero_ordine).filter(n => n && n !== null)
             ).size;
             
+            // Salva nel contesto per richieste successive (se non già dal contesto)
+            if (!params.fromContext) {
+                this.lastClientContext = params.cliente;
+            }
+            
             // Analisi aggiuntiva
             const ultimoOrdine = ordiniCliente.sort((a, b) => new Date(b.data) - new Date(a.data))[0];
             const nomeCliente = ordiniCliente[0].cliente;
@@ -282,16 +304,19 @@ class RequestMiddleware {
                 ? numeriOrdine.join(', ')
                 : `${numeriOrdine.slice(0, 10).join(', ')}, e altri ${numeriOrdine.length - 10}`;
             
+            const contextNote = params.fromContext ? ' (dal contesto precedente)' : '';
+            
             return {
                 success: true,
-                response: `📊 Cliente ${nomeCliente}: ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali)\n📋 Numeri ordine: ${listaNumeri}\n📅 Ultimo ordine: ${ultimoOrdine.data}`,
+                response: `📊 Cliente ${nomeCliente}${contextNote}: ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali)\n📋 Numeri ordine: ${listaNumeri}\n📅 Ultimo ordine: ${ultimoOrdine.data}`,
                 data: { 
                     cliente: nomeCliente,
                     ordini: ordiniDistinti,
                     righe: ordiniCliente.length,
                     numeriOrdine: numeriOrdine,
                     ultimoOrdine: ultimoOrdine.data,
-                    dettaglio: ordiniCliente.slice(0, 3)
+                    dettaglio: ordiniCliente.slice(0, 3),
+                    fromContext: params.fromContext || false
                 }
             };
             
