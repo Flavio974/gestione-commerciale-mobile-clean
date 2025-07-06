@@ -508,6 +508,7 @@ class AIVoiceManagerV2 {
 
     async processTranscript(transcript) {
         console.log('Trascrizione:', transcript);
+        console.log('Modalità AUTO:', this.isAutoMode, 'Wake word attive:', this.useWakeWord);
         
         // Mostra trascrizione
         if (this.elements.transcriptionDisplay) {
@@ -531,24 +532,34 @@ class AIVoiceManagerV2 {
                 cleanTranscript = cleanTranscript.replace(new RegExp(phrase, 'gi'), '').trim();
             });
             transcript = cleanTranscript;
+            console.log('Testo pulito dopo rimozione wake word:', transcript);
         }
         
-        // Invia all'assistente AI
-        if (window.FlavioAIAssistant) {
+        // Invia all'assistente AI (prova entrambi i nomi)
+        const assistant = window.FlavioAIAssistant || window.flavioAI;
+        
+        if (assistant) {
+            console.log('Assistente AI trovato, invio comando:', transcript);
             this.updateUIState('processing');
             
             try {
-                const response = await window.FlavioAIAssistant.processCommand(transcript);
+                const response = await assistant.processCommand(transcript);
+                console.log('Risposta ricevuta:', response);
                 
                 // Mostra risposta in chat
                 if (response) {
                     // Leggi risposta vocalmente
                     await this.speak(response);
+                } else {
+                    console.log('Nessuna risposta ricevuta dall\'AI');
                 }
             } catch (error) {
                 console.error('Errore elaborazione comando:', error);
                 this.showNotification('Errore elaborazione comando', 'error');
             }
+        } else {
+            console.error('Assistente AI non trovato! (provati FlavioAIAssistant e flavioAI)');
+            this.showNotification('Assistente AI non disponibile', 'error');
         }
     }
 
