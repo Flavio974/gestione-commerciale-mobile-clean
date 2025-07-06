@@ -13,6 +13,7 @@ class AIVoiceManagerV2 {
         this.useWakeWord = true;
         this.transcriptionBuffer = [];
         this.lastSpeechTime = Date.now();
+        this.ttsActivated = false; // Flag per tracciare attivazione TTS
         
         // Configurazione TTS
         this.ttsConfig = {
@@ -280,6 +281,7 @@ class AIVoiceManagerV2 {
     setupUIEvents() {
         // Pulsante microfono
         this.elements.micButton.addEventListener('click', () => {
+            this.activateTTS(); // Attiva TTS su interazione utente
             if (!this.isAutoMode) {
                 this.toggleListening();
             }
@@ -287,6 +289,7 @@ class AIVoiceManagerV2 {
         
         // Pulsanti modalità auto
         this.elements.autoModeOnBtn.addEventListener('click', () => {
+            this.activateTTS(); // Attiva TTS su interazione utente
             this.enableAutoMode();
         });
         
@@ -313,8 +316,30 @@ class AIVoiceManagerV2 {
         if (testTtsBtn) {
             testTtsBtn.addEventListener('click', () => {
                 console.log('🧪 Test TTS richiesto');
+                this.activateTTS(); // Attiva TTS prima del test
                 this.speak('Test audio funzionante. Questo è un test della sintesi vocale su iPad.');
             });
+        }
+    }
+
+    // Attiva TTS con interazione utente (richiesto da iOS)
+    activateTTS() {
+        if (!this.ttsActivated) {
+            console.log('🎵 Attivazione TTS per iOS...');
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
+            if (isIOS) {
+                // Crea un utterance silenzioso per attivare TTS
+                const utterance = new SpeechSynthesisUtterance('');
+                utterance.volume = 0;
+                this.synthesis.speak(utterance);
+                
+                this.ttsActivated = true;
+                console.log('✅ TTS attivato per iOS');
+                this.showNotification('🔊 Audio attivato', 'success');
+            } else {
+                this.ttsActivated = true;
+            }
         }
     }
 
@@ -458,6 +483,15 @@ class AIVoiceManagerV2 {
     async speak(text) {
         return new Promise((resolve) => {
             console.log('🔊 Avvio TTS per:', text);
+            
+            // Verifica attivazione TTS per iOS
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS && !this.ttsActivated) {
+                console.log('⚠️ TTS non attivato su iOS - skip sintesi vocale');
+                this.showNotification('Clicca il microfono per attivare l\'audio', 'warning');
+                resolve();
+                return;
+            }
             
             // Cancella code precedenti
             this.synthesis.cancel();
