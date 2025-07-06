@@ -329,14 +329,45 @@ class AIVoiceManagerV2 {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
             
             if (isIOS) {
-                // Crea un utterance silenzioso per attivare TTS
-                const utterance = new SpeechSynthesisUtterance('');
-                utterance.volume = 0;
-                this.synthesis.speak(utterance);
+                // Metodo 1: Utterance silenzioso
+                const silentUtterance = new SpeechSynthesisUtterance(' ');
+                silentUtterance.volume = 0.01; // Volume bassissimo ma non zero
+                silentUtterance.rate = 10; // Velocissimo per finire subito
                 
-                this.ttsActivated = true;
-                console.log('✅ TTS attivato per iOS');
-                this.showNotification('🔊 Audio attivato', 'success');
+                silentUtterance.onend = () => {
+                    console.log('✅ TTS pre-attivato con successo');
+                    this.ttsActivated = true;
+                    
+                    // Metodo 2: Test immediato con voce reale
+                    setTimeout(() => {
+                        const testUtterance = new SpeechSynthesisUtterance('Audio attivato');
+                        testUtterance.lang = 'it-IT';
+                        testUtterance.volume = 0.5;
+                        testUtterance.rate = 1.0;
+                        
+                        if (this.ttsConfig.voice) {
+                            testUtterance.voice = this.ttsConfig.voice;
+                        }
+                        
+                        testUtterance.onstart = () => {
+                            console.log('✅ TTS confermato funzionante');
+                            this.showNotification('🔊 Audio attivato', 'success');
+                        };
+                        
+                        this.synthesis.speak(testUtterance);
+                    }, 100);
+                };
+                
+                silentUtterance.onerror = (e) => {
+                    console.error('❌ Errore pre-attivazione TTS:', e);
+                    // Prova comunque ad attivare
+                    this.ttsActivated = true;
+                };
+                
+                // Cancella eventuali code e parla
+                this.synthesis.cancel();
+                this.synthesis.speak(silentUtterance);
+                
             } else {
                 this.ttsActivated = true;
             }
@@ -512,14 +543,37 @@ class AIVoiceManagerV2 {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
             if (isIOS) {
                 console.log('📱 Dispositivo iOS rilevato - Applicando fix TTS');
-                // Su iOS, a volte bisogna aspettare che il synthesis sia pronto
-                if (this.synthesis.speaking) {
-                    this.synthesis.cancel();
-                    // Piccola pausa per iOS
-                    setTimeout(() => this.synthesis.speak(utterance), 100);
-                } else {
-                    this.synthesis.speak(utterance);
-                }
+                
+                // Metodo robusto per iOS
+                const speakWithRetry = (attempt = 1) => {
+                    console.log(`🔄 Tentativo ${attempt} di parlare su iOS`);
+                    
+                    // Se sta già parlando, cancella e riprova
+                    if (this.synthesis.speaking || this.synthesis.pending) {
+                        console.log('⏸️ Cancello sintesi in corso...');
+                        this.synthesis.cancel();
+                        
+                        if (attempt < 3) {
+                            setTimeout(() => speakWithRetry(attempt + 1), 200);
+                            return;
+                        }
+                    }
+                    
+                    // Prova a parlare
+                    try {
+                        this.synthesis.speak(utterance);
+                        console.log('🎤 Comando speak inviato');
+                    } catch (e) {
+                        console.error('❌ Errore speak:', e);
+                        if (attempt < 3) {
+                            setTimeout(() => speakWithRetry(attempt + 1), 500);
+                        }
+                    }
+                };
+                
+                // Avvia il tentativo
+                speakWithRetry();
+                
             } else {
                 this.synthesis.speak(utterance);
             }
