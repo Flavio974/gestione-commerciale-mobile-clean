@@ -18,7 +18,7 @@ class RequestMiddleware {
         // Pattern regex per estrazione parametri
         this.patterns = {
             fatturato: /(?:fatturato|venduto|incasso).*?(?:con|di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
-            ordiniCliente: /(?:quanti|numero).*ordini.*?(?:con|di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
+            ordiniCliente: /(?:quanti|numero|numeri).*ordini.*?(?:con|di|del|da|cliente|per|anche)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
             clientiZona: /clienti.*(?:in|nella|di|della)\s+([^?\n]+?)(?:\?|$)/i
         };
@@ -272,13 +272,24 @@ class RequestMiddleware {
             const ultimoOrdine = ordiniCliente.sort((a, b) => new Date(b.data) - new Date(a.data))[0];
             const nomeCliente = ordiniCliente[0].cliente;
             
+            // Estrai numeri ordine unici
+            const numeriOrdine = [...new Set(
+                ordiniCliente.map(o => o.numero_ordine).filter(n => n && n !== null)
+            )].sort();
+            
+            // Crea lista numeri ordine per la risposta
+            const listaNumeri = numeriOrdine.length <= 10 
+                ? numeriOrdine.join(', ')
+                : `${numeriOrdine.slice(0, 10).join(', ')}, e altri ${numeriOrdine.length - 10}`;
+            
             return {
                 success: true,
-                response: `📊 Cliente ${nomeCliente}: ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali). Ultimo: ${ultimoOrdine.data}`,
+                response: `📊 Cliente ${nomeCliente}: ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali)\n📋 Numeri ordine: ${listaNumeri}\n📅 Ultimo ordine: ${ultimoOrdine.data}`,
                 data: { 
                     cliente: nomeCliente,
                     ordini: ordiniDistinti,
                     righe: ordiniCliente.length,
+                    numeriOrdine: numeriOrdine,
                     ultimoOrdine: ultimoOrdine.data,
                     dettaglio: ordiniCliente.slice(0, 3)
                 }
