@@ -197,13 +197,15 @@ const AIVoiceManager = {
       btn.title = 'Attiva/Disattiva comandi vocali';
       btn.setAttribute('aria-label', 'Comandi vocali');
       
-      // Stile base
+      // Stile base con touch target appropriato
       btn.style.cssText = `
         position: fixed;
         top: 15px;
         right: 15px;
-        width: 45px;
-        height: 45px;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        min-height: 48px;
         border-radius: 50%;
         background: #457b9d;
         color: white;
@@ -216,12 +218,30 @@ const AIVoiceManager = {
         align-items: center;
         justify-content: center;
         transition: all 0.3s ease;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
       `;
       
-      // Aggiungi event listener con debug
-      btn.addEventListener('click', () => {
+      // Aggiungi event listener con gestione mobile ottimizzata
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         console.log('🎤 PULSANTE MICROFONO CLICCATO!');
         this.toggle();
+      });
+      
+      // Aggiungi feedback tattile per mobile
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+        btn.style.transform = 'scale(0.95)';
+      });
+      
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        btn.style.transform = 'scale(1)';
       });
       
       // Aggiungi al body
@@ -236,7 +256,16 @@ const AIVoiceManager = {
    * Inizializzazione
    */
   init: function() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    // Check HTTPS
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      console.error('❌ HTTPS richiesto per il riconoscimento vocale');
+      this.showError('Il riconoscimento vocale richiede una connessione sicura (HTTPS)');
+      return false;
+    }
+    
+    // Feature detection migliorato
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
       console.error('Web Speech API non supportata in questo browser');
       return false;
     }
@@ -357,7 +386,15 @@ const AIVoiceManager = {
         console.error('Permesso microfono negato!');
         this.state.isListening = false;
         this.updateUI(false);
-        alert('È necessario concedere il permesso per il microfono per usare i comandi vocali.');
+        this.showPermissionDeniedMessage();
+        return;
+      } else if (event.error === 'audio-capture') {
+        console.error('Errore cattura audio');
+        this.showError('Errore accesso microfono. Riprova o controlla le impostazioni.');
+        return;
+      } else if (event.error === 'not-supported') {
+        console.error('Riconoscimento vocale non supportato');
+        this.showError('Riconoscimento vocale non supportato su questo dispositivo.');
         return;
       }
       
@@ -418,6 +455,149 @@ const AIVoiceManager = {
       this.state.lastActivation = now;
       this.activateCommandMode();
     }
+  },
+
+  /**
+   * Richiede permessi microfono con UI progressiva
+   */
+  requestMicrophonePermission: async function() {
+    try {
+      // Controlla se i permessi sono già stati concessi
+      if (navigator.permissions && navigator.permissions.query) {
+        const result = await navigator.permissions.query({ name: 'microphone' });
+        console.log('Stato permessi microfono:', result.state);
+        
+        if (result.state === 'denied') {
+          this.showPermissionDeniedMessage();
+          return false;
+        }
+      }
+      
+      // Mostra spiegazione prima di richiedere permessi
+      if (!localStorage.getItem('micPermissionExplained')) {
+        this.showPermissionExplanation();
+        localStorage.setItem('micPermissionExplained', 'true');
+      }
+      
+      // Richiedi permessi usando getUserMedia (più affidabile su mobile)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      console.log('✅ Permessi microfono concessi');
+      return true;
+      
+    } catch (error) {
+      console.error('❌ Errore permessi microfono:', error);
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        this.showPermissionDeniedMessage();
+      } else if (error.name === 'NotFoundError') {
+        this.showError('Nessun microfono trovato su questo dispositivo');
+      } else {
+        this.showError('Errore accesso microfono: ' + error.message);
+      }
+      return false;
+    }
+  },
+
+  /**
+   * Mostra spiegazione permessi
+   */
+  showPermissionExplanation: function() {
+    const modal = document.createElement('div');
+    modal.className = 'voice-permission-modal';
+    modal.innerHTML = `
+      <div class="voice-permission-content">
+        <h3>🎤 Attivazione Comandi Vocali</h3>
+        <p>Per utilizzare i comandi vocali, l'app necessita l'accesso al microfono.</p>
+        <p>Potrai:</p>
+        <ul>
+          <li>Navigare l'app con la voce</li>
+          <li>Cercare clienti e prodotti</li>
+          <li>Creare ordini vocalmente</li>
+          <li>Dettare note e descrizioni</li>
+        </ul>
+        <button onclick="AIVoiceManager.closePermissionModal()">Ho capito</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  },
+
+  /**
+   * Chiude modal permessi
+   */
+  closePermissionModal: function() {
+    const modal = document.querySelector('.voice-permission-modal');
+    if (modal) modal.remove();
+  },
+
+  /**
+   * Mostra messaggio permessi negati
+   */
+  showPermissionDeniedMessage: function() {
+    this.showError('Permessi microfono negati. Per riattivare, vai nelle impostazioni del browser/dispositivo.');
+  },
+
+  /**
+   * Mostra errore user-friendly
+   */
+  showError: function(message) {
+    // Crea notifica mobile-friendly
+    const notification = document.createElement('div');
+    notification.className = 'voice-error-notification';
+    notification.innerHTML = `
+      <div class="voice-error-content">
+        <span class="voice-error-icon">⚠️</span>
+        <span class="voice-error-message">${message}</span>
+        <button onclick="this.parentElement.parentElement.remove()">×</button>
+      </div>
+    `;
+    
+    // Aggiungi stili inline per compatibilità
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      background: #ff4757;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      z-index: 10000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      font-size: 14px;
+      line-height: 1.4;
+    `;
+    
+    const content = notification.querySelector('.voice-error-content');
+    content.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    `;
+    
+    const button = notification.querySelector('button');
+    button.style.cssText = `
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      margin-left: auto;
+      padding: 5px;
+      min-width: 30px;
+      min-height: 30px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Rimuovi automaticamente dopo 5 secondi
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+    
+    // Log per debug
+    console.error('🎤 Voice Error:', message);
   },
 
   /**
@@ -583,12 +763,14 @@ const AIVoiceManager = {
   speak: function(text) {
     console.log('🔊 Voice Manager - Parlando:', text);
     
-    // Rileva iPhone
+    // Rileva dispositivi iOS
     const isIPhone = /iPhone/.test(navigator.userAgent);
+    const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+    const isIOS = isIPhone || isIPad;
     
-    if (isIPhone) {
-      console.log('📱 iPhone: Uso metodo speech ottimizzato');
-      this.speakForIPhone(text);
+    if (isIOS) {
+      console.log('📱 iOS Device: Uso metodo speech ottimizzato', isIPhone ? 'iPhone' : 'iPad');
+      this.speakForIOS(text, isIPad);
       return;
     }
     
@@ -635,27 +817,31 @@ const AIVoiceManager = {
   },
   
   /**
-   * Pronuncia ottimizzata per iPhone con fix aggressivi
+   * Pronuncia ottimizzata per dispositivi iOS (iPhone e iPad)
    */
-  speakForIPhone: function(text) {
-    console.log('📱 iPhone speech:', text);
+  speakForIOS: function(text, isIPad = false) {
+    const deviceName = isIPad ? 'iPad' : 'iPhone';
+    console.log(`📱 ${deviceName} speech:`, text);
     
     // Mostra sempre il testo nella debug box
     if (window.AICommandParser && AICommandParser.showDebugOnScreen) {
-      AICommandParser.showDebugOnScreen('🔊 ' + text);
+      AICommandParser.showDebugOnScreen(`🔊 ${deviceName}: ` + text);
     }
     
     // METODO 1: Prova la sintesi standard con fix iOS
-    this.tryiOSSpeech(text);
+    this.tryiOSSpeech(text, isIPad);
     
-    // METODO 2: Fallback con vibrazione + alert dopo 2 secondi
+    // METODO 2: Fallback con feedback appropriato per il dispositivo
     setTimeout(() => {
-      if (navigator.vibrate) {
+      if (!isIPad && navigator.vibrate) {
+        // Vibrazione solo per iPhone (iPad non ha vibrazione)
         navigator.vibrate([200, 100, 200]);
       }
-      // Non mostrare alert, solo debug visivo
+      
+      // Feedback visivo per entrambi i dispositivi
       if (window.AICommandParser && AICommandParser.showDebugOnScreen) {
-        AICommandParser.showDebugOnScreen('📳 Vibrazione + Testo: ' + text);
+        const feedback = isIPad ? '📺 Display + Audio: ' : '📳 Vibrazione + Testo: ';
+        AICommandParser.showDebugOnScreen(feedback + text);
       }
     }, 2000);
   },
@@ -663,28 +849,30 @@ const AIVoiceManager = {
   /**
    * Tentativo speech iOS con tutte le ottimizzazioni
    */
-  tryiOSSpeech: function(text) {
+  tryiOSSpeech: function(text, isIPad = false) {
+    const deviceName = isIPad ? 'iPad' : 'iPhone';
+    
     try {
       // Forza ricaricamento voci
       const voices = speechSynthesis.getVoices();
-      console.log('📱 iPhone: Voci disponibili:', voices.length);
+      console.log(`📱 ${deviceName}: Voci disponibili:`, voices.length);
       
       if (voices.length === 0) {
         // Se non ci sono voci, prova a forzare il caricamento
-        console.log('📱 iPhone: Forzo caricamento voci...');
+        console.log(`📱 ${deviceName}: Forzo caricamento voci...`);
         speechSynthesis.onvoiceschanged = () => {
-          console.log('📱 iPhone: Voci caricate, riprovo speech');
-          this.executeiOSSpeech(text);
+          console.log(`📱 ${deviceName}: Voci caricate, riprovo speech`);
+          this.executeiOSSpeech(text, isIPad);
         };
         return;
       }
       
-      this.executeiOSSpeech(text);
+      this.executeiOSSpeech(text, isIPad);
       
     } catch (error) {
-      console.error('📱 iPhone: Errore tryiOSSpeech:', error);
+      console.error(`📱 ${deviceName}: Errore tryiOSSpeech:`, error);
       if (window.AICommandParser && AICommandParser.showDebugOnScreen) {
-        AICommandParser.showDebugOnScreen('❌ tryiOS: ' + error.message);
+        AICommandParser.showDebugOnScreen(`❌ try${deviceName}: ` + error.message);
       }
     }
   },
@@ -692,24 +880,26 @@ const AIVoiceManager = {
   /**
    * Esecuzione speech iOS con massima compatibilità
    */
-  executeiOSSpeech: function(text) {
+  executeiOSSpeech: function(text, isIPad = false) {
+    const deviceName = isIPad ? 'iPad' : 'iPhone';
     try {
       // Cancella tutto
       speechSynthesis.cancel();
       
-      // Aspetta un po' per essere sicuri
+      // Aspetta un po' per essere sicuri (iPad potrebbe aver bisogno di più tempo)
+      const delay = isIPad ? 100 : 50;
       setTimeout(() => {
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Configurazione iOS specifica
+        // Configurazione iOS specifica (iPad potrebbe preferire impostazioni diverse)
         utterance.lang = 'it-IT';
-        utterance.rate = 0.8;
+        utterance.rate = isIPad ? 0.9 : 0.8; // iPad leggermente più veloce
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
         
         // Trova voce iOS italiana
         const voices = speechSynthesis.getVoices();
-        console.log('📱 iPhone: Lista voci:', voices.map(v => v.name));
+        console.log(`📱 ${deviceName}: Lista voci:`, voices.map(v => v.name));
         
         const iosVoice = voices.find(voice => 
           voice.lang.startsWith('it') && 
@@ -804,6 +994,45 @@ const AIVoiceManager = {
   },
 
   /**
+   * Inizializza audio per iPad (richiede interazione utente)
+   */
+  initAudioForiPad: function() {
+    const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+    if (!isIPad) return;
+
+    // Crea un audio context dummy per "unlockare" l'audio su iPad
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        gainNode.gain.value = 0; // Silenzioso
+        oscillator.frequency.value = 440;
+        oscillator.start(0);
+        oscillator.stop(0.1);
+        
+        console.log('📱 iPad: Audio context inizializzato');
+      }
+    } catch (error) {
+      console.log('📱 iPad: Errore init audio context:', error);
+    }
+
+    // Test speech synthesis "unlock"
+    try {
+      const testUtterance = new SpeechSynthesisUtterance('');
+      testUtterance.volume = 0;
+      speechSynthesis.speak(testUtterance);
+      console.log('📱 iPad: Speech synthesis unlocked');
+    } catch (error) {
+      console.log('📱 iPad: Errore unlock speech:', error);
+    }
+  },
+
+  /**
    * Mostra UI comando
    */
   showCommandUI: function() {
@@ -844,15 +1073,26 @@ const AIVoiceManager = {
   /**
    * Toggle ascolto
    */
-  toggle: function() {
+  toggle: async function() {
     console.log('🎤 VOICE TOGGLE chiamato. Stato corrente isListening:', this.state.isListening);
-    console.log('🎤 VOICE: Permesso microfono richiesto...');
     
     if (this.state.isListening) {
       console.log('Fermo ascolto');
       this.stopListening();
     } else {
+      console.log('🎤 VOICE: Controllo permessi microfono...');
+      
+      // Richiedi permessi prima di avviare
+      const hasPermission = await this.requestMicrophonePermission();
+      if (!hasPermission) {
+        console.error('❌ Permessi microfono non concessi');
+        return;
+      }
+      
       console.log('🎤 Avvio ascolto DIRETTO (senza wake word)');
+      
+      // Inizializza audio per iPad se necessario
+      this.initAudioForiPad();
       
       // Vai direttamente in modalità comando (senza wake word)
       this.startDirectCommandMode();

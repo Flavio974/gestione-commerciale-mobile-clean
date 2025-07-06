@@ -327,10 +327,12 @@ class BaseExtractor {
   }
 }
 
-// Export per ES6 modules
-export { BaseExtractor };
-
 // Export globale per compatibilità
 if (typeof window !== 'undefined') {
   window.BaseExtractor = BaseExtractor;
+}
+
+// Export per ES6 modules (se supportati)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = BaseExtractor;
 }

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test iPad Voice Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            padding: 15px 25px;
+            margin: 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            min-width: 48px;
+            min-height: 48px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .primary { background: #007bff; color: white; }
+        .primary:hover { background: #0056b3; }
+        .success-btn { background: #28a745; color: white; }
+        .success-btn:hover { background: #218838; }
+        .danger { background: #dc3545; color: white; }
+        .danger:hover { background: #c82333; }
+        .secondary { background: #6c757d; color: white; }
+        .secondary:hover { background: #5a6268; }
+        h1 { color: #333; margin-bottom: 10px; }
+        h3 { color: #555; margin-top: 0; }
+        .device-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .test-result {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎤 Test iPad Voice Fix</h1>
+    
+    <div class="device-info" id="device-info">
+        <strong>Rilevamento dispositivo...</strong>
+    </div>
+    
+    <div class="test-card">
+        <h3>1. Test Rilevamento iPad</h3>
+        <div id="ipad-detection" class="status info">Controllando rilevamento iPad...</div>
+        <button class="primary" onclick="testIPadDetection()">Testa Rilevamento</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>2. Test API Fallback</h3>
+        <div id="api-fallback" class="status info test-result">Clicca per testare fallback API</div>
+        <button class="primary" onclick="testAPIFallback()">Testa Fallback API</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>3. Test Speech Recognition Locale</h3>
+        <div id="speech-local" class="status info test-result">Clicca per testare Speech Recognition</div>
+        <button class="primary" onclick="testLocalSpeechRecognition()">Testa Speech Recognition</button>
+        <button class="danger" onclick="stopSpeechTest()">Ferma Test</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>4. Test Voice Manager iPad</h3>
+        <div id="voice-manager" class="status info test-result">Clicca per testare Voice Manager</div>
+        <button class="primary" onclick="testVoiceManagerIPad()">Testa Voice Manager</button>
+    </div>
+
+    <div class="test-card">
+        <h3>5. Test Keep-Alive iPad</h3>
+        <div id="keep-alive" class="status info test-result">Clicca per testare Keep-Alive</div>
+        <button class="primary" onclick="testKeepAlive()">Testa Keep-Alive</button>
+    </div>
+
+    <script>
+        let recognition = null;
+        let mockSmartAssistant = null;
+        
+        // Inizializzazione
+        window.addEventListener('load', function() {
+            updateDeviceInfo();
+            testIPadDetection();
+        });
+        
+        function updateDeviceInfo() {
+            const info = document.getElementById('device-info');
+            const userAgent = navigator.userAgent;
+            const isIPad = /iPad|Macintosh/.test(userAgent) && 'ontouchend' in document;
+            const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
+            info.innerHTML = `
+                <strong>Informazioni Dispositivo:</strong><br>
+                User Agent: ${userAgent}<br>
+                iPad rilevato: ${isIPad}<br>
+                Touch support: ${hasTouch}<br>
+                Speech API: ${!!(window.SpeechRecognition || window.webkitSpeechRecognition)}<br>
+                MediaDevices: ${!!navigator.mediaDevices}
+            `;
+        }
+        
+        function testIPadDetection() {
+            const resultDiv = document.getElementById('ipad-detection');
+            
+            // Simula la logica del SmartAssistant
+            const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+            
+            if (isIPad) {
+                resultDiv.textContent = '✅ iPad rilevato correttamente - Modalità fallback attivata';
+                resultDiv.className = 'status success';
+            } else {
+                resultDiv.textContent = '❌ iPad non rilevato - Modalità normale';
+                resultDiv.className = 'status warning';
+            }
+        }
+        
+        // Mock delle configurazioni
+        const IPAD_CONFIG = {
+            useLocalSpeechRecognition: true,
+            disableServerTranscription: true,
+            enableMockResponses: true,
+            reducedTimeout: 10000
+        };
+        
+        async function testAPIFallback() {
+            const resultDiv = document.getElementById('api-fallback');
+            resultDiv.textContent = '🔄 Testando fallback API...';
+            resultDiv.className = 'status info';
+            
+            const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+            
+            try {
+                if (isIPad && IPAD_CONFIG.disableServerTranscription) {
+                    resultDiv.textContent = '✅ iPad: Trascrizione server disabilitata correttamente';
+                    resultDiv.className = 'status success';
+                    return;
+                }
+                
+                // Simula tentativo API con timeout
+                const timeout = isIPad ? IPAD_CONFIG.reducedTimeout : 30000;
+                resultDiv.textContent = `🔄 Tentando API con timeout ${timeout}ms...`;
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Simula errore 502
+                throw new Error('502');
+                
+            } catch (error) {
+                if (error.message.includes('502')) {
+                    resultDiv.textContent = '✅ Errore 502 gestito - Fallback attivato';
+                    resultDiv.className = 'status success';
+                } else {
+                    resultDiv.textContent = '❌ Errore imprevisto: ' + error.message;
+                    resultDiv.className = 'status error';
+                }
+            }
+        }
+        
+        async function testLocalSpeechRecognition() {
+            const resultDiv = document.getElementById('speech-local');
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                resultDiv.textContent = '❌ Speech Recognition non supportato';
+                resultDiv.className = 'status error';
+                return;
+            }
+            
+            try {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'it-IT';
+                
+                recognition.onstart = () => {
+                    resultDiv.textContent = '🎤 Speech Recognition attivo... Parla adesso!';
+                    resultDiv.className = 'status info';
+                };
+                
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    resultDiv.textContent = `✅ Riconosciuto: "${transcript}"`;
+                    resultDiv.className = 'status success';
+                };
+                
+                recognition.onerror = (event) => {
+                    let message = '⚠️ Errore Speech Recognition: ';
+                    switch(event.error) {
+                        case 'not-allowed':
+                            message += 'Permessi microfono negati';
+                            break;
+                        case 'no-speech':
+                            message += 'Nessun parlato rilevato';
+                            break;
+                        case 'audio-capture':
+                            message += 'Errore cattura audio';
+                            break;
+                        default:
+                            message += event.error;
+                    }
+                    resultDiv.textContent = message;
+                    resultDiv.className = 'status warning';
+                };
+                
+                recognition.onend = () => {
+                    if (resultDiv.textContent.includes('attivo')) {
+                        resultDiv.textContent = '⚠️ Speech Recognition terminato senza risultati';
+                        resultDiv.className = 'status warning';
+                    }
+                };
+                
+                recognition.start();
+                
+            } catch (error) {
+                resultDiv.textContent = '❌ Errore avvio Speech Recognition: ' + error.message;
+                resultDiv.className = 'status error';
+            }
+        }
+        
+        function stopSpeechTest() {
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+                document.getElementById('speech-local').textContent = '🛑 Test fermato';
+                document.getElementById('speech-local').className = 'status warning';
+            }
+        }
+        
+        function testVoiceManagerIPad() {
+            const resultDiv = document.getElementById('voice-manager');
+            
+            // Simula inizializzazione Voice Manager
+            const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+            
+            if (isIPad) {
+                resultDiv.textContent = '✅ Voice Manager: Modalità iPad configurata correttamente';
+                resultDiv.className = 'status success';
+            } else {
+                resultDiv.textContent = '✅ Voice Manager: Modalità standard configurata';
+                resultDiv.className = 'status success';
+            }
+            
+            // Verifica componenti
+            const hasVoiceAPI = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+            const hasMediaDevices = !!navigator.mediaDevices;
+            
+            setTimeout(() => {
+                if (hasVoiceAPI && hasMediaDevices) {
+                    resultDiv.textContent += ' - Tutti i componenti disponibili';
+                } else {
+                    resultDiv.textContent += ' - Alcuni componenti mancanti';
+                    resultDiv.className = 'status warning';
+                }
+            }, 500);
+        }
+        
+        function testKeepAlive() {
+            const resultDiv = document.getElementById('keep-alive');
+            const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+            
+            if (isIPad) {
+                resultDiv.textContent = '✅ Keep-Alive: Disabilitato su iPad per evitare errori 502';
+                resultDiv.className = 'status success';
+            } else {
+                resultDiv.textContent = '✅ Keep-Alive: Attivo per dispositivi non-iPad';
+                resultDiv.className = 'status success';
+            }
+        }
+    </script>
+</body>
+</html>

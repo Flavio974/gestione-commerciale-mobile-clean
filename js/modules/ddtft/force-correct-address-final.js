@@ -8,23 +8,39 @@
     
     console.log('⚡ FORCE CORRECT ADDRESS - Fix finale assoluto attivato...');
     
-    // Intercetta il metodo che salva i documenti
-    if (window.DDTFTImport && window.DDTFTImport.prototype.importDocuments) {
-        const originalImport = window.DDTFTImport.prototype.importDocuments;
-        
-        window.DDTFTImport.prototype.importDocuments = function(documents, options) {
-            console.log('[FORCE ADDRESS] Intercettando importDocuments...');
+    // Intercetta il metodo che salva i documenti (con retry)
+    function setupImportInterceptor() {
+        if (window.DDTFTImport && window.DDTFTImport.prototype && window.DDTFTImport.prototype.importDocuments) {
+            const originalImport = window.DDTFTImport.prototype.importDocuments;
             
-            // Correggi ogni documento prima dell'import
-            if (Array.isArray(documents)) {
-                documents.forEach(doc => {
-                    forceCorrectAddress(doc);
-                });
+            window.DDTFTImport.prototype.importDocuments = function(documents, options) {
+                console.log('[FORCE ADDRESS] Intercettando importDocuments...');
+                
+                // Correggi ogni documento prima dell'import
+                if (Array.isArray(documents)) {
+                    documents.forEach(doc => {
+                        forceCorrectAddress(doc);
+                    });
+                }
+                
+                // Chiama il metodo originale
+                return originalImport.call(this, documents, options);
+            };
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    // Tenta setup immediato, poi retry
+    if (!setupImportInterceptor()) {
+        setTimeout(() => {
+            if (!setupImportInterceptor()) {
+                console.log('[FORCE ADDRESS] DDTFTImport non ancora disponibile, attendendo...');
+                // Setup su DOMContentLoaded se necessario
+                document.addEventListener('DOMContentLoaded', setupImportInterceptor);
             }
-            
-            // Chiama il metodo originale
-            return originalImport.call(this, documents, options);
-        };
+        }, 1000);
     }
     
     // Intercetta anche la conferma del caricamento

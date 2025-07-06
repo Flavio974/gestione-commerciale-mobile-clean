@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Voice Mobile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            padding: 12px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            min-width: 48px;
+            min-height: 48px;
+        }
+        .primary { background: #007bff; color: white; }
+        .secondary { background: #6c757d; color: white; }
+        .success-btn { background: #28a745; color: white; }
+        .danger { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🎤 Test Voice Mobile</h1>
+    
+    <div class="test-section">
+        <h3>1. Controlli Preliminari</h3>
+        <div id="https-check" class="status info">Controllando HTTPS...</div>
+        <div id="speech-support" class="status info">Controllando supporto Speech API...</div>
+        <div id="mic-support" class="status info">Controllando supporto microfono...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Permessi</h3>
+        <button class="primary" onclick="testMicPermissions()">Testa Permessi Microfono</button>
+        <div id="permission-result" class="status info">Clicca per testare permessi</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test Speech Recognition</h3>
+        <button class="primary" onclick="testSpeechRecognition()">Avvia Test Riconoscimento</button>
+        <button class="danger" onclick="stopSpeechTest()">Ferma Test</button>
+        <div id="speech-result" class="status info">Clicca per testare riconoscimento vocale</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Test Voice Manager</h3>
+        <button class="primary" onclick="testVoiceManager()">Test Voice Manager</button>
+        <div id="voice-manager-result" class="status info">Clicca per testare Voice Manager</div>
+    </div>
+
+    <script>
+        let recognition = null;
+        
+        // Test iniziali automatici
+        window.addEventListener('load', function() {
+            // Test HTTPS
+            const httpsCheck = document.getElementById('https-check');
+            if (location.protocol === 'https:' || location.hostname === 'localhost') {
+                httpsCheck.textContent = '✅ HTTPS: OK';
+                httpsCheck.className = 'status success';
+            } else {
+                httpsCheck.textContent = '❌ HTTPS: Richiesto per funzioni vocali';
+                httpsCheck.className = 'status error';
+            }
+            
+            // Test Speech API
+            const speechCheck = document.getElementById('speech-support');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                speechCheck.textContent = '✅ Speech Recognition: Supportato';
+                speechCheck.className = 'status success';
+            } else {
+                speechCheck.textContent = '❌ Speech Recognition: Non supportato';
+                speechCheck.className = 'status error';
+            }
+            
+            // Test MediaDevices
+            const micCheck = document.getElementById('mic-support');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                micCheck.textContent = '✅ getUserMedia: Supportato';
+                micCheck.className = 'status success';
+            } else {
+                micCheck.textContent = '❌ getUserMedia: Non supportato';
+                micCheck.className = 'status error';
+            }
+        });
+        
+        async function testMicPermissions() {
+            const resultDiv = document.getElementById('permission-result');
+            resultDiv.textContent = '🔄 Testando permessi...';
+            resultDiv.className = 'status info';
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+                resultDiv.textContent = '✅ Permessi microfono: CONCESSI';
+                resultDiv.className = 'status success';
+            } catch (error) {
+                let message = '❌ Errore permessi: ';
+                if (error.name === 'NotAllowedError') {
+                    message += 'Permessi negati dall\'utente';
+                } else if (error.name === 'NotFoundError') {
+                    message += 'Nessun microfono trovato';
+                } else {
+                    message += error.message;
+                }
+                resultDiv.textContent = message;
+                resultDiv.className = 'status error';
+            }
+        }
+        
+        function testSpeechRecognition() {
+            const resultDiv = document.getElementById('speech-result');
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                resultDiv.textContent = '❌ Speech Recognition non supportato';
+                resultDiv.className = 'status error';
+                return;
+            }
+            
+            try {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'it-IT';
+                
+                recognition.onstart = () => {
+                    resultDiv.textContent = '🎤 Ascolto attivo... Parla adesso!';
+                    resultDiv.className = 'status info';
+                };
+                
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    resultDiv.textContent = `✅ Riconosciuto: "${transcript}"`;
+                    resultDiv.className = 'status success';
+                };
+                
+                recognition.onerror = (event) => {
+                    let message = '❌ Errore riconoscimento: ';
+                    switch(event.error) {
+                        case 'not-allowed':
+                            message += 'Permessi microfono negati';
+                            break;
+                        case 'no-speech':
+                            message += 'Nessun parlato rilevato';
+                            break;
+                        case 'audio-capture':
+                            message += 'Errore cattura audio';
+                            break;
+                        default:
+                            message += event.error;
+                    }
+                    resultDiv.textContent = message;
+                    resultDiv.className = 'status error';
+                };
+                
+                recognition.onend = () => {
+                    if (resultDiv.textContent.includes('Ascolto attivo')) {
+                        resultDiv.textContent = '⚠️ Riconoscimento terminato senza risultati';
+                        resultDiv.className = 'status warning';
+                    }
+                };
+                
+                recognition.start();
+                
+            } catch (error) {
+                resultDiv.textContent = '❌ Errore avvio riconoscimento: ' + error.message;
+                resultDiv.className = 'status error';
+            }
+        }
+        
+        function stopSpeechTest() {
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+                document.getElementById('speech-result').textContent = '🛑 Test fermato';
+                document.getElementById('speech-result').className = 'status warning';
+            }
+        }
+        
+        function testVoiceManager() {
+            const resultDiv = document.getElementById('voice-manager-result');
+            
+            if (typeof AIVoiceManager !== 'undefined') {
+                resultDiv.textContent = '✅ AIVoiceManager: Caricato e disponibile';
+                resultDiv.className = 'status success';
+                
+                // Test inizializzazione
+                if (AIVoiceManager.state && AIVoiceManager.state.isInitialized) {
+                    resultDiv.textContent += ' - Inizializzato ✅';
+                } else {
+                    resultDiv.textContent += ' - Non inizializzato ⚠️';
+                    resultDiv.className = 'status warning';
+                }
+            } else {
+                resultDiv.textContent = '❌ AIVoiceManager: Non caricato';
+                resultDiv.className = 'status error';
+            }
+        }
+    </script>
+</body>
+</html>

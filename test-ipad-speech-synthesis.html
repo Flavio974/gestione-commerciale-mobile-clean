@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test iPad Speech Synthesis</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: 500;
+            min-height: 20px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            padding: 15px 25px;
+            margin: 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            min-width: 48px;
+            min-height: 48px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .primary { background: #007bff; color: white; }
+        .primary:hover { background: #0056b3; }
+        .success-btn { background: #28a745; color: white; }
+        .danger { background: #dc3545; color: white; }
+        .secondary { background: #6c757d; color: white; }
+        h1 { color: #333; margin-bottom: 10px; }
+        h3 { color: #555; margin-top: 0; }
+        .device-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .voice-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .debug-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔊 Test iPad Speech Synthesis</h1>
+    
+    <div class="device-info" id="device-info">
+        <strong>Rilevamento dispositivo...</strong>
+    </div>
+    
+    <div class="test-card">
+        <h3>1. Test Supporto Speech Synthesis</h3>
+        <div id="speech-support" class="status info">Controllando supporto Speech Synthesis...</div>
+        <button class="primary" onclick="testSpeechSynthesisSupport()">Testa Supporto</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>2. Test Voci Disponibili</h3>
+        <div id="voices-result" class="status info">Clicca per caricare le voci</div>
+        <div id="voices-list" class="voice-list" style="display:none;"></div>
+        <button class="primary" onclick="loadVoices()">Carica Voci</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>3. Test Speech Base</h3>
+        <div id="speech-basic" class="status info">Clicca per testare speech base</div>
+        <button class="primary" onclick="testBasicSpeech()">Test Speech Base</button>
+        <button class="danger" onclick="stopAllSpeech()">Stop Speech</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>4. Test Speech iOS Ottimizzato</h3>
+        <div id="speech-ios" class="status info">Clicca per testare speech iOS ottimizzato</div>
+        <button class="primary" onclick="testIOSSpeech()">Test Speech iOS</button>
+    </div>
+
+    <div class="test-card">
+        <h3>5. Test Speech con Voice Italiana</h3>
+        <div id="speech-italian" class="status info">Clicca per testare voce italiana</div>
+        <button class="primary" onclick="testItalianVoice()">Test Voice Italiana</button>
+    </div>
+
+    <div class="test-card">
+        <h3>6. Debug Output</h3>
+        <div id="debug-output" class="debug-output">
+            Messaggi di debug appariranno qui...
+        </div>
+        <button class="secondary" onclick="clearDebug()">Pulisci Debug</button>
+    </div>
+
+    <script>
+        let debugOutput = document.getElementById('debug-output');
+        let currentUtterance = null;
+        
+        function addDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `[${timestamp}] ${message}\n`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearDebug() {
+            debugOutput.innerHTML = 'Debug pulito...\n';
+        }
+        
+        // Inizializzazione
+        window.addEventListener('load', function() {
+            updateDeviceInfo();
+            testSpeechSynthesisSupport();
+        });
+        
+        function updateDeviceInfo() {
+            const info = document.getElementById('device-info');
+            const userAgent = navigator.userAgent;
+            const isIPad = /iPad|Macintosh/.test(userAgent) && 'ontouchend' in document;
+            const isIPhone = /iPhone/.test(userAgent);
+            const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const hasSpeechSynthesis = 'speechSynthesis' in window;
+            
+            info.innerHTML = `
+                <strong>Informazioni Dispositivo:</strong><br>
+                User Agent: ${userAgent.substring(0, 80)}...<br>
+                iPad rilevato: ${isIPad}<br>
+                iPhone rilevato: ${isIPhone}<br>
+                Touch support: ${hasTouch}<br>
+                Speech Synthesis: ${hasSpeechSynthesis}<br>
+                Voci caricate: ${speechSynthesis.getVoices().length}
+            `;
+            
+            addDebug(`📱 Device detected: ${isIPad ? 'iPad' : isIPhone ? 'iPhone' : 'Other'}`);
+        }
+        
+        function testSpeechSynthesisSupport() {
+            const resultDiv = document.getElementById('speech-support');
+            
+            if ('speechSynthesis' in window) {
+                resultDiv.textContent = '✅ Speech Synthesis supportato';
+                resultDiv.className = 'status success';
+                addDebug('✅ Speech Synthesis API disponibile');
+                
+                // Test stato
+                addDebug(`📊 Stato iniziale: speaking=${speechSynthesis.speaking}, pending=${speechSynthesis.pending}`);
+            } else {
+                resultDiv.textContent = '❌ Speech Synthesis NON supportato';
+                resultDiv.className = 'status error';
+                addDebug('❌ Speech Synthesis API non disponibile');
+            }
+        }
+        
+        function loadVoices() {
+            const resultDiv = document.getElementById('voices-result');
+            const voicesList = document.getElementById('voices-list');
+            
+            resultDiv.textContent = '🔄 Caricando voci...';
+            resultDiv.className = 'status info';
+            
+            function showVoices() {
+                const voices = speechSynthesis.getVoices();
+                addDebug(`🎤 Voci trovate: ${voices.length}`);
+                
+                if (voices.length > 0) {
+                    resultDiv.textContent = `✅ ${voices.length} voci disponibili`;
+                    resultDiv.className = 'status success';
+                    
+                    const italianVoices = voices.filter(voice => voice.lang.includes('it'));
+                    addDebug(`🇮🇹 Voci italiane: ${italianVoices.length}`);
+                    
+                    voicesList.innerHTML = voices.map(voice => 
+                        `<div>${voice.name} (${voice.lang}) ${voice.default ? '[DEFAULT]' : ''} ${voice.localService ? '[LOCAL]' : '[REMOTE]'}</div>`
+                    ).join('');
+                    voicesList.style.display = 'block';
+                } else {
+                    resultDiv.textContent = '⚠️ Nessuna voce trovata';
+                    resultDiv.className = 'status warning';
+                    
+                    // Riprova dopo un secondo
+                    setTimeout(() => {
+                        const retryVoices = speechSynthesis.getVoices();
+                        if (retryVoices.length > 0) {
+                            addDebug(`🔄 Retry successful: ${retryVoices.length} voci`);
+                            showVoices();
+                        }
+                    }, 1000);
+                }
+            }
+            
+            // Se le voci non sono ancora caricate
+            if (speechSynthesis.getVoices().length === 0) {
+                speechSynthesis.onvoiceschanged = showVoices;
+                addDebug('🔄 Aspettando caricamento voci...');
+            } else {
+                showVoices();
+            }
+        }
+        
+        function testBasicSpeech() {
+            const resultDiv = document.getElementById('speech-basic');
+            const testText = 'Ciao! Questo è un test di sintesi vocale su iPad.';
+            
+            resultDiv.textContent = '🔄 Testando speech base...';
+            resultDiv.className = 'status info';
+            addDebug('🔊 Avviando test speech base');
+            
+            try {
+                stopAllSpeech();
+                
+                const utterance = new SpeechSynthesisUtterance(testText);
+                utterance.lang = 'it-IT';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                utterance.onstart = () => {
+                    addDebug('✅ Speech iniziato');
+                    resultDiv.textContent = '✅ Speech in corso...';
+                    resultDiv.className = 'status success';
+                };
+                
+                utterance.onend = () => {
+                    addDebug('✅ Speech completato');
+                    resultDiv.textContent = '✅ Speech completato con successo';
+                    resultDiv.className = 'status success';
+                };
+                
+                utterance.onerror = (event) => {
+                    addDebug(`❌ Speech errore: ${event.error}`);
+                    resultDiv.textContent = `❌ Errore: ${event.error}`;
+                    resultDiv.className = 'status error';
+                };
+                
+                currentUtterance = utterance;
+                speechSynthesis.speak(utterance);
+                
+                addDebug('📤 Comando speak inviato');
+                
+                // Check status dopo 500ms
+                setTimeout(() => {
+                    addDebug(`📊 Stato dopo 500ms: speaking=${speechSynthesis.speaking}, pending=${speechSynthesis.pending}`);
+                }, 500);
+                
+            } catch (error) {
+                addDebug(`❌ Errore test base: ${error.message}`);
+                resultDiv.textContent = `❌ Errore: ${error.message}`;
+                resultDiv.className = 'status error';
+            }
+        }
+        
+        function testIOSSpeech() {
+            const resultDiv = document.getElementById('speech-ios');
+            const testText = 'Test ottimizzato per iOS. Sistema vocale iPad attivo.';
+            const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+            
+            resultDiv.textContent = '🔄 Testando speech iOS ottimizzato...';
+            resultDiv.className = 'status info';
+            addDebug(`🔊 Avviando test iOS (iPad: ${isIPad})`);
+            
+            try {
+                stopAllSpeech();
+                
+                // Aspetta un po' prima di iniziare (come nel codice originale)
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(testText);
+                    
+                    // Configurazione iOS specifica
+                    utterance.lang = 'it-IT';
+                    utterance.rate = isIPad ? 0.9 : 0.8;
+                    utterance.pitch = 1.0;
+                    utterance.volume = 1.0;
+                    
+                    // Trova voce italiana
+                    const voices = speechSynthesis.getVoices();
+                    const iosVoice = voices.find(voice => 
+                        voice.lang.startsWith('it') && 
+                        (voice.name.includes('Italian') || voice.name.includes('Alice') || 
+                         voice.name.includes('Luca') || voice.name.includes('Federica'))
+                    ) || voices.find(voice => voice.lang.startsWith('it'));
+                    
+                    if (iosVoice) {
+                        utterance.voice = iosVoice;
+                        addDebug(`🎤 Voce selezionata: ${iosVoice.name}`);
+                    } else {
+                        addDebug('⚠️ Nessuna voce italiana trovata, uso default');
+                    }
+                    
+                    utterance.onstart = () => {
+                        addDebug('✅ iOS Speech iniziato');
+                        resultDiv.textContent = '✅ iOS Speech in corso...';
+                        resultDiv.className = 'status success';
+                    };
+                    
+                    utterance.onend = () => {
+                        addDebug('✅ iOS Speech completato');
+                        resultDiv.textContent = '✅ iOS Speech completato con successo';
+                        resultDiv.className = 'status success';
+                    };
+                    
+                    utterance.onerror = (event) => {
+                        addDebug(`❌ iOS Speech errore: ${event.error}`);
+                        resultDiv.textContent = `❌ Errore iOS: ${event.error}`;
+                        resultDiv.className = 'status error';
+                    };
+                    
+                    currentUtterance = utterance;
+                    speechSynthesis.speak(utterance);
+                    addDebug('📤 iOS comando speak inviato');
+                    
+                    // Doppio tentativo come nel codice originale
+                    setTimeout(() => {
+                        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+                            addDebug('🔄 Primo tentativo fallito, riprovo...');
+                            const utterance2 = new SpeechSynthesisUtterance(testText);
+                            utterance2.lang = 'it-IT';
+                            utterance2.rate = 1.0;
+                            utterance2.volume = 1.0;
+                            if (iosVoice) utterance2.voice = iosVoice;
+                            speechSynthesis.speak(utterance2);
+                        }
+                    }, 500);
+                    
+                }, isIPad ? 100 : 50);
+                
+            } catch (error) {
+                addDebug(`❌ Errore test iOS: ${error.message}`);
+                resultDiv.textContent = `❌ Errore: ${error.message}`;
+                resultDiv.className = 'status error';
+            }
+        }
+        
+        function testItalianVoice() {
+            const resultDiv = document.getElementById('speech-italian');
+            const testText = 'Benvenuto! Sistema di riconoscimento vocale in italiano attivo e funzionante.';
+            
+            resultDiv.textContent = '🔄 Testando voce italiana...';
+            resultDiv.className = 'status info';
+            addDebug('🇮🇹 Test voce italiana');
+            
+            try {
+                stopAllSpeech();
+                
+                const voices = speechSynthesis.getVoices();
+                const italianVoices = voices.filter(voice => voice.lang.includes('it'));
+                
+                if (italianVoices.length === 0) {
+                    resultDiv.textContent = '❌ Nessuna voce italiana disponibile';
+                    resultDiv.className = 'status error';
+                    addDebug('❌ Nessuna voce italiana trovata');
+                    return;
+                }
+                
+                addDebug(`🇮🇹 Voci italiane disponibili: ${italianVoices.length}`);
+                italianVoices.forEach(voice => {
+                    addDebug(`  - ${voice.name} (${voice.lang})`);
+                });
+                
+                const bestVoice = italianVoices.find(voice => 
+                    voice.name.includes('Alice') || voice.name.includes('Federica') || voice.name.includes('Luca')
+                ) || italianVoices[0];
+                
+                const utterance = new SpeechSynthesisUtterance(testText);
+                utterance.voice = bestVoice;
+                utterance.lang = 'it-IT';
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                addDebug(`🎤 Usando voce: ${bestVoice.name}`);
+                
+                utterance.onstart = () => {
+                    addDebug('✅ Voce italiana iniziata');
+                    resultDiv.textContent = `✅ Parlando con ${bestVoice.name}...`;
+                    resultDiv.className = 'status success';
+                };
+                
+                utterance.onend = () => {
+                    addDebug('✅ Voce italiana completata');
+                    resultDiv.textContent = '✅ Test voce italiana completato';
+                    resultDiv.className = 'status success';
+                };
+                
+                utterance.onerror = (event) => {
+                    addDebug(`❌ Errore voce italiana: ${event.error}`);
+                    resultDiv.textContent = `❌ Errore: ${event.error}`;
+                    resultDiv.className = 'status error';
+                };
+                
+                currentUtterance = utterance;
+                speechSynthesis.speak(utterance);
+                
+            } catch (error) {
+                addDebug(`❌ Errore test voce italiana: ${error.message}`);
+                resultDiv.textContent = `❌ Errore: ${error.message}`;
+                resultDiv.className = 'status error';
+            }
+        }
+        
+        function stopAllSpeech() {
+            try {
+                speechSynthesis.cancel();
+                if (currentUtterance) {
+                    currentUtterance = null;
+                }
+                addDebug('🛑 Speech fermato');
+            } catch (error) {
+                addDebug(`❌ Errore stop speech: ${error.message}`);
+            }
+        }
+        
+        // Monitor stato speech synthesis
+        setInterval(() => {
+            if (speechSynthesis.speaking) {
+                addDebug(`📊 Speech attivo: speaking=${speechSynthesis.speaking}, pending=${speechSynthesis.pending}`);
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

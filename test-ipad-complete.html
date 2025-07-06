@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test iPad Completo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 12px;
+            font-weight: 500;
+            min-height: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .success { background: rgba(40, 167, 69, 0.3); border: 1px solid rgba(40, 167, 69, 0.5); }
+        .error { background: rgba(220, 53, 69, 0.3); border: 1px solid rgba(220, 53, 69, 0.5); }
+        .warning { background: rgba(255, 193, 7, 0.3); border: 1px solid rgba(255, 193, 7, 0.5); }
+        .info { background: rgba(23, 162, 184, 0.3); border: 1px solid rgba(23, 162, 184, 0.5); }
+        
+        button {
+            padding: 15px 25px;
+            margin: 8px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            min-width: 48px;
+            min-height: 48px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .primary { background: rgba(0, 123, 255, 0.3); border-color: rgba(0, 123, 255, 0.5); }
+        .success-btn { background: rgba(40, 167, 69, 0.3); border-color: rgba(40, 167, 69, 0.5); }
+        .danger { background: rgba(220, 53, 69, 0.3); border-color: rgba(220, 53, 69, 0.5); }
+        
+        h1 { 
+            color: white; 
+            margin-bottom: 10px; 
+            text-align: center;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        h3 { 
+            color: white; 
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+        
+        .device-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .test-result {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .floating-mic {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .floating-mic:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+        
+        .floating-mic.listening {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎤 Test iPad Completo</h1>
+    
+    <div class="device-info" id="device-info">
+        <strong>Rilevamento dispositivo in corso...</strong>
+    </div>
+    
+    <div class="test-card">
+        <h3>1. 📱 Sistema Device Detection</h3>
+        <div id="device-test" class="status info test-result">Rilevamento dispositivo...</div>
+        <button class="primary" onclick="testDeviceDetection()">Test Device Detection</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>2. 🔊 Sistema Speech Synthesis</h3>
+        <div id="speech-test" class="status info test-result">Test sintesi vocale...</div>
+        <button class="primary" onclick="testSpeechSynthesis()">Test Speech Synthesis</button>
+        <button class="danger" onclick="stopSpeech()">Stop</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>3. 🎤 Sistema Speech Recognition</h3>
+        <div id="recognition-test" class="status info test-result">Test riconoscimento vocale...</div>
+        <button class="primary" onclick="testSpeechRecognition()">Test Recognition</button>
+        <button class="danger" onclick="stopRecognition()">Stop</button>
+    </div>
+    
+    <div class="test-card">
+        <h3>4. 🔄 Test Conversazione Completa</h3>
+        <div id="conversation-test" class="status info test-result">Test conversazione completa...</div>
+        <button class="success-btn" onclick="testCompleteConversation()">Test Conversazione</button>
+    </div>
+
+    <!-- Floating Microphone Button -->
+    <button id="floating-mic" class="floating-mic" onclick="toggleListening()">
+        🎤
+    </button>
+
+    <script>
+        let recognition = null;
+        let isListening = false;
+        let currentUtterance = null;
+        
+        // Configurazione iPad
+        const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+        const isIPhone = /iPhone/.test(navigator.userAgent);
+        const isIOS = isIPad || isIPhone;
+        
+        // Inizializzazione
+        window.addEventListener('load', function() {
+            updateDeviceInfo();
+            testDeviceDetection();
+            initializeAudioContext();
+        });
+        
+        function updateDeviceInfo() {
+            const info = document.getElementById('device-info');
+            info.innerHTML = `
+                <strong>📱 Informazioni Dispositivo:</strong><br>
+                iPad: ${isIPad ? '✅' : '❌'}<br>
+                iPhone: ${isIPhone ? '✅' : '❌'}<br>
+                iOS: ${isIOS ? '✅' : '❌'}<br>
+                Touch: ${'ontouchstart' in window ? '✅' : '❌'}<br>
+                Speech Synthesis: ${window.speechSynthesis ? '✅' : '❌'}<br>
+                Speech Recognition: ${!!(window.SpeechRecognition || window.webkitSpeechRecognition) ? '✅' : '❌'}
+            `;
+        }
+        
+        function testDeviceDetection() {
+            const resultDiv = document.getElementById('device-test');
+            
+            if (isIPad) {
+                resultDiv.textContent = '✅ iPad rilevato correttamente - Modalità ottimizzata attiva';
+                resultDiv.className = 'status success test-result';
+            } else if (isIPhone) {
+                resultDiv.textContent = '✅ iPhone rilevato - Modalità mobile attiva';
+                resultDiv.className = 'status success test-result';
+            } else {
+                resultDiv.textContent = '⚠️ Dispositivo non iOS - Modalità standard';
+                resultDiv.className = 'status warning test-result';
+            }
+        }
+        
+        async function initializeAudioContext() {
+            if (!isIOS) return;
+            
+            try {
+                // Unlock audio context for iOS
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    const audioContext = new AudioContext();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    gainNode.gain.value = 0;
+                    oscillator.frequency.value = 440;
+                    oscillator.start(0);
+                    oscillator.stop(0.1);
+                    
+                    console.log('✅ Audio context inizializzato per iOS');
+                }
+                
+                // Unlock speech synthesis
+                const testUtterance = new SpeechSynthesisUtterance('');
+                testUtterance.volume = 0;
+                speechSynthesis.speak(testUtterance);
+                
+            } catch (error) {
+                console.log('⚠️ Errore inizializzazione audio:', error);
+            }
+        }
+        
+        function testSpeechSynthesis() {
+            const resultDiv = document.getElementById('speech-test');
+            const testText = isIPad ? 
+                'Ciao! Sono il tuo assistente vocale per iPad. Sistema di sintesi vocale attivo e funzionante.' :
+                'Test di sintesi vocale in corso.';
+            
+            resultDiv.textContent = '🔄 Avviando sintesi vocale...';
+            resultDiv.className = 'status info test-result';
+            
+            try {
+                stopSpeech();
+                
+                const utterance = new SpeechSynthesisUtterance(testText);
+                
+                // Configurazione iOS specifica
+                utterance.lang = 'it-IT';
+                utterance.rate = isIPad ? 0.9 : 0.8;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                // Seleziona voce italiana se disponibile
+                const voices = speechSynthesis.getVoices();
+                const italianVoice = voices.find(voice => 
+                    voice.lang.includes('it') && 
+                    (voice.name.includes('Alice') || voice.name.includes('Federica') || voice.name.includes('Luca'))
+                ) || voices.find(voice => voice.lang.includes('it'));
+                
+                if (italianVoice) {
+                    utterance.voice = italianVoice;
+                }
+                
+                utterance.onstart = () => {
+                    resultDiv.textContent = '🔊 Sintesi vocale in corso...';
+                    resultDiv.className = 'status success test-result';
+                };
+                
+                utterance.onend = () => {
+                    resultDiv.textContent = '✅ Sintesi vocale completata con successo!';
+                    resultDiv.className = 'status success test-result';
+                };
+                
+                utterance.onerror = (event) => {
+                    resultDiv.textContent = `❌ Errore sintesi vocale: ${event.error}`;
+                    resultDiv.className = 'status error test-result';
+                };
+                
+                currentUtterance = utterance;
+                speechSynthesis.speak(utterance);
+                
+                // Doppio tentativo per iOS come nel codice originale
+                if (isIOS) {
+                    setTimeout(() => {
+                        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+                            const utterance2 = new SpeechSynthesisUtterance(testText);
+                            utterance2.lang = 'it-IT';
+                            utterance2.rate = 1.0;
+                            utterance2.volume = 1.0;
+                            if (italianVoice) utterance2.voice = italianVoice;
+                            speechSynthesis.speak(utterance2);
+                        }
+                    }, 500);
+                }
+                
+            } catch (error) {
+                resultDiv.textContent = `❌ Errore: ${error.message}`;
+                resultDiv.className = 'status error test-result';
+            }
+        }
+        
+        function stopSpeech() {
+            try {
+                speechSynthesis.cancel();
+                currentUtterance = null;
+            } catch (error) {
+                console.log('Errore stop speech:', error);
+            }
+        }
+        
+        async function testSpeechRecognition() {
+            const resultDiv = document.getElementById('recognition-test');
+            
+            // Richiedi permessi prima
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                resultDiv.textContent = `❌ Permessi microfono negati: ${error.message}`;
+                resultDiv.className = 'status error test-result';
+                return;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                resultDiv.textContent = '❌ Speech Recognition non supportato';
+                resultDiv.className = 'status error test-result';
+                return;
+            }
+            
+            try {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'it-IT';
+                
+                recognition.onstart = () => {
+                    resultDiv.textContent = '🎤 Riconoscimento attivo - Parla adesso!';
+                    resultDiv.className = 'status success test-result';
+                    document.getElementById('floating-mic').classList.add('listening');
+                };
+                
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    const confidence = Math.round(event.results[0][0].confidence * 100);
+                    resultDiv.textContent = `✅ Riconosciuto: "${transcript}" (${confidence}% accuratezza)`;
+                    resultDiv.className = 'status success test-result';
+                };
+                
+                recognition.onerror = (event) => {
+                    let message = '❌ Errore riconoscimento: ';
+                    switch(event.error) {
+                        case 'not-allowed':
+                            message += 'Permessi microfono negati';
+                            break;
+                        case 'no-speech':
+                            message += 'Nessun parlato rilevato - riprova';
+                            break;
+                        case 'audio-capture':
+                            message += 'Errore cattura audio';
+                            break;
+                        default:
+                            message += event.error;
+                    }
+                    resultDiv.textContent = message;
+                    resultDiv.className = 'status error test-result';
+                };
+                
+                recognition.onend = () => {
+                    document.getElementById('floating-mic').classList.remove('listening');
+                    if (resultDiv.textContent.includes('Riconoscimento attivo')) {
+                        resultDiv.textContent = '⚠️ Riconoscimento terminato senza risultati';
+                        resultDiv.className = 'status warning test-result';
+                    }
+                };
+                
+                recognition.start();
+                
+            } catch (error) {
+                resultDiv.textContent = `❌ Errore avvio riconoscimento: ${error.message}`;
+                resultDiv.className = 'status error test-result';
+            }
+        }
+        
+        function stopRecognition() {
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+                document.getElementById('floating-mic').classList.remove('listening');
+            }
+        }
+        
+        async function testCompleteConversation() {
+            const resultDiv = document.getElementById('conversation-test');
+            
+            resultDiv.textContent = '🔄 Avviando test conversazione completa...';
+            resultDiv.className = 'status info test-result';
+            
+            // Step 1: Speech Synthesis
+            const greeting = isIPad ? 
+                'Benvenuto nel test completo iPad. Dimmi qualcosa e ti risponderò.' :
+                'Test conversazione avviato. Dimmi qualcosa.';
+            
+            const utterance = new SpeechSynthesisUtterance(greeting);
+            utterance.lang = 'it-IT';
+            utterance.rate = isIPad ? 0.9 : 0.8;
+            
+            utterance.onend = async () => {
+                // Step 2: Speech Recognition
+                resultDiv.textContent = '🎤 Ora parla... Ti sto ascoltando!';
+                resultDiv.className = 'status success test-result';
+                
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const recognition = new SpeechRecognition();
+                    recognition.continuous = false;
+                    recognition.interimResults = false;
+                    recognition.lang = 'it-IT';
+                    
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        
+                        // Step 3: Response
+                        const response = `Hai detto: ${transcript}. Test conversazione completato con successo!`;
+                        
+                        resultDiv.textContent = `✅ ${response}`;
+                        resultDiv.className = 'status success test-result';
+                        
+                        // Step 4: Speak response
+                        const responseUtterance = new SpeechSynthesisUtterance(response);
+                        responseUtterance.lang = 'it-IT';
+                        responseUtterance.rate = isIPad ? 0.9 : 0.8;
+                        speechSynthesis.speak(responseUtterance);
+                    };
+                    
+                    recognition.onerror = (event) => {
+                        resultDiv.textContent = `❌ Errore riconoscimento: ${event.error}`;
+                        resultDiv.className = 'status error test-result';
+                    };
+                    
+                    recognition.start();
+                    
+                } catch (error) {
+                    resultDiv.textContent = `❌ Errore microfono: ${error.message}`;
+                    resultDiv.className = 'status error test-result';
+                }
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+        
+        function toggleListening() {
+            if (isListening) {
+                stopRecognition();
+                isListening = false;
+                document.getElementById('floating-mic').textContent = '🎤';
+            } else {
+                testSpeechRecognition();
+                isListening = true;
+                document.getElementById('floating-mic').textContent = '🛑';
+            }
+        }
+        
+        // Load voices
+        if (speechSynthesis.getVoices().length === 0) {
+            speechSynthesis.onvoiceschanged = () => {
+                console.log('Voci caricate:', speechSynthesis.getVoices().length);
+            };
+        }
+    </script>
+</body>
+</html>

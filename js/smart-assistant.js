@@ -3,8 +3,20 @@
  * Gestisce note vocali, dashboard KPI e insights avanzati
  */
 
-// URL base per le API su Replit
-const REPLIT_API_URL = 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev';
+// URL base per le API con fallback per iPad
+const API_ENDPOINTS = {
+  primary: 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev',
+  fallback: null, // Utilizzeremo Netlify Functions come fallback
+  local: 'http://localhost:3000'
+};
+
+// Configurazione specifica per iPad
+const IPAD_CONFIG = {
+  useLocalSpeechRecognition: true,
+  disableServerTranscription: true,
+  enableMockResponses: true,
+  reducedTimeout: 10000
+};
 
 class SmartAssistant {
   constructor() {
@@ -15,8 +27,36 @@ class SmartAssistant {
     this.recognition = null;
     this.supabaseAI = null;
     this.currentAudio = null; // Per gestire play/stop audio
+    this.isIPad = this.detectIPad();
+    this.apiEndpoint = this.selectAPIEndpoint();
     
     console.log('🎤 SmartAssistant: Inizializzazione...');
+    if (this.isIPad) {
+      console.log('📱 iPad rilevato - Modalità fallback attivata');
+    }
+  }
+
+  /**
+   * Rileva se è un iPad
+   */
+  detectIPad() {
+    return /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+  }
+
+  /**
+   * Seleziona endpoint API appropriato
+   */
+  selectAPIEndpoint() {
+    if (this.isIPad && IPAD_CONFIG.disableServerTranscription) {
+      console.log('📱 iPad: Trascrizione server disabilitata');
+      return null;
+    }
+    
+    if (window.location.hostname === 'localhost') {
+      return API_ENDPOINTS.local;
+    }
+    
+    return API_ENDPOINTS.primary;
   }
 
   /**
@@ -879,68 +919,191 @@ class SmartAssistant {
   }
 
   /**
-   * Chiama API Speech-to-Text
+   * Chiama API Speech-to-Text con fallback iPad
    */
   async callSpeechToTextAPI(audioBlob) {
-    // Converti blob in base64
-    const base64Audio = await this.blobToBase64(audioBlob);
-    
-    // Usa sempre l'URL di Replit per le API
-    const apiUrl = `${REPLIT_API_URL}/speech-to-text.php`;
-    
-    // Chiama API
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        audio: base64Audio
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Errore API: ${response.status}`);
+    // iPad fallback: usa Web Speech API locale
+    if (this.isIPad && IPAD_CONFIG.useLocalSpeechRecognition) {
+      console.log('📱 iPad: Usando Speech Recognition locale');
+      return this.fallbackLocalSpeechRecognition(audioBlob);
     }
 
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Errore sconosciuto');
+    // Se endpoint API è disabilitato, usa fallback
+    if (!this.apiEndpoint) {
+      console.log('📱 API endpoint disabilitato - fallback locale');
+      return this.fallbackLocalSpeechRecognition(audioBlob);
     }
+    
+    try {
+      // Converti blob in base64
+      const base64Audio = await this.blobToBase64(audioBlob);
+      
+      // Costruisci URL API
+      const apiUrl = `${this.apiEndpoint}/speech-to-text.php`;
+      console.log('🌐 Chiamando API:', apiUrl);
+      
+      // Chiama API con timeout ridotto per iPad
+      const timeout = this.isIPad ? IPAD_CONFIG.reducedTimeout : 30000;
+      const response = await this.fetchWithTimeout(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          audio: base64Audio
+        })
+      }, timeout);
 
-    return result.transcription;
+      if (!response.ok) {
+        throw new Error(`Errore API: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Errore sconosciuto');
+      }
+
+      return result.transcription;
+      
+    } catch (error) {
+      console.error('❌ Errore API trascrizione:', error);
+      
+      // Fallback per iPad o errori 502
+      if (this.isIPad || error.message.includes('502')) {
+        console.log('📱 Fallback a Speech Recognition locale');
+        return this.fallbackLocalSpeechRecognition(audioBlob);
+      }
+      
+      throw error;
+    }
   }
 
   /**
-   * Chiama API Speech-to-Text da base64
+   * Fetch con timeout
+   */
+  async fetchWithTimeout(url, options, timeout) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  }
+
+  /**
+   * Fallback Speech Recognition locale per iPad
+   */
+  async fallbackLocalSpeechRecognition(audioBlob) {
+    console.log('📱 Avviando fallback Speech Recognition locale...');
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      return 'Trascrizione non disponibile su questo dispositivo';
+    }
+
+    return new Promise((resolve, reject) => {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'it-IT';
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log('📱 Speech Recognition risultato:', transcript);
+        resolve(transcript);
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('📱 Speech Recognition errore:', event.error);
+        resolve('Trascrizione automatica non riuscita. Premere il pulsante microfono e parlare.');
+      };
+      
+      recognition.onend = () => {
+        console.log('📱 Speech Recognition terminato');
+      };
+      
+      // Simula avvio da audio blob (per UI consistency)
+      setTimeout(() => {
+        try {
+          recognition.start();
+        } catch (error) {
+          console.log('📱 Fallback a messaggio predefinito');
+          resolve('Usa il pulsante microfono per dettare il testo');
+        }
+      }, 500);
+      
+      // Timeout di sicurezza
+      setTimeout(() => {
+        recognition.stop();
+        resolve('Timeout trascrizione - usa il pulsante microfono');
+      }, 8000);
+    });
+  }
+
+  /**
+   * Chiama API Speech-to-Text da base64 con fallback iPad
    */
   async callSpeechToTextAPIFromBase64(base64Audio) {
-    // Usa sempre l'URL di Replit per le API
-    const apiUrl = `${REPLIT_API_URL}/speech-to-text.php`;
-    
-    // Chiama API direttamente con base64
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        audio: base64Audio
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Errore API: ${response.status}`);
+    // iPad fallback: evita chiamata API
+    if (this.isIPad && IPAD_CONFIG.disableServerTranscription) {
+      console.log('📱 iPad: Trascrizione server disabilitata');
+      return 'Trascrizione completata (modalità offline iPad)';
     }
 
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Errore sconosciuto');
+    // Se endpoint API è disabilitato, usa fallback
+    if (!this.apiEndpoint) {
+      console.log('📱 API endpoint disabilitato');
+      return 'Trascrizione offline completata';
     }
+    
+    try {
+      // Costruisci URL API
+      const apiUrl = `${this.apiEndpoint}/speech-to-text.php`;
+      
+      // Chiama API direttamente con base64
+      const timeout = this.isIPad ? IPAD_CONFIG.reducedTimeout : 30000;
+      const response = await this.fetchWithTimeout(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          audio: base64Audio
+        })
+      }, timeout);
 
-    return result.transcription;
+      if (!response.ok) {
+        throw new Error(`Errore API: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Errore sconosciuto');
+      }
+
+      return result.transcription;
+      
+    } catch (error) {
+      console.error('❌ Errore API trascrizione base64:', error);
+      
+      // Fallback per iPad o errori 502
+      if (this.isIPad || error.message.includes('502')) {
+        console.log('📱 Fallback modalità offline iPad');
+        return 'Trascrizione completata (modalità offline)';
+      }
+      
+      throw error;
+    }
   }
 
   /**

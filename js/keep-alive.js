@@ -20,14 +20,23 @@ const KeepAlive = {
   },
   
   async ping() {
+    // Rileva iPad e disabilita ping se necessario
+    const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+    if (isIPad) {
+      console.log('📱 iPad: Keep-alive disabilitato per evitare errori 502');
+      return;
+    }
+
     try {
       const response = await fetch(`${this.REPLIT_URL}/claude-ai.php?keepalive=1`, {
         method: 'GET',
-        mode: 'no-cors' // Evita problemi CORS per il ping
+        mode: 'no-cors', // Evita problemi CORS per il ping
+        signal: AbortSignal.timeout(5000) // Timeout 5 secondi
       });
       console.log('✅ Keep-alive ping inviato');
     } catch (error) {
       console.error('❌ Keep-alive error:', error);
+      // Non bloccare l'app per errori keep-alive
     }
   },
   
