@@ -17,8 +17,8 @@ class RequestMiddleware {
         
         // Pattern regex per estrazione parametri
         this.patterns = {
-            fatturato: /(?:fatturato|venduto|incasso).*(?:con|di|del|da)\s+([^?\n]+?)(?:\?|$)/i,
-            ordiniCliente: /(?:quanti|numero).*ordini.*(?:con|di|del|da)\s+([^?\n]+?)(?:\?|$)/i,
+            fatturato: /(?:fatturato|venduto|incasso).*?(?:con|di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
+            ordiniCliente: /(?:quanti|numero).*ordini.*?(?:con|di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
             clientiZona: /clienti.*(?:in|nella|di|della)\s+([^?\n]+?)(?:\?|$)/i
         };
@@ -78,7 +78,7 @@ class RequestMiddleware {
         // Parole strategiche che richiedono AI
         const strategicKeywords = [
             'consiglia', 'analizza', 'perché', 'strategia', 'ottimizza', 'meglio',
-            'dovrei', 'come', 'suggerisci', 'pensa', 'valuta', 'interpreta'
+            'dovrei', 'suggerisci', 'pensa', 'valuta', 'interpreta'
         ];
         
         // Check se è richiesta strategica

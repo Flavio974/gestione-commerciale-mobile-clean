@@ -53,6 +53,8 @@ class EnhancedAIAssistant {
      */
     async sendMessage(isVoiceInput = false) {
         try {
+            console.log('🔄 ENHANCED: sendMessage chiamato!', {isVoiceInput});
+            
             // Assicurati che l'initialization sia completata
             await this.initializationPromise;
             

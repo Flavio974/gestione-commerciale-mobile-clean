@@ -3664,6 +3664,44 @@
             window.flavioAI = window.EnhancedAI;
             window.FlavioAIAssistant = window.EnhancedAI; // Per compatibility
             
+            // Forza rebind di event listeners se necessario
+            setTimeout(() => {
+              // Verifica che l'integrazione sia effettiva
+              console.log('🔍 MIDDLEWARE: Verifico stato integrazione...');
+              console.log('window.flavioAI tipo:', typeof window.flavioAI);
+              console.log('window.flavioAI constructor:', window.flavioAI?.constructor?.name);
+              console.log('window.EnhancedAI tipo:', typeof window.EnhancedAI);
+              
+              if (window.flavioAI && window.flavioAI.constructor.name === 'EnhancedAIAssistant') {
+                console.log('✅ MIDDLEWARE: Verifica integrazione - OK');
+              } else {
+                console.log('⚠️ MIDDLEWARE: Verifica integrazione - FALLITA, forzando...');
+                
+                // Forza sostituzione più aggressiva
+                if (window.EnhancedAI) {
+                  window.flavioAI = window.EnhancedAI;
+                  
+                  // Trova e aggiorna pulsante invio se necessario
+                  const sendButton = document.querySelector('#send-btn, [onclick*="flavioAI.sendMessage"], .send-button');
+                  if (sendButton && sendButton.onclick) {
+                    console.log('🔄 MIDDLEWARE: Aggiornando event listener pulsante...');
+                    sendButton.onclick = () => window.flavioAI.sendMessage(false);
+                  }
+                  
+                  console.log('✅ MIDDLEWARE: Sostituzione forzata completata');
+                } else {
+                  console.log('❌ MIDDLEWARE: EnhancedAI non disponibile!');
+                }
+              }
+              
+              // Test finale
+              setTimeout(() => {
+                console.log('🧪 MIDDLEWARE: Test finale...');
+                console.log('flavioAI finale:', window.flavioAI?.constructor?.name);
+              }, 500);
+              
+            }, 1000);
+            
             console.log('✅ MIDDLEWARE: Integrazione completata!');
             console.log('🎯 MIDDLEWARE: Funzioni disponibili:');
             console.log('   - Calcolo fatturato cliente');
@@ -3672,6 +3710,7 @@
             console.log('   - Ricerca clienti per zona');
             console.log('📊 MIDDLEWARE: Usa flavioAI.getMiddlewareStats() per statistiche');
             console.log('⚙️ MIDDLEWARE: Usa flavioAI.toggleDebugMode() per debug');
+            console.log('🔧 MIDDLEWARE: Usa forceMiddleware() per forzare integrazione');
             
             // Test di compatibilità con Voice Manager
             if (window.AIVoiceManagerV2) {
@@ -3689,8 +3728,22 @@
         }
         
       }, 3000); // Aspetta 3 secondi per essere sicuri che tutto sia caricato
+      
+      // Funzione di debug globale per forzare middleware
+      window.forceMiddleware = function() {
+        console.log('🔧 FORCE: Forzando uso middleware...');
+        if (window.EnhancedAI) {
+          window.flavioAI = window.EnhancedAI;
+          console.log('✅ FORCE: Middleware forzato!');
+          console.log('🧪 FORCE: Prova ora "Fatturato cliente Essemme?"');
+        } else {
+          console.log('❌ FORCE: EnhancedAI non disponibile');
+        }
+      };
+      
     });
   </script>
+
 
 </body>
 </html>
