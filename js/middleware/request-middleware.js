@@ -22,15 +22,58 @@ class RequestMiddleware {
             // Pattern semplice per "fatturato X"
             fatturatoSemplice: /^(?:fatturato|venduto|incasso)\s+([A-Za-z\s]+?)(?:\?|$)/i,
             ordiniCliente: /(?:quanti|numero|numeri).*ordini.*?(?:con|di|del|da|cliente|per|anche)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
-            ordiniGenerici: /^(?:numero|numeri).*(?:identificativo|ordini?).*\?*$/i,
+            ordiniGenerici: /(?:mi\s+dici|dimmi|mostra|numero|numeri|identificativo).*(?:numero|numeri|identificativo|codici?).*(?:ordini?|dei\s+vari|vari)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
             clientiZona: /clienti.*(?:in|nella|di|della)\s+([^?\n]+?)(?:\?|$)/i
         };
         
         // Memoria dell'ultimo cliente consultato per contesto
         this.lastClientContext = null;
+        this.lastClientTimestamp = null;
+        this.contextTimeoutMinutes = 5; // Mantieni contesto per 5 minuti
         
         console.log('🤖 RequestMiddleware inizializzato');
+    }
+    
+    /**
+     * Verifica se il contesto è ancora valido
+     */
+    isContextValid() {
+        if (!this.lastClientContext || !this.lastClientTimestamp) {
+            return false;
+        }
+        
+        const now = Date.now();
+        const timeElapsed = (now - this.lastClientTimestamp) / (1000 * 60); // minuti
+        
+        return timeElapsed <= this.contextTimeoutMinutes;
+    }
+    
+    /**
+     * Salva il contesto cliente
+     */
+    saveContext(clientName) {
+        this.lastClientContext = clientName;
+        this.lastClientTimestamp = Date.now();
+        console.log(`🧠 MIDDLEWARE: Contesto salvato per "${clientName}" (valido per ${this.contextTimeoutMinutes} minuti)`);
+    }
+    
+    /**
+     * Ottiene il contesto se valido
+     */
+    getValidContext() {
+        if (this.isContextValid()) {
+            return this.lastClientContext;
+        }
+        
+        // Pulisci contesto scaduto
+        if (this.lastClientContext) {
+            console.log(`⏰ MIDDLEWARE: Contesto per "${this.lastClientContext}" scaduto`);
+            this.lastClientContext = null;
+            this.lastClientTimestamp = null;
+        }
+        
+        return null;
     }
 
     /**
@@ -140,9 +183,18 @@ class RequestMiddleware {
                 } else {
                     // Controlla se è una richiesta generica sui numeri ordine
                     const ordiniGenericiMatch = input.match(this.patterns.ordiniGenerici);
-                    if (ordiniGenericiMatch && this.lastClientContext) {
-                        params.cliente = this.lastClientContext;
+                    const validContext = this.getValidContext();
+                    
+                    if (ordiniGenericiMatch && validContext) {
+                        params.cliente = validContext;
                         params.fromContext = true;
+                    } else if (validContext) {
+                        // Fallback: se c'è un contesto valido e la query contiene parole chiave ordini
+                        const inputLower = input.toLowerCase();
+                        if (inputLower.includes('ordini') || inputLower.includes('numero') || inputLower.includes('identificativo')) {
+                            params.cliente = validContext;
+                            params.fromContext = true;
+                        }
                     }
                 }
                 break;
@@ -230,7 +282,7 @@ class RequestMiddleware {
             const nomeCliente = ordiniCliente[0].cliente;
             
             // Salva nel contesto per richieste successive
-            this.lastClientContext = params.cliente;
+            this.saveContext(params.cliente);
             
             // Conta ordini distinti usando numero_ordine
             const ordiniDistinti = new Set(
@@ -296,7 +348,7 @@ class RequestMiddleware {
             
             // Salva nel contesto per richieste successive (se non già dal contesto)
             if (!params.fromContext) {
-                this.lastClientContext = params.cliente;
+                this.saveContext(params.cliente);
             }
             
             // Analisi aggiuntiva
