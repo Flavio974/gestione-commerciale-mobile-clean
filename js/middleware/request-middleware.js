@@ -26,6 +26,8 @@ class RequestMiddleware {
             ordiniGenerici: /(?:mi\s+dici|dimmi|mostra|numero|numeri|identificativo).*(?:numero|numeri|identificativo|codici?).*(?:ordini?|dei\s+vari|vari)/i,
             // Pattern per richieste di data con cliente specifico
             dataCliente: /(?:data|quando).*(?:ultimo|ordine).*(?:di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
+            // Pattern per tutte le date degli ordini
+            dataTuttiOrdini: /(?:data|quando).*(?:tutti|tutte).*(?:ordini).*(?:di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per richieste di data generiche
             dataGenerica: /(?:mi\s+dici|dimmi|mostra|quale).*(?:data|quando).*(?:ultimo|ordine)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
@@ -287,23 +289,31 @@ class RequestMiddleware {
                 break;
                 
             case 'data':
-                let dataMatch = input.match(this.patterns.dataCliente);
-                if (dataMatch) {
-                    params.cliente = dataMatch[1].trim();
+                // Prima controlla se è una richiesta per TUTTI gli ordini
+                let dataTuttiMatch = input.match(this.patterns.dataTuttiOrdini);
+                if (dataTuttiMatch) {
+                    params.cliente = dataTuttiMatch[1].trim();
+                    params.tuttiOrdini = true;
                 } else {
-                    // Controlla se è una richiesta generica sulla data
-                    const dataGenericaMatch = input.match(this.patterns.dataGenerica);
-                    const validContext = this.getValidContext();
-                    
-                    if (dataGenericaMatch && validContext) {
-                        params.cliente = validContext;
-                        params.fromContext = true;
-                    } else if (validContext) {
-                        // Fallback: se c'è un contesto valido e la query contiene parole chiave data
-                        const inputLower = input.toLowerCase();
-                        if (inputLower.includes('data') || inputLower.includes('ultimo') || inputLower.includes('quando')) {
+                    // Poi controlla se è per un singolo ordine
+                    let dataMatch = input.match(this.patterns.dataCliente);
+                    if (dataMatch) {
+                        params.cliente = dataMatch[1].trim();
+                    } else {
+                        // Controlla se è una richiesta generica sulla data
+                        const dataGenericaMatch = input.match(this.patterns.dataGenerica);
+                        const validContext = this.getValidContext();
+                        
+                        if (dataGenericaMatch && validContext) {
                             params.cliente = validContext;
                             params.fromContext = true;
+                        } else if (validContext) {
+                            // Fallback: se c'è un contesto valido e la query contiene parole chiave data
+                            const inputLower = input.toLowerCase();
+                            if (inputLower.includes('data') || inputLower.includes('ultimo') || inputLower.includes('quando')) {
+                                params.cliente = validContext;
+                                params.fromContext = true;
+                            }
                         }
                     }
                 }
@@ -506,9 +516,14 @@ class RequestMiddleware {
      */
     async getUltimaData(params) {
         try {
-            console.log('📅 MIDDLEWARE: Ricerca ultima data per:', params.cliente);
-            if (params.fromContext) {
-                console.log('🔄 MIDDLEWARE: Usando contesto cliente precedente:', params.cliente);
+            if (params.tuttiOrdini) {
+                console.log('📅 MIDDLEWARE: Ricerca date di tutti gli ordini per:', params.cliente);
+                return await this.getAllOrderDates(params);
+            } else {
+                console.log('📅 MIDDLEWARE: Ricerca ultima data per:', params.cliente);
+                if (params.fromContext) {
+                    console.log('🔄 MIDDLEWARE: Usando contesto cliente precedente:', params.cliente);
+                }
             }
             
             const supabaseData = await this.supabaseAI.getAllData();
@@ -561,6 +576,138 @@ class RequestMiddleware {
         } catch (error) {
             console.error('❌ Errore ricerca ultima data:', error);
             return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * FUNZIONE 3b: Date di Tutti gli Ordini Cliente
+     */
+    async getAllOrderDates(params) {
+        try {
+            console.log('📅 MIDDLEWARE: Recupero date di tutti gli ordini per:', params.cliente);
+            
+            const supabaseData = await this.supabaseAI.getAllData();
+            const ordini = supabaseData.historicalOrders?.sampleData || [];
+            
+            if (!params.cliente) {
+                return {
+                    success: true,
+                    response: `📅 Specificare un cliente per vedere le date degli ordini`,
+                    data: { error: 'Cliente non specificato' }
+                };
+            }
+            
+            const clienteNorm = params.cliente.toLowerCase();
+            const ordiniCliente = ordini.filter(ordine => 
+                ordine.cliente && ordine.cliente.toLowerCase().includes(clienteNorm)
+            );
+            
+            if (ordiniCliente.length === 0) {
+                return {
+                    success: true,
+                    response: `❌ Nessun ordine trovato per "${params.cliente}"`,
+                    data: { ordini: [] }
+                };
+            }
+            
+            // Salva nel contesto per richieste successive
+            this.saveContext(params.cliente);
+            
+            const nomeCliente = ordiniCliente[0].cliente;
+            
+            // Raggruppa ordini per numero_ordine con date
+            const ordiniConDate = new Map();
+            
+            // Campi data possibili
+            const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp', 'date'];
+            
+            ordiniCliente.forEach(ordine => {
+                const numeroOrdine = ordine.numero_ordine;
+                if (!numeroOrdine) return;
+                
+                if (!ordiniConDate.has(numeroOrdine)) {
+                    // Trova la data migliore per questo ordine
+                    let dataOrdine = null;
+                    let fieldUsed = null;
+                    
+                    for (const field of dateFields) {
+                        if (ordine[field] && ordine[field] !== null && ordine[field] !== '' && !isNaN(Date.parse(ordine[field]))) {
+                            dataOrdine = ordine[field];
+                            fieldUsed = field;
+                            break;
+                        }
+                    }
+                    
+                    ordiniConDate.set(numeroOrdine, {
+                        numero: numeroOrdine,
+                        data: dataOrdine,
+                        dataField: fieldUsed,
+                        displayDate: dataOrdine ? this.formatDate(dataOrdine) : 'Data non disponibile'
+                    });
+                }
+            });
+            
+            // Converti in array e ordina per data (più recenti prima)
+            const ordiniArray = Array.from(ordiniConDate.values());
+            const ordiniConDataValida = ordiniArray.filter(o => o.data);
+            const ordiniSenzaData = ordiniArray.filter(o => !o.data);
+            
+            // Ordina quelli con data per data decrescente
+            ordiniConDataValida.sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            // Combina ordini con data + ordini senza data
+            const ordiniOrdinati = [...ordiniConDataValida, ...ordiniSenzaData];
+            
+            // Crea risposta
+            const totalOrdini = ordiniOrdinati.length;
+            const conData = ordiniConDataValida.length;
+            const senzaData = ordiniSenzaData.length;
+            
+            let response = `📅 Cliente ${nomeCliente}: ${totalOrdini} ordini distinti`;
+            if (senzaData > 0) {
+                response += ` (${conData} con data, ${senzaData} senza data)`;
+            }
+            
+            response += '\n\n📋 Date ordini:\n';
+            
+            // Mostra al massimo 10 ordini
+            const ordiniToShow = ordiniOrdinati.slice(0, 10);
+            ordiniToShow.forEach((ordine, index) => {
+                response += `${index + 1}. ${ordine.numero} - ${ordine.displayDate}\n`;
+            });
+            
+            if (ordiniOrdinati.length > 10) {
+                response += `... e altri ${ordiniOrdinati.length - 10} ordini`;
+            }
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    cliente: nomeCliente,
+                    totalOrdini,
+                    ordiniConData: conData,
+                    ordiniSenzaData: senzaData,
+                    ordini: ordiniOrdinati,
+                    ordiniMostrati: ordiniToShow.length
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore recupero date ordini:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    /**
+     * Utility per formattare le date
+     */
+    formatDate(dateValue) {
+        try {
+            const date = new Date(dateValue);
+            return date.toLocaleDateString('it-IT');
+        } catch {
+            return dateValue.toString();
         }
     }
 
