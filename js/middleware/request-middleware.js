@@ -373,9 +373,8 @@ class RequestMiddleware {
         try {
             console.log('💰 MIDDLEWARE: Calcolo fatturato per:', params.cliente);
             
-            // Recupera dati da Supabase
-            const supabaseData = await this.supabaseAI.getAllData();
-            const ordini = supabaseData.historicalOrders?.sampleData || [];
+            // Usa dati già caricati senza ricaricare
+            const ordini = this.supabaseAI.historicalOrders?.sampleData || [];
             
             if (!params.cliente) {
                 // Fatturato totale
@@ -440,8 +439,8 @@ class RequestMiddleware {
                 console.log('🔄 MIDDLEWARE: Usando contesto cliente precedente:', params.cliente);
             }
             
-            const supabaseData = await this.supabaseAI.getAllData();
-            const ordini = supabaseData.historicalOrders?.sampleData || [];
+            // Usa dati già caricati senza ricaricare
+            const ordini = this.supabaseAI.historicalOrders?.sampleData || [];
             
             if (!params.cliente) {
                 return {
@@ -526,8 +525,8 @@ class RequestMiddleware {
                 }
             }
             
-            const supabaseData = await this.supabaseAI.getAllData();
-            const ordini = supabaseData.historicalOrders?.sampleData || [];
+            // Usa dati già caricati senza ricaricare
+            const ordini = this.supabaseAI.historicalOrders?.sampleData || [];
             
             if (!params.cliente) {
                 return {
@@ -586,8 +585,8 @@ class RequestMiddleware {
         try {
             console.log('📅 MIDDLEWARE: Recupero date di tutti gli ordini per:', params.cliente);
             
-            const supabaseData = await this.supabaseAI.getAllData();
-            const ordini = supabaseData.historicalOrders?.sampleData || [];
+            // Usa dati già caricati senza ricaricare
+            const ordini = this.supabaseAI.historicalOrders?.sampleData || [];
             
             if (!params.cliente) {
                 return {
@@ -718,8 +717,8 @@ class RequestMiddleware {
         try {
             console.log('🚗 MIDDLEWARE: Calcolo percorso da:', params.da, 'a:', params.a);
             
-            const supabaseData = await this.supabaseAI.getAllData();
-            const percorsi = supabaseData.percorsi || [];
+            // Usa dati già caricati senza ricaricare
+            const percorsi = this.supabaseAI.percorsi || [];
             
             if (!params.da || !params.a) {
                 return { success: false, error: 'Parametri mancanti per calcolo percorso' };
@@ -783,8 +782,8 @@ class RequestMiddleware {
         try {
             console.log('👥 MIDDLEWARE: Ricerca clienti zona:', params.zona);
             
-            const supabaseData = await this.supabaseAI.getAllData();
-            const clienti = supabaseData.clients || [];
+            // Usa dati già caricati senza ricaricare
+            const clienti = this.supabaseAI.clients || [];
             
             if (!params.zona) {
                 return {
