@@ -1247,6 +1247,10 @@
   <!-- Voice Manager V2 per iPad -->
   <script src="js/ai/ai-voice-manager-v2.js"></script>
   
+  <!-- Middleware System -->
+  <script src="js/middleware/request-middleware.js"></script>
+  <script src="js/middleware/enhanced-ai-assistant.js"></script>
+  
   <!-- Keep Alive per Replit -->
   <script src="js/keep-alive.js"></script>
   
@@ -3611,6 +3615,80 @@
         window.SiriShortcuts.init();
         window.MobileVoiceController.init();
       }, 2000); // Aspetta che AI Assistant sia pronto
+    });
+    
+    // ========================================
+    // MIDDLEWARE INTEGRATION SETUP
+    // ========================================
+    
+    // Aspetta che tutti i componenti siano caricati
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        console.log('🚀 MIDDLEWARE: Inizializzazione integrazione...');
+        
+        try {
+          // Verifica che tutti i componenti necessari siano disponibili
+          if (typeof RequestMiddleware === 'undefined') {
+            console.error('❌ MIDDLEWARE: RequestMiddleware non caricato');
+            return;
+          }
+          
+          if (typeof EnhancedAIAssistant === 'undefined') {
+            console.error('❌ MIDDLEWARE: EnhancedAIAssistant non caricato');
+            return;
+          }
+          
+          if (typeof FlavioAIAssistant === 'undefined') {
+            console.error('❌ MIDDLEWARE: FlavioAIAssistant non disponibile');
+            return;
+          }
+          
+          // Backup dell'assistant originale
+          window.OriginalFlavioAIAssistant = window.FlavioAIAssistant;
+          
+          // Inizializza l'Enhanced AI Assistant
+          console.log('🔄 MIDDLEWARE: Creazione EnhancedAIAssistant...');
+          window.EnhancedAI = new EnhancedAIAssistant();
+          
+          // Aspetta l'inizializzazione completa
+          window.EnhancedAI.initializationPromise.then(() => {
+            console.log('✅ MIDDLEWARE: EnhancedAIAssistant pronto');
+            
+            // Sostituisci gradualmente l'assistant originale
+            console.log('🔄 MIDDLEWARE: Sostituzione assistant...');
+            
+            // Backup del flavioAI esistente
+            window.originalFlavioAI = window.flavioAI;
+            
+            // Sostituisci con l'enhanced version
+            window.flavioAI = window.EnhancedAI;
+            window.FlavioAIAssistant = window.EnhancedAI; // Per compatibility
+            
+            console.log('✅ MIDDLEWARE: Integrazione completata!');
+            console.log('🎯 MIDDLEWARE: Funzioni disponibili:');
+            console.log('   - Calcolo fatturato cliente');
+            console.log('   - Conteggio ordini cliente');  
+            console.log('   - Calcolo tempi percorso');
+            console.log('   - Ricerca clienti per zona');
+            console.log('📊 MIDDLEWARE: Usa flavioAI.getMiddlewareStats() per statistiche');
+            console.log('⚙️ MIDDLEWARE: Usa flavioAI.toggleDebugMode() per debug');
+            
+            // Test di compatibilità con Voice Manager
+            if (window.AIVoiceManagerV2) {
+              console.log('🎤 MIDDLEWARE: Compatibilità Voice Manager V2 verificata');
+            }
+            
+          }).catch(error => {
+            console.error('❌ MIDDLEWARE: Errore inizializzazione:', error);
+            console.log('🔄 MIDDLEWARE: Mantengo assistant originale come fallback');
+          });
+          
+        } catch (error) {
+          console.error('❌ MIDDLEWARE: Errore setup integrazione:', error);
+          console.log('🔄 MIDDLEWARE: Sistema rimane con AI originale');
+        }
+        
+      }, 3000); // Aspetta 3 secondi per essere sicuri che tutto sia caricato
     });
   </script>
 
