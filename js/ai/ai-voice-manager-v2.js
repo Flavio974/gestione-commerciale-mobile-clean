@@ -171,6 +171,8 @@ class AIVoiceManagerV2 {
     }
 
     createUI() {
+        console.log('🎨 Creazione UI Voice Controls V2...');
+        
         // Container principale
         const container = document.createElement('div');
         container.id = 'voice-controls-v2';
@@ -264,7 +266,17 @@ class AIVoiceManagerV2 {
         container.appendChild(controlsContainer);
         
         // Aggiungi al DOM
-        document.body.appendChild(container);
+        if (document.body) {
+            document.body.appendChild(container);
+            console.log('✅ Voice Controls V2 aggiunti al DOM');
+        } else {
+            console.error('❌ document.body non disponibile!');
+            // Riprova dopo che il DOM è caricato
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.appendChild(container);
+                console.log('✅ Voice Controls V2 aggiunti al DOM (dopo DOMContentLoaded)');
+            });
+        }
         
         // Salva riferimenti elementi
         this.elements = {
@@ -624,7 +636,13 @@ class AIVoiceManagerV2 {
 
 // Inizializza al caricamento della pagina
 document.addEventListener('DOMContentLoaded', () => {
-    window.AIVoiceManagerV2 = new AIVoiceManagerV2();
+    console.log('📱 Inizializzazione AIVoiceManagerV2...');
+    try {
+        window.AIVoiceManagerV2 = new AIVoiceManagerV2();
+        console.log('✅ AIVoiceManagerV2 inizializzato con successo');
+    } catch (error) {
+        console.error('❌ Errore inizializzazione AIVoiceManagerV2:', error);
+    }
 });
 
 // Export per uso in altri moduli
