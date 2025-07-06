@@ -14,6 +14,18 @@
     gap: 15px;
 }
 
+/* Su Desktop, tutti i controlli sono sempre visibili */
+.voice-controls-container:not(.iphone-layout) .expandable-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    opacity: 1;
+    max-height: none;
+    overflow: visible;
+    transform: none;
+    pointer-events: auto;
+}
+
 /* Pulsanti vocali base */
 .voice-button {
     border: none;
@@ -343,7 +355,7 @@
         z-index: 1002;
     }
     
-    /* Indicatore visual su iPhone per long press */
+    /* Indicatore visual SOLO su iPhone per long press */
     .iphone-layout .mic-button::after {
         content: '⚙️';
         position: absolute;
@@ -359,6 +371,11 @@
         justify-content: center;
         border: 2px solid white;
         animation: pulseHint 2s infinite;
+    }
+    
+    /* Nascondi l'indicatore su Desktop e iPad */
+    .voice-controls-container:not(.iphone-layout) .mic-button::after {
+        display: none;
     }
     
     @keyframes pulseHint {
@@ -377,8 +394,8 @@
         height: 28px !important;
     }
     
-    /* Controlli espandibili iPhone */
-    .expandable-controls {
+    /* Controlli espandibili iPhone - SOLO per iPhone */
+    .iphone-layout .expandable-controls {
         margin-top: 8px;
         max-height: 0;
         overflow: hidden;
@@ -387,14 +404,14 @@
         transform: translateY(-10px);
     }
     
-    .expandable-controls.collapsed {
+    .iphone-layout .expandable-controls.collapsed {
         max-height: 0;
         opacity: 0;
         transform: translateY(-10px);
         pointer-events: none;
     }
     
-    .expandable-controls.expanded {
+    .iphone-layout .expandable-controls.expanded {
         max-height: 500px;
         opacity: 1;
         transform: translateY(0);

@@ -183,6 +183,18 @@ class AIVoiceManagerV2 {
     createUI() {
         console.log('🎨 Creazione UI Voice Controls V2...');
         
+        // Rilevamento dispositivo all'inizio
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isIPhone = /iPhone/.test(navigator.userAgent);
+        const isIPad = /iPad/.test(navigator.userAgent);
+        
+        console.log('🔍 Device Detection:', {
+            userAgent: navigator.userAgent,
+            isIOS: isIOS,
+            isIPhone: isIPhone,
+            isIPad: isIPad
+        });
+        
         // Container principale
         const container = document.createElement('div');
         container.id = 'voice-controls-v2';
@@ -197,10 +209,6 @@ class AIVoiceManagerV2 {
         const micButton = document.createElement('button');
         micButton.id = 'mic-button-v2';
         micButton.className = 'voice-button mic-button';
-        // Dimensioni diverse per PC, iPad e iPhone
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const isIPhone = /iPhone/.test(navigator.userAgent);
-        const isIPad = /iPad/.test(navigator.userAgent);
         
         let iconSize;
         if (isIPhone) {
