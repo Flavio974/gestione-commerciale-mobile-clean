@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Ordini ESSEMME SRL</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.loading {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .summary-card {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .summary-card h3 {
+            margin: 0 0 15px 0;
+            color: #495057;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Ordini ESSEMME SRL</h1>
+        
+        <div style="text-align: center;">
+            <button class="button" onclick="runAnalysis()" id="analyzeBtn">
+                🚀 Avvia Analisi Ordini
+            </button>
+            <button class="button" onclick="clearResults()" id="clearBtn">
+                🧹 Pulisci Risultati
+            </button>
+        </div>
+
+        <div id="status"></div>
+        <div id="results"></div>
+    </div>
+
+    <!-- Include Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config/supabase-config.js"></script>
+    <script src="debug-essemme-orders.js"></script>
+
+    <script>
+        let analysisResults = null;
+
+        function showStatus(message, type = 'loading') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function clearStatus() {
+            document.getElementById('status').innerHTML = '';
+        }
+
+        async function runAnalysis() {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Disabilita il pulsante
+                analyzeBtn.disabled = true;
+                analyzeBtn.textContent = '⏳ Analisi in corso...';
+                
+                showStatus('🔍 Connessione a Supabase...', 'loading');
+                
+                // Verifica che Supabase sia disponibile
+                if (!window.supabase) {
+                    throw new Error('Supabase non è disponibile. Verifica la configurazione.');
+                }
+
+                showStatus('📊 Recupero dati per ESSEMME SRL...', 'loading');
+                
+                // Esegui l'analisi
+                const analyzer = new EssemmeOrderAnalyzer();
+                await analyzer.analyzeEssemmeOrders();
+                analysisResults = analyzer.exportResults();
+                
+                showStatus('✅ Analisi completata!', 'success');
+                displayResults(analysisResults);
+                
+            } catch (error) {
+                console.error('Errore durante l\'analisi:', error);
+                showStatus(`❌ Errore: ${error.message}`, 'error');
+                
+            } finally {
+                // Riabilita il pulsante
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🚀 Avvia Analisi Ordini';
+            }
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!results || results.distinctOrders === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="results">
+                        <h2>⚠️ Nessun dato trovato</h2>
+                        <p>Non sono stati trovati ordini per ESSEMME SRL nel database.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const totalRecords = results.totalRecords || results.orderGroups.length;
+            const distinctOrders = results.distinctOrders;
+            const avgLinesPerOrder = totalRecords > 0 ? (totalRecords / distinctOrders).toFixed(2) : 0;
+
+            resultsDiv.innerHTML = `
+                <div class="results">
+                    <h2>📊 Risultati Analisi ESSEMME SRL</h2>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-number">${totalRecords}</div>
+                            <div class="stat-label">Record Totali</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${distinctOrders}</div>
+                            <div class="stat-label">Ordini Distinti</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${avgLinesPerOrder}</div>
+                            <div class="stat-label">Media Righe/Ordine</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${results.recordsWithoutOrderNumber || 0}</div>
+                            <div class="stat-label">Record senza N. Ordine</div>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <h3>🎯 Interpretazione</h3>
+                        ${generateInterpretation(results)}
+                    </div>
+
+                    <div class="summary-card">
+                        <h3>📋 Esempi di Ordini Multi-Riga</h3>
+                        ${generateOrderExamples(results)}
+                    </div>
+
+                    <div class="summary-card">
+                        <h3>📈 Conclusione</h3>
+                        <p><strong>I "97 ordini" di ESSEMME SRL sono in realtà ${distinctOrders} ordini distinti contenenti ${totalRecords} righe di prodotti totali.</strong></p>
+                        <p>Il sistema conta le righe di prodotto, non gli ordini veri e propri. Ogni ordine può contenere multiple righe prodotto.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateInterpretation(results) {
+            const totalRecords = results.totalRecords || results.orderGroups.length;
+            const distinctOrders = results.distinctOrders;
+
+            if (distinctOrders > 0 && distinctOrders < totalRecords) {
+                return `
+                    <div style="color: #155724; background: #d4edda; padding: 15px; border-radius: 5px;">
+                        <p>✅ <strong>I ${totalRecords} record rappresentano RIGHE DI PRODOTTI</strong></p>
+                        <p>✅ <strong>Numero ordini distinti effettivi: ${distinctOrders}</strong></p>
+                        <p>✅ <strong>Ogni ordine contiene multiple righe prodotto</strong></p>
+                        <p>✅ <strong>La dicitura "97 ordini" nel sistema si riferisce a 97 RIGHE, non 97 ordini distinti</strong></p>
+                    </div>
+                `;
+            } else if (distinctOrders === totalRecords) {
+                return `
+                    <div style="color: #856404; background: #fff3cd; padding: 15px; border-radius: 5px;">
+                        <p>⚠️ Ogni record sembra rappresentare un ordine distinto</p>
+                        <p>⚠️ Non ci sono ordini con multiple righe prodotto</p>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div style="color: #721c24; background: #f8d7da; padding: 15px; border-radius: 5px;">
+                        <p>❓ Situazione anomala da investigare ulteriormente</p>
+                    </div>
+                `;
+            }
+        }
+
+        function generateOrderExamples(results) {
+            if (!results.orderGroups || results.orderGroups.length === 0) {
+                return '<p>Nessun ordine trovato.</p>';
+            }
+
+            const multiLineOrders = results.orderGroups
+                .filter(o => o.righe && o.righe.length > 1)
+                .sort((a, b) => b.righe.length - a.righe.length)
+                .slice(0, 3);
+
+            if (multiLineOrders.length === 0) {
+                return '<p>Nessun ordine multi-riga trovato.</p>';
+            }
+
+            return multiLineOrders.map((order, index) => `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <strong>${index + 1}. Ordine ${order.numeroOrdine}</strong><br>
+                    - Righe: ${order.righe.length}<br>
+                    - Prodotti: ${order.prodotti.size}<br>
+                    - Totale: €${order.totaleImporto.toFixed(2)}<br>
+                    - Data: ${order.dataConsegna || order.dataOrdine || 'N/A'}
+                </div>
+            `).join('');
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            clearStatus();
+            analysisResults = null;
+        }
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('🔧 Debug script caricato. Premi "Avvia Analisi Ordini" per iniziare.', 'loading');
+            
+            // Verifica la disponibilità di Supabase
+            setTimeout(() => {
+                if (window.supabase) {
+                    showStatus('✅ Pronto per l\'analisi. Premi "Avvia Analisi Ordini".', 'success');
+                } else {
+                    showStatus('❌ Supabase non disponibile. Verifica la configurazione.', 'error');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

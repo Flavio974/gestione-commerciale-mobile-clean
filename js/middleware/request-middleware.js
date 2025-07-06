@@ -209,13 +209,19 @@ class RequestMiddleware {
             const fatturato = ordiniCliente.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
             const nomeCliente = ordiniCliente[0].cliente;
             
+            // Conta ordini distinti usando numero_ordine
+            const ordiniDistinti = new Set(
+                ordiniCliente.map(o => o.numero_ordine).filter(n => n && n !== null)
+            ).size;
+            
             return {
                 success: true,
-                response: `💰 Cliente ${nomeCliente}: €${fatturato.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordiniCliente.length} ordini`,
+                response: `💰 Cliente ${nomeCliente}: €${fatturato.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali)`,
                 data: { 
                     cliente: nomeCliente,
                     fatturato: fatturato, 
-                    ordini: ordiniCliente.length,
+                    ordini: ordiniDistinti,
+                    righe: ordiniCliente.length,
                     dettaglio: ordiniCliente.slice(0, 5) // Prime 5 per dettaglio
                 }
             };
@@ -257,16 +263,22 @@ class RequestMiddleware {
                 };
             }
             
+            // Conta ordini distinti usando numero_ordine
+            const ordiniDistinti = new Set(
+                ordiniCliente.map(o => o.numero_ordine).filter(n => n && n !== null)
+            ).size;
+            
             // Analisi aggiuntiva
             const ultimoOrdine = ordiniCliente.sort((a, b) => new Date(b.data) - new Date(a.data))[0];
             const nomeCliente = ordiniCliente[0].cliente;
             
             return {
                 success: true,
-                response: `📊 Cliente ${nomeCliente}: ${ordiniCliente.length} ordini. Ultimo: ${ultimoOrdine.data}`,
+                response: `📊 Cliente ${nomeCliente}: ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali). Ultimo: ${ultimoOrdine.data}`,
                 data: { 
                     cliente: nomeCliente,
-                    ordini: ordiniCliente.length,
+                    ordini: ordiniDistinti,
+                    righe: ordiniCliente.length,
                     ultimoOrdine: ultimoOrdine.data,
                     dettaglio: ordiniCliente.slice(0, 3)
                 }
