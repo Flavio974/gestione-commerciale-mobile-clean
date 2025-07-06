@@ -373,8 +373,13 @@ class RequestMiddleware {
         try {
             console.log('💰 MIDDLEWARE: Calcolo fatturato per:', params.cliente);
             
-            // Usa dati già caricati senza ricaricare
-            const ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
+            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            if (ordini.length === 0) {
+                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
+                const supabaseData = await this.supabaseAI.getAllData();
+                ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
             
             if (!params.cliente) {
                 // Fatturato totale
@@ -439,8 +444,13 @@ class RequestMiddleware {
                 console.log('🔄 MIDDLEWARE: Usando contesto cliente precedente:', params.cliente);
             }
             
-            // Usa dati già caricati senza ricaricare
-            const ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
+            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            if (ordini.length === 0) {
+                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
+                const supabaseData = await this.supabaseAI.getAllData();
+                ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
             
             if (!params.cliente) {
                 return {
@@ -525,8 +535,13 @@ class RequestMiddleware {
                 }
             }
             
-            // Usa dati già caricati senza ricaricare
-            const ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
+            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            if (ordini.length === 0) {
+                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
+                const supabaseData = await this.supabaseAI.getAllData();
+                ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
             
             if (!params.cliente) {
                 return {
@@ -585,8 +600,13 @@ class RequestMiddleware {
         try {
             console.log('📅 MIDDLEWARE: Recupero date di tutti gli ordini per:', params.cliente);
             
-            // Usa dati già caricati senza ricaricare
-            const ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
+            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            if (ordini.length === 0) {
+                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
+                const supabaseData = await this.supabaseAI.getAllData();
+                ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
             
             if (!params.cliente) {
                 return {
