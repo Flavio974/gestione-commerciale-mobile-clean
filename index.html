@@ -1943,7 +1943,17 @@
           
           let finalData;
           
-          if (queryInfo.needsData || needsOrderData) {
+          // NUOVO: Controlla se è una query puramente conversazionale
+          const isPureConversational = this.isPureConversationalQuery(message);
+          
+          if (isPureConversational) {
+            console.log('💬 Query puramente conversazionale - nessun dato necessario');
+            finalData = {
+              conversationalMode: true,
+              timestamp: new Date().toISOString(),
+              message: "Risposta conversazionale - non sono necessari dati aziendali"
+            };
+          } else if (queryInfo.needsData || needsOrderData) {
             console.log(`🎯 Query richiede dati: ${queryInfo.dataTypes.join(', ')}`);
             console.log(`🔍 Filtri rilevati:`, queryInfo.filters);
             
@@ -2492,6 +2502,51 @@
         
         // Default: se messaggio corto probabilmente conversazionale
         return message.length > 20;
+      }
+
+      // 🆕 NUOVO: Rileva query puramente conversazionali che non necessitano dati
+      isPureConversationalQuery(message) {
+        const msg = message.toLowerCase().trim();
+        
+        // Query puramente conversazionali - saluti, ringraziamenti, richieste generiche
+        const pureConversationalPatterns = [
+          // Saluti
+          /^(ciao|salve|buongiorno|buonasera|buona giornata|buona serata|hey|hi|hello)[\s\!\?\.]*$/,
+          // Ringraziamenti
+          /^(grazie|thanks|perfetto|ok|bene|ottimo|fantastico)[\s\!\?\.]*$/,
+          // Richieste di aiuto generiche
+          /^(aiuto|help|cosa puoi fare|come funzioni|chi sei)[\s\!\?\.]*$/,
+          // Convenevoli
+          /^(come stai|come va|tutto bene|tutto ok)[\s\!\?\.]*$/,
+          // Risposte semplici
+          /^(si|sì|no|forse|non so|boh)[\s\!\?\.]*$/
+        ];
+        
+        // Controlla se il messaggio corrisponde a uno dei pattern conversazionali
+        const isPureConversational = pureConversationalPatterns.some(pattern => pattern.test(msg));
+        
+        if (isPureConversational) {
+          console.log(`💭 Rilevata query puramente conversazionale: "${message}"`);
+          return true;
+        }
+        
+        // Controllo aggiuntivo: messaggi molto corti senza parole chiave aziendali
+        if (msg.length <= 15) {
+          const businessKeywords = [
+            'ordine', 'ordini', 'cliente', 'clienti', 'prodotto', 'prodotti', 
+            'venduto', 'fatturato', 'agnolotti', 'ravioli', 'tempo', 'percorso',
+            'quanti', 'quanto', 'dove', 'quando', 'report', 'analisi'
+          ];
+          
+          const hasBusinessKeyword = businessKeywords.some(keyword => msg.includes(keyword));
+          
+          if (!hasBusinessKeyword) {
+            console.log(`💭 Messaggio corto senza parole chiave aziendali: "${message}"`);
+            return true;
+          }
+        }
+        
+        return false;
       }
       
       // 🎯 NUOVO: Rileva se messaggio richiede dati di cliente specifico

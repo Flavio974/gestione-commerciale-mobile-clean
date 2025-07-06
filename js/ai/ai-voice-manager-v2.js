@@ -231,6 +231,12 @@ class AIVoiceManagerV2 {
         statusIndicator.className = 'status-indicator';
         statusIndicator.innerHTML = '<span class="status-text">Pronto</span>';
         
+        // Indicatore permanente wake word
+        const wakeWordStatus = document.createElement('div');
+        wakeWordStatus.id = 'wake-word-status';
+        wakeWordStatus.className = 'wake-word-status';
+        wakeWordStatus.innerHTML = '<span class="wake-word-text">🎤 Wake Word: ON</span>';
+        
         // Display trascrizione
         const transcriptionDisplay = document.createElement('div');
         transcriptionDisplay.id = 'voice-transcription';
@@ -275,6 +281,7 @@ class AIVoiceManagerV2 {
         container.appendChild(micButton);
         container.appendChild(autoModeContainer);
         container.appendChild(statusIndicator);
+        container.appendChild(wakeWordStatus);
         container.appendChild(transcriptionDisplay);
         container.appendChild(controlsContainer);
         
@@ -297,6 +304,7 @@ class AIVoiceManagerV2 {
             autoModeOnBtn: autoOnBtn,
             autoModeOffBtn: autoOffBtn,
             statusIndicator: statusIndicator,
+            wakeWordStatus: wakeWordStatus,
             transcriptionDisplay: transcriptionDisplay,
             volumeControl: document.getElementById('tts-volume'),
             speedControl: document.getElementById('tts-speed'),
@@ -306,6 +314,7 @@ class AIVoiceManagerV2 {
         // Aggiorna stato iniziale UI
         try {
             this.updateAutoModeUI();
+            this.updateWakeWordStatus();
             
             // Mostra istruzioni per iPad
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -351,6 +360,7 @@ class AIVoiceManagerV2 {
         this.elements.wakeWordToggle.addEventListener('change', (e) => {
             this.useWakeWord = e.target.checked;
             console.log('Wake word toggle cambiato:', this.useWakeWord);
+            this.updateWakeWordStatus();
             this.showNotification(
                 this.useWakeWord ? 'Wake word attivate' : 'Wake word disattivate', 
                 'info'
@@ -369,6 +379,7 @@ class AIVoiceManagerV2 {
                     this.elements.wakeWordToggle.checked = !this.elements.wakeWordToggle.checked;
                     this.useWakeWord = this.elements.wakeWordToggle.checked;
                     console.log('Wake word toggle (touch):', this.useWakeWord);
+                    this.updateWakeWordStatus();
                     this.showNotification(
                         this.useWakeWord ? 'Wake word attivate' : 'Wake word disattivate', 
                         'info'
@@ -387,6 +398,7 @@ class AIVoiceManagerV2 {
                 wakeWordBtn.textContent = this.useWakeWord ? '🎤 Wake Word: ON' : '🎤 Wake Word: OFF';
                 wakeWordBtn.style.background = this.useWakeWord ? '#FF9500' : '#8E8E93';
                 
+                this.updateWakeWordStatus();
                 console.log('Wake word button clicked:', this.useWakeWord);
                 this.showNotification(
                     this.useWakeWord ? 'Wake word attivate - Dì "assistente" prima del comando' : 'Wake word disattivate - Ascolto diretto', 
@@ -526,6 +538,19 @@ class AIVoiceManagerV2 {
             this.elements.micButton.classList.remove('disabled');
             this.elements.statusIndicator.classList.remove('auto-mode');
             this.elements.statusIndicator.querySelector('.status-text').textContent = 'Pronto';
+        }
+    }
+
+    updateWakeWordStatus() {
+        if (this.elements.wakeWordStatus) {
+            const statusText = this.elements.wakeWordStatus.querySelector('.wake-word-text');
+            if (statusText) {
+                statusText.textContent = this.useWakeWord ? '🎤 Wake Word: ON' : '🎤 Wake Word: OFF';
+                
+                // Aggiorna stile visivo
+                this.elements.wakeWordStatus.classList.toggle('active', this.useWakeWord);
+                this.elements.wakeWordStatus.classList.toggle('inactive', !this.useWakeWord);
+            }
         }
     }
 

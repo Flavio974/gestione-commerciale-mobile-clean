@@ -53,6 +53,24 @@ if (clientRequest.isClientQuery) {
 }
 ```
 
+#### Query Conversazionali (NUOVO)
+```javascript
+// ✅ CORRETTO: Rileva saluti e query semplici
+const isPureConversational = this.isPureConversationalQuery(message);
+if (isPureConversational) {
+    // Payload minimo ~200 bytes invece di 400KB+
+    formattedData = {
+        conversationalMode: true,
+        message: "Risposta conversazionale"
+    };
+}
+
+// ❌ SBAGLIATO: Inviare dati aziendali per "ciao"
+if (message === "ciao") {
+    formattedData = getAllOrdersClientsProducts(); // Spreco!
+}
+```
+
 ## 🔧 PATTERN DI IMPLEMENTAZIONE
 
 ### 1. Detector Pattern
@@ -113,6 +131,10 @@ if (!specificRequest) {
 - Filtro percorsi intelligente
 - Detector regex per viaggi
 - Payload minimale per routes
+- **Query conversazionali pure (NUOVO 2025-07-06)**
+  - Rileva saluti semplici ("ciao", "grazie")
+  - Payload minimo: ~200 bytes vs 400KB+
+  - Pattern regex per identificazione automatica
 
 ### 🔄 Da implementare:
 - Filtro prodotti specifici
