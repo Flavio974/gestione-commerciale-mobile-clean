@@ -75,6 +75,82 @@ class RequestMiddleware {
         
         return null;
     }
+    
+    /**
+     * Trova l'ordine più recente usando il campo data migliore disponibile
+     */
+    findLatestOrder(ordini) {
+        if (!ordini || ordini.length === 0) {
+            return { displayDate: 'N/A', numero_ordine: 'N/A' };
+        }
+        
+        // Campi data possibili in ordine di preferenza
+        const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp', 'date'];
+        
+        let bestField = null;
+        let maxValid = 0;
+        
+        // Trova il campo con più date valide
+        for (const field of dateFields) {
+            const validCount = ordini.filter(o => 
+                o[field] && 
+                o[field] !== null && 
+                o[field] !== '' && 
+                !isNaN(Date.parse(o[field]))
+            ).length;
+            
+            if (validCount > maxValid) {
+                maxValid = validCount;
+                bestField = field;
+            }
+        }
+        
+        if (!bestField || maxValid === 0) {
+            // Nessun campo data valido, restituisci primo ordine per numero_ordine
+            const sorted = ordini.filter(o => o.numero_ordine).sort((a, b) => 
+                (b.numero_ordine || '').localeCompare(a.numero_ordine || '')
+            );
+            
+            return {
+                displayDate: 'Data non disponibile',
+                numero_ordine: sorted.length > 0 ? sorted[0].numero_ordine : 'N/A',
+                sortField: 'numero_ordine'
+            };
+        }
+        
+        // Ordina per il campo data migliore
+        const validOrders = ordini.filter(o => 
+            o[bestField] && 
+            o[bestField] !== null && 
+            o[bestField] !== '' && 
+            !isNaN(Date.parse(o[bestField]))
+        );
+        
+        if (validOrders.length === 0) {
+            return { displayDate: 'Data non disponibile', numero_ordine: 'N/A' };
+        }
+        
+        const sorted = validOrders.sort((a, b) => new Date(b[bestField]) - new Date(a[bestField]));
+        const latest = sorted[0];
+        
+        // Formatta la data per la visualizzazione
+        const dateValue = latest[bestField];
+        let displayDate;
+        
+        try {
+            const date = new Date(dateValue);
+            displayDate = date.toLocaleDateString('it-IT');
+        } catch {
+            displayDate = dateValue.toString();
+        }
+        
+        return {
+            displayDate,
+            numero_ordine: latest.numero_ordine || 'N/A',
+            sortField: bestField,
+            originalDate: dateValue
+        };
+    }
 
     /**
      * Punto di ingresso principale - analizza e processa la richiesta
@@ -351,9 +427,9 @@ class RequestMiddleware {
                 this.saveContext(params.cliente);
             }
             
-            // Analisi aggiuntiva
-            const ultimoOrdine = ordiniCliente.sort((a, b) => new Date(b.data) - new Date(a.data))[0];
+            // Analisi aggiuntiva - trova campo data migliore
             const nomeCliente = ordiniCliente[0].cliente;
+            const ultimoOrdine = this.findLatestOrder(ordiniCliente);
             
             // Estrai numeri ordine unici
             const numeriOrdine = [...new Set(
@@ -369,13 +445,14 @@ class RequestMiddleware {
             
             return {
                 success: true,
-                response: `📊 Cliente ${nomeCliente}${contextNote}: ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali)\n📋 Numeri ordine: ${listaNumeri}\n📅 Ultimo ordine: ${ultimoOrdine.data}`,
+                response: `📊 Cliente ${nomeCliente}${contextNote}: ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali)\n📋 Numeri ordine: ${listaNumeri}\n📅 Ultimo ordine: ${ultimoOrdine.displayDate}`,
                 data: { 
                     cliente: nomeCliente,
                     ordini: ordiniDistinti,
                     righe: ordiniCliente.length,
                     numeriOrdine: numeriOrdine,
-                    ultimoOrdine: ultimoOrdine.data,
+                    ultimoOrdine: ultimoOrdine.displayDate,
+                    ultimoOrdineNumero: ultimoOrdine.numero_ordine,
                     dettaglio: ordiniCliente.slice(0, 3),
                     fromContext: params.fromContext || false
                 }
