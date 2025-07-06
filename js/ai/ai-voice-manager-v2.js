@@ -254,6 +254,13 @@ class AIVoiceManagerV2 {
                     Usa wake word in auto
                 </label>
             </div>
+            ${isIOS ? `
+            <div class="control-group">
+                <button id="wake-word-button" style="padding: 8px 16px; background: #FF9500; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
+                    🎤 Wake Word: ON
+                </button>
+            </div>
+            ` : ''}
             <div class="control-group">
                 <button id="test-tts-btn" style="padding: 8px 16px; background: #007AFF; color: white; border: none; border-radius: 6px; cursor: pointer;">
                     🔊 Test Audio
@@ -343,7 +350,51 @@ class AIVoiceManagerV2 {
         // Toggle wake word
         this.elements.wakeWordToggle.addEventListener('change', (e) => {
             this.useWakeWord = e.target.checked;
+            console.log('Wake word toggle cambiato:', this.useWakeWord);
+            this.showNotification(
+                this.useWakeWord ? 'Wake word attivate' : 'Wake word disattivate', 
+                'info'
+            );
         });
+        
+        // Fix per iPad - aggiungi anche eventi touch
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS && this.elements.wakeWordToggle) {
+            // Aggiungi listener per click diretto sul label
+            const label = this.elements.wakeWordToggle.parentElement;
+            if (label) {
+                label.style.cursor = 'pointer';
+                label.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.elements.wakeWordToggle.checked = !this.elements.wakeWordToggle.checked;
+                    this.useWakeWord = this.elements.wakeWordToggle.checked;
+                    console.log('Wake word toggle (touch):', this.useWakeWord);
+                    this.showNotification(
+                        this.useWakeWord ? 'Wake word attivate' : 'Wake word disattivate', 
+                        'info'
+                    );
+                });
+            }
+        }
+        
+        // Pulsante wake word per iPad
+        const wakeWordBtn = document.getElementById('wake-word-button');
+        if (wakeWordBtn && isIOS) {
+            wakeWordBtn.addEventListener('click', () => {
+                this.useWakeWord = !this.useWakeWord;
+                this.elements.wakeWordToggle.checked = this.useWakeWord;
+                
+                wakeWordBtn.textContent = this.useWakeWord ? '🎤 Wake Word: ON' : '🎤 Wake Word: OFF';
+                wakeWordBtn.style.background = this.useWakeWord ? '#FF9500' : '#8E8E93';
+                
+                console.log('Wake word button clicked:', this.useWakeWord);
+                this.showNotification(
+                    this.useWakeWord ? 'Wake word attivate - Dì "assistente" prima del comando' : 'Wake word disattivate - Ascolto diretto', 
+                    'info',
+                    3000
+                );
+            });
+        }
         
         // Pulsante test TTS
         const testTtsBtn = document.getElementById('test-tts-btn');
