@@ -3734,12 +3734,40 @@
         console.log('🔧 FORCE: Forzando uso middleware...');
         if (window.EnhancedAI) {
           window.flavioAI = window.EnhancedAI;
-          console.log('✅ FORCE: Middleware forzato!');
+          
+          // Forza rebind di tutti i possibili event listeners
+          const sendBtn = document.querySelector('#send-btn, .send-button, [onclick*="sendMessage"], [onclick*="flavioAI"]');
+          if (sendBtn) {
+            console.log('🔄 FORCE: Aggiornando event listener pulsante invio...');
+            sendBtn.onclick = null;
+            sendBtn.onclick = () => window.flavioAI.sendMessage(false);
+          }
+          
+          // Forza rebind input enter
+          const aiInput = document.getElementById('aiInput');
+          if (aiInput) {
+            console.log('🔄 FORCE: Aggiornando event listener input...');
+            aiInput.onkeypress = function(e) {
+              if (e.key === 'Enter') {
+                window.flavioAI.sendMessage(false);
+              }
+            };
+          }
+          
+          console.log('✅ FORCE: Middleware forzato con rebind completo!');
           console.log('🧪 FORCE: Prova ora "Fatturato cliente Essemme?"');
         } else {
           console.log('❌ FORCE: EnhancedAI non disponibile');
         }
       };
+      
+      // Auto-forza dopo l'integrazione
+      setTimeout(() => {
+        if (window.flavioAI && window.flavioAI.constructor.name === 'EnhancedAIAssistant') {
+          console.log('🔄 AUTO-FORCE: Applicando rebind automatico...');
+          window.forceMiddleware();
+        }
+      }, 5000);
       
     });
   </script>
