@@ -31,8 +31,8 @@
 
 /* Pulsante microfono principale */
 .mic-button {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     background: #007AFF;
     color: white;
 }
@@ -231,8 +231,8 @@
     }
     
     .mic-button {
-        width: 80px;
-        height: 80px;
+        width: 90px;
+        height: 90px;
     }
     
     .auto-button {
