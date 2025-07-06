@@ -59,11 +59,17 @@ class AIVoiceManagerV2 {
         // Setup voce TTS italiana
         this.setupTTSVoice();
         
-        // Crea interfaccia utente
-        this.createUI();
-        
-        // Gestisci eventi UI
-        this.setupUIEvents();
+        // Crea interfaccia utente solo quando il DOM è pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.createUI();
+                this.setupUIEvents();
+            });
+        } else {
+            // DOM già caricato
+            this.createUI();
+            this.setupUIEvents();
+        }
     }
 
     setupRecognitionEvents() {
@@ -291,14 +297,18 @@ class AIVoiceManagerV2 {
         };
         
         // Aggiorna stato iniziale UI
-        this.updateAutoModeUI();
-        
-        // Mostra istruzioni per iPad
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        if (isIOS) {
-            setTimeout(() => {
-                this.showNotification('📱 Su iPad: Clicca "🔊 Test Audio" per attivare le risposte vocali', 'info', 5000);
-            }, 2000);
+        try {
+            this.updateAutoModeUI();
+            
+            // Mostra istruzioni per iPad
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS) {
+                setTimeout(() => {
+                    this.showNotification('📱 Su iPad: Clicca "🔊 Test Audio" per attivare le risposte vocali', 'info', 5000);
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('❌ Errore in createUI:', error);
         }
     }
 
