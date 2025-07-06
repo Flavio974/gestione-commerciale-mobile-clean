@@ -512,29 +512,8 @@ class AIVoiceManagerV2 {
     }
 
     async speak(text) {
-        // Se esiste il manager iOS dedicato, usalo
-        if (window.iosTTSManager) {
-            console.log('🍎 Uso iOS TTS Manager dedicato');
-            try {
-                await window.iosTTSManager.speak(text);
-                return;
-            } catch (error) {
-                console.error('Errore iOS TTS Manager:', error);
-                // Fallback al metodo standard
-            }
-        }
-        
         return new Promise((resolve) => {
-            console.log('🔊 Avvio TTS standard per:', text);
-            
-            // Verifica attivazione TTS per iOS
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            if (isIOS && !this.ttsActivated) {
-                console.log('⚠️ TTS non attivato su iOS - skip sintesi vocale');
-                this.showNotification('Clicca il microfono per attivare l\'audio', 'warning');
-                resolve();
-                return;
-            }
+            console.log('🔊 Avvio TTS per:', text);
             
             // Cancella code precedenti
             this.synthesis.cancel();
@@ -551,44 +530,8 @@ class AIVoiceManagerV2 {
                 console.log('🎤 Voce selezionata:', this.ttsConfig.voice.name);
             }
             
-            // Fix specifico per iPad/iOS
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            if (isIOS) {
-                console.log('📱 Dispositivo iOS rilevato - Applicando fix TTS');
-                
-                // Metodo robusto per iOS
-                const speakWithRetry = (attempt = 1) => {
-                    console.log(`🔄 Tentativo ${attempt} di parlare su iOS`);
-                    
-                    // Se sta già parlando, cancella e riprova
-                    if (this.synthesis.speaking || this.synthesis.pending) {
-                        console.log('⏸️ Cancello sintesi in corso...');
-                        this.synthesis.cancel();
-                        
-                        if (attempt < 3) {
-                            setTimeout(() => speakWithRetry(attempt + 1), 200);
-                            return;
-                        }
-                    }
-                    
-                    // Prova a parlare
-                    try {
-                        this.synthesis.speak(utterance);
-                        console.log('🎤 Comando speak inviato');
-                    } catch (e) {
-                        console.error('❌ Errore speak:', e);
-                        if (attempt < 3) {
-                            setTimeout(() => speakWithRetry(attempt + 1), 500);
-                        }
-                    }
-                };
-                
-                // Avvia il tentativo
-                speakWithRetry();
-                
-            } else {
-                this.synthesis.speak(utterance);
-            }
+            // Avvia sintesi vocale
+            this.synthesis.speak(utterance);
             
             // Eventi
             utterance.onstart = () => {
@@ -605,26 +548,8 @@ class AIVoiceManagerV2 {
             utterance.onerror = (event) => {
                 console.error('❌ Errore TTS:', event);
                 this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
-                
-                // Fallback per iOS: prova a riavviare dopo errore
-                if (isIOS && event.error === 'network') {
-                    console.log('🔄 Tentativo fallback TTS per iOS');
-                    setTimeout(() => {
-                        this.synthesis.cancel();
-                        this.synthesis.speak(utterance);
-                    }, 500);
-                }
-                
                 resolve();
             };
-            
-            // Timeout di sicurezza per iOS
-            setTimeout(() => {
-                if (this.synthesis.speaking) {
-                    console.log('⏰ Timeout TTS - force resolve');
-                    resolve();
-                }
-            }, 15000); // 15 secondi max
         });
     }
 
