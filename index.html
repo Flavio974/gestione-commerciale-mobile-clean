@@ -50,6 +50,9 @@
   <link rel="stylesheet" href="css/smart-assistant.css">
   <link rel="stylesheet" href="css/ai-assistant-mobile-fix.css">
   
+  <!-- Voice Controls V2 per iPad -->
+  <link rel="stylesheet" href="css/voice-controls-v2.css">
+  
   <!-- TEST CSS iPhone INLINE -->
   <style>
     @media screen and (max-width: 390px) {
@@ -1225,6 +1228,9 @@
   <!-- Smart Assistant Module -->
   <script src="js/smart-assistant.js"></script>
   
+  <!-- Voice Manager V2 per iPad -->
+  <script src="js/ai/ai-voice-manager-v2.js"></script>
+  
   <!-- Keep Alive per Replit -->
   <script src="js/keep-alive.js"></script>
   
@@ -1751,6 +1757,12 @@
         return null;
       }
 
+      // Metodo pubblico per permettere al voice manager V2 di inviare comandi
+      async processCommand(message) {
+        document.getElementById('aiInput').value = message;
+        return await this.sendMessage(true);
+      }
+      
       async sendMessage(isVoiceInput = false) {
         // Forza modalità vocale se input è arrivato tramite microfono mobile
         if (window.currentInputIsVoice) {
@@ -1836,8 +1848,13 @@
                 this.updateChat();
                 this.hideThinking();
                 
-                if (isVoiceInput && this.voiceManager) {
-                  this.voiceManager.speak(result.response);
+                if (isVoiceInput) {
+                  // Usa il nuovo Voice Manager V2 se disponibile
+                  if (window.AIVoiceManagerV2) {
+                    window.AIVoiceManagerV2.speak(result.response);
+                  } else if (this.voiceManager) {
+                    this.voiceManager.speak(result.response);
+                  }
                 }
                 return;
               } else {
@@ -1871,8 +1888,13 @@
                 this.updateChat();
                 this.hideThinking();
                 
-                if (isVoiceInput && this.voiceManager) {
-                  this.voiceManager.speak(result.response);
+                if (isVoiceInput) {
+                  // Usa il nuovo Voice Manager V2 se disponibile
+                  if (window.AIVoiceManagerV2) {
+                    window.AIVoiceManagerV2.speak(result.response);
+                  } else if (this.voiceManager) {
+                    this.voiceManager.speak(result.response);
+                  }
                 }
                 return;
               } else {

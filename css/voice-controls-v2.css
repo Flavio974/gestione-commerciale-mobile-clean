@@ -1,0 +1,342 @@
+/**
+ * Stili per il sistema vocale V2 ottimizzato per iPad
+ */
+
+/* Container principale */
+.voice-controls-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 15px;
+}
+
+/* Pulsanti vocali base */
+.voice-button {
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Pulsante microfono principale */
+.mic-button {
+    width: 60px;
+    height: 60px;
+    background: #007AFF;
+    color: white;
+}
+
+.mic-button:hover:not(.disabled) {
+    background: #0051D5;
+    transform: scale(1.05);
+}
+
+.mic-button:active:not(.disabled) {
+    transform: scale(0.95);
+}
+
+.mic-button.listening {
+    background: #FF3B30;
+    animation: pulse 1.5s infinite;
+}
+
+.mic-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Animazione pulsazione */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(255, 59, 48, 0.4);
+    }
+    70% {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 0 15px rgba(255, 59, 48, 0);
+    }
+    100% {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(255, 59, 48, 0);
+    }
+}
+
+/* Container controlli modalità auto */
+.auto-mode-controls {
+    display: flex;
+    gap: 10px;
+}
+
+/* Pulsanti modalità auto */
+.auto-button {
+    width: 120px;
+    height: 50px;
+    border-radius: 25px;
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 8px;
+}
+
+.auto-button span {
+    white-space: nowrap;
+}
+
+/* Pulsante ON */
+.on-button {
+    background: #34C759;
+    color: white;
+}
+
+.on-button:hover {
+    background: #30A852;
+}
+
+.on-button.active {
+    background: #30A852;
+    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.4);
+}
+
+/* Pulsante OFF */
+.off-button {
+    background: #FF453A;
+    color: white;
+}
+
+.off-button:hover {
+    background: #E03E33;
+}
+
+.off-button.active {
+    background: #E03E33;
+    box-shadow: 0 4px 12px rgba(255, 69, 58, 0.4);
+}
+
+/* Indicatore di stato */
+.status-indicator {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 10px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.status-indicator.active .status-text {
+    color: #007AFF;
+}
+
+.status-indicator.auto-mode {
+    background: rgba(52, 199, 89, 0.1);
+    border: 2px solid #34C759;
+}
+
+.status-indicator.auto-mode .status-text {
+    color: #34C759;
+    font-weight: 600;
+}
+
+/* Display trascrizione */
+.transcription-display {
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 15px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    margin-top: -10px;
+}
+
+.transcription-display:not(:empty) {
+    opacity: 1;
+    margin-top: 0;
+}
+
+/* Controlli avanzati */
+.voice-advanced-controls {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 250px;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    min-width: 70px;
+}
+
+.control-group input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #E5E5EA;
+    outline: none;
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007AFF;
+    cursor: pointer;
+}
+
+.control-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 5px;
+}
+
+/* Media queries per iPad */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+    .voice-controls-container {
+        top: 30px;
+        right: 30px;
+        gap: 20px;
+    }
+    
+    .mic-button {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .auto-button {
+        width: 140px;
+        height: 60px;
+        font-size: 16px;
+    }
+    
+    .status-indicator,
+    .transcription-display {
+        font-size: 18px;
+    }
+    
+    .voice-advanced-controls {
+        width: 300px;
+    }
+}
+
+/* Landscape mode per iPad */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
+    .voice-controls-container {
+        flex-direction: row;
+        align-items: center;
+        top: 20px;
+    }
+    
+    .auto-mode-controls {
+        order: -1;
+    }
+    
+    .status-indicator,
+    .transcription-display,
+    .voice-advanced-controls {
+        position: absolute;
+        top: 80px;
+        right: 0;
+    }
+    
+    .transcription-display {
+        top: 120px;
+    }
+    
+    .voice-advanced-controls {
+        top: 200px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .status-indicator,
+    .transcription-display,
+    .voice-advanced-controls {
+        background: rgba(30, 30, 30, 0.95);
+        color: #fff;
+    }
+    
+    .status-indicator {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .control-group label {
+        color: #999;
+    }
+    
+    .control-group input[type="range"] {
+        background: #48484A;
+    }
+}
+
+/* Notifiche toast */
+.voice-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10000;
+    animation: slideUp 0.3s ease;
+}
+
+.voice-toast.success {
+    background: rgba(52, 199, 89, 0.9);
+}
+
+.voice-toast.error {
+    background: rgba(255, 69, 58, 0.9);
+}
+
+.voice-toast.info {
+    background: rgba(0, 122, 255, 0.9);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}

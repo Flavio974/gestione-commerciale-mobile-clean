@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Test Voice System V2 - iPad</title>
+    
+    <!-- CSS principale -->
+    <link rel="stylesheet" href="css/voice-controls-v2.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f7;
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1d1d1f;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #86868b;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .chat-container {
+            border: 1px solid #e5e5e7;
+            border-radius: 15px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        .message.user {
+            background: #007AFF;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message.assistant {
+            background: #e9e9eb;
+            color: #1d1d1f;
+        }
+        
+        .test-section {
+            background: #f5f5f7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #1d1d1f;
+        }
+        
+        .test-commands {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .test-command {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+            border: 1px solid #e5e5e7;
+        }
+        
+        .status-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e5e5e7;
+        }
+        
+        .status-item .label {
+            font-size: 12px;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-item .value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Sistema Vocale V2</h1>
+        <p class="subtitle">Test ottimizzato per iPad</p>
+        
+        <div class="chat-container" id="chat-container">
+            <div class="message assistant">
+                Ciao! Sono il tuo assistente vocale. Puoi parlarmi usando il pulsante del microfono o attivando la modalità AUTO per l'ascolto continuo.
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Comandi di Test</h3>
+            <div class="test-commands">
+                <div class="test-command">"Assistente, che ore sono?"</div>
+                <div class="test-command">"Hey assistente, vai a ordini"</div>
+                <div class="test-command">"Ok assistente, cerca cliente Mario"</div>
+                <div class="test-command">"Assistente, crea nuovo ordine"</div>
+            </div>
+        </div>
+        
+        <div class="status-info">
+            <div class="status-item">
+                <div class="label">Modalità</div>
+                <div class="value" id="mode-status">Manuale</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Wake Word</div>
+                <div class="value" id="wake-status">Attivo</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Volume TTS</div>
+                <div class="value" id="volume-status">100%</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Velocità TTS</div>
+                <div class="value" id="speed-status">1.0x</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mock dell'assistente AI per test -->
+    <script>
+        // Simulazione assistente AI
+        window.FlavioAIAssistant = {
+            processCommand: async function(command) {
+                console.log('Comando ricevuto:', command);
+                
+                // Aggiungi messaggio utente alla chat
+                addMessage(command, 'user');
+                
+                // Simula elaborazione
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Genera risposta di test
+                let response = '';
+                const lowerCommand = command.toLowerCase();
+                
+                if (lowerCommand.includes('ore') || lowerCommand.includes('ora')) {
+                    const now = new Date();
+                    response = `Sono le ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+                } else if (lowerCommand.includes('ordini')) {
+                    response = 'Ho aperto la sezione ordini per te.';
+                } else if (lowerCommand.includes('cerca')) {
+                    const searchTerm = command.split('cerca')[1]?.trim() || 'qualcosa';
+                    response = `Sto cercando "${searchTerm}" nel database...`;
+                } else if (lowerCommand.includes('crea') || lowerCommand.includes('nuovo')) {
+                    response = 'Ho preparato un nuovo modulo per te. Puoi iniziare a compilarlo.';
+                } else {
+                    response = `Ho capito: "${command}". Come posso aiutarti?`;
+                }
+                
+                // Aggiungi risposta alla chat
+                addMessage(response, 'assistant');
+                
+                return response;
+            }
+        };
+        
+        // Funzione per aggiungere messaggi alla chat
+        function addMessage(text, type) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Funzione per mostrare notifiche toast
+        window.showToast = function(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `voice-toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+        
+        // Monitor per aggiornamenti stato
+        setInterval(() => {
+            if (window.AIVoiceManagerV2) {
+                const vm = window.AIVoiceManagerV2;
+                
+                // Aggiorna stato modalità
+                document.getElementById('mode-status').textContent = 
+                    vm.isAutoMode ? 'AUTO' : 'Manuale';
+                
+                // Aggiorna stato wake word
+                document.getElementById('wake-status').textContent = 
+                    vm.useWakeWord ? 'Attivo' : 'Disattivato';
+                
+                // Aggiorna volume
+                document.getElementById('volume-status').textContent = 
+                    Math.round(vm.ttsConfig.volume * 100) + '%';
+                
+                // Aggiorna velocità
+                document.getElementById('speed-status').textContent = 
+                    vm.ttsConfig.rate.toFixed(1) + 'x';
+            }
+        }, 500);
+    </script>
+    
+    <!-- Carica il sistema vocale V2 -->
+    <script src="js/ai/ai-voice-manager-v2.js"></script>
+</body>
+</html>
