@@ -11,6 +11,7 @@ class RequestMiddleware {
         this.operativeKeywords = {
             fatturato: ['fatturato', 'venduto', 'incasso', 'guadagno', 'euro', '€'],
             ordini: ['ordini', 'ordine', 'acquisti', 'numero', 'quanti'],
+            data: ['data', 'quando', 'ultimo'],
             percorsi: ['tempo', 'distanza', 'percorso', 'viaggio', 'minuti', 'km'],
             clienti: ['cliente', 'clienti', 'zona', 'nome']
         };
@@ -23,6 +24,10 @@ class RequestMiddleware {
             fatturatoSemplice: /^(?:fatturato|venduto|incasso)\s+([A-Za-z\s]+?)(?:\?|$)/i,
             ordiniCliente: /(?:quanti|numero|numeri).*ordini.*?(?:con|di|del|da|cliente|per|anche)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
             ordiniGenerici: /(?:mi\s+dici|dimmi|mostra|numero|numeri|identificativo).*(?:numero|numeri|identificativo|codici?).*(?:ordini?|dei\s+vari|vari)/i,
+            // Pattern per richieste di data con cliente specifico
+            dataCliente: /(?:data|quando).*(?:ultimo|ordine).*(?:di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
+            // Pattern per richieste di data generiche
+            dataGenerica: /(?:mi\s+dici|dimmi|mostra|quale).*(?:data|quando).*(?:ultimo|ordine)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
             clientiZona: /clienti.*(?:in|nella|di|della)\s+([^?\n]+?)(?:\?|$)/i
         };
@@ -221,6 +226,10 @@ class RequestMiddleware {
             return 'ordini';
         }
         
+        if (this.operativeKeywords.data.some(kw => inputLower.includes(kw))) {
+            return 'data';
+        }
+        
         if (this.operativeKeywords.percorsi.some(kw => inputLower.includes(kw))) {
             return 'percorsi';
         }
@@ -275,6 +284,29 @@ class RequestMiddleware {
                 }
                 break;
                 
+            case 'data':
+                let dataMatch = input.match(this.patterns.dataCliente);
+                if (dataMatch) {
+                    params.cliente = dataMatch[1].trim();
+                } else {
+                    // Controlla se è una richiesta generica sulla data
+                    const dataGenericaMatch = input.match(this.patterns.dataGenerica);
+                    const validContext = this.getValidContext();
+                    
+                    if (dataGenericaMatch && validContext) {
+                        params.cliente = validContext;
+                        params.fromContext = true;
+                    } else if (validContext) {
+                        // Fallback: se c'è un contesto valido e la query contiene parole chiave data
+                        const inputLower = input.toLowerCase();
+                        if (inputLower.includes('data') || inputLower.includes('ultimo') || inputLower.includes('quando')) {
+                            params.cliente = validContext;
+                            params.fromContext = true;
+                        }
+                    }
+                }
+                break;
+                
             case 'percorsi':
                 const percorsoMatch = input.match(this.patterns.tempoPercorso);
                 if (percorsoMatch) {
@@ -304,6 +336,9 @@ class RequestMiddleware {
                 
             case 'ordini':
                 return await this.countOrdini(params);
+                
+            case 'data':
+                return await this.getUltimaData(params);
                 
             case 'percorsi':
                 return await this.calculatePercorso(params);
@@ -465,7 +500,70 @@ class RequestMiddleware {
     }
 
     /**
-     * FUNZIONE 3: Calcolo Tempo Percorso
+     * FUNZIONE 3: Data Ultimo Ordine Cliente
+     */
+    async getUltimaData(params) {
+        try {
+            console.log('📅 MIDDLEWARE: Ricerca ultima data per:', params.cliente);
+            if (params.fromContext) {
+                console.log('🔄 MIDDLEWARE: Usando contesto cliente precedente:', params.cliente);
+            }
+            
+            const supabaseData = await this.supabaseAI.getAllData();
+            const ordini = supabaseData.historicalOrders?.sampleData || [];
+            
+            if (!params.cliente) {
+                return {
+                    success: true,
+                    response: `📅 Richiedi la data specificando un cliente`,
+                    data: { error: 'Cliente non specificato' }
+                };
+            }
+            
+            const clienteNorm = params.cliente.toLowerCase();
+            const ordiniCliente = ordini.filter(ordine => 
+                ordine.cliente && ordine.cliente.toLowerCase().includes(clienteNorm)
+            );
+            
+            if (ordiniCliente.length === 0) {
+                return {
+                    success: true,
+                    response: `❌ Nessun ordine trovato per "${params.cliente}"`,
+                    data: { data: null }
+                };
+            }
+            
+            // Salva nel contesto per richieste successive (se non già dal contesto)
+            if (!params.fromContext) {
+                this.saveContext(params.cliente);
+            }
+            
+            // Trova l'ordine più recente
+            const nomeCliente = ordiniCliente[0].cliente;
+            const ultimoOrdine = this.findLatestOrder(ordiniCliente);
+            
+            const contextNote = params.fromContext ? ' (dal contesto precedente)' : '';
+            
+            return {
+                success: true,
+                response: `📅 Cliente ${nomeCliente}${contextNote}: ultimo ordine ${ultimoOrdine.numero_ordine} del ${ultimoOrdine.displayDate}`,
+                data: { 
+                    cliente: nomeCliente,
+                    ultimaData: ultimoOrdine.displayDate,
+                    numeroOrdine: ultimoOrdine.numero_ordine,
+                    sortField: ultimoOrdine.sortField,
+                    fromContext: params.fromContext || false
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore ricerca ultima data:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * FUNZIONE 4: Calcolo Tempo Percorso
      */
     async calculatePercorso(params) {
         try {
