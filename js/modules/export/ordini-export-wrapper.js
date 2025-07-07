@@ -40,7 +40,7 @@
     },
 
     /**
-     * Visualizza il contenuto del file VENDUTO
+     * Visualizza il contenuto del file ORDINI
      * Chiamata da ordini-ui.js
      */
     viewVendutoContent: function() {
@@ -111,7 +111,7 @@
     },
 
     /**
-     * Ottiene il conteggio righe VENDUTO
+     * Ottiene il conteggio righe ORDINI
      */
     getVendutoCount: function() {
       if (window.ExportDialogManager) {
@@ -121,7 +121,7 @@
     },
 
     /**
-     * Import file VENDUTO
+     * Import file ORDINI
      */
     importVendutoFromFile: function(file) {
       if (window.FileIOManager) {
@@ -138,7 +138,7 @@
     _proceedWithAll: false,
 
     /**
-     * Continua export VENDUTO (compatibilità con vecchio sistema)
+     * Continua export ORDINI (compatibilità con vecchio sistema)
      */
     _continueVendutoExport: function() {
       if (window.VendutoExporter) {

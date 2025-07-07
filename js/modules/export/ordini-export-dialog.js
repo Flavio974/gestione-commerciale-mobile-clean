@@ -38,7 +38,7 @@
           </button>
           
           <button class="btn btn-success" onclick="window.ExportCoordinator.handleExportVenduto()" style="width: 100%; margin-bottom: 10px; padding: 10px;">
-            📋 Aggiorna file VENDUTO.xlsx
+            📋 Aggiorna file ORDINI.xlsx
             <br><small>File permanente con storico vendite</small>
           </button>
           
@@ -64,7 +64,7 @@
     }
 
     /**
-     * Mostra dialog per confronto file VENDUTO
+     * Mostra dialog per confronto file ORDINI
      */
     showVendutoComparisonDialog() {
       this.closeDialog('comparison');
@@ -78,11 +78,11 @@
       modalContent.style.cssText = 'background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 8px;';
       
       modalContent.innerHTML = `
-        <h3>📋 Aggiornamento File VENDUTO</h3>
+        <h3>📋 Aggiornamento File ORDINI</h3>
         
         <div style="margin: 20px 0; padding: 15px; background-color: #e7f3ff; border-radius: 5px;">
           <h4 style="margin-top: 0; color: #0066cc;">Per confrontare i dati:</h4>
-          <p>1. Carica il file VENDUTO.xlsx esistente per verificare i duplicati</p>
+          <p>1. Carica il file ORDINI.xlsx esistente per verificare i duplicati</p>
           <p>2. Oppure procedi senza confronto (usa solo la memoria del browser)</p>
         </div>
         
@@ -90,7 +90,7 @@
           <input type="file" id="vendutoCompareFile" accept=".xlsx" style="display: none;">
           
           <button class="btn btn-primary" id="vendutoLoadBtn" style="padding: 10px;">
-            📁 Carica file VENDUTO.xlsx per confronto
+            📁 Carica file ORDINI.xlsx per confronto
             <br><small>Confronta con il file reale prima di aggiungere nuovi dati</small>
           </button>
           
@@ -203,7 +203,7 @@
               <br><small>Includi anche quelli già ${isFileComparison ? 'nel file Excel' : 'in memoria'}</small>
             </button>
             
-            <button class="btn btn-danger" onclick="if(confirm('Questo cancellerà tutti i dati salvati nella memoria del browser. Sei sicuro?')) { localStorage.removeItem('vendutoFileData'); alert('Memoria cancellata. Ora puoi riesportare tutti i dati.'); window.ExportDialogManager.closeDialog('duplicates'); }" style="padding: 10px;">
+            <button class="btn btn-danger" onclick="if(confirm('Questo cancellerà tutti i dati salvati nella memoria del browser. Sei sicuro?')) { localStorage.removeItem('ordiniFileData'); alert('Memoria cancellata. Ora puoi riesportare tutti i dati.'); window.ExportDialogManager.closeDialog('duplicates'); }" style="padding: 10px;">
               🗑️ Cancella memoria e ricomincia
               <br><small>Rimuove tutti i dati dalla memoria del browser</small>
             </button>
@@ -249,7 +249,7 @@
     }
 
     /**
-     * Mostra dialog per sincronizzazione file VENDUTO
+     * Mostra dialog per sincronizzazione file ORDINI
      */
     showSyncDialog() {
       this.closeDialog('sync');
@@ -267,27 +267,27 @@
       
       modalContent.innerHTML = `
         <span class="close" onclick="window.ExportDialogManager.closeDialog('sync')" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
-        <h3 style="margin-top: 0;">🔄 Sincronizzazione File VENDUTO</h3>
+        <h3 style="margin-top: 0;">🔄 Sincronizzazione File ORDINI</h3>
         
         <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
           <h4 style="margin-top: 0;">Stato attuale:</h4>
-          <p>Il file VENDUTO contiene attualmente <strong>${vendutoCount} righe</strong>.</p>
+          <p>Il file ORDINI contiene attualmente <strong>${vendutoCount} righe</strong>.</p>
         </div>
         
         <div style="margin: 20px 0;">
           <h4>Operazioni disponibili:</h4>
           <div style="display: flex; flex-direction: column; gap: 10px;">
             <button class="btn btn-info" onclick="window.ExportCoordinator.analytics.viewVendutoContent(); window.ExportDialogManager.closeDialog('sync');" style="padding: 10px 20px;">
-              👁️ Visualizza contenuto VENDUTO
+              👁️ Visualizza contenuto ORDINI
             </button>
             
-            <button class="btn btn-warning" onclick="if(confirm('Sei sicuro di voler cancellare tutto il contenuto del file VENDUTO?')) { localStorage.removeItem('vendutoFileData'); alert('File VENDUTO cancellato con successo!'); window.ExportDialogManager.closeDialog('sync'); location.reload(); }" style="padding: 10px 20px;">
-              🗑️ Cancella file VENDUTO
+            <button class="btn btn-warning" onclick="if(confirm('Sei sicuro di voler cancellare tutto il contenuto del file ORDINI?')) { localStorage.removeItem('ordiniFileData'); alert('File ORDINI cancellato con successo!'); window.ExportDialogManager.closeDialog('sync'); location.reload(); }" style="padding: 10px 20px;">
+              🗑️ Cancella file ORDINI
             </button>
             
             <input type="file" id="vendutoImportFile" accept=".xlsx" style="display: none;" onchange="window.ExportCoordinator.fileIO.importVendutoFromFile(this.files[0])">
             <button class="btn btn-primary" onclick="document.getElementById('vendutoImportFile').click()" style="padding: 10px 20px;">
-              📁 Importa file VENDUTO.xlsx esistente
+              📁 Importa file ORDINI.xlsx esistente
             </button>
             
             <button class="btn btn-success" onclick="window.ExportDialogManager.syncVendutoToSupabase()" style="padding: 10px 20px;">
@@ -334,7 +334,7 @@
     }
 
     /**
-     * Sincronizza dati VENDUTO importati con Supabase
+     * Sincronizza dati ORDINI importati con Supabase
      */
     async syncVendutoToSupabase() {
       if (!window.SupabaseSyncVenduto) {
@@ -364,7 +364,7 @@
           
         } else {
           const errorMsg = result.reason === 'no_data' 
-            ? 'Nessun dato VENDUTO trovato nell\'app. Importa prima un file Excel.'
+            ? 'Nessun dato ORDINI trovato nell\'app. Importa prima un file Excel.'
             : result.reason === 'disabled'
             ? 'Sincronizzazione Supabase disabilitata. Verifica la configurazione.'
             : 'Errore durante la sincronizzazione: ' + (result.error || 'Errore sconosciuto');
@@ -379,16 +379,16 @@
     }
 
     /**
-     * Ottiene il conteggio righe VENDUTO
+     * Ottiene il conteggio righe ORDINI
      */
     getVendutoCount() {
       try {
-        const savedVenduto = localStorage.getItem('vendutoFileData');
+        const savedVenduto = localStorage.getItem('ordiniFileData');
         if (savedVenduto) {
           return JSON.parse(savedVenduto).length;
         }
       } catch (e) {
-        console.error('Errore nel conteggio VENDUTO:', e);
+        console.error('Errore nel conteggio ORDINI:', e);
       }
       return 0;
     }

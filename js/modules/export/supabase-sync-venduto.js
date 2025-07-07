@@ -282,9 +282,9 @@
 
       try {
         // Carica dati dal localStorage
-        const savedData = localStorage.getItem('vendutoFileData');
+        const savedData = localStorage.getItem('ordiniFileData');
         if (!savedData) {
-          console.log('⚠️ Nessun dato VENDUTO trovato nel localStorage');
+          console.log('⚠️ Nessun dato ORDINI trovato nel localStorage');
           return { success: false, reason: 'no_data' };
         }
 

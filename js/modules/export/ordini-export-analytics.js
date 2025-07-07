@@ -1,6 +1,6 @@
 /**
  * Ordini Export Analytics Module
- * Gestisce l'analisi e la visualizzazione dei dati VENDUTO
+ * Gestisce l'analisi e la visualizzazione dei dati ORDINI
  */
 
 (function() {
@@ -12,15 +12,15 @@
     }
 
     /**
-     * Visualizza il contenuto del file VENDUTO
+     * Visualizza il contenuto del file ORDINI
      */
     viewVendutoContent() {
-      console.log('📋 Visualizzazione contenuto file VENDUTO...');
+      console.log('📋 Visualizzazione contenuto file ORDINI...');
       
       // Recupera dati dal localStorage
-      const savedVenduto = localStorage.getItem('vendutoFileData');
+      const savedVenduto = localStorage.getItem('ordiniFileData');
       if (!savedVenduto) {
-        window.ExportDialogManager.showMessage('Il file VENDUTO è vuoto. Nessun dato salvato.', 'warning');
+        window.ExportDialogManager.showMessage('Il file ORDINI è vuoto. Nessun dato salvato.', 'warning');
         return;
       }
       
@@ -35,13 +35,13 @@
         this.showVendutoViewer(data, stats);
         
       } catch (e) {
-        console.error('Errore nel caricamento dati VENDUTO:', e);
-        window.ExportDialogManager.showMessage('Errore nel caricamento del file VENDUTO', 'error');
+        console.error('Errore nel caricamento dati ORDINI:', e);
+        window.ExportDialogManager.showMessage('Errore nel caricamento del file ORDINI', 'error');
       }
     }
 
     /**
-     * Analizza i dati VENDUTO
+     * Analizza i dati ORDINI
      */
     analyzeData(data) {
       const stats = {
@@ -110,7 +110,7 @@
     }
 
     /**
-     * Mostra il viewer con i dati VENDUTO
+     * Mostra il viewer con i dati ORDINI
      */
     showVendutoViewer(data, stats) {
       // Chiudi eventuali dialog aperti
@@ -138,7 +138,7 @@
       
       modalContent.innerHTML = `
         <span class="close" onclick="this.closest('.modal').remove()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
-        <h3>📋 Contenuto File VENDUTO</h3>
+        <h3>📋 Contenuto File ORDINI</h3>
         
         <!-- Riepilogo Generale -->
         <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
@@ -352,7 +352,7 @@
      * Analisi rapida dei dati
      */
     async getQuickStats() {
-      const savedVenduto = localStorage.getItem('vendutoFileData');
+      const savedVenduto = localStorage.getItem('ordiniFileData');
       if (!savedVenduto) {
         return { totalRows: 0, totalAmount: 0 };
       }

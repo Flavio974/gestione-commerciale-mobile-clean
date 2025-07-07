@@ -131,7 +131,7 @@
     }
 
     /**
-     * Gestione export VENDUTO
+     * Gestione export ORDINI
      */
     handleExportVenduto() {
       try {
@@ -139,7 +139,7 @@
         // Mostra dialog per confronto
         this.dialogManager.showVendutoComparisonDialog();
       } catch (error) {
-        console.error('Errore export VENDUTO:', error);
+        console.error('Errore export ORDINI:', error);
         this.dialogManager.showMessage(
           'Errore durante l\'esportazione: ' + error.message, 
           'error'

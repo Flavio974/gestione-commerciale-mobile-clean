@@ -104,7 +104,7 @@
             console.log('📊 Righe non vuote:', nonEmptyRows.length);
             
             if (nonEmptyRows.length === 0) {
-              console.log('📄 File VENDUTO vuoto (solo header), procedo con export diretto');
+              console.log('📄 File ORDINI vuoto (solo header), procedo con export diretto');
               // Resetta la memoria locale per sincronizzare con il file vuoto
               localStorage.removeItem('ordiniFileData');
               this.vendutoData = [];

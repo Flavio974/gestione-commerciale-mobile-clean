@@ -71,7 +71,7 @@
     }
 
     /**
-     * Importa file VENDUTO esistente
+     * Importa file ORDINI esistente
      */
     importVendutoFromFile(file) {
       if (!file) return;
@@ -82,9 +82,9 @@
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, {type: 'array'});
           
-          // Cerca il foglio VENDUTO
+          // Cerca il foglio ORDINI
           const sheetName = workbook.SheetNames.find(name => 
-            name.toUpperCase() === 'VENDUTO'
+            name.toUpperCase() === 'ORDINI'
           ) || workbook.SheetNames[0];
           
           const worksheet = workbook.Sheets[sheetName];
@@ -95,10 +95,10 @@
             const dataRows = jsonData.slice(1);
             
             // Salva nel localStorage
-            localStorage.setItem('vendutoFileData', JSON.stringify(dataRows));
+            localStorage.setItem('ordiniFileData', JSON.stringify(dataRows));
             
             window.ExportDialogManager.showMessage(
-              `File VENDUTO importato con successo!<br><br>
+              `File ORDINI importato con successo!<br><br>
               Righe importate: <strong>${dataRows.length}</strong>`,
               'success'
             );
