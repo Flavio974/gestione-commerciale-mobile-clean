@@ -482,6 +482,157 @@ class AIVoiceManagerV2 {
                 this.speak('Audio attivato correttamente. Le risposte dell\'assistente saranno ora vocali.');
             });
         }
+        
+        // Setup drag & drop
+        this.setupDragAndDrop();
+    }
+
+    setupDragAndDrop() {
+        console.log('🎯 Configurazione drag & drop per controlli vocali...');
+        
+        const container = document.getElementById('voice-controls-v2');
+        if (!container) {
+            console.error('❌ Container controlli vocali non trovato');
+            return;
+        }
+        
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let startLeft = 0;
+        let startTop = 0;
+        
+        // Carica posizione salvata
+        this.loadSavedPosition(container);
+        
+        // Mouse events (Desktop)
+        container.addEventListener('mousedown', (e) => {
+            // Solo drag se si clicca sul container ma non sui pulsanti
+            if (e.target.closest('.voice-button')) return;
+            
+            isDragging = true;
+            container.classList.add('dragging');
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            const rect = container.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            
+            e.preventDefault();
+        });
+        
+        // Touch events (Mobile/Tablet)
+        container.addEventListener('touchstart', (e) => {
+            // Solo drag se si tocca il container ma non i pulsanti
+            if (e.target.closest('.voice-button')) return;
+            
+            const touch = e.touches[0];
+            isDragging = true;
+            container.classList.add('dragging');
+            
+            startX = touch.clientX;
+            startY = touch.clientY;
+            
+            const rect = container.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            
+            document.addEventListener('touchmove', onTouchMove, { passive: false });
+            document.addEventListener('touchend', onTouchEnd);
+            
+            e.preventDefault();
+        });
+        
+        const onMouseMove = (e) => {
+            if (!isDragging) return;
+            
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            
+            this.updatePosition(container, startLeft + deltaX, startTop + deltaY);
+        };
+        
+        const onTouchMove = (e) => {
+            if (!isDragging) return;
+            
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            
+            this.updatePosition(container, startLeft + deltaX, startTop + deltaY);
+            e.preventDefault();
+        };
+        
+        const onMouseUp = () => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            container.classList.remove('dragging');
+            this.savePosition(container);
+            
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        
+        const onTouchEnd = () => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            container.classList.remove('dragging');
+            this.savePosition(container);
+            
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+        };
+        
+        console.log('✅ Drag & drop configurato - ora puoi trascinare i controlli vocali!');
+    }
+    
+    updatePosition(container, left, top) {
+        // Vincoli ai bordi dello schermo
+        const maxLeft = window.innerWidth - container.offsetWidth;
+        const maxTop = window.innerHeight - container.offsetHeight;
+        
+        left = Math.max(0, Math.min(left, maxLeft));
+        top = Math.max(0, Math.min(top, maxTop));
+        
+        container.style.left = left + 'px';
+        container.style.top = top + 'px';
+        container.style.right = 'auto';
+        container.style.bottom = 'auto';
+    }
+    
+    savePosition(container) {
+        const position = {
+            left: container.style.left,
+            top: container.style.top
+        };
+        
+        localStorage.setItem('voice-controls-position', JSON.stringify(position));
+        console.log('💾 Posizione controlli vocali salvata:', position);
+    }
+    
+    loadSavedPosition(container) {
+        try {
+            const saved = localStorage.getItem('voice-controls-position');
+            if (saved) {
+                const position = JSON.parse(saved);
+                if (position.left && position.top) {
+                    container.style.left = position.left;
+                    container.style.top = position.top;
+                    container.style.right = 'auto';
+                    container.style.bottom = 'auto';
+                    console.log('📍 Posizione controlli vocali caricata:', position);
+                }
+            }
+        } catch (error) {
+            console.log('⚠️ Errore caricamento posizione:', error);
+        }
     }
 
     setupiPhoneEvents() {

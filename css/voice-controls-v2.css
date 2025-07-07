@@ -12,33 +12,44 @@
     flex-direction: column;
     align-items: flex-end;
     gap: 15px;
+    cursor: move;
+    user-select: none;
+    touch-action: none;
 }
 
-/* Aggiustamenti quando la tab ordini è attiva */
-body.ordini-tab-active .voice-controls-container {
-    top: 100px !important; /* Sposta più in basso per evitare sovrapposizioni */
-    right: 15px !important;
+/* Stili durante il drag */
+.voice-controls-container.dragging {
+    opacity: 0.8;
+    transform: scale(1.05);
+    transition: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
 
-/* Aggiustamenti per schermo piccolo quando tab ordini è attiva */
-@media (max-width: 1200px) {
-    body.ordini-tab-active .voice-controls-container {
-        top: 120px !important;
-        right: 10px !important;
-    }
+/* Indicatore di drag */
+.voice-controls-container::before {
+    content: "⋮⋮";
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-/* Aggiustamenti per mobile quando tab ordini è attiva */
-@media (max-width: 768px) {
-    body.ordini-tab-active .voice-controls-container {
-        top: 140px !important;
-        right: 10px !important;
-    }
-    
-    body.ordini-tab-active .voice-controls-container .mic-button {
-        width: 50px !important;
-        height: 50px !important;
-    }
+.voice-controls-container:hover::before {
+    opacity: 1;
+}
+
+/* Posizionamento di default - ora superato dal drag & drop */
+.voice-controls-container {
+    /* Posizione di default se non è mai stata spostata */
 }
 
 /* Su Desktop, tutti i controlli sono sempre visibili */
