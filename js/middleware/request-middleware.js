@@ -503,10 +503,18 @@ class RequestMiddleware {
             }
             
             if (!params.cliente) {
+                // Conta ordini distinti usando numero_ordine
+                const ordiniDistinti = new Set(
+                    ordini.map(o => o.numero_ordine).filter(n => n && n !== null)
+                ).size;
+                
                 return {
                     success: true,
-                    response: `📊 Totale ordini: ${ordini.length}`,
-                    data: { ordini: ordini.length }
+                    response: `📊 Totale ordini distinti: ${ordiniDistinti} (${ordini.length} righe totali)`,
+                    data: { 
+                        ordini: ordiniDistinti, 
+                        righe: ordini.length 
+                    }
                 };
             }
             

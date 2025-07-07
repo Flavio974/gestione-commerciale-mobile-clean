@@ -719,10 +719,23 @@ class SupabaseAIIntegration {
      * Calcola statistiche per l'AI
      */
     calculateStats() {
+        // Calcola ordini distinti dai dati storici se disponibili
+        let distinctOrders = 0;
+        if (this.cache.historicalOrders?.statistics?.numeroOrdini) {
+            distinctOrders = this.cache.historicalOrders.statistics.numeroOrdini;
+        } else if (this.cache.orders?.length > 0) {
+            // Fallback: conta ordini distinti dai dati orders se disponibili
+            const orderNumbers = new Set(this.cache.orders.map(o => o.numero_ordine || o.order_number || o.id).filter(n => n));
+            distinctOrders = orderNumbers.size;
+        } else {
+            distinctOrders = this.cache.orders?.length || 0;
+        }
+
         const stats = {
             totalClients: this.cache.clients?.length || 0,
             activeClients: this.cache.clients?.filter(c => c.status === 'active').length || 0,
-            totalOrders: this.cache.orders?.length || 0,
+            totalOrders: distinctOrders, // FIX: Usa ordini distinti invece di righe totali
+            totalOrderRows: this.cache.orders?.length || 0, // Mantieni il dato delle righe totali separato
             pendingOrders: this.cache.orders?.filter(o => o.status === 'pending').length || 0,
             totalRevenue: this.cache.orders?.reduce((sum, o) => sum + (o.amount || 0), 0) || 0,
             documentsCount: this.cache.documents?.length || 0,
@@ -754,9 +767,11 @@ class SupabaseAIIntegration {
             summary: {
                 totalClients: stats.totalClients,
                 totalOrders: stats.totalOrders,
+                totalOrderRows: stats.totalOrderRows,
                 totalRevenue: stats.totalRevenue,
                 lastUpdate: data.lastUpdate ? new Date(data.lastUpdate).toLocaleString('it-IT') : 'sconosciuto',
-                offlineMode: this.offlineMode
+                offlineMode: this.offlineMode,
+                note: `IMPORTANTE: totalOrders=${stats.totalOrders} rappresenta ORDINI DISTINTI, totalOrderRows=${stats.totalOrderRows} rappresenta RIGHE TOTALI`
             },
             // Solo statistiche aggregate per ridurre payload
             historicalOrders: data.historicalOrders ? {
@@ -815,7 +830,8 @@ class SupabaseAIIntegration {
             summary: {
                 ...stats,
                 lastUpdate: data.lastUpdate ? new Date(data.lastUpdate).toLocaleString('it-IT') : 'sconosciuto',
-                offlineMode: this.offlineMode
+                offlineMode: this.offlineMode,
+                note: `IMPORTANTE: totalOrders=${stats.totalOrders} rappresenta ORDINI DISTINTI, totalOrderRows=${stats.totalOrderRows} rappresenta RIGHE TOTALI`
             },
             clients: data.clients?.slice(0, 10) || [], // Top 10 clienti
             recentOrders: data.orders?.slice(0, 20) || [], // Ultimi 20 ordini
