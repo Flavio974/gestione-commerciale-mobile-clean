@@ -27,7 +27,7 @@ class RequestMiddleware {
             // Pattern per richieste di data con cliente specifico
             dataCliente: /(?:data|quando).*(?:ultimo|ordine).*(?:di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per tutte le date degli ordini
-            dataTuttiOrdini: /(?:data|quando).*(?:tutti|tutte|altri|altre).*(?:ordini).*(?:di|del|da|cliente|per)?\s*(?:cliente\s+)?([A-Za-z\s]*?)(?:\?|$)/i,
+            dataTuttiOrdini: /(?:data|quando|date|dammi).*(?:tutti|tutte|altri|altre|dei|quattro|4).*(?:ordini).*(?:di|del|da|cliente|per)?\s*(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per "Date ordini [cliente]"
             dateOrdiniCliente: /^(?:date\s+ordini)\s+([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per richieste di data di tutti gli ordini generiche (senza cliente specificato)
@@ -237,7 +237,9 @@ class RequestMiddleware {
         // Se contiene parole chiave per date è probabilmente una richiesta di data
         if (inputLower.includes('data') || inputLower.includes('quando') || 
             inputLower.includes('date') || inputLower.includes('altre date') ||
-            inputLower.includes('altri date') || /e\s+le\s+altre.*date/.test(inputLower)) {
+            inputLower.includes('altri date') || /e\s+le\s+altre.*date/.test(inputLower) ||
+            (inputLower.includes('dammi') && inputLower.includes('ordini') && 
+             (inputLower.includes('quattro') || inputLower.includes('4')))) {
             return 'data';
         }
         
@@ -251,6 +253,12 @@ class RequestMiddleware {
         
         if (this.operativeKeywords.clienti.some(kw => inputLower.includes(kw))) {
             return 'clienti';
+        }
+        
+        // Se è solo un nome di azienda (contiene s.r.l., srl, spa, etc) 
+        // e c'è un contesto valido, presumo sia una richiesta di fatturato
+        if (this.isContextValid() && /\b(s\.?r\.?l\.?|spa|s\.?n\.?c\.?|s\.?a\.?s\.?)\b/i.test(inputLower)) {
+            return 'fatturato';
         }
         
         return 'unknown';
