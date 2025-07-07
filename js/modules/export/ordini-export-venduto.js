@@ -193,7 +193,7 @@
               cleanAddress,                              // Indirizzo Consegna
               order.vatNumber || '',                     // P.IVA
               this.formatDate(order.deliveryDate),       // Data Consegna
-              product.code || '',                        // Codice Prodotto
+              this.cleanProductCode(product.code || ''), // Codice Prodotto
               product.description || '',                 // Prodotto
               quantity,                                  // Quantità
               unitPrice,                                 // Prezzo Unitario
@@ -507,6 +507,24 @@
         total += parseFloat(row[12]) || 0;
       });
       return total;
+    }
+
+    /**
+     * Pulisce il codice prodotto rimuovendo prefissi indesiderati
+     */
+    cleanProductCode(code) {
+      if (!code) return '';
+      
+      // Rimuove "Codice articolo:" se presente
+      let cleaned = code.replace(/^Codice\s+articolo:\s*/i, '');
+      
+      // Rimuove altri prefissi comuni
+      cleaned = cleaned.replace(/^Art\.\s*/i, '');
+      cleaned = cleaned.replace(/^Articolo:\s*/i, '');
+      cleaned = cleaned.replace(/^Cod\.\s*/i, '');
+      cleaned = cleaned.replace(/^Codice:\s*/i, '');
+      
+      return cleaned.trim();
     }
 
     /**
