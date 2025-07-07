@@ -1,5 +1,5 @@
 /**
- * Supabase Sync per file VENDUTO
+ * Supabase Sync per file ORDINI
  * Sincronizza i dati degli ordini con Supabase per analisi AI
  */
 

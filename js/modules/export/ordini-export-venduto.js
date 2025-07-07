@@ -1,6 +1,6 @@
 /**
- * Ordini Export Venduto Module
- * Gestisce l'export e l'aggiornamento del file VENDUTO.xlsx
+ * Ordini Export Module  
+ * Gestisce l'export e l'aggiornamento del file ORDINI.xlsx
  */
 
 (function() {
@@ -13,7 +13,7 @@
     }
 
     /**
-     * Esporta gli ordini nel file VENDUTO
+     * Esporta gli ordini nel file ORDINI
      */
     exportToVendutoFile(orders) {
       try {
@@ -21,7 +21,7 @@
           throw new Error('Libreria XLSX non caricata. Ricaricare la pagina.');
         }
 
-        console.log('📋 Inizio export VENDUTO');
+        console.log('📋 Inizio export ORDINI');
         console.log('⚠️ NOTA: Usando solo la memoria del browser per il confronto');
         
         // Reset flag per indicare che NON stiamo usando dati del file
@@ -54,7 +54,7 @@
         return this.completeExport(newData);
         
       } catch (error) {
-        console.error('Errore durante l\'export VENDUTO:', error);
+        console.error('Errore durante l\'export ORDINI:', error);
         throw error;
       }
     }
@@ -81,9 +81,9 @@
           
           console.log('📊 Fogli disponibili:', workbook.SheetNames);
           
-          // Cerca il foglio VENDUTO
+          // Cerca il foglio ORDINI
           const sheetName = workbook.SheetNames.find(name => 
-            name.toUpperCase() === 'VENDUTO'
+            name.toUpperCase() === 'ORDINI'
           ) || workbook.SheetNames[0];
           
           console.log('📋 Usando foglio:', sheetName);
@@ -106,7 +106,7 @@
             if (nonEmptyRows.length === 0) {
               console.log('📄 File VENDUTO vuoto (solo header), procedo con export diretto');
               // Resetta la memoria locale per sincronizzare con il file vuoto
-              localStorage.removeItem('vendutoFileData');
+              localStorage.removeItem('ordiniFileData');
               this.vendutoData = [];
               
               // Mostra dialog con pulsante OK che procede con l'export
@@ -118,7 +118,7 @@
           } else {
             console.log('⚠️ File senza dati, procedo con export normale');
             // Resetta la memoria locale
-            localStorage.removeItem('vendutoFileData');
+            localStorage.removeItem('ordiniFileData');
             this.vendutoData = [];
             
             // Mostra dialog con pulsante OK
@@ -164,7 +164,7 @@
     }
 
     /**
-     * Prepara i dati nel formato VENDUTO
+     * Prepara i dati nel formato ORDINI
      */
     prepareVendutoData(orders) {
       const rows = [];
@@ -212,12 +212,12 @@
      * Carica dati esistenti dal localStorage
      */
     loadExistingData() {
-      const savedData = localStorage.getItem('vendutoFileData');
+      const savedData = localStorage.getItem('ordiniFileData');
       if (savedData) {
         try {
           this.vendutoData = JSON.parse(savedData);
         } catch (e) {
-          console.error('Errore nel caricamento dati VENDUTO:', e);
+          console.error('Errore nel caricamento dati ORDINI:', e);
           this.vendutoData = [];
         }
       } else {
@@ -268,7 +268,7 @@
         const allData = [...this.vendutoData, ...dataToAdd];
         
         // Salva nel localStorage
-        localStorage.setItem('vendutoFileData', JSON.stringify(allData));
+        localStorage.setItem('ordiniFileData', JSON.stringify(allData));
         
         // Crea file Excel
         const wb = XLSX.utils.book_new();
@@ -285,10 +285,10 @@
         // Applica formattazione
         this.applyVendutoFormatting(ws);
         
-        XLSX.utils.book_append_sheet(wb, ws, 'VENDUTO');
+        XLSX.utils.book_append_sheet(wb, ws, 'ORDINI');
         
         // Salva file
-        XLSX.writeFile(wb, 'VENDUTO.xlsx');
+        XLSX.writeFile(wb, 'ORDINI.xlsx');
         
         // Calcola statistiche
         const stats = {
@@ -315,7 +315,7 @@
     }
 
     /**
-     * Applica formattazione al foglio VENDUTO
+     * Applica formattazione al foglio ORDINI
      */
     applyVendutoFormatting(worksheet) {
       worksheet['!cols'] = [
@@ -340,7 +340,7 @@
      */
     showSuccessMessage(stats) {
       const message = `
-        <strong>File VENDUTO aggiornato!</strong><br><br>
+        <strong>File ORDINI aggiornato!</strong><br><br>
         Righe totali nel file: ${stats.totalRows}<br>
         Nuove righe aggiunte: ${stats.newRows}<br>
         Totale complessivo: €${stats.totalAmount.toFixed(2)}
@@ -522,9 +522,9 @@
       modalContent.style.cssText = 'background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 8px;';
       
       modalContent.innerHTML = `
-        <h3 style="color: #28a745;">📄 File VENDUTO Vuoto</h3>
+        <h3 style="color: #28a745;">📄 File ORDINI Vuoto</h3>
         <div style="margin: 20px 0;">
-          <p>Il file VENDUTO caricato è vuoto (contiene solo l'intestazione).</p>
+          <p>Il file ORDINI caricato è vuoto (contiene solo l'intestazione).</p>
           <p><strong>I dati verranno aggiunti a partire dalla riga 2.</strong></p>
           <p style="margin-top: 15px; color: #666; font-size: 14px;">
             La memoria locale del browser è stata sincronizzata con il file vuoto.
