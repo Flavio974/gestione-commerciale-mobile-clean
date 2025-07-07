@@ -52,7 +52,7 @@ echo "--------------------"
 check_dir "icons"
 check_dir "js"
 check_dir "css"
-check_dir "api"
+check_dir "functions"
 
 echo ""
 echo "🎤 VERIFICA SMART ASSISTANT"
@@ -62,11 +62,43 @@ check_file "js/smart-assistant.js"
 check_file "css/smart-assistant.css"
 
 echo ""
-echo "🌐 VERIFICA API"
-echo "---------------"
+echo "📋 VERIFICA SISTEMA COMANDI INTELLIGENTE"
+echo "----------------------------------------"
 
-check_file "api/speech-to-text.php"
-check_file "api/claude-ai.php"
+check_file "js/comandi-core.js"
+check_file "js/comandi-ui.js"
+check_file "css/comandi-module.css"
+check_file "comandi/vocabolario_comandi.txt"
+
+echo ""
+echo "🧠 VERIFICA MIDDLEWARE INTELLIGENTE"
+echo "-----------------------------------"
+
+check_file "js/middleware/request-middleware.js"
+check_file "js/middleware/vocabolario-middleware.js"
+check_file "js/middleware/enhanced-ai-assistant.js"
+
+echo ""
+echo "🔗 VERIFICA SISTEMA ALIAS CLIENTI"
+echo "---------------------------------"
+
+check_file "js/utils/client-alias-resolver.js"
+check_file "sql/add_client_aliases.sql"
+
+echo ""
+echo "📅 VERIFICA TIMELINE INTELLIGENTE"
+echo "---------------------------------"
+
+check_file "js/timeline/timeline-intelligent-manager.js"
+check_file "js/timeline/date-natural-parser.js"
+check_file "config/timeline-rules.json"
+
+echo ""
+echo "🌐 VERIFICA API (Netlify Functions)"
+echo "-----------------------------------"
+
+check_file "functions/speech-to-text.js"
+check_file "functions/claude-ai.js"
 
 echo ""
 echo "🎨 VERIFICA ICONE"
@@ -75,9 +107,10 @@ echo "-----------------"
 # Icone essenziali
 REQUIRED_ICONS=("152x152" "192x192" "512x512")
 for size in "${REQUIRED_ICONS[@]}"; do
-    if [ -f "icons/icon-${size}.png" ]; then
+    iconpath="icons/icons/icon-${size}.png"
+    if [ -f "$iconpath" ]; then
         # Verifica dimensione file (dovrebbe essere > 1KB)
-        filesize=$(stat -f%z "icons/icon-${size}.png" 2>/dev/null || stat -c%s "icons/icon-${size}.png" 2>/dev/null)
+        filesize=$(stat -f%z "$iconpath" 2>/dev/null || stat -c%s "$iconpath" 2>/dev/null)
         if [ "$filesize" -gt 1000 ]; then
             echo -e "${GREEN}✅ icon-${size}.png (${filesize} bytes)${NC}"
             ((SUCCESS++))
@@ -141,7 +174,16 @@ if [ $ERRORS -eq 0 ]; then
         echo "📋 PROSSIMI PASSI:"
         echo "1. Genera le icone: apri generate-icons-simple.html"
         echo "2. Testa tutto: apri test-pwa.html"
-        echo "3. Deploy su Netlify: segui DEPLOY-NETLIFY.md"
+        echo "3. Configura database: esegui sql/add_client_aliases.sql su Supabase"
+        echo "4. Popola alias esempio: esegui sql/populate_example_aliases.sql"
+        echo "5. Deploy su Netlify: segui DEPLOY-NETLIFY.md"
+        echo ""
+        echo "🎯 NUOVE FUNZIONALITÀ IMPLEMENTATE:"
+        echo "- ✅ Sistema Comandi Intelligente con vocabolario editabile"
+        echo "- ✅ Middleware Coordinatore con pattern matching avanzato"  
+        echo "- ✅ Gestione Alias Clienti multipli"
+        echo "- ✅ Timeline Intelligente con inserimento automatico appuntamenti"
+        echo "- ✅ Parser Date Naturali (domani, lunedì prossimo, etc.)"
     else
         echo -e "${YELLOW}⚠️  QUASI PRONTO - Risolvi i warning per risultato ottimale${NC}"
     fi

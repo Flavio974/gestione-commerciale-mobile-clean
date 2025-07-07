@@ -1,0 +1,414 @@
+/**
+ * Comandi Module Styles
+ * Stili per il modulo di gestione comandi
+ */
+
+/* Nascondi tab Comandi su mobile e tablet */
+@media (max-width: 1024px) {
+  #tab-comandi {
+    display: none !important;
+  }
+}
+
+/* Container principale */
+.comandi-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.comandi-header {
+  margin-bottom: 30px;
+}
+
+.comandi-header h2 {
+  color: #457b9d;
+  margin-bottom: 10px;
+}
+
+/* Toolbar */
+.comandi-toolbar {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comandi-toolbar .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Quick Add Section */
+.comandi-quick-add {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.comandi-quick-add h4 {
+  margin-bottom: 15px;
+  color: #495057;
+}
+
+.comandi-quick-add .form-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.comandi-quick-add select {
+  flex: 0 0 250px;
+}
+
+.comandi-quick-add input {
+  flex: 1;
+}
+
+.comandi-quick-add button {
+  flex: 0 0 auto;
+}
+
+/* Editor Container */
+.comandi-editor-container {
+  margin-bottom: 20px;
+}
+
+.comandi-editor-container h4 {
+  margin-bottom: 15px;
+  color: #495057;
+}
+
+/* Vocabolario Editor */
+.vocabolario-editor {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  resize: vertical;
+  min-height: 400px;
+  width: 100%;
+}
+
+.vocabolario-editor:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Stats Section */
+.comandi-stats {
+  background: #e9ecef;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.comandi-stats h4 {
+  margin-bottom: 15px;
+  color: #495057;
+}
+
+.comandi-stats ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.comandi-stats li {
+  padding: 8px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.comandi-stats li:last-child {
+  border-bottom: none;
+}
+
+.comandi-stats strong {
+  color: #212529;
+}
+
+/* Form Controls */
+.form-control {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Buttons */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background-color: #117a8b;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  animation: slideIn 0.3s ease;
+}
+
+.toast-success {
+  background: #28a745;
+  color: white;
+}
+
+.toast-error {
+  background: #dc3545;
+  color: white;
+}
+
+.toast-info {
+  background: #17a2b8;
+  color: white;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Loading State */
+.loading-container {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+/* Aliases Section */
+.comandi-aliases-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.comandi-aliases-section h4 {
+  color: #495057;
+  margin-bottom: 10px;
+}
+
+.alias-search {
+  margin-bottom: 20px;
+}
+
+.alias-results {
+  margin-bottom: 20px;
+}
+
+.alias-result-card {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  margin-bottom: 10px;
+}
+
+.alias-result-card.error {
+  border-color: #dc3545;
+  background: #f8f9fa;
+}
+
+.alias-result-card h6 {
+  margin-bottom: 10px;
+  color: #495057;
+}
+
+.alias-result-card p {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.alias-result-card strong {
+  color: #212529;
+}
+
+.alias-result-card ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.alias-actions {
+  margin-top: 10px;
+}
+
+.alias-add-section {
+  border-top: 1px solid #dee2e6;
+  padding-top: 15px;
+}
+
+.alias-add-section h5 {
+  color: #495057;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Timeline Section */
+.comandi-timeline-section {
+  background: #e3f2fd;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border: 1px solid #bbdefb;
+}
+
+.comandi-timeline-section h4 {
+  color: #1565c0;
+  margin-bottom: 10px;
+}
+
+.timeline-rules-actions {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.timeline-rules-display {
+  margin-top: 15px;
+}
+
+.rules-display-card {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #e3f2fd;
+}
+
+.rules-display-card h6 {
+  color: #1565c0;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e3f2fd;
+  padding-bottom: 5px;
+}
+
+.rules-display-card h6:first-child {
+  margin-top: 0;
+}
+
+.rules-display-card p {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.rules-actions {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e3f2fd;
+}
+
+/* Responsive adjustments for larger screens */
+@media (min-width: 1200px) {
+  .comandi-container {
+    max-width: 1140px;
+  }
+  
+  .comandi-quick-add .form-row {
+    max-width: 800px;
+  }
+  
+  .alias-search .form-row {
+    max-width: 600px;
+  }
+  
+  .alias-add-section .form-row {
+    max-width: 700px;
+  }
+}

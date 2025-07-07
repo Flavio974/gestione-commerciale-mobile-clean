@@ -24,6 +24,9 @@ class RequestMiddleware {
             fatturatoSemplice: /^(?:fatturato|venduto|incasso)\s+([A-Za-z\s]+?)(?:\?|$)/i,
             ordiniCliente: /(?:quanti|numero|numeri).*ordini.*?(?:con|di|del|da|cliente|per|anche)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
             ordiniGenerici: /(?:mi\s+dici|dimmi|mostra|numero|numeri|identificativo).*(?:numero|numeri|identificativo|codici?).*(?:ordini?|dei\s+vari|vari)/i,
+            // Pattern per conteggio ordini generici (senza cliente specifico)
+            ordiniTotali: /(?:quanti|numero|numeri).*(?:ordini?).*(?:ci\s+sono|totali?|nel\s+database|complessivi?|in\s+tutto)(?:\?|$)/i,
+      righeOrdine: /(?:quante|numero|numeri).*(?:righe?|prodotti?).*(?:contiene|ha|nell?['']?ordine|ordini?).*(?:database|totali?)?(?:\?|$)/i,
             // Pattern per richieste di data con cliente specifico
             dataCliente: /(?:data|quando).*(?:ultimo|ordine).*(?:di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per tutte le date degli ordini
@@ -36,6 +39,8 @@ class RequestMiddleware {
             dateOrdiniGenerico: /^(?:date\s+(?:degli\s+)?ordini)\s*(?:\?|$)/i,
             // Pattern per richieste di data generiche
             dataGenerica: /(?:mi\s+dici|dimmi|mostra|quale).*(?:data|quando).*(?:ultimo|ordine)/i,
+            // Pattern per prodotti negli ordini di un cliente
+            prodottiOrdine: /(?:prodotti|composto).*(?:ordine.*cliente|cliente)[\s:]*([^?]+?)(?:\?|$)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
             clientiZona: /clienti.*(?:in|nella|di|della)\s+([^?\n]+?)(?:\?|$)/i
         };
@@ -218,6 +223,20 @@ class RequestMiddleware {
      */
     classifyRequest(input) {
         const inputLower = input.toLowerCase();
+        console.log('🔍 CLASSIFY REQUEST:', input, 'lowercase:', inputLower);
+        
+        // CONTROLLO PRIORITARIO: Richieste sui prodotti degli ordini
+        if ((inputLower.includes('prodotti') || inputLower.includes('composto')) && 
+            (inputLower.includes('ordine') || inputLower.includes('cliente'))) {
+            console.log('🎯 MATCH DIRETTO: Prodotti ordine cliente');
+            return 'prodotti_ordine';
+        }
+        
+        // CONTROLLO PRIORITARIO: Richieste di conteggio ordini 
+        if (inputLower.includes('quanti') && inputLower.includes('ordini') && inputLower.includes('database')) {
+            console.log('🎯 MATCH DIRETTO: Conteggio ordini database');
+            return 'ordini';
+        }
         
         // Parole strategiche che richiedono AI
         const strategicKeywords = [
@@ -235,13 +254,28 @@ class RequestMiddleware {
             return 'fatturato';
         }
         
-        // Controlla prima le richieste di data (più specifiche)
+        // Controlla prima le richieste di conteggio ordini (prima delle richieste di data)
+        const ordiniTotaliPattern = /(?:quanti|numero|numeri).*(?:ordini?).*(?:ci\s+sono|totali?|nel\s+database|complessivi?|in\s+tutto)(?:\?|$)/i;
+        if (ordiniTotaliPattern.test(input)) {
+            console.log('🎯 PATTERN ORDINI TOTALI MATCH:', input);
+            return 'ordini';
+        }
+        
+        // Controlla richieste di conteggio righe ordine
+        if (/(?:quante|numero|numeri).*(?:righe?|prodotti?).*(?:contiene|ha|nell?['']?ordine|ordini?).*(?:database|totali?)?(?:\?|$)/i.test(input)) {
+            return 'ordini';
+        }
+        
+        // Controlla le richieste di data (più specifiche)
         // Se contiene parole chiave per date è probabilmente una richiesta di data
-        if (inputLower.includes('data') || inputLower.includes('quando') || 
+        // Escludi "database" e richieste di conteggio dalla parola "data"
+        if (((/\bdata\b/.test(inputLower) && !inputLower.includes('database') && !(/(?:quanti|numero|numeri).*(?:ordini?)/i.test(input))) || 
+            inputLower.includes('quando') || 
             inputLower.includes('date') || inputLower.includes('altre date') ||
             inputLower.includes('altri date') || /e\s+le\s+altre.*date/.test(inputLower) ||
             (inputLower.includes('dammi') && inputLower.includes('ordini') && 
-             (inputLower.includes('quattro') || inputLower.includes('4')))) {
+             (inputLower.includes('quattro') || inputLower.includes('4')))) &&
+            !(/(?:quanti|numero|numeri).*(?:ordini?|righe?)/i.test(input))) {
             return 'data';
         }
         
@@ -286,24 +320,44 @@ class RequestMiddleware {
                 }
                 break;
                 
+            case 'prodotti_ordine':
+                const prodottiMatch = input.match(this.patterns.prodottiOrdine);
+                if (prodottiMatch) {
+                    params.cliente = prodottiMatch[1].trim();
+                }
+                break;
+                
             case 'ordini':
                 const ordiniMatch = input.match(this.patterns.ordiniCliente);
                 if (ordiniMatch) {
                     params.cliente = ordiniMatch[1].trim();
                 } else {
-                    // Controlla se è una richiesta generica sui numeri ordine
-                    const ordiniGenericiMatch = input.match(this.patterns.ordiniGenerici);
-                    const validContext = this.getValidContext();
-                    
-                    if (ordiniGenericiMatch && validContext) {
-                        params.cliente = validContext;
-                        params.fromContext = true;
-                    } else if (validContext) {
-                        // Fallback: se c'è un contesto valido e la query contiene parole chiave ordini
-                        const inputLower = input.toLowerCase();
-                        if (inputLower.includes('ordini') || inputLower.includes('numero') || inputLower.includes('identificativo')) {
-                            params.cliente = validContext;
-                            params.fromContext = true;
+                    // Controlla se è una richiesta di conteggio totale ordini
+                    const ordiniTotaliMatch = input.match(this.patterns.ordiniTotali);
+                    if (ordiniTotaliMatch) {
+                        // Richiesta di conteggio totale - non serve cliente
+                        params.totali = true;
+                    } else {
+                        // Controlla se è una richiesta di conteggio righe ordine
+                        const righeOrdineMatch = input.match(this.patterns.righeOrdine);
+                        if (righeOrdineMatch) {
+                            params.righeOrdine = true;
+                        } else {
+                            // Controlla se è una richiesta generica sui numeri ordine
+                            const ordiniGenericiMatch = input.match(this.patterns.ordiniGenerici);
+                            const validContext = this.getValidContext();
+                            
+                            if (ordiniGenericiMatch && validContext) {
+                                params.cliente = validContext;
+                                params.fromContext = true;
+                            } else if (validContext) {
+                                // Fallback: se c'è un contesto valido e la query contiene parole chiave ordini
+                                const inputLower = input.toLowerCase();
+                                if (inputLower.includes('ordini') || inputLower.includes('numero') || inputLower.includes('identificativo')) {
+                                    params.cliente = validContext;
+                                    params.fromContext = true;
+                                }
+                            }
                         }
                     }
                 }
@@ -398,6 +452,9 @@ class RequestMiddleware {
                 
             case 'ordini':
                 return await this.countOrdini(params);
+                
+            case 'prodotti_ordine':
+                return await this.getProdottiOrdine(params);
                 
             case 'data':
                 return await this.getUltimaData(params);
@@ -503,6 +560,15 @@ class RequestMiddleware {
             }
             
             if (!params.cliente) {
+                // Se è una richiesta di conteggio righe ordine
+                if (params.righeOrdine) {
+                    return {
+                        success: true,
+                        response: `📊 Righe totali negli ordini: ${ordini.length}`,
+                        data: { righe: ordini.length }
+                    };
+                }
+                
                 // Conta ordini distinti usando numero_ordine
                 const ordiniDistinti = new Set(
                     ordini.map(o => o.numero_ordine).filter(n => n && n !== null)
@@ -574,6 +640,112 @@ class RequestMiddleware {
             
         } catch (error) {
             console.error('❌ Errore conteggio ordini:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * FUNZIONE 2.1: Prodotti negli Ordini Cliente
+     */
+    async getProdottiOrdine(params) {
+        try {
+            console.log('📦 MIDDLEWARE: Ricerca prodotti ordini per:', params.cliente);
+            
+            if (!params.cliente) {
+                return { 
+                    success: false, 
+                    error: 'Nome cliente mancante per ricerca prodotti ordini' 
+                };
+            }
+            
+            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
+            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            if (ordini.length === 0) {
+                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
+                const supabaseData = await this.supabaseAI.getAllData();
+                ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
+            
+            const clienteNorm = params.cliente.toLowerCase();
+            const ordiniCliente = ordini.filter(ordine => 
+                ordine.cliente && ordine.cliente.toLowerCase().includes(clienteNorm)
+            );
+            
+            if (ordiniCliente.length === 0) {
+                return {
+                    success: true,
+                    response: `❌ Nessun ordine trovato per "${params.cliente}"`,
+                    data: { ordini: 0, prodotti: [] }
+                };
+            }
+            
+            // Salva nel contesto per richieste successive
+            this.saveContext(params.cliente);
+            
+            const nomeCliente = ordiniCliente[0].cliente;
+            
+            // Raggruppa prodotti per ordine
+            const ordiniProdotti = {};
+            ordiniCliente.forEach(riga => {
+                const numeroOrdine = riga.numero_ordine;
+                if (!ordiniProdotti[numeroOrdine]) {
+                    ordiniProdotti[numeroOrdine] = {
+                        numero: numeroOrdine,
+                        data: riga.data_ordine || riga.data_consegna || 'N/A',
+                        prodotti: []
+                    };
+                }
+                
+                if (riga.codice_prodotto || riga.descrizione_prodotto) {
+                    ordiniProdotti[numeroOrdine].prodotti.push({
+                        codice: riga.codice_prodotto || 'N/A',
+                        descrizione: riga.descrizione_prodotto || 'N/A',
+                        quantita: riga.quantita || 'N/A',
+                        importo: riga.importo || 'N/A'
+                    });
+                }
+            });
+            
+            // Conta ordini distinti e prodotti totali
+            const numOrdiniDistinti = Object.keys(ordiniProdotti).length;
+            const tuttiprodotti = Object.values(ordiniProdotti).flatMap(o => o.prodotti);
+            
+            // Prepara risposta dettagliata
+            let response = `🛒 Cliente ${nomeCliente}: ${numOrdiniDistinti} ordini con ${tuttiprodotti.length} prodotti totali\n\n`;
+            
+            // Mostra dettaglio degli ordini (massimo 3 per evitare payload troppo grandi)
+            const ordiniArray = Object.values(ordiniProdotti);
+            const ordiniDaMostrare = ordiniArray.slice(0, 3);
+            
+            ordiniDaMostrare.forEach(ordine => {
+                response += `📋 Ordine ${ordine.numero} (${ordine.data}):\n`;
+                ordine.prodotti.slice(0, 5).forEach(prodotto => {
+                    response += `  • ${prodotto.descrizione} (${prodotto.codice}) - Q.tà: ${prodotto.quantita}\n`;
+                });
+                if (ordine.prodotti.length > 5) {
+                    response += `  ... e altri ${ordine.prodotti.length - 5} prodotti\n`;
+                }
+                response += '\n';
+            });
+            
+            if (ordiniArray.length > 3) {
+                response += `... e altri ${ordiniArray.length - 3} ordini\n`;
+            }
+            
+            return {
+                success: true,
+                response: response.trim(),
+                data: { 
+                    cliente: nomeCliente,
+                    ordiniDistinti: numOrdiniDistinti,
+                    prodottiTotali: tuttiprodotti.length,
+                    ordini: ordiniProdotti,
+                    dettaglio: ordiniDaMostrare
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore ricerca prodotti ordini:', error);
             return { success: false, error: error.message };
         }
     }

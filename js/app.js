@@ -96,7 +96,7 @@ const App = {
     // Orologio gestito nel DOM ready
     
     // Inizializza moduli se disponibili
-    const modules = ['Timeline', 'Clienti', 'Ordini', 'Prodotti', 'Percorsi', 'Worksheet', 'DDTFTModule'];
+    const modules = ['Timeline', 'Clienti', 'Ordini', 'Prodotti', 'Percorsi', 'Worksheet', 'DDTFTModule', 'ComandiModule'];
     modules.forEach(module => {
       if (window[module] && typeof window[module].init === 'function') {
         try {

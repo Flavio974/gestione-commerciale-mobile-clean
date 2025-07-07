@@ -478,7 +478,51 @@
 
     formatDate(date) {
       if (!date) return '';
-      return date;
+      
+      try {
+        // Se è già nel formato DD/MM/YYYY, restituiscilo così com'è
+        if (typeof date === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(date)) {
+          return date;
+        }
+        
+        // Se è un numero Excel (giorni dal 1900)
+        if (typeof date === 'number') {
+          const excelEpoch = new Date(1900, 0, 1);
+          const jsDate = new Date(excelEpoch.getTime() + (date - 2) * 24 * 60 * 60 * 1000);
+          return jsDate.toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+        }
+        
+        // Se è un oggetto Date
+        if (date instanceof Date) {
+          return date.toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+        }
+        
+        // Se è una stringa, prova a parsarla
+        if (typeof date === 'string') {
+          const parsedDate = new Date(date);
+          if (!isNaN(parsedDate.getTime())) {
+            return parsedDate.toLocaleDateString('it-IT', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+          }
+        }
+        
+        // Se tutto fallisce, restituisci la data originale
+        return date;
+      } catch (error) {
+        console.warn('Errore formatting data:', date, error);
+        return date;
+      }
     }
 
     cleanAddress(address, clientName) {

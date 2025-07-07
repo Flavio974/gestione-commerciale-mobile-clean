@@ -49,6 +49,7 @@
   <link rel="stylesheet" href="css/worksheet.css">
   <link rel="stylesheet" href="css/smart-assistant.css">
   <link rel="stylesheet" href="css/ai-assistant-mobile-fix.css">
+  <link rel="stylesheet" href="css/comandi-module.css">
   
   <!-- Voice Controls V2 per iPad -->
   <link rel="stylesheet" href="css/voice-controls-v2.css">
@@ -723,6 +724,7 @@
       <div id="tab-worksheet" class="tab-link" data-target="worksheet-content">Foglio di Lavoro</div>
       <div id="tab-orders" class="tab-link" data-target="orders-content">Ordini</div>
       <div id="tab-ddtft" class="tab-link" data-target="ddtft-content">DDT e FT</div>
+      <div id="tab-comandi" class="tab-link" data-target="comandi-content">⚙️ Comandi</div>
       <div id="tab-smart" class="tab-link" data-target="smart-content">🎤 Smart Assistant</div>
       <div id="tab-ai" class="tab-link" data-target="ai-content">🤖 AI Assistant</div>
     </nav>
@@ -767,6 +769,11 @@
       <!-- DDT/FT Tab -->
       <div id="ddtft-content" class="tab-content">
         <!-- Content will be loaded dynamically -->
+      </div>
+
+      <!-- COMANDI TAB -->
+      <div id="comandi-content" class="tab-content">
+        <!-- Contenuto Comandi verrà caricato dinamicamente -->
       </div>
 
       <!-- SMART ASSISTANT TAB -->
@@ -1249,10 +1256,18 @@
   
   <!-- Middleware System -->
   <script src="js/middleware/request-middleware.js"></script>
+  <script src="js/middleware/vocabolario-middleware.js"></script>
   <script src="js/middleware/enhanced-ai-assistant.js"></script>
   
   <!-- Keep Alive per Replit -->
   <script src="js/keep-alive.js"></script>
+  
+  <!-- Modulo Comandi (solo desktop) -->
+  <script src="js/utils/client-alias-resolver.js"></script>
+  <script src="js/timeline/date-natural-parser.js"></script>
+  <script src="js/timeline/timeline-intelligent-manager.js"></script>
+  <script src="js/comandi-ui.js"></script>
+  <script src="js/comandi-core.js"></script>
   
   <!-- FlavioAIAssistant JavaScript con integrazione Supabase e Claude -->
   <script>

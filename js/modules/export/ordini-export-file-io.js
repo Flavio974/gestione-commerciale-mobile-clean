@@ -130,7 +130,11 @@
      * Crea foglio riepilogo
      */
     createSummarySheet(orders) {
-      const today = new Date().toLocaleDateString('it-IT');
+      const today = new Date().toLocaleDateString('it-IT', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
       const stats = this.calculateExportStats(orders);
       
       return [

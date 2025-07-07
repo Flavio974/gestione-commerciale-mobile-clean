@@ -1,0 +1,149 @@
+{
+  "meta": {
+    "version": "1.0",
+    "ultimo_aggiornamento": "2025-01-07",
+    "descrizione": "Regole configurabili per gestione timeline intelligente"
+  },
+  
+  "orari_lavoro": {
+    "default": {
+      "inizio": "08:00",
+      "fine": "19:00",
+      "descrizione": "Orario standard di lavoro"
+    },
+    "pausa_pranzo": {
+      "inizio": "12:30",
+      "fine": "14:00",
+      "descrizione": "Pausa pranzo standard"
+    },
+    "personalizzati": {
+      "lunedi": {
+        "inizio": "08:00",
+        "fine": "19:00"
+      },
+      "martedi": {
+        "inizio": "08:00", 
+        "fine": "19:00"
+      },
+      "mercoledi": {
+        "inizio": "08:00",
+        "fine": "19:00"
+      },
+      "giovedi": {
+        "inizio": "08:00",
+        "fine": "19:00"
+      },
+      "venerdi": {
+        "inizio": "08:00",
+        "fine": "18:00",
+        "nota": "Venerdi si finisce prima"
+      },
+      "sabato": {
+        "inizio": "09:00",
+        "fine": "13:00",
+        "nota": "Solo mattina"
+      },
+      "domenica": {
+        "attivo": false,
+        "nota": "Giorno di riposo"
+      }
+    }
+  },
+  
+  "durate_standard": {
+    "appuntamento_base": 60,
+    "appuntamento_breve": 30,
+    "appuntamento_lungo": 90,
+    "buffer_minimo": 15,
+    "descrizione": "Durate in minuti - modificabili caso per caso"
+  },
+  
+  "regole_spostamenti": {
+    "tempo_default_se_mancante": 30,
+    "avviso_percorso_mancante": true,
+    "auto_suggerimento_aggiunta": true,
+    "descrizione": "Usa tabella percorsi Supabase, se mancante chiedi di aggiungere"
+  },
+  
+  "preferenze_clienti": {
+    "rispetta_momento_preferito": true,
+    "considera_zona_geografica": true,
+    "priorita_clienti_VIP": true,
+    "descrizione": "Legge da campo momento_preferito in tabella clienti"
+  },
+  
+  "gestione_conflitti": {
+    "numero_alternative": 3,
+    "intervallo_ricerca_ore": 4,
+    "suggerisci_giorno_successivo": true,
+    "descrizione": "Come gestire sovrapposizioni"
+  },
+  
+  "vincoli_pianificazione": {
+    "max_appuntamenti_giorno": 8,
+    "max_km_giorno": 200,
+    "tempo_max_continuo_ore": 4,
+    "pausa_obbligatoria_dopo_ore": 3,
+    "descrizione": "Limiti giornalieri - puoi modificare"
+  },
+  
+  "giorni_speciali": {
+    "festivi": [
+      "2025-01-01",
+      "2025-01-06", 
+      "2025-04-25",
+      "2025-05-01",
+      "2025-06-02",
+      "2025-08-15",
+      "2025-11-01",
+      "2025-12-08",
+      "2025-12-25",
+      "2025-12-26"
+    ],
+    "ferie_programmate": [
+      {
+        "dal": "2025-08-10",
+        "al": "2025-08-20",
+        "motivo": "Ferie estive"
+      }
+    ],
+    "orari_ridotti": [
+      {
+        "data": "2025-12-24",
+        "inizio": "08:00",
+        "fine": "14:00",
+        "motivo": "Vigilia di Natale"
+      }
+    ]
+  },
+  
+  "zone_geografiche": {
+    "zona_nord": {
+      "preferenza_orario": "mattina",
+      "tempo_spostamento_medio": 25
+    },
+    "zona_sud": {
+      "preferenza_orario": "pomeriggio", 
+      "tempo_spostamento_medio": 35
+    },
+    "zona_centro": {
+      "preferenza_orario": "qualsiasi",
+      "tempo_spostamento_medio": 15
+    }
+  },
+  
+  "regole_personalizzate": {
+    "descrizione": "Sezione per aggiungere regole specifiche mano a mano",
+    "esempi": {
+      "cliente_ESSEMME": {
+        "durata_preferita": 90,
+        "orario_preferito": "10:00-12:00",
+        "note": "Preferisce appuntamenti lunghi al mattino"
+      },
+      "zona_industriale": {
+        "buffer_extra": 20,
+        "note": "Serve più tempo per parcheggio"
+      }
+    }
+  }
+}

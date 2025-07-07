@@ -39,6 +39,9 @@ class EnhancedAIAssistant {
                     // Inizializza middleware
                     this.middleware = new RequestMiddleware(this.originalAssistant.supabaseAI);
                     
+                    // Inizializza VocabolarioMiddleware
+                    this.vocabolarioMiddleware = new VocabolarioMiddleware(this.middleware);
+                    
                     resolve();
                 } else {
                     setTimeout(checkReady, 100);
@@ -74,21 +77,27 @@ class EnhancedAIAssistant {
             // Mostra thinking indicator
             this.originalAssistant.showThinking();
             
-            // MIDDLEWARE INTEGRATION POINT
+            // VOCABOLARIO MIDDLEWARE INTEGRATION POINT
             if (this.middlewareEnabled) {
-                console.log('🤖 ENHANCED: Tentativo elaborazione middleware...');
+                console.log('📋 ENHANCED: Tentativo elaborazione con VocabolarioMiddleware...');
                 
-                const middlewareResult = await this.middleware.processRequest(message);
+                const middlewareResult = await this.vocabolarioMiddleware.processWithVocabulario(message);
                 
                 if (middlewareResult.handled) {
-                    console.log('✅ ENHANCED: Middleware ha gestito la richiesta');
+                    console.log('✅ ENHANCED: VocabolarioMiddleware ha gestito la richiesta');
                     
                     // Gestisci risposta diretta del middleware
                     await this.handleMiddlewareResponse(middlewareResult, isVoiceInput);
                     return;
                 } else {
-                    console.log('🧠 ENHANCED: Middleware ha passato la richiesta all\'AI');
+                    console.log('🧠 ENHANCED: VocabolarioMiddleware ha passato la richiesta all\'AI');
                     console.log('📝 ENHANCED: Motivo:', middlewareResult.reason);
+                    
+                    // Se è stato trovato un match ma non gestito, aggiungi contesto per l'AI
+                    if (middlewareResult.matchFound) {
+                        console.log('🔍 ENHANCED: Match trovato nel vocabolario, aggiungo contesto per AI');
+                        await this.addVocabularioContextToAI(message, middlewareResult);
+                    }
                 }
             }
             
@@ -190,6 +199,36 @@ class EnhancedAIAssistant {
     }
     
     /**
+     * Aggiunge contesto vocabolario per l'AI quando viene trovato un match
+     */
+    async addVocabularioContextToAI(originalMessage, middlewareResult) {
+        try {
+            const match = middlewareResult.match;
+            let contextMessage = `\nCONTESTO VOCABOLARIO:\n`;
+            contextMessage += `- Pattern riconosciuto: "${match.pattern}"\n`;
+            contextMessage += `- Categoria: ${match.category}\n`;
+            contextMessage += `- Confidenza: ${(match.confidence * 100).toFixed(1)}%\n`;
+            
+            if (middlewareResult.suggestion) {
+                contextMessage += `- Suggerimento: ${middlewareResult.suggestion}\n`;
+            }
+            
+            contextMessage += `\nElabora la richiesta considerando questo contesto.`;
+            
+            // Aggiungi il contesto al messaggio dell'utente
+            const lastMessage = this.originalAssistant.messages[this.originalAssistant.messages.length - 1];
+            if (lastMessage && lastMessage.role === 'user') {
+                lastMessage.content += contextMessage;
+            }
+            
+            console.log('📋 ENHANCED: Contesto vocabolario aggiunto al messaggio AI');
+            
+        } catch (error) {
+            console.error('❌ Errore aggiunta contesto vocabolario:', error);
+        }
+    }
+    
+    /**
      * Proxy di tutti gli altri metodi all'assistant originale
      */
     
@@ -281,4 +320,30 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = EnhancedAIAssistant;
 }
 
-console.log('✅ EnhancedAIAssistant caricato');
+// Espone globalmente per integrazione
+window.EnhancedAIAssistant = EnhancedAIAssistant;
+
+// Inizializzazione ritardata per aspettare FlavioAIAssistant
+setTimeout(() => {
+    try {
+        if (typeof FlavioAIAssistant !== 'undefined') {
+            console.log('🔄 ENHANCED: Inizializzazione ritardata...');
+            window.EnhancedAI = new EnhancedAIAssistant();
+            console.log('✅ EnhancedAIAssistant inizializzato e disponibile globalmente');
+        } else {
+            console.log('⏳ ENHANCED: FlavioAIAssistant non ancora disponibile, nuovo tentativo...');
+            setTimeout(() => {
+                if (typeof FlavioAIAssistant !== 'undefined') {
+                    window.EnhancedAI = new EnhancedAIAssistant();
+                    console.log('✅ EnhancedAIAssistant inizializzato al secondo tentativo');
+                } else {
+                    console.error('❌ ENHANCED: FlavioAIAssistant non trovato dopo 2 tentativi');
+                }
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('❌ ENHANCED: Errore inizializzazione:', error);
+    }
+}, 1000);
+
+console.log('✅ EnhancedAIAssistant caricato (inizializzazione in corso...)');

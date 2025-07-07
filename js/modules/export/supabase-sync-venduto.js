@@ -79,7 +79,7 @@
     }
 
     /**
-     * Parse date da formato Excel a ISO string
+     * Parse date da formato Excel a formato italiano DD/MM/YYYY
      */
     parseDate(dateValue) {
       if (!dateValue) return null;
@@ -87,20 +87,46 @@
       try {
         // Se è già una data
         if (dateValue instanceof Date) {
-          return dateValue.toISOString().split('T')[0];
+          return dateValue.toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
         }
         
         // Se è un numero Excel (giorni dal 1900)
         if (typeof dateValue === 'number') {
           const excelEpoch = new Date(1900, 0, 1);
           const date = new Date(excelEpoch.getTime() + (dateValue - 2) * 24 * 60 * 60 * 1000);
-          return date.toISOString().split('T')[0];
+          return date.toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
         }
         
-        // Se è una stringa, prova a parsarla
+        // Se è una stringa in formato DD/MM/YYYY italiano, mantienila così
+        if (typeof dateValue === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateValue)) {
+          return dateValue;
+        }
+        
+        // Se è una stringa in formato ISO YYYY-MM-DD, convertila
+        if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+          const parts = dateValue.split('-');
+          const year = parts[0];
+          const month = parts[1];
+          const day = parts[2];
+          return `${day}/${month}/${year}`;
+        }
+        
+        // Se è una stringa, prova a parsarla e convertila in formato italiano
         const date = new Date(dateValue);
         if (!isNaN(date.getTime())) {
-          return date.toISOString().split('T')[0];
+          return date.toLocaleDateString('it-IT', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
         }
         
         return null;

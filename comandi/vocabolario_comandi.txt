@@ -1,0 +1,60 @@
+# CATEGORIA: Fatturato e Ordini
+dimmi il fatturato del cliente [CLIENTE]
+qual è il fatturato del cliente [CLIENTE]
+mostrami il fatturato di [CLIENTE]
+forniscimi il fatturato del cliente [CLIENTE]
+fatturato [CLIENTE]
+ordini del cliente [CLIENTE]
+mostrami ordini di [CLIENTE]
+ordini ultimi [GIORNI] giorni
+quanti ordini ha fatto [CLIENTE]
+fatturato totale del mese
+fatturato totale dell'anno
+
+# CATEGORIA: Percorsi e Spostamenti
+quanto tempo da [CLIENTE_A] a [CLIENTE_B]
+tempo di percorrenza da [CLIENTE_A] a [CLIENTE_B]
+distanza tra [CLIENTE_A] e [CLIENTE_B]
+quanto ci metto da [CLIENTE_A] a [CLIENTE_B]
+percorso più veloce per [CLIENTE]
+mostrami il percorso per [CLIENTE]
+ottimizza percorsi del [GIORNO]
+crea percorso per domani
+
+# CATEGORIA: Timeline e Appuntamenti
+quando ho l'appuntamento con [CLIENTE]
+mostrami appuntamento [CLIENTE]
+appuntamento con [CLIENTE] quando è
+inserisci appuntamento con [CLIENTE] il [DATA] alle [ORA]
+aggiungi appuntamento [CLIENTE] [DATA] [ORA]
+cancella appuntamento con [CLIENTE]
+sposta appuntamento di [CLIENTE] a [DATA] [ORA]
+prossimo appuntamento
+appuntamenti di oggi
+appuntamenti di domani
+appuntamenti della settimana
+
+# CATEGORIA: Analisi e Report
+consegne previste [PERIODO]
+stato ordini [CLIENTE]
+report vendite [PERIODO]
+prodotti più venduti
+clienti migliori
+fatturato per categoria
+analisi vendite [PRODOTTO]
+confronta vendite [PERIODO_A] vs [PERIODO_B]
+
+# CATEGORIA: Gestione Clienti
+aggiungi nuovo cliente
+modifica cliente [CLIENTE]
+informazioni cliente [CLIENTE]
+storico cliente [CLIENTE]
+note cliente [CLIENTE]
+aggiungi nota a [CLIENTE]: [NOTA]
+clienti zona [ZONA]
+clienti non visitati da [GIORNI] giorni
+
+# ESEMPI ALIAS SUPPORTATI
+# ESSEMME → Essemme Conad Montegrosso
+# DONAC → DONAC Distribuzione SRL
+# Mario → Bar da Mario

@@ -87,7 +87,14 @@ const Navigation = {
    * Ottiene ordine dei tab
    */
   getTabOrder: function() {
-    return ['timeline', 'data', 'planner', 'clients', 'travels', 'worksheet', 'orders', 'ddtft', 'smart', 'ai'];
+    const tabs = ['timeline', 'data', 'planner', 'clients', 'travels', 'worksheet', 'orders', 'ddtft', 'smart', 'ai'];
+    
+    // Aggiungi tab Comandi solo su desktop
+    if (window.DeviceDetector && window.DeviceDetector.info.isDesktop) {
+      tabs.push('comandi');
+    }
+    
+    return tabs;
   },
   
   /**
@@ -224,7 +231,8 @@ const Navigation = {
       'worksheet': 'Worksheet',
       'ddtft': 'DDTFTModule',
       'smart': 'SmartAssistant',
-      'ai': 'FlavioAIAssistant'
+      'ai': 'FlavioAIAssistant',
+      'comandi': 'ComandiModule'
     };
     
     const moduleName = moduleMap[tabName];
@@ -247,7 +255,8 @@ const Navigation = {
       'worksheet': 'Worksheet',
       'ddtft': 'DDTFTModule',
       'smart': 'SmartAssistant',
-      'ai': 'FlavioAIAssistant'
+      'ai': 'FlavioAIAssistant',
+      'comandi': 'ComandiModule'
     };
     
     const moduleName = moduleMap[tabName];
