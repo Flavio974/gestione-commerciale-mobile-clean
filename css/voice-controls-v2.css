@@ -15,20 +15,29 @@
 }
 
 /* Aggiustamenti quando la tab ordini è attiva */
-.tab-content.active[data-tab="ordini"] ~ .voice-controls-container,
-.nav-link.active[data-tab="ordini"] ~ .voice-controls-container,
 body.ordini-tab-active .voice-controls-container {
-    top: 80px; /* Sposta più in basso per evitare sovrapposizioni */
-    right: 15px;
+    top: 100px !important; /* Sposta più in basso per evitare sovrapposizioni */
+    right: 15px !important;
 }
 
 /* Aggiustamenti per schermo piccolo quando tab ordini è attiva */
 @media (max-width: 1200px) {
-    .tab-content.active[data-tab="ordini"] ~ .voice-controls-container,
-    .nav-link.active[data-tab="ordini"] ~ .voice-controls-container,
     body.ordini-tab-active .voice-controls-container {
-        top: 120px;
-        right: 10px;
+        top: 120px !important;
+        right: 10px !important;
+    }
+}
+
+/* Aggiustamenti per mobile quando tab ordini è attiva */
+@media (max-width: 768px) {
+    body.ordini-tab-active .voice-controls-container {
+        top: 140px !important;
+        right: 10px !important;
+    }
+    
+    body.ordini-tab-active .voice-controls-container .mic-button {
+        width: 50px !important;
+        height: 50px !important;
     }
 }
 
