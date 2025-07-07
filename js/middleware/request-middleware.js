@@ -28,10 +28,12 @@ class RequestMiddleware {
             dataCliente: /(?:data|quando).*(?:ultimo|ordine).*(?:di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per tutte le date degli ordini
             dataTuttiOrdini: /(?:data|quando|date|dammi).*(?:tutti|tutte|altri|altre|dei|quattro|4).*(?:ordini).*(?:di|del|da|cliente|per)?\s*(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
-            // Pattern per "Date ordini [cliente]"
-            dateOrdiniCliente: /^(?:date\s+ordini)\s+([A-Za-z\s]+?)(?:\?|$)/i,
+            // Pattern per "Date ordini [cliente]" o "Date degli ordini di [cliente]"
+            dateOrdiniCliente: /(?:date\s+(?:degli\s+)?ordini)(?:\s+di)?\s+([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per richieste di data di tutti gli ordini generiche (senza cliente specificato)
             dataTuttiGenerica: /(?:data|quando|date).*(?:di\s+)?(?:tutti|tutte|altri|altre).*(?:ordini)|(?:altre|altri)\s+date|(?:e\s+le\s+)?(?:altre|altri)\s+date.*(?:quali|sono)/i,
+            // Pattern per "Date degli ordini?" senza cliente (generico)
+            dateOrdiniGenerico: /^(?:date\s+(?:degli\s+)?ordini)\s*(?:\?|$)/i,
             // Pattern per richieste di data generiche
             dataGenerica: /(?:mi\s+dici|dimmi|mostra|quale).*(?:data|quando).*(?:ultimo|ordine)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
@@ -314,12 +316,22 @@ class RequestMiddleware {
                     params.cliente = dateOrdiniMatch[1].trim();
                     params.tuttiOrdini = true;
                 } else {
-                    // Controlla se è una richiesta per TUTTI gli ordini con cliente specifico
-                    let dataTuttiMatch = input.match(this.patterns.dataTuttiOrdini);
-                    if (dataTuttiMatch && dataTuttiMatch[1] && dataTuttiMatch[1].trim()) {
-                        params.cliente = dataTuttiMatch[1].trim();
-                        params.tuttiOrdini = true;
+                    // Controlla "Date degli ordini?" generico
+                    const dateOrdiniGenericoMatch = input.match(this.patterns.dateOrdiniGenerico);
+                    if (dateOrdiniGenericoMatch) {
+                        const validContext = this.getValidContext();
+                        if (validContext) {
+                            params.cliente = validContext;
+                            params.fromContext = true;
+                            params.tuttiOrdini = true;
+                        }
                     } else {
+                        // Controlla se è una richiesta per TUTTI gli ordini con cliente specifico
+                        let dataTuttiMatch = input.match(this.patterns.dataTuttiOrdini);
+                        if (dataTuttiMatch && dataTuttiMatch[1] && dataTuttiMatch[1].trim()) {
+                            params.cliente = dataTuttiMatch[1].trim();
+                            params.tuttiOrdini = true;
+                        } else {
                         // Controlla se è una richiesta per TUTTI gli ordini generica (senza cliente)
                         const dataTuttiGenericaMatch = input.match(this.patterns.dataTuttiGenerica);
                         if (dataTuttiGenericaMatch) {
@@ -353,6 +365,7 @@ class RequestMiddleware {
                             }
                         }
                     }
+                }
                 }
                 break;
                 
