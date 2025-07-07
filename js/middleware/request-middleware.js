@@ -28,8 +28,10 @@ class RequestMiddleware {
             dataCliente: /(?:data|quando).*(?:ultimo|ordine).*(?:di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per tutte le date degli ordini
             dataTuttiOrdini: /(?:data|quando).*(?:tutti|tutte|altri|altre).*(?:ordini).*(?:di|del|da|cliente|per)?\s*(?:cliente\s+)?([A-Za-z\s]*?)(?:\?|$)/i,
+            // Pattern per "Date ordini [cliente]"
+            dateOrdiniCliente: /^(?:date\s+ordini)\s+([A-Za-z\s]+?)(?:\?|$)/i,
             // Pattern per richieste di data di tutti gli ordini generiche (senza cliente specificato)
-            dataTuttiGenerica: /(?:data|quando).*(?:di\s+)?(?:tutti|tutte|altri|altre).*(?:ordini)(?!\s+(?:di|del|da|per))/i,
+            dataTuttiGenerica: /(?:data|quando|date).*(?:di\s+)?(?:tutti|tutte|altri|altre).*(?:ordini)|(?:altre|altri)\s+date|(?:e\s+le\s+)?(?:altre|altri)\s+date.*(?:quali|sono)/i,
             // Pattern per richieste di data generiche
             dataGenerica: /(?:mi\s+dici|dimmi|mostra|quale).*(?:data|quando).*(?:ultimo|ordine)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
@@ -232,8 +234,10 @@ class RequestMiddleware {
         }
         
         // Controlla prima le richieste di data (più specifiche)
-        // Se contiene "data" o "quando" è probabilmente una richiesta di data
-        if (inputLower.includes('data') || inputLower.includes('quando')) {
+        // Se contiene parole chiave per date è probabilmente una richiesta di data
+        if (inputLower.includes('data') || inputLower.includes('quando') || 
+            inputLower.includes('date') || inputLower.includes('altre date') ||
+            inputLower.includes('altri date') || /e\s+le\s+altre.*date/.test(inputLower)) {
             return 'data';
         }
         
@@ -296,40 +300,47 @@ class RequestMiddleware {
                 break;
                 
             case 'data':
-                // Prima controlla se è una richiesta per TUTTI gli ordini con cliente specifico
-                let dataTuttiMatch = input.match(this.patterns.dataTuttiOrdini);
-                if (dataTuttiMatch && dataTuttiMatch[1] && dataTuttiMatch[1].trim()) {
-                    params.cliente = dataTuttiMatch[1].trim();
+                // Prima controlla "Date ordini [cliente]" - formato diretto
+                let dateOrdiniMatch = input.match(this.patterns.dateOrdiniCliente);
+                if (dateOrdiniMatch && dateOrdiniMatch[1] && dateOrdiniMatch[1].trim()) {
+                    params.cliente = dateOrdiniMatch[1].trim();
                     params.tuttiOrdini = true;
                 } else {
-                    // Controlla se è una richiesta per TUTTI gli ordini generica (senza cliente)
-                    const dataTuttiGenericaMatch = input.match(this.patterns.dataTuttiGenerica);
-                    if (dataTuttiGenericaMatch) {
-                        const validContext = this.getValidContext();
-                        if (validContext) {
-                            params.cliente = validContext;
-                            params.fromContext = true;
-                            params.tuttiOrdini = true;
-                        }
+                    // Controlla se è una richiesta per TUTTI gli ordini con cliente specifico
+                    let dataTuttiMatch = input.match(this.patterns.dataTuttiOrdini);
+                    if (dataTuttiMatch && dataTuttiMatch[1] && dataTuttiMatch[1].trim()) {
+                        params.cliente = dataTuttiMatch[1].trim();
+                        params.tuttiOrdini = true;
                     } else {
-                        // Poi controlla se è per un singolo ordine
-                        let dataMatch = input.match(this.patterns.dataCliente);
-                        if (dataMatch) {
-                            params.cliente = dataMatch[1].trim();
-                        } else {
-                            // Controlla se è una richiesta generica sulla data
-                            const dataGenericaMatch = input.match(this.patterns.dataGenerica);
+                        // Controlla se è una richiesta per TUTTI gli ordini generica (senza cliente)
+                        const dataTuttiGenericaMatch = input.match(this.patterns.dataTuttiGenerica);
+                        if (dataTuttiGenericaMatch) {
                             const validContext = this.getValidContext();
-                            
-                            if (dataGenericaMatch && validContext) {
+                            if (validContext) {
                                 params.cliente = validContext;
                                 params.fromContext = true;
-                            } else if (validContext) {
-                                // Fallback: se c'è un contesto valido e la query contiene parole chiave data
-                                const inputLower = input.toLowerCase();
-                                if (inputLower.includes('data') || inputLower.includes('ultimo') || inputLower.includes('quando')) {
+                                params.tuttiOrdini = true;
+                            }
+                        } else {
+                            // Poi controlla se è per un singolo ordine
+                            let dataMatch = input.match(this.patterns.dataCliente);
+                            if (dataMatch) {
+                                params.cliente = dataMatch[1].trim();
+                            } else {
+                                // Controlla se è una richiesta generica sulla data
+                                const dataGenericaMatch = input.match(this.patterns.dataGenerica);
+                                const validContext = this.getValidContext();
+                                
+                                if (dataGenericaMatch && validContext) {
                                     params.cliente = validContext;
                                     params.fromContext = true;
+                                } else if (validContext) {
+                                    // Fallback: se c'è un contesto valido e la query contiene parole chiave data
+                                    const inputLower = input.toLowerCase();
+                                    if (inputLower.includes('data') || inputLower.includes('ultimo') || inputLower.includes('quando')) {
+                                        params.cliente = validContext;
+                                        params.fromContext = true;
+                                    }
                                 }
                             }
                         }
