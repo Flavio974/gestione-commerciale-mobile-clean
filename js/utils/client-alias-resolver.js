@@ -49,8 +49,7 @@ class ClientAliasResolver {
     async loadFromSupabase() {
         const { data, error } = await window.supabase
             .from('clients')
-            .select('id, nome, alias')
-            .not('alias', 'is', null);
+            .select('id, nome, name');
             
         if (error) {
             throw error;
@@ -61,28 +60,61 @@ class ClientAliasResolver {
         
         if (data) {
             data.forEach(client => {
-                const aliases = client.alias || [];
+                const clientName = client.nome || client.name;
                 
-                // Aggiungi nome principale come alias
-                const allNames = [client.nome, ...aliases];
-                
-                allNames.forEach(name => {
-                    if (name && name.trim()) {
-                        this.aliases.set(
-                            name.toLowerCase().trim(), 
-                            {
-                                id: client.id,
-                                nome_principale: client.nome,
-                                tipo: name === client.nome ? 'principale' : 'alias'
-                            }
-                        );
-                    }
-                });
+                if (clientName && clientName.trim()) {
+                    // Aggiungi nome principale
+                    this.aliases.set(
+                        clientName.toLowerCase().trim(), 
+                        {
+                            id: client.id,
+                            nome_principale: clientName,
+                            tipo: 'principale'
+                        }
+                    );
+                    
+                    // Aggiungi varianti automatiche del nome
+                    this.addNameVariants(clientName, client.id);
+                }
             });
         }
         
         // Salva in localStorage per fallback
         this.saveToLocalStorage();
+    }
+    
+    /**
+     * Aggiunge varianti automatiche del nome cliente
+     */
+    addNameVariants(clientName, clientId) {
+        const baseKey = {
+            id: clientId,
+            nome_principale: clientName,
+            tipo: 'variante'
+        };
+        
+        // Varianti comuni
+        const variants = [
+            // Rimuovi punti
+            clientName.replace(/\./g, ''),
+            // Rimuovi spazi extra
+            clientName.replace(/\s+/g, ' '),
+            // Solo le prime parole (per nomi molto lunghi)
+            clientName.split(' ').slice(0, 3).join(' '),
+            // Senza abbreviazioni comuni
+            clientName.replace(/\bS\.S\.S\./gi, 'SSS')
+                     .replace(/\bS\.R\.L\./gi, 'SRL')
+                     .replace(/\bS\.P\.A\./gi, 'SPA')
+        ];
+        
+        variants.forEach(variant => {
+            if (variant && variant.trim() && variant !== clientName) {
+                const normalizedVariant = variant.toLowerCase().trim();
+                if (!this.aliases.has(normalizedVariant)) {
+                    this.aliases.set(normalizedVariant, baseKey);
+                }
+            }
+        });
     }
     
     /**

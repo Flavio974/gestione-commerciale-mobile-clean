@@ -10,6 +10,13 @@ ordini ultimi [GIORNI] giorni
 quanti ordini ha fatto [CLIENTE]
 fatturato totale del mese
 fatturato totale dell'anno
+da quali prodotti è composto l'ordine del cliente: [CLIENTE]
+composizione ordine cliente: [CLIENTE]
+prodotti nell'ordine del cliente: [CLIENTE]
+cosa ha ordinato il cliente: [CLIENTE]
+dettaglio prodotti ordine cliente: [CLIENTE]
+storico ordini del cliente: [CLIENTE]
+consulta lo storico degli ordini del cliente: [CLIENTE]
 
 # CATEGORIA: Percorsi e Spostamenti
 quanto tempo da [CLIENTE_A] a [CLIENTE_B]

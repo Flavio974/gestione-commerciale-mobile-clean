@@ -227,10 +227,21 @@ class VocabolarioMiddleware {
     }
     
     /**
-     * Determina se è fatturato, ordini o data basandosi sul pattern
+     * Determina se è fatturato, ordini, data o prodotti ordine basandosi sul pattern
      */
     determineFatturatoType(pattern) {
         const patternLower = pattern.toLowerCase();
+        
+        // Riconoscimento prodotti negli ordini
+        if (patternLower.includes('prodotti') || 
+            patternLower.includes('composto') || 
+            patternLower.includes('composizione') ||
+            patternLower.includes('cosa ha ordinato') ||
+            patternLower.includes('dettaglio prodotti') ||
+            patternLower.includes('storico ordini') ||
+            patternLower.includes('storico degli ordini')) {
+            return 'prodotti_ordine';
+        }
         
         if (patternLower.includes('quando') || 
             patternLower.includes('data') || 
@@ -260,7 +271,7 @@ class VocabolarioMiddleware {
             const requestType = this.mapCategoryToRequestType(exactMatch.category, exactMatch.pattern);
             
             // Se è un tipo gestito dal middleware esistente
-            if (['fatturato', 'ordini', 'data', 'percorsi', 'clienti'].includes(requestType)) {
+            if (['fatturato', 'ordini', 'data', 'percorsi', 'clienti', 'prodotti_ordine'].includes(requestType)) {
                 // Adatta i parametri al formato atteso (con risoluzione alias)
                 const adaptedParams = await this.adaptParamsForMiddleware(requestType, exactMatch.params);
                 
@@ -368,6 +379,7 @@ class VocabolarioMiddleware {
             case 'fatturato':
             case 'ordini':
             case 'data':
+            case 'prodotti_ordine':
                 adapted.cliente = resolvedParams.cliente;
                 // Mantieni informazioni sulla risoluzione per il messaggio di risposta
                 if (resolvedParams._clientResolution) {
