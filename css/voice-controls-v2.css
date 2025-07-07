@@ -14,6 +14,24 @@
     gap: 15px;
 }
 
+/* Aggiustamenti quando la tab ordini è attiva */
+.tab-content.active[data-tab="ordini"] ~ .voice-controls-container,
+.nav-link.active[data-tab="ordini"] ~ .voice-controls-container,
+body.ordini-tab-active .voice-controls-container {
+    top: 80px; /* Sposta più in basso per evitare sovrapposizioni */
+    right: 15px;
+}
+
+/* Aggiustamenti per schermo piccolo quando tab ordini è attiva */
+@media (max-width: 1200px) {
+    .tab-content.active[data-tab="ordini"] ~ .voice-controls-container,
+    .nav-link.active[data-tab="ordini"] ~ .voice-controls-container,
+    body.ordini-tab-active .voice-controls-container {
+        top: 120px;
+        right: 10px;
+    }
+}
+
 /* Su Desktop, tutti i controlli sono sempre visibili */
 .voice-controls-container:not(.iphone-layout) .expandable-controls {
     display: flex;

@@ -181,10 +181,32 @@ const Navigation = {
       // After enter hook
       this.afterEnterTab(tabName);
       
+      // Aggiorna classe body per controllo voice controls
+      this.updateBodyClasses(tabName);
+      
       // Dispatch event
       window.dispatchEvent(new CustomEvent('navigation:tabchange', {
         detail: { tab: tabName }
       }));
+    }
+  },
+  
+  /**
+   * Aggiorna classi CSS del body per supportare positioning dei voice controls
+   */
+  updateBodyClasses: function(tabName) {
+    const body = document.body;
+    
+    // Rimuove tutte le classi tab esistenti
+    body.classList.remove('ordini-tab-active', 'ai-tab-active', 'smart-tab-active');
+    
+    // Aggiunge classe specifica per tab corrente se necessario
+    if (tabName === 'ordini' || tabName === 'orders') {
+      body.classList.add('ordini-tab-active');
+    } else if (tabName === 'ai') {
+      body.classList.add('ai-tab-active');
+    } else if (tabName === 'smart') {
+      body.classList.add('smart-tab-active');
     }
   },
   
