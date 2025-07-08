@@ -1337,6 +1337,9 @@ class AIVoiceManagerV2 {
         
         localStorage.setItem('voice-controls-position', JSON.stringify(position));
         console.log('💾 Posizione controlli vocali salvata:', position);
+        
+        // Aggiungi classe per nascondere tooltip dopo primo drag
+        container.classList.add('dragged');
     }
     
     loadSavedPosition(container) {
@@ -1349,6 +1352,7 @@ class AIVoiceManagerV2 {
                     container.style.top = position.top;
                     container.style.right = 'auto';
                     container.style.bottom = 'auto';
+                    container.classList.add('dragged'); // Se c'è una posizione salvata, è già stato trascinato
                     console.log('📍 Posizione controlli vocali caricata:', position);
                 }
             }
