@@ -623,27 +623,20 @@ class AIVoiceManagerV2 {
             wakeWordToggle.dispatchEvent(new Event('change'));
         });
         
-        // Rendi draggable per iPad
+        // Rendi draggable per iPad e PC
         this.makeIPadControlsDraggable(container);
         
         console.log('✅ Controlli iPad creati con successo');
-        
-        // Rendi i controlli draggabili anche su PC
-        this.makeIPadControlsDraggable(container);
-        
-        // Setup drag & drop generico per PC
-        setTimeout(() => {
-            this.setupDragAndDrop();
-        }, 100);
     }
     
     // Metodo deprecato - ora usa updateIPadStatus() con parametri
     
-    // Rende i controlli iPad draggabili
+    // Rende i controlli iPad draggabili (touch + mouse)
     makeIPadControlsDraggable(element) {
         let isDragging = false;
         let startX, startY, initialX, initialY;
         
+        // Touch events per tablet/mobile
         element.addEventListener('touchstart', (e) => {
             isDragging = true;
             const touch = e.touches[0];
@@ -656,6 +649,7 @@ class AIVoiceManagerV2 {
             
             element.style.transition = 'none';
             element.style.opacity = '0.8';
+            element.classList.add('dragging');
         });
         
         element.addEventListener('touchmove', (e) => {
@@ -671,12 +665,61 @@ class AIVoiceManagerV2 {
             
             element.style.left = (initialX + deltaX) + 'px';
             element.style.top = (initialY + deltaY) + 'px';
+            element.style.right = 'auto';
+            element.style.bottom = 'auto';
         });
         
         element.addEventListener('touchend', () => {
             isDragging = false;
             element.style.transition = 'all 0.3s ease';
             element.style.opacity = '1';
+            element.classList.remove('dragging');
+            this.savePosition(element);
+        });
+        
+        // Mouse events per desktop
+        element.addEventListener('mousedown', (e) => {
+            // Solo drag se non si clicca su un pulsante
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+            
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            const rect = element.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+            
+            element.style.transition = 'none';
+            element.style.opacity = '0.8';
+            element.classList.add('dragging');
+            
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const currentX = e.clientX;
+            const currentY = e.clientY;
+            
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+            
+            element.style.left = (initialX + deltaX) + 'px';
+            element.style.top = (initialY + deltaY) + 'px';
+            element.style.right = 'auto';
+            element.style.bottom = 'auto';
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            element.style.transition = 'all 0.3s ease';
+            element.style.opacity = '1';
+            element.classList.remove('dragging');
+            this.savePosition(element);
         });
     }
     
