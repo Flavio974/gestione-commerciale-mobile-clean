@@ -1,13 +1,17 @@
-FORCE NETLIFY DEPLOY
-===================
-Timestamp: 2025-07-08 16:33:00 UTC
-Deploy ID: CRITICAL_TTS_FIX_v2.1
-Status: FORCE REBUILD REQUIRED
+FORCE NETLIFY DEPLOY - ATTEMPT #2
+===================================
+Timestamp: 2025-07-08 16:37:00 UTC
+Deploy ID: CRITICAL_TTS_FIX_v2.1_RETRY
+Status: MANUAL DEPLOY TRIGGER ACTIVATED
 
-Changes:
-- Disabled AIVoiceManagerV2.speak() on iPad
-- Disabled route TTS calls  
-- Single TTS system: index.html only
-- Version bumped to v2.1
+Previous deploys cleared - forcing fresh build
 
-🚨 CRITICAL FIX for double reading on iPad
+CRITICAL CHANGES APPLIED:
+✅ AIVoiceManagerV2.speak() → DISABLED on iPad
+✅ Route TTS calls → DISABLED completely  
+✅ Single TTS system → index.html speechSynthesis ONLY
+✅ Version → v2.1
+✅ Console logs → Enhanced for debugging
+
+🚨 FINAL SOLUTION: Only ONE TTS system active on iPad
+🎯 NO MORE DOUBLE READING
