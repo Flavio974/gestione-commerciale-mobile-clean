@@ -17,6 +17,13 @@ cosa ha ordinato il cliente: [CLIENTE]
 dettaglio prodotti ordine cliente: [CLIENTE]
 storico ordini del cliente: [CLIENTE]
 consulta lo storico degli ordini del cliente: [CLIENTE]
+i prodotti dell'ordine del cliente: [CLIENTE]
+prodotti del cliente: [CLIENTE]
+prodotti ordinati da [CLIENTE]
+elenco prodotti cliente: [CLIENTE]
+lista prodotti cliente: [CLIENTE]
+elencami i prodotti del cliente: [CLIENTE]
+mostrami i prodotti ordinati da [CLIENTE]
 
 # CATEGORIA: Percorsi e Spostamenti
 quanto tempo da [CLIENTE_A] a [CLIENTE_B]

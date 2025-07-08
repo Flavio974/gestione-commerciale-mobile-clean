@@ -267,8 +267,10 @@ class VocabolarioMiddleware {
         // 1. Cerca match esatto
         const exactMatch = this.findExactMatch(userInput);
         if (exactMatch) {
+            console.log('📋 VOCABOLARIO: Match esatto trovato:', exactMatch);
             // Mappa al tipo di richiesta del middleware esistente
             const requestType = this.mapCategoryToRequestType(exactMatch.category, exactMatch.pattern);
+            console.log('📋 VOCABOLARIO: Request type mappato:', requestType);
             
             // Se è un tipo gestito dal middleware esistente
             if (['fatturato', 'ordini', 'data', 'percorsi', 'clienti', 'prodotti_ordine'].includes(requestType)) {
