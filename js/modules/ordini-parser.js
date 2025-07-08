@@ -361,11 +361,41 @@ const OrdiniParser = {
         console.log('  Suggerimento: verificare i pattern regex o il formato nel PDF');
       }
       
-      // Data consegna
-      const deliveryDateMatch = text.match(/Consegna\s+S\.M\.*?\n.*?(\d{2}\/\d{2}\/\d{4})/s);
-      if (deliveryDateMatch) {
-        order.deliveryDate = deliveryDateMatch[1];
-        console.log('Data consegna trovata:', order.deliveryDate);
+      // Data consegna - pattern multipli per maggiore compatibilità
+      console.log('🔍 Ricerca data consegna nel documento...');
+      
+      const deliveryDatePatterns = [
+        /Consegna\s+S\.M\.*?\n.*?(\d{2}\/\d{2}\/\d{4})/s,                    // Pattern originale
+        /Data\s+consegna[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                       // "Data consegna: 15/06/2024"
+        /Consegna[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                              // "Consegna: 15/06/2024" 
+        /Delivery\s+date[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                       // "Delivery date: 15/06/2024"
+        /Data\s+di\s+consegna[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                  // "Data di consegna: 15/06/2024"
+        /Consegna\s+il[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                         // "Consegna il 15/06/2024"
+        /(?:Consegna|Data\s+consegna).*?(\d{2}\/\d{2}\/\d{4})/is             // Pattern generale più ampio
+      ];
+      
+      let deliveryDateFound = false;
+      for (let i = 0; i < deliveryDatePatterns.length; i++) {
+        const deliveryDateMatch = text.match(deliveryDatePatterns[i]);
+        if (deliveryDateMatch) {
+          order.deliveryDate = deliveryDateMatch[1];
+          console.log(`✅ Data consegna trovata con pattern ${i + 1}:`, order.deliveryDate);
+          deliveryDateFound = true;
+          break;
+        }
+      }
+      
+      if (!deliveryDateFound) {
+        console.log('⚠️ Data consegna NON trovata nel documento');
+        console.log('📝 Debug: ecco un campione del testo per verifica pattern:');
+        // Mostra le prime 10 righe che contengono "consegna" (case insensitive)
+        const consegnaLines = text.split('\n').filter(line => 
+          line.toLowerCase().includes('consegna')
+        ).slice(0, 10);
+        consegnaLines.forEach((line, idx) => {
+          console.log(`  Riga ${idx + 1}: "${line.trim()}"`);
+        });
+        order.deliveryDate = '';
       }
       
       // Estrazione indirizzi

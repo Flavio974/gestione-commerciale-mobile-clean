@@ -134,6 +134,15 @@ window.OrdiniExportCore = {
     orders.forEach((order, index) => {
       console.log(`\nProcessando ordine ${index + 1}/${orders.length}: ${order.orderNumber || 'Senza numero'}`);
       
+      // DEBUG: Verifica presence del campo deliveryDate
+      console.log(`📅 DEBUG Data Consegna:`, {
+        deliveryDate: order.deliveryDate,
+        orderDate: order.orderDate,
+        hasDeliveryDate: !!order.deliveryDate,
+        deliveryDateType: typeof order.deliveryDate,
+        orderKeys: Object.keys(order).filter(key => key.includes('date') || key.includes('Date'))
+      });
+      
       if (order.products && order.products.length > 0) {
         ordiniConProdotti++;
         console.log(`  - ${order.products.length} prodotti trovati`);
