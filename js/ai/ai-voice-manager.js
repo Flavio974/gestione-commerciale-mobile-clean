@@ -33,10 +33,10 @@ const AIVoiceManager = {
   initForIPhone: function() {
     console.log('📱 Inizializzazione iPhone...');
     
-    // Su iPad, se AIVoiceManagerV2 è attivo, disabilita questo sistema
+    // Su iPad, SEMPRE disabilita questo sistema - solo AIVoiceManagerV2 deve funzionare
     const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
-    if (isIPad && window.AIVoiceManagerV2) {
-      console.log('📱 iPad rilevato con AIVoiceManagerV2 - Disabilito AIVoiceManager vecchio');
+    if (isIPad) {
+      console.log('🔇 iPad rilevato - Sistema vecchio COMPLETAMENTE DISABILITATO');
       return false;
     }
     
@@ -777,11 +777,11 @@ const AIVoiceManager = {
   speak: function(text) {
     console.log('🔊 Voice Manager - Parlando:', text);
     
-    // Su iPad, se AIVoiceManagerV2 è attivo, DISABILITA completamente questo sistema
+    // Su iPad, SEMPRE disabilita questo sistema - solo index.html deve gestire TTS
     const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
-    if (isIPad && window.AIVoiceManagerV2) {
-      console.log('🔇 iPad: Sistema vecchio DISABILITATO - AIVoiceManagerV2 gestisce tutto');
-      return; // NON fare nulla - lascia che solo il nuovo sistema gestisca
+    if (isIPad) {
+      console.log('🔇 🚨 iPad: Sistema vecchio COMPLETAMENTE DISABILITATO - SOLO index.html gestisce TTS');
+      return; // NON fare nulla - lascia che solo index.html gestisca TTS
     }
     
     // Rileva dispositivi iOS
@@ -1215,8 +1215,15 @@ window.AIVoiceManager = AIVoiceManager;
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🎤 Inizializzando AI Voice Manager...');
   
-  // Rileva se è iPhone
+  // Rileva se è iPhone o iPad
   const isIPhone = /iPhone/.test(navigator.userAgent);
+  const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+  
+  // Su iPad, NON inizializzare questo sistema - solo AIVoiceManagerV2 deve funzionare
+  if (isIPad) {
+    console.log('🔇 🚨 iPad rilevato - Sistema vecchio NON inizializzato (solo AIVoiceManagerV2 deve funzionare)');
+    return; // BLOCCA completamente l'inizializzazione su iPad
+  }
   
   if (isIPhone) {
     console.log('📱 iPhone rilevato - Attivando soluzione specifica...');
@@ -1225,7 +1232,7 @@ document.addEventListener('DOMContentLoaded', () => {
     AIVoiceManager.init();
   }
   
-  // Controlli multipli per tutti i dispositivi
+  // Controlli multipli SOLO per non-iPad
   [1000, 2000, 3000, 5000].forEach(delay => {
     setTimeout(() => {
       if (!document.getElementById('aiVoiceToggle')) {
