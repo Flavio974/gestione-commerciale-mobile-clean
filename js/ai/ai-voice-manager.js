@@ -33,6 +33,13 @@ const AIVoiceManager = {
   initForIPhone: function() {
     console.log('📱 Inizializzazione iPhone...');
     
+    // Su iPad, se AIVoiceManagerV2 è attivo, disabilita questo sistema
+    const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+    if (isIPad && window.AIVoiceManagerV2) {
+      console.log('📱 iPad rilevato con AIVoiceManagerV2 - Disabilito AIVoiceManager vecchio');
+      return false;
+    }
+    
     // Configurazione ottimizzata per iPhone
     this.config.continuous = true;
     this.config.wakeWordEnabled = true;
@@ -763,9 +770,16 @@ const AIVoiceManager = {
   speak: function(text) {
     console.log('🔊 Voice Manager - Parlando:', text);
     
+    // Su iPad, se AIVoiceManagerV2 è attivo, non usare questo sistema
+    const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+    if (isIPad && window.AIVoiceManagerV2) {
+      console.log('🔇 iPad: Delego speak() al nuovo AIVoiceManagerV2');
+      window.AIVoiceManagerV2.speak(text);
+      return;
+    }
+    
     // Rileva dispositivi iOS
     const isIPhone = /iPhone/.test(navigator.userAgent);
-    const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
     const isIOS = isIPhone || isIPad;
     
     if (isIOS) {

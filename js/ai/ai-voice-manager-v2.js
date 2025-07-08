@@ -969,69 +969,38 @@ class AIVoiceManagerV2 {
         wakeWordStatus.className = 'wake-word-status';
         wakeWordStatus.innerHTML = '<span class="wake-word-text">🎤 Wake Word: ON</span>';
         
-        // Display trascrizione
+        // CONTROLLI SEMPLIFICATI - Solo elementi essenziali
+        
+        // Display trascrizione (manteniamo)
         const transcriptionDisplay = document.createElement('div');
         transcriptionDisplay.id = 'voice-transcription';
         transcriptionDisplay.className = 'transcription-display';
         
-        // Controlli volume e velocità
-        const controlsContainer = document.createElement('div');
-        controlsContainer.className = 'voice-advanced-controls';
-        controlsContainer.innerHTML = `
-            <div class="control-group">
-                <label for="tts-volume">Volume:</label>
-                <input type="range" id="tts-volume" min="0" max="1" step="0.1" value="1">
-            </div>
-            <div class="control-group">
-                <label for="tts-speed">Velocità:</label>
-                <input type="range" id="tts-speed" min="0.5" max="2" step="0.1" value="1">
-            </div>
-            <div class="control-group">
-                <label for="wake-word-toggle">
-                    <input type="checkbox" id="wake-word-toggle" checked>
-                    Usa wake word in auto
-                </label>
-            </div>
-            ${isIOS ? `
-            <div class="control-group">
-                <button id="wake-word-button" style="padding: ${isIPhone ? '6px 12px' : '8px 16px'}; background: #FF9500; color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-size: ${isIPhone ? '12px' : '14px'};">
-                    🎤 Wake Word: ON
-                </button>
-            </div>
-            ` : ''}
-            <div class="control-group">
-                <button id="test-tts-btn" style="padding: ${isIPhone ? '6px 12px' : '8px 16px'}; background: #007AFF; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: ${isIPhone ? '12px' : '14px'};">
-                    🔊 Test Audio
-                </button>
-            </div>
-        `;
+        // NOTE: Controlli semplificati - Rimossi elementi duplicati
         
         // Assembla UI
         autoModeContainer.appendChild(autoOnBtn);
         autoModeContainer.appendChild(autoOffBtn);
         
-        // Su iPhone, wrapper per controlli collapsibili
+        // Layout semplificato - Solo controlli essenziali
         if (isIPhone) {
             const expandableControls = document.createElement('div');
             expandableControls.id = 'expandable-controls';
             expandableControls.className = 'expandable-controls collapsed';
             
+            // Solo controlli base per iPhone
             expandableControls.appendChild(autoModeContainer);
             expandableControls.appendChild(statusIndicator);
-            expandableControls.appendChild(wakeWordStatus);
             expandableControls.appendChild(transcriptionDisplay);
-            expandableControls.appendChild(controlsContainer);
             
             container.appendChild(micButton);
             container.appendChild(expandableControls);
         } else {
-            // Layout normale per iPad/Desktop
+            // Layout normale per iPad/Desktop - SOLO controlli base
             container.appendChild(micButton);
             container.appendChild(autoModeContainer);
             container.appendChild(statusIndicator);
-            container.appendChild(wakeWordStatus);
             container.appendChild(transcriptionDisplay);
-            container.appendChild(controlsContainer);
         }
         
         // Aggiungi al DOM
@@ -1047,17 +1016,13 @@ class AIVoiceManagerV2 {
             });
         }
         
-        // Salva riferimenti elementi
+        // Salva riferimenti elementi ESSENZIALI
         this.elements = {
             micButton: micButton,
             autoModeOnBtn: autoOnBtn,
             autoModeOffBtn: autoOffBtn,
             statusIndicator: statusIndicator,
-            wakeWordStatus: wakeWordStatus,
-            transcriptionDisplay: transcriptionDisplay,
-            volumeControl: document.getElementById('tts-volume'),
-            speedControl: document.getElementById('tts-speed'),
-            wakeWordToggle: document.getElementById('wake-word-toggle')
+            transcriptionDisplay: transcriptionDisplay
         };
         
         // Aggiorna stato iniziale UI
