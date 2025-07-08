@@ -119,6 +119,10 @@
             ⚠️ <strong>Importante:</strong> Prima di iniziare, assicurati di aver cliccato su "Test Audio" nell'app principale per attivare il TTS su iPad.
         </div>
         
+        <div class="warning" style="background: #d1ecf1; color: #0c5460;">
+            ✅ <strong>Fix Loop Infinito:</strong> Il sistema ora pausa automaticamente il riconoscimento vocale durante la riproduzione TTS per evitare che l'AI risponda a se stessa. Osserva i log per vedere come funziona!
+        </div>
+        
         <div class="test-section">
             <h2>1. Simulazione Modalità AUTO</h2>
             <p>Questo test simula la modalità AUTO con ascolto continuo e risposte vocali automatiche.</p>
@@ -362,17 +366,58 @@
         
         // Utilities
         function speak(text) {
+            // IMPORTANTE: Pausa riconoscimento mentre parla per evitare loop
+            const wasListening = isAutoMode && recognition;
+            if (wasListening) {
+                log('⏸️ Pauso riconoscimento per evitare loop durante TTS');
+                try {
+                    recognition.stop();
+                } catch (error) {
+                    log('Errore pausa: ' + error.message);
+                }
+            }
+            
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'it-IT';
             utterance.voice = ttsVoice;
             utterance.rate = 1.0;
             
+            utterance.onstart = () => {
+                log('🔊 TTS avviato - riconoscimento in pausa');
+            };
+            
             utterance.onend = () => {
                 updateStatus('responseStatus', '✅ Riproduzione completata', 'success');
+                log('🔊 TTS completato');
+                
+                // Riattiva riconoscimento dopo delay per evitare echi
+                if (wasListening && isAutoMode) {
+                    setTimeout(() => {
+                        log('▶️ Riattivo riconoscimento dopo TTS');
+                        try {
+                            recognition.start();
+                        } catch (error) {
+                            log('Errore riattivazione: ' + error.message);
+                        }
+                    }, 1000); // 1 secondo di pausa
+                }
             };
             
             utterance.onerror = (event) => {
                 updateStatus('responseStatus', '❌ Errore TTS: ' + event.error, 'error');
+                log('❌ Errore TTS: ' + event.error);
+                
+                // Riattiva anche in caso di errore
+                if (wasListening && isAutoMode) {
+                    setTimeout(() => {
+                        log('▶️ Riattivo riconoscimento dopo errore');
+                        try {
+                            recognition.start();
+                        } catch (error) {
+                            log('Errore riattivazione: ' + error.message);
+                        }
+                    }, 500);
+                }
             };
             
             synthesis.cancel();

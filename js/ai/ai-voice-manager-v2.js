@@ -848,6 +848,45 @@ class AIVoiceManagerV2 {
         }
     }
 
+    // Pausa temporanea del riconoscimento (per evitare loop durante TTS)
+    pauseListening() {
+        if (!this.isListening) return;
+        
+        try {
+            console.log('⏸️ Pausa riconoscimento vocale');
+            this.isListening = false;
+            this.recognition.stop();
+        } catch (error) {
+            console.error('Errore pausa riconoscimento:', error);
+        }
+    }
+
+    // Riprende il riconoscimento dopo la pausa
+    resumeListening() {
+        if (this.isListening || !this.isAutoMode) return;
+        
+        try {
+            console.log('▶️ Ripresa riconoscimento vocale');
+            this.isListening = true;
+            this.recognition.continuous = true;
+            this.recognition.start();
+        } catch (error) {
+            console.error('Errore ripresa riconoscimento:', error);
+            // Se fallisce, riprova dopo un delay
+            setTimeout(() => {
+                if (this.isAutoMode && !this.isListening) {
+                    console.log('🔄 Retry ripresa riconoscimento...');
+                    try {
+                        this.isListening = true;
+                        this.recognition.start();
+                    } catch (retryError) {
+                        console.error('Errore retry ripresa:', retryError);
+                    }
+                }
+            }, 2000);
+        }
+    }
+
     enableAutoMode() {
         this.isAutoMode = true;
         this.showNotification('Modalità AUTO attivata - Ascolto continuo', 'success');
@@ -980,6 +1019,13 @@ class AIVoiceManagerV2 {
         return new Promise((resolve) => {
             console.log('🔊 Avvio TTS per:', text);
             
+            // IMPORTANTE: Disattiva riconoscimento vocale mentre parla per evitare loop
+            const wasListening = this.isListening;
+            if (wasListening && this.isAutoMode) {
+                console.log('🔇 Disattivo riconoscimento temporaneamente per evitare loop');
+                this.pauseListening();
+            }
+            
             // Cancella code precedenti
             this.synthesis.cancel();
             
@@ -1006,12 +1052,30 @@ class AIVoiceManagerV2 {
             
             utterance.onend = () => {
                 console.log('🔊 TTS terminato');
+                
+                // Riattiva riconoscimento dopo un delay per evitare echi
+                if (wasListening && this.isAutoMode) {
+                    setTimeout(() => {
+                        console.log('🔊 Riattivo riconoscimento dopo TTS');
+                        this.resumeListening();
+                    }, 1000); // 1 secondo di pausa per evitare echi
+                }
+                
                 this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
                 resolve();
             };
             
             utterance.onerror = (event) => {
                 console.error('❌ Errore TTS:', event);
+                
+                // Riattiva riconoscimento anche in caso di errore
+                if (wasListening && this.isAutoMode) {
+                    setTimeout(() => {
+                        console.log('🔊 Riattivo riconoscimento dopo errore TTS');
+                        this.resumeListening();
+                    }, 500);
+                }
+                
                 this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
                 resolve();
             };
