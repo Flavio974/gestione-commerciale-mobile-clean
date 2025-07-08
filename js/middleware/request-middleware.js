@@ -1218,7 +1218,7 @@ class RequestMiddleware {
                 };
             }
             
-            // Analizza i clienti (colonna 7 = "Descrizione Cliente")
+            // Analizza i clienti (colonna 2 = Nome Cliente)
             const uniqueClients = new Set();
             const clientiDetails = new Map();
             
@@ -1227,11 +1227,12 @@ class RequestMiddleware {
                 
                 const numeroOrdine = row[0];
                 const dataOrdine = row[1];
-                const codiceCliente = row[6];
-                const nomeCliente = row[7];
-                const indirizzoConsegna = row[8];
-                const partitaIva = row[9];
-                const importo = parseFloat(row[16]) || 0;
+                const nomeCliente = row[2];        // CORREZIONE: Cliente in colonna 2
+                const indirizzoConsegna = row[3];  // CORREZIONE: Indirizzo in colonna 3
+                const partitaIva = row[4];         // CORREZIONE: P.IVA in colonna 4
+                const dataConsegna = row[5];       // CORREZIONE: Data consegna in colonna 5
+                const codiceProdotto = row[6];     // Codice prodotto in colonna 6
+                const importo = parseFloat(row[12]) || 0; // CORREZIONE: Importo in colonna 12
                 
                 if (nomeCliente && nomeCliente.trim() !== '') {
                     uniqueClients.add(nomeCliente);
@@ -1239,7 +1240,6 @@ class RequestMiddleware {
                     if (!clientiDetails.has(nomeCliente)) {
                         clientiDetails.set(nomeCliente, {
                             nome: nomeCliente,
-                            codice: codiceCliente,
                             partitaIva: partitaIva,
                             indirizzo: indirizzoConsegna,
                             ordini: new Set(),
