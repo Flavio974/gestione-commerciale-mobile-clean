@@ -88,6 +88,14 @@
         return isNaN(parsed) ? 0 : parsed;
       }
       
+      // Caso speciale: "1.234" senza virgola - trattalo come separatore migliaia se ha 3 cifre dopo il punto
+      if (/^\d{1,3}\.\d{3}$/.test(stringValue)) {
+        // Es: "1.234" -> rimuovi punto -> "1234"
+        const withoutThousands = stringValue.replace('.', '');
+        const parsed = parseFloat(withoutThousands);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      
       // Se è formato italiano "1.234,56" o "1234,56"
       if (stringValue.includes(',')) {
         // Rimuovi tutti i punti (separatori migliaia) e sostituisci virgola con punto
