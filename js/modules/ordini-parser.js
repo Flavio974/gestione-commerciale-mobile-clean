@@ -361,39 +361,83 @@ const OrdiniParser = {
         console.log('  Suggerimento: verificare i pattern regex o il formato nel PDF');
       }
       
-      // Data consegna - pattern multipli per maggiore compatibilità
+      // Data consegna - pattern specifici per evitare conflitti con data ordine
       console.log('🔍 Ricerca data consegna nel documento...');
+      console.log('📅 Data ordine già estratta:', order.orderDate);
       
       const deliveryDatePatterns = [
+        // Pattern più specifici che richiedono contesto "consegna"
+        /(?:Data\s+(?:di\s+)?consegna|Consegna)[:\s]+(\d{2}\/\d{2}\/\d{4})/i,
         /Consegna\s+S\.M\.*?\n.*?(\d{2}\/\d{2}\/\d{4})/s,                    // Pattern originale
-        /Data\s+consegna[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                       // "Data consegna: 15/06/2024"
-        /Consegna[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                              // "Consegna: 15/06/2024" 
-        /Delivery\s+date[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                       // "Delivery date: 15/06/2024"
-        /Data\s+di\s+consegna[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                  // "Data di consegna: 15/06/2024"
-        /Consegna\s+il[:\s]*(\d{2}\/\d{2}\/\d{4})/i,                         // "Consegna il 15/06/2024"
-        /(?:Consegna|Data\s+consegna).*?(\d{2}\/\d{2}\/\d{4})/is             // Pattern generale più ampio
+        /Delivery\s+date[:\s]+(\d{2}\/\d{2}\/\d{4})/i,
+        /Consegna\s+(?:il\s+|prevista\s+)?(\d{2}\/\d{2}\/\d{4})/i,
+        /(?:Spedizione|Consegna)\s*[:\-]\s*(\d{2}\/\d{2}\/\d{4})/i
       ];
+      
+      // Funzione per validare che la data di consegna sia logica
+      const isValidDeliveryDate = (deliveryDateStr, orderDateStr) => {
+        if (!orderDateStr || !deliveryDateStr) return true; // Se manca una data, accetta
+        
+        try {
+          // Converte date in formato dd/mm/yyyy a oggetti Date per confronto
+          const parseDate = (dateStr) => {
+            const [day, month, year] = dateStr.split('/').map(Number);
+            return new Date(year, month - 1, day);
+          };
+          
+          const orderDate = parseDate(orderDateStr);
+          const deliveryDate = parseDate(deliveryDateStr);
+          
+          // La data di consegna deve essere uguale o successiva alla data ordine
+          // Ma non più di 90 giorni dopo (controllo ragionevolezza)
+          const diffDays = (deliveryDate - orderDate) / (1000 * 60 * 60 * 24);
+          const isValid = diffDays >= 0 && diffDays <= 90;
+          
+          console.log(`🧮 Validazione date:`, {
+            orderDate: orderDateStr,
+            deliveryDate: deliveryDateStr,
+            diffDays: Math.round(diffDays),
+            isValid: isValid
+          });
+          
+          return isValid;
+        } catch (error) {
+          console.log('⚠️ Errore parsing date per validazione:', error);
+          return true; // In caso di errore, accetta la data
+        }
+      };
       
       let deliveryDateFound = false;
       for (let i = 0; i < deliveryDatePatterns.length; i++) {
         const deliveryDateMatch = text.match(deliveryDatePatterns[i]);
         if (deliveryDateMatch) {
-          order.deliveryDate = deliveryDateMatch[1];
-          console.log(`✅ Data consegna trovata con pattern ${i + 1}:`, order.deliveryDate);
-          deliveryDateFound = true;
-          break;
+          const candidateDate = deliveryDateMatch[1];
+          
+          // Valida che non sia la stessa data dell'ordine e che sia logica
+          if (candidateDate !== order.orderDate && isValidDeliveryDate(candidateDate, order.orderDate)) {
+            order.deliveryDate = candidateDate;
+            console.log(`✅ Data consegna trovata con pattern ${i + 1}:`, order.deliveryDate);
+            deliveryDateFound = true;
+            break;
+          } else {
+            console.log(`⚠️ Pattern ${i + 1} trovato data "${candidateDate}" ma scartata (uguale a data ordine o non valida)`);
+          }
         }
       }
       
       if (!deliveryDateFound) {
         console.log('⚠️ Data consegna NON trovata nel documento');
         console.log('📝 Debug: ecco un campione del testo per verifica pattern:');
-        // Mostra le prime 10 righe che contengono "consegna" (case insensitive)
-        const consegnaLines = text.split('\n').filter(line => 
-          line.toLowerCase().includes('consegna')
-        ).slice(0, 10);
-        consegnaLines.forEach((line, idx) => {
-          console.log(`  Riga ${idx + 1}: "${line.trim()}"`);
+        // Mostra le righe che contengono "consegna" con contesto
+        const lines = text.split('\n');
+        lines.forEach((line, idx) => {
+          if (line.toLowerCase().includes('consegna')) {
+            console.log(`  Riga ${idx + 1}: "${line.trim()}"`);
+            // Mostra anche le righe precedenti e successive per contesto
+            if (idx > 0) console.log(`    Precedente: "${lines[idx-1].trim()}"`);
+            if (idx < lines.length - 1) console.log(`    Successiva: "${lines[idx+1].trim()}"`);
+            console.log('    ---');
+          }
         });
         order.deliveryDate = '';
       }
