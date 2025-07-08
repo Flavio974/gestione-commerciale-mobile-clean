@@ -2116,6 +2116,15 @@
           
           if (shouldSpeak && 'speechSynthesis' in window) {
             console.log('🔊 RISPOSTA VOCALE ATTIVATA - Input era vocale!');
+            
+            // Su iPad, usa SOLO AIVoiceManagerV2 se disponibile per evitare doppia lettura
+            const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+            if (isIPad && window.AIVoiceManagerV2 && window.AIVoiceManagerV2.speak) {
+              console.log('🔇 iPad: Delego TTS ad AIVoiceManagerV2 per evitare doppia lettura');
+              window.AIVoiceManagerV2.speak(data.response);
+              return; // ESCI per evitare doppio TTS
+            }
+            
             // FERMA tutte le sintesi vocali in corso (incluso Voice Manager)
             console.log('🔊 FERMANDO tutte le sintesi vocali precedenti...');
             window.speechSynthesis.cancel();
