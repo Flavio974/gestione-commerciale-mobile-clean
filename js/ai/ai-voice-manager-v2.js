@@ -255,11 +255,17 @@ class AIVoiceManagerV2 {
                 margin: 5px;
                 transition: all 0.3s ease;
                 box-shadow: 0 2px 8px rgba(0,122,255,0.3);
+                -webkit-tap-highlight-color: rgba(0,122,255,0.3);
+                touch-action: manipulation;
+                user-select: none;
+                -webkit-user-select: none;
             `;
             
             this.updateAudioButtonState(audioBtn);
             
-            audioBtn.addEventListener('click', () => {
+            // Eventi per iPad - touch e click
+            const handleAudioButton = () => {
+                console.log('🎵 iPad Audio Button pressed, ttsActivated:', this.ttsActivated);
                 if (this.ttsActivated) {
                     // Test audio
                     this.testAudioOnIPad(audioBtn);
@@ -267,6 +273,35 @@ class AIVoiceManagerV2 {
                     // Attiva audio
                     this.activateAudioFromTab(audioBtn);
                 }
+            };
+            
+            // Aggiungi eventi touch per iPad
+            audioBtn.addEventListener('touchstart', (e) => {
+                audioBtn.style.transform = 'scale(0.95)';
+                audioBtn.style.opacity = '0.8';
+            });
+            
+            audioBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                console.log('🎵 iPad Touch event triggered');
+                
+                // Reset visual feedback
+                audioBtn.style.transform = 'scale(1)';
+                audioBtn.style.opacity = '1';
+                
+                handleAudioButton();
+            });
+            
+            audioBtn.addEventListener('touchcancel', (e) => {
+                // Reset visual feedback if touch is cancelled
+                audioBtn.style.transform = 'scale(1)';
+                audioBtn.style.opacity = '1';
+            });
+            
+            // Fallback per desktop
+            audioBtn.addEventListener('click', (e) => {
+                console.log('🎵 Click event triggered');
+                handleAudioButton();
             });
             
             ipadControls.appendChild(audioBtn);
@@ -307,30 +342,58 @@ class AIVoiceManagerV2 {
     
     // Test audio dal tab AI
     testAudioOnIPad(button) {
+        console.log('🔊 Avvio test audio iPad...');
         button.textContent = '🔊 Testing...';
         button.disabled = true;
+        button.style.opacity = '0.6';
         
-        const testUtterance = new SpeechSynthesisUtterance('Test audio completato. Il sistema vocale funziona correttamente su iPad.');
-        testUtterance.lang = 'it-IT';
-        testUtterance.volume = 0.8;
+        // Cancella eventuali code TTS precedenti
+        this.synthesis.cancel();
         
-        if (this.ttsConfig.voice) {
-            testUtterance.voice = this.ttsConfig.voice;
-        }
-        
-        testUtterance.onend = () => {
-            this.updateAudioButtonState(button);
-            button.disabled = false;
-            this.showNotification('✅ Test audio completato!', 'success', 2000);
-        };
-        
-        testUtterance.onerror = () => {
-            this.updateAudioButtonState(button);
-            button.disabled = false;
-            this.showNotification('⚠️ Problema con il test audio', 'error', 3000);
-        };
-        
-        this.synthesis.speak(testUtterance);
+        // Attendi un momento prima di parlare
+        setTimeout(() => {
+            const testUtterance = new SpeechSynthesisUtterance('Test audio completato. Il sistema vocale funziona correttamente su iPad.');
+            testUtterance.lang = 'it-IT';
+            testUtterance.volume = 0.8;
+            testUtterance.rate = 1.0;
+            testUtterance.pitch = 1.0;
+            
+            if (this.ttsConfig.voice) {
+                testUtterance.voice = this.ttsConfig.voice;
+                console.log('🔊 Usando voce:', this.ttsConfig.voice.name);
+            }
+            
+            testUtterance.onstart = () => {
+                console.log('🔊 Test audio avviato');
+            };
+            
+            testUtterance.onend = () => {
+                console.log('✅ Test audio completato');
+                this.updateAudioButtonState(button);
+                button.disabled = false;
+                button.style.opacity = '1';
+                this.showNotification('✅ Test audio completato!', 'success', 2000);
+            };
+            
+            testUtterance.onerror = (e) => {
+                console.error('❌ Errore test audio:', e);
+                this.updateAudioButtonState(button);
+                button.disabled = false;
+                button.style.opacity = '1';
+                this.showNotification('⚠️ Problema con il test audio: ' + e.error, 'error', 3000);
+            };
+            
+            try {
+                this.synthesis.speak(testUtterance);
+                console.log('🔊 Comando speak inviato');
+            } catch (error) {
+                console.error('❌ Errore nell\'eseguire speak:', error);
+                this.updateAudioButtonState(button);
+                button.disabled = false;
+                button.style.opacity = '1';
+                this.showNotification('❌ Errore speak: ' + error.message, 'error', 3000);
+            }
+        }, 200);
     }
     
     // Crea controlli semplificati per iPad
@@ -419,6 +482,40 @@ class AIVoiceManagerV2 {
         status.textContent = 'Ready';
         container.appendChild(status);
         
+        // Bottone test audio rapido
+        const testAudioBtn = document.createElement('button');
+        testAudioBtn.textContent = '🔊 Test Audio';
+        testAudioBtn.style.cssText = `
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+            -webkit-tap-highlight-color: rgba(40,167,69,0.3);
+            touch-action: manipulation;
+        `;
+        
+        // Eventi touch per il test audio
+        testAudioBtn.addEventListener('touchstart', () => {
+            testAudioBtn.style.transform = 'scale(0.95)';
+        });
+        
+        testAudioBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            testAudioBtn.style.transform = 'scale(1)';
+            this.quickTestAudio();
+        });
+        
+        testAudioBtn.addEventListener('click', () => {
+            this.quickTestAudio();
+        });
+        
+        container.appendChild(testAudioBtn);
+        
         // Aggiungi al DOM
         document.body.appendChild(container);
         
@@ -446,21 +543,7 @@ class AIVoiceManagerV2 {
         console.log('✅ Controlli iPad creati con successo');
     }
     
-    // Aggiorna status nei controlli iPad
-    updateIPadStatus() {
-        const status = document.getElementById('ipad-voice-status');
-        if (status) {
-            if (this.useWakeWord) {
-                status.textContent = '🎤 Wake word ON - "Hey Assistente"';
-                status.style.background = '#d4edda';
-                status.style.color = '#155724';
-            } else {
-                status.textContent = '🔇 Wake word OFF';
-                status.style.background = '#f8d7da'; 
-                status.style.color = '#721c24';
-            }
-        }
-    }
+    // Metodo deprecato - ora usa updateIPadStatus() con parametri
     
     // Rende i controlli iPad draggabili
     makeIPadControlsDraggable(element) {
@@ -501,6 +584,83 @@ class AIVoiceManagerV2 {
             element.style.transition = 'all 0.3s ease';
             element.style.opacity = '1';
         });
+    }
+    
+    // Test audio rapido per iPad
+    quickTestAudio() {
+        console.log('🔊 Quick test audio avviato...');
+        
+        // Prima controlla se il TTS è attivato
+        if (!this.ttsActivated) {
+            console.log('⚠️ TTS non attivato, attivo prima...');
+            this.activateAudioForIPad(() => {
+                // Dopo attivazione, esegui il test
+                this.performQuickTest();
+            });
+        } else {
+            this.performQuickTest();
+        }
+    }
+    
+    // Esegue il test audio rapido
+    performQuickTest() {
+        this.synthesis.cancel();
+        
+        setTimeout(() => {
+            const testText = 'Test rapido completato su iPad';
+            const utterance = new SpeechSynthesisUtterance(testText);
+            utterance.lang = 'it-IT';
+            utterance.volume = 0.8;
+            utterance.rate = 1.2; // Più veloce per test rapido
+            
+            if (this.ttsConfig.voice) {
+                utterance.voice = this.ttsConfig.voice;
+            }
+            
+            utterance.onstart = () => {
+                console.log('🔊 Quick test in corso...');
+                this.updateIPadStatus('🔊 Test in corso...');
+            };
+            
+            utterance.onend = () => {
+                console.log('✅ Quick test completato');
+                this.updateIPadStatus();
+                this.showNotification('✅ Test audio OK!', 'success', 1500);
+            };
+            
+            utterance.onerror = (e) => {
+                console.error('❌ Quick test fallito:', e);
+                this.updateIPadStatus();
+                this.showNotification('❌ Test fallito: ' + e.error, 'error', 2000);
+            };
+            
+            try {
+                this.synthesis.speak(utterance);
+            } catch (error) {
+                console.error('❌ Errore quick test:', error);
+                this.showNotification('❌ Errore: ' + error.message, 'error', 2000);
+            }
+        }, 100);
+    }
+    
+    // Aggiorna status con messaggio custom
+    updateIPadStatus(customMessage = null) {
+        const status = document.getElementById('ipad-voice-status');
+        if (status) {
+            if (customMessage) {
+                status.textContent = customMessage;
+                status.style.background = '#ffeaa7';
+                status.style.color = '#2d3436';
+            } else if (this.useWakeWord) {
+                status.textContent = '🎤 Wake word ON - "Hey Assistente"';
+                status.style.background = '#d4edda';
+                status.style.color = '#155724';
+            } else {
+                status.textContent = '🔇 Wake word OFF';
+                status.style.background = '#f8d7da'; 
+                status.style.color = '#721c24';
+            }
+        }
     }
 
     async init() {
