@@ -24,6 +24,13 @@ elenco prodotti cliente: [CLIENTE]
 lista prodotti cliente: [CLIENTE]
 elencami i prodotti del cliente: [CLIENTE]
 mostrami i prodotti ordinati da [CLIENTE]
+data di consegna ordine [NUMERO_ORDINE]
+quando viene consegnato l'ordine [NUMERO_ORDINE]
+data consegna per [CLIENTE]
+ordini con data di consegna [DATA]
+verifica data consegna ordine [NUMERO_ORDINE]
+estrai data consegna da PDF ordine
+processa ordini PDF per data consegna
 
 # CATEGORIA: Percorsi e Spostamenti
 quanto tempo da [CLIENTE_A] a [CLIENTE_B]
@@ -58,6 +65,18 @@ fatturato per categoria
 analisi vendite [PRODOTTO]
 confronta vendite [PERIODO_A] vs [PERIODO_B]
 
+# CATEGORIA: Sistema e Database  
+sincronizza dati con Supabase
+esporta ordini su Supabase
+controlla connessione database
+stato sincronizzazione
+pulisci cache localStorage
+elimina dati tabella [NOME_TABELLA]
+backup dati locali
+ripristina backup
+test parser PDF ordini
+valida estrazione data consegna
+
 # CATEGORIA: Gestione Clienti
 aggiungi nuovo cliente
 modifica cliente [CLIENTE]
@@ -67,6 +86,16 @@ note cliente [CLIENTE]
 aggiungi nota a [CLIENTE]: [NOTA]
 clienti zona [ZONA]
 clienti non visitati da [GIORNI] giorni
+elenco clienti database
+clienti nel database
+mostrami tutti i clienti
+lista clienti completa
+quali clienti abbiamo
+chi sono i nostri clienti
+clienti presenti nel sistema
+database clienti
+interroga clienti database
+visualizza clienti
 
 # ESEMPI ALIAS SUPPORTATI
 # ESSEMME → Essemme Conad Montegrosso
