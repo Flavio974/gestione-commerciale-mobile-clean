@@ -777,12 +777,9 @@ const AIVoiceManager = {
   speak: function(text) {
     console.log('🔊 Voice Manager - Parlando:', text);
     
-    // Su iPad, SEMPRE disabilita questo sistema - solo index.html deve gestire TTS
-    const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
-    if (isIPad) {
-      console.log('🔇 🚨 iPad: Sistema vecchio COMPLETAMENTE DISABILITATO - SOLO index.html gestisce TTS');
-      return; // NON fare nulla - lascia che solo index.html gestisca TTS
-    }
+    // COMPLETAMENTE DISABILITATO - SOLO index.html deve parlare
+    console.log('🔇 🚨 AIVoiceManager TTS COMPLETAMENTE DISABILITATO - SOLO index.html parla');
+    return; // NON fare nulla - lascia che solo index.html gestisca TTS
     
     // Rileva dispositivi iOS
     const isIPhone = /iPhone/.test(navigator.userAgent);

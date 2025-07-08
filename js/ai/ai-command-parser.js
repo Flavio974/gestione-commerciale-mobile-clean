@@ -5,14 +5,11 @@
 
 const AICommandParser = {
   /**
-   * Blocca TTS su iPad - usa solo index.html per TTS
+   * COMPLETAMENTE DISABILITATO - SOLO index.html deve parlare
    */
   speakSafe: function(text) {
-    const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
-    if (!isIPad && window.AIVoiceManager && window.AIVoiceManager.speak) {
-      window.AIVoiceManager.speak(text);
-    }
-    // Su iPad, NON fare nulla - lascia che solo index.html gestisca il TTS
+    console.log('🔇 🚨 AICommandParser TTS COMPLETAMENTE DISABILITATO - SOLO index.html parla');
+    return; // NON fare nulla - lascia che solo index.html gestisca il TTS
   },
 
   /**
