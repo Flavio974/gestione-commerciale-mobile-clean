@@ -367,7 +367,15 @@ class AIVoiceManagerV2 {
                 }, 2000);
             } else if (isIPad) {
                 setTimeout(() => {
-                    this.showNotification('📱 Su iPad: Clicca "🔊 Test Audio" per attivare le risposte vocali', 'info', 5000);
+                    this.showNotification('📱 Su iPad: Clicca "🔊 Test Audio" per attivare le risposte vocali', 'info', 8000);
+                    
+                    // Pre-attiva automaticamente TTS su iPad dopo 3 secondi
+                    setTimeout(() => {
+                        if (!this.ttsActivated) {
+                            console.log('🎵 Pre-attivazione automatica TTS per iPad...');
+                            this.preActivateTTSForiPad();
+                        }
+                    }, 3000);
                 }, 2000);
             }
         } catch (error) {
@@ -733,6 +741,28 @@ class AIVoiceManagerV2 {
         }, 10000); // 10 secondi
     }
 
+    // Pre-attivazione specifica per iPad
+    preActivateTTSForiPad() {
+        if (this.ttsActivated) return;
+        
+        console.log('🎵 Pre-attivazione TTS automatica per iPad...');
+        
+        // Crea un pulsante invisibile temporaneo
+        const tempButton = document.createElement('button');
+        tempButton.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+        document.body.appendChild(tempButton);
+        
+        // Simula click per attivare TTS
+        tempButton.addEventListener('click', () => {
+            this.activateTTS();
+            // Rimuovi il pulsante dopo l'uso
+            setTimeout(() => tempButton.remove(), 100);
+        });
+        
+        // Trigger click programmatico
+        tempButton.click();
+    }
+    
     // Attiva TTS con interazione utente (richiesto da iOS)
     activateTTS() {
         if (!this.ttsActivated) {
