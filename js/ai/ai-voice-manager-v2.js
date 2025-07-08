@@ -1846,6 +1846,7 @@ class AIVoiceManagerV2 {
             const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
             if (isIPad) {
                 console.log('🔇 AIVoiceManagerV2 SPEAK DISABILITATO su iPad - index.html gestisce TTS');
+                console.log('⚡ FORCE DEPLOY - Timestamp:', new Date().toISOString());
                 resolve();
                 return;
             }
