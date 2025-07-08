@@ -15,6 +15,8 @@ class AIVoiceManagerV2 {
         this.lastSpeechTime = Date.now();
         this.ttsActivated = false; // Flag per tracciare attivazione TTS
         this.isSpeaking = false; // Flag per tracciare se il TTS sta parlando
+        this.lastSpokenText = null; // Ultimo testo pronunciato per evitare duplicati
+        this.lastSpokenTime = 0; // Timestamp ultimo TTS per evitare duplicati ravvicinati
         
         // Stato UI collapsible per iPhone
         this.isExpanded = false;
@@ -732,21 +734,32 @@ class AIVoiceManagerV2 {
         };
 
         this.recognition.onend = () => {
-            console.log('Riconoscimento terminato');
+            console.log('📱 iPad RECOGNITION.ONEND DEBUG:', {
+                isListening: this.isListening,
+                isAutoMode: this.isAutoMode,
+                isSpeaking: this.isSpeaking,
+                timestamp: new Date().toISOString()
+            });
+            
             this.isListening = false;
             
             // In modalità auto, riavvia automaticamente SOLO se non stiamo parlando
             if (this.isAutoMode && !this.isSpeaking) {
+                // Su iPad usiamo delay più lungo per evitare interferenze
+                const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+                const delay = isIPad ? 2000 : 500; // 2 secondi su iPad vs 0.5 su desktop
+                
                 setTimeout(() => {
-                    // Doppio controllo: riavvia solo se non stiamo ancora parlando
-                    if (!this.isSpeaking && this.isAutoMode) {
-                        console.log('🔄 Riavvio automatico...');
+                    // TRIPLO controllo per iPad: riavvia solo se non stiamo ancora parlando
+                    if (!this.isSpeaking && this.isAutoMode && !this.synthesis.speaking) {
+                        console.log('🔄 iPad: Riavvio automatico dopo', delay + 'ms');
                         this.startListening();
                     } else {
-                        console.log('⏸️ Riavvio sospeso - TTS in corso');
+                        console.log('⏸️ iPad: Riavvio sospeso - TTS in corso o synthesis.speaking attivo');
                     }
-                }, 500);
+                }, delay);
             } else {
+                console.log('📱 iPad: Non riavvio - autoMode:', this.isAutoMode, 'isSpeaking:', this.isSpeaking);
                 this.updateUIState('idle');
             }
         };
@@ -1712,10 +1725,32 @@ class AIVoiceManagerV2 {
 
     async speak(text) {
         return new Promise((resolve) => {
-            console.log('🔊 Avvio TTS per:', text);
+            console.log('🔊 iPad SPEAK DEBUG:', {
+                text: text.substring(0, 50) + '...',
+                isSpeaking: this.isSpeaking,
+                isListening: this.isListening,
+                isAutoMode: this.isAutoMode,
+                timestamp: new Date().toISOString()
+            });
+            
+            // PREVENZIONE DOPPIA CHIAMATA - Se già sta parlando, ignora
+            if (this.isSpeaking) {
+                console.log('⚠️ PREVENZIONE LOOP: TTS già in corso, ignoro nuova chiamata');
+                resolve();
+                return;
+            }
+            
+            // PREVENZIONE DUPLICATI - Controlla se è lo stesso testo in poco tempo
+            const now = Date.now();
+            const timeDiff = now - this.lastSpokenTime;
+            if (this.lastSpokenText === text && timeDiff < 3000) {
+                console.log('⚠️ PREVENZIONE DUPLICATI: Stesso testo in', timeDiff, 'ms, ignoro');
+                resolve();
+                return;
+            }
             
             // Su iPad, verifica che TTS sia attivato
-            const isIPad = /iPad/.test(navigator.userAgent);
+            const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
             if (isIPad && !this.ttsActivated) {
                 console.log('⚠️ TTS non attivato su iPad, mostro prompt');
                 this.createAudioActivationButton();
@@ -1727,7 +1762,7 @@ class AIVoiceManagerV2 {
             // IMPORTANTE: Disattiva riconoscimento vocale mentre parla per evitare loop
             const wasListening = this.isListening;
             if (wasListening && this.isAutoMode) {
-                console.log('🔇 Disattivo riconoscimento temporaneamente per evitare loop');
+                console.log('🔇 iPad: Disattivo riconoscimento temporaneamente per evitare loop');
                 this.pauseListening();
             }
             
@@ -1751,8 +1786,10 @@ class AIVoiceManagerV2 {
             
             // Eventi
             utterance.onstart = () => {
-                console.log('🔊 TTS avviato');
+                console.log('🔊 iPad TTS avviato');
                 this.isSpeaking = true; // Imposta flag speaking
+                this.lastSpokenText = text; // Salva ultimo testo
+                this.lastSpokenTime = Date.now(); // Salva timestamp
                 this.updateUIState('speaking');
             };
             
