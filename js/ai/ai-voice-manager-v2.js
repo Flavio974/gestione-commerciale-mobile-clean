@@ -195,6 +195,143 @@ class AIVoiceManagerV2 {
         this.synthesis.cancel();
         this.synthesis.speak(silentUtterance);
     }
+    
+    // Aggiungi bottone di attivazione audio nel tab AI per iPad
+    addAudioButtonToAITab() {
+        // Aspetta che il DOM del tab AI sia pronto
+        const checkAITab = () => {
+            const aiContent = document.getElementById('ai-content');
+            if (!aiContent) {
+                setTimeout(checkAITab, 500);
+                return;
+            }
+            
+            // Verifica se il bottone esiste già
+            if (document.getElementById('ipad-audio-tab-btn')) return;
+            
+            console.log('🎵 Aggiungendo bottone audio nel tab AI...');
+            
+            // Crea contenitore per controlli iPad
+            let ipadControls = document.getElementById('ipad-audio-controls');
+            if (!ipadControls) {
+                ipadControls = document.createElement('div');
+                ipadControls.id = 'ipad-audio-controls';
+                ipadControls.style.cssText = `
+                    background: #f8f9fa;
+                    border: 2px solid #007AFF;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 20px 0;
+                    text-align: center;
+                `;
+                
+                ipadControls.innerHTML = `
+                    <h3 style="margin: 0 0 15px 0; color: #007AFF;">🎤 Controlli Audio iPad</h3>
+                    <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">
+                        Su iPad, l'audio deve essere attivato manualmente per le risposte vocali.
+                    </p>
+                `;
+                
+                // Inserisci all'inizio del contenuto AI
+                if (aiContent.firstChild) {
+                    aiContent.insertBefore(ipadControls, aiContent.firstChild);
+                } else {
+                    aiContent.appendChild(ipadControls);
+                }
+            }
+            
+            // Crea il bottone
+            const audioBtn = document.createElement('button');
+            audioBtn.id = 'ipad-audio-tab-btn';
+            audioBtn.style.cssText = `
+                background: #007AFF;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                margin: 5px;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(0,122,255,0.3);
+            `;
+            
+            this.updateAudioButtonState(audioBtn);
+            
+            audioBtn.addEventListener('click', () => {
+                if (this.ttsActivated) {
+                    // Test audio
+                    this.testAudioOnIPad(audioBtn);
+                } else {
+                    // Attiva audio
+                    this.activateAudioFromTab(audioBtn);
+                }
+            });
+            
+            ipadControls.appendChild(audioBtn);
+        };
+        
+        checkAITab();
+    }
+    
+    // Aggiorna stato del bottone audio nel tab
+    updateAudioButtonState(button) {
+        if (this.ttsActivated) {
+            button.textContent = '🔊 Test Audio';
+            button.style.background = '#28a745';
+            button.title = 'Clicca per testare l\'audio';
+        } else {
+            button.textContent = '🎵 Attiva Audio';
+            button.style.background = '#007AFF';
+            button.title = 'Clicca per attivare l\'audio su iPad';
+        }
+    }
+    
+    // Attiva audio dal tab AI
+    activateAudioFromTab(button) {
+        button.textContent = '⏳ Attivazione...';
+        button.disabled = true;
+        button.style.opacity = '0.7';
+        
+        this.activateAudioForIPad(() => {
+            // Successo
+            this.updateAudioButtonState(button);
+            button.disabled = false;
+            button.style.opacity = '1';
+            
+            // Mostra notifica
+            this.showNotification('✅ Audio attivato con successo!', 'success', 3000);
+        });
+    }
+    
+    // Test audio dal tab AI
+    testAudioOnIPad(button) {
+        button.textContent = '🔊 Testing...';
+        button.disabled = true;
+        
+        const testUtterance = new SpeechSynthesisUtterance('Test audio completato. Il sistema vocale funziona correttamente su iPad.');
+        testUtterance.lang = 'it-IT';
+        testUtterance.volume = 0.8;
+        
+        if (this.ttsConfig.voice) {
+            testUtterance.voice = this.ttsConfig.voice;
+        }
+        
+        testUtterance.onend = () => {
+            this.updateAudioButtonState(button);
+            button.disabled = false;
+            this.showNotification('✅ Test audio completato!', 'success', 2000);
+        };
+        
+        testUtterance.onerror = () => {
+            this.updateAudioButtonState(button);
+            button.disabled = false;
+            this.showNotification('⚠️ Problema con il test audio', 'error', 3000);
+        };
+        
+        this.synthesis.speak(testUtterance);
+    }
 
     async init() {
         // Verifica supporto browser
@@ -354,6 +491,11 @@ class AIVoiceManagerV2 {
         // Su iPad, mostra sempre il bottone di attivazione audio se TTS non è attivo
         if (isIPad && !this.ttsActivated) {
             this.createAudioActivationButton();
+        }
+        
+        // Aggiungi anche bottone nel tab AI se siamo su iPad
+        if (isIPad) {
+            this.addAudioButtonToAITab();
         }
         
         console.log('🔍 Device Detection:', {
