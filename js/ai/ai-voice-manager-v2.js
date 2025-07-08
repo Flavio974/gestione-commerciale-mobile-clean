@@ -427,6 +427,10 @@ class AIVoiceManagerV2 {
             min-width: 200px;
             border: 2px solid rgba(0,122,255,0.3);
             animation: slideInLeft 0.3s ease;
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+            transition: all 0.3s ease;
         `;
         
         // Titolo
@@ -561,6 +565,42 @@ class AIVoiceManagerV2 {
                         opacity: 1;
                     }
                 }
+                
+                /* Drag styles per iPad controls */
+                #ipad-voice-controls.dragging {
+                    opacity: 0.9;
+                    transform: scale(1.05);
+                    transition: none !important;
+                    box-shadow: 0 8px 35px rgba(0, 122, 255, 0.4);
+                    border-color: rgba(0, 122, 255, 0.6) !important;
+                    cursor: grabbing !important;
+                }
+                
+                #ipad-voice-controls:hover {
+                    border-color: rgba(0, 122, 255, 0.4);
+                    box-shadow: 0 6px 25px rgba(0, 122, 255, 0.3);
+                }
+                
+                /* Indicatore drag per iPad controls */
+                #ipad-voice-controls::before {
+                    content: "⋮⋮";
+                    position: absolute;
+                    top: -5px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    color: rgba(0, 122, 255, 0.5);
+                    font-size: 16px;
+                    font-weight: bold;
+                    letter-spacing: 3px;
+                    opacity: 0.7;
+                    transition: all 0.3s ease;
+                }
+                
+                #ipad-voice-controls:hover::before {
+                    opacity: 1;
+                    color: rgba(0, 122, 255, 0.8);
+                    font-size: 18px;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -587,6 +627,14 @@ class AIVoiceManagerV2 {
         this.makeIPadControlsDraggable(container);
         
         console.log('✅ Controlli iPad creati con successo');
+        
+        // Rendi i controlli draggabili anche su PC
+        this.makeIPadControlsDraggable(container);
+        
+        // Setup drag & drop generico per PC
+        setTimeout(() => {
+            this.setupDragAndDrop();
+        }, 100);
     }
     
     // Metodo deprecato - ora usa updateIPadStatus() con parametri
@@ -1127,25 +1175,31 @@ class AIVoiceManagerV2 {
             this.disableAutoMode();
         });
         
-        // Controlli volume e velocità
-        this.elements.volumeControl.addEventListener('input', (e) => {
-            this.ttsConfig.volume = parseFloat(e.target.value);
-        });
+        // Controlli volume e velocità (solo se esistono)
+        if (this.elements.volumeControl) {
+            this.elements.volumeControl.addEventListener('input', (e) => {
+                this.ttsConfig.volume = parseFloat(e.target.value);
+            });
+        }
         
-        this.elements.speedControl.addEventListener('input', (e) => {
-            this.ttsConfig.rate = parseFloat(e.target.value);
-        });
+        if (this.elements.speedControl) {
+            this.elements.speedControl.addEventListener('input', (e) => {
+                this.ttsConfig.rate = parseFloat(e.target.value);
+            });
+        }
         
-        // Toggle wake word
-        this.elements.wakeWordToggle.addEventListener('change', (e) => {
-            this.useWakeWord = e.target.checked;
-            console.log('Wake word toggle cambiato:', this.useWakeWord);
-            this.updateWakeWordStatus();
-            this.showNotification(
-                this.useWakeWord ? 'Wake word attivate' : 'Wake word disattivate', 
-                'info'
-            );
-        });
+        // Toggle wake word (solo se esiste)
+        if (this.elements.wakeWordToggle) {
+            this.elements.wakeWordToggle.addEventListener('change', (e) => {
+                this.useWakeWord = e.target.checked;
+                console.log('Wake word toggle cambiato:', this.useWakeWord);
+                this.updateWakeWordStatus();
+                this.showNotification(
+                    this.useWakeWord ? 'Wake word attivate' : 'Wake word disattivate', 
+                    'info'
+                );
+            });
+        }
         
         // Fix per iPad - aggiungi anche eventi touch
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -1212,11 +1266,18 @@ class AIVoiceManagerV2 {
     setupDragAndDrop() {
         console.log('🎯 Configurazione drag & drop per controlli vocali...');
         
-        const container = document.getElementById('voice-controls-v2');
+        // Prova prima voice-controls-v2, poi ipad-voice-controls
+        let container = document.getElementById('voice-controls-v2');
         if (!container) {
-            console.error('❌ Container controlli vocali non trovato');
+            container = document.getElementById('ipad-voice-controls');
+        }
+        
+        if (!container) {
+            console.error('❌ Nessun container controlli vocali trovato');
             return;
         }
+        
+        console.log('✅ Container trovato:', container.id);
         
         let isDragging = false;
         let startX = 0;
