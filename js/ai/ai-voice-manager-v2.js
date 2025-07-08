@@ -1876,8 +1876,7 @@ class AIVoiceManagerV2 {
                 return;
             }
             
-            // Su iPad, verifica che TTS sia attivato
-            const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+            // Su iPad, verifica che TTS sia attivato (già dichiarato isIPad sopra)
             if (isIPad && !this.ttsActivated) {
                 console.log('⚠️ TTS non attivato su iPad, mostro prompt');
                 this.createAudioActivationButton();

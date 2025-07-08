@@ -88,18 +88,10 @@
         // Correzioni basate su pattern
         
         // 1. DISABILITATO - DONAC ha più punti vendita con indirizzi diversi
+        // Questa sezione è commentata per evitare errori di sintassi
         /*
         if (address.includes('VIA MARGARITA') && fullText && fullText.includes('VIA SALUZZO')) {
             console.log('[DONAC FIX] Correzione VIA MARGARITA -> VIA SALUZZO');
-            
-            // Estrai VIA SALUZZO dal testo
-            const viaSaluzzoMatch = fullText.match(/VIA SALUZZO[,\s]+\d+/i);
-            if (viaSaluzzoMatch) {
-                // Sostituisci la parte dell'indirizzo
-                const newAddress = address.replace(/VIA MARGARITA[^0-9]+(?:\d+)?[^0-9]*/, viaSaluzzoMatch[0] + ' ');
-                console.log(`[DONAC FIX] Indirizzo corretto: "${newAddress}"`);
-                return newAddress;
-            }
         }
         */
         

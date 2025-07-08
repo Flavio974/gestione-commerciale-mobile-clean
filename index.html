@@ -1254,6 +1254,42 @@
   <!-- Voice Manager V2 per iPad -->
   <script src="js/ai/ai-voice-manager-v2.js"></script>
   
+  <!-- INIZIALIZZAZIONE VOICE CONTROLS V2 -->
+  <script>
+    // Force inizializzazione Voice Controls V2 dopo caricamento completo
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🎤 INIZIALIZZAZIONE VOICE CONTROLS V2...');
+      
+      // Aspetta che tutti i script siano caricati
+      setTimeout(function() {
+        if (typeof AIVoiceManagerV2 !== 'undefined') {
+          console.log('✅ AIVoiceManagerV2 class trovata, inizializzazione...');
+          
+          // Verifica se già esistono i controlli
+          if (!document.querySelector('.voice-controls-container')) {
+            console.log('🎯 Creando controlli vocali...');
+            
+            // Forza inizializzazione
+            try {
+              if (!window.AIVoiceManagerV2) {
+                window.AIVoiceManagerV2 = new AIVoiceManagerV2();
+                console.log('✅ AIVoiceManagerV2 istanziato con successo');
+              } else {
+                console.log('✅ AIVoiceManagerV2 già inizializzato');
+              }
+            } catch (error) {
+              console.error('❌ Errore inizializzazione AIVoiceManagerV2:', error);
+            }
+          } else {
+            console.log('✅ Controlli vocali già presenti');
+          }
+        } else {
+          console.error('❌ AIVoiceManagerV2 class non trovata!');
+        }
+      }, 1000);
+    });
+  </script>
+  
   <!-- Middleware System -->
   <script src="js/middleware/request-middleware.js"></script>
   <script src="js/middleware/vocabolario-middleware.js"></script>
