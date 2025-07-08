@@ -275,7 +275,13 @@ class VocabolarioMiddleware {
             patternLower.includes('clienti presenti nel sistema') ||
             patternLower.includes('database clienti') ||
             patternLower.includes('interroga clienti database') ||
-            patternLower.includes('visualizza clienti')) {
+            patternLower.includes('visualizza clienti') ||
+            // NUOVI PATTERN per domande sugli ordini
+            patternLower.includes('ordini') && patternLower.includes('clienti') && patternLower.includes('appartengono') ||
+            patternLower.includes('ordini') && patternLower.includes('database') && patternLower.includes('clienti') ||
+            patternLower.includes('ordini') && patternLower.includes('tabella') && patternLower.includes('clienti') ||
+            patternLower.includes('che clienti') && (patternLower.includes('database') || patternLower.includes('ordini')) ||
+            patternLower.includes('a che clienti') && patternLower.includes('appartengono')) {
             return 'clienti_database';
         }
         
