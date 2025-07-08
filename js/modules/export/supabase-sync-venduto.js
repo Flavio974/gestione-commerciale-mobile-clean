@@ -52,10 +52,120 @@
     /**
      * Converte i dati dal formato Excel al formato Supabase
      */
+    /**
+     * Parser numeri italiani robusto - gestisce formato "1.234,56"
+     * Compatibile con numeri già convertiti
+     * 
+     * Test cases:
+     * parseItalianNumber("1.234,56") -> 1234.56
+     * parseItalianNumber("1234,56") -> 1234.56  
+     * parseItalianNumber("1234.56") -> 1234.56
+     * parseItalianNumber("1.234") -> 1234
+     * parseItalianNumber(1234.56) -> 1234.56
+     */
+    parseItalianNumber(value) {
+      // Se è già un numero, restituiscilo così com'è
+      if (typeof value === 'number' && !isNaN(value)) {
+        return value;
+      }
+      
+      // Se è null, undefined o stringa vuota
+      if (value === null || value === undefined || value === '') {
+        return 0;
+      }
+      
+      // Converti in stringa per elaborazione
+      const stringValue = value.toString().trim();
+      
+      // Se è stringa vuota dopo trim
+      if (stringValue === '') {
+        return 0;
+      }
+      
+      // Se è un numero normale (formato inglese) con solo punto decimale
+      if (/^\d+\.?\d*$/.test(stringValue)) {
+        const parsed = parseFloat(stringValue);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      
+      // Se è formato italiano "1.234,56" o "1234,56"
+      if (stringValue.includes(',')) {
+        // Rimuovi tutti i punti (separatori migliaia) e sostituisci virgola con punto
+        const normalized = stringValue
+          .replace(/\./g, '')  // Rimuovi separatori migliaia
+          .replace(/,/g, '.'); // Converti virgola decimale in punto
+        
+        const parsed = parseFloat(normalized);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      
+      // Se contiene solo punti (potrebbe essere separatore migliaia senza decimali)
+      if (stringValue.includes('.') && !stringValue.includes(',')) {
+        // Se ha più di un punto, trattali come separatori migliaia
+        const parts = stringValue.split('.');
+        if (parts.length > 2) {
+          // Rimuovi tutti i punti tranne l'ultimo (che diventa decimale)
+          const withoutThousands = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
+          const parsed = parseFloat(withoutThousands);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+      }
+      
+      // Tentativo finale con parseFloat standard
+      const parsed = parseFloat(stringValue);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    /**
+     * Test del parser numeri italiani - chiamabile da console
+     * Uso: window.supabaseSync.testNumberParser()
+     */
+    testNumberParser() {
+      const testCases = [
+        { input: "1.234,56", expected: 1234.56 },
+        { input: "1234,56", expected: 1234.56 },
+        { input: "1234.56", expected: 1234.56 },
+        { input: "1.234", expected: 1234 },
+        { input: 1234.56, expected: 1234.56 },
+        { input: "0", expected: 0 },
+        { input: "", expected: 0 },
+        { input: null, expected: 0 },
+        { input: "12.345.678,90", expected: 12345678.90 },
+        { input: "5,00", expected: 5.00 }
+      ];
+
+      console.log('🧪 TEST PARSER NUMERI ITALIANI:');
+      let allPassed = true;
+
+      testCases.forEach((test, i) => {
+        const result = this.parseItalianNumber(test.input);
+        const passed = Math.abs(result - test.expected) < 0.01; // Tolleranza float
+        
+        console.log(`${passed ? '✅' : '❌'} Test ${i + 1}: "${test.input}" -> ${result} (atteso: ${test.expected})`);
+        
+        if (!passed) allPassed = false;
+      });
+
+      console.log(allPassed ? '🎉 TUTTI I TEST PASSATI!' : '⚠️ ALCUNI TEST FALLITI');
+      return allPassed;
+    }
+
     formatDataForSupabase(vendutoData) {
-      return vendutoData.map(row => {
+      return vendutoData.map((row, index) => {
         // Genera un ID univoco basato su ordine + prodotto
         const uniqueId = `${row['N° Ordine']}_${row['Codice Prodotto']}`;
+        
+        // Log per debug conversione numeri (solo primi 3 record per non spammare)
+        if (index < 3) {
+          console.log(`🔢 Conversione numeri riga ${index + 1}:`, {
+            quantita_originale: row['Quantità'],
+            quantita_convertita: this.parseItalianNumber(row['Quantità']),
+            prezzo_originale: row['Prezzo Unitario'],
+            prezzo_convertito: this.parseItalianNumber(row['Prezzo Unitario']),
+            importo_originale: row['Importo'],
+            importo_convertito: this.parseItalianNumber(row['Importo'])
+          });
+        }
         
         return {
           id: uniqueId,
@@ -67,11 +177,11 @@
           data_consegna: this.parseDate(row['Data Consegna']),
           codice_prodotto: row['Codice Prodotto']?.toString() || '',
           prodotto: row['Prodotto']?.toString() || '',
-          quantita: parseFloat(row['Quantità']) || 0,
-          prezzo_unitario: parseFloat(row['Prezzo Unitario']) || 0,
-          sconto_merce: parseFloat(row['S.M.']) || 0,
-          sconto_percentuale: parseFloat(row['Sconto %']) || 0,
-          importo: parseFloat(row['Importo']) || 0,
+          quantita: this.parseItalianNumber(row['Quantità']),
+          prezzo_unitario: this.parseItalianNumber(row['Prezzo Unitario']),
+          sconto_merce: this.parseItalianNumber(row['S.M.']),
+          sconto_percentuale: this.parseItalianNumber(row['Sconto %']),
+          importo: this.parseItalianNumber(row['Importo']),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
@@ -272,7 +382,7 @@
 
         // Calcola statistiche
         const totalRecords = data.length;
-        const totalImporto = data.reduce((sum, row) => sum + (parseFloat(row.importo) || 0), 0);
+        const totalImporto = data.reduce((sum, row) => sum + this.parseItalianNumber(row.importo), 0);
         const uniqueOrders = new Set(data.map(row => row.numero_ordine)).size;
         const uniqueClients = new Set(data.map(row => row.cliente)).size;
 
@@ -391,3 +501,7 @@
   console.log('✅ SupabaseSyncVenduto caricato');
 
 })();
+
+// Crea istanza globale FUORI dall'IIFE per testing e uso immediato
+window.supabaseSync = new window.SupabaseSyncVenduto();
+console.log('🧪 Test numeri italiani: window.supabaseSync.testNumberParser()');
