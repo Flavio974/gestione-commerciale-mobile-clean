@@ -220,7 +220,8 @@ class VocabolarioMiddleware {
             'Percorsi e Spostamenti': 'percorsi',
             'Timeline e Appuntamenti': 'timeline',
             'Analisi e Report': 'analisi',
-            'Gestione Clienti': 'clienti'
+            'Gestione Clienti': this.determineClientiType(pattern),
+            'Sistema e Database': this.determineSistemaType(pattern)
         };
         
         return mapping[category] || 'unknown';
@@ -259,6 +260,54 @@ class VocabolarioMiddleware {
     }
     
     /**
+     * Determina il tipo di richiesta per gestione clienti
+     */
+    determineClientiType(pattern) {
+        const patternLower = pattern.toLowerCase();
+        
+        // Riconoscimento query database clienti
+        if (patternLower.includes('elenco clienti database') ||
+            patternLower.includes('clienti nel database') ||
+            patternLower.includes('mostrami tutti i clienti') ||
+            patternLower.includes('lista clienti completa') ||
+            patternLower.includes('quali clienti abbiamo') ||
+            patternLower.includes('chi sono i nostri clienti') ||
+            patternLower.includes('clienti presenti nel sistema') ||
+            patternLower.includes('database clienti') ||
+            patternLower.includes('interroga clienti database') ||
+            patternLower.includes('visualizza clienti')) {
+            return 'clienti_database';
+        }
+        
+        return 'clienti';
+    }
+    
+    /**
+     * Determina il tipo di richiesta per sistema e database
+     */
+    determineSistemaType(pattern) {
+        const patternLower = pattern.toLowerCase();
+        
+        if (patternLower.includes('sincronizza') || patternLower.includes('esporta')) {
+            return 'sincronizzazione';
+        }
+        
+        if (patternLower.includes('controlla connessione') || patternLower.includes('stato')) {
+            return 'stato_sistema';
+        }
+        
+        if (patternLower.includes('pulisci') || patternLower.includes('elimina')) {
+            return 'pulizia_dati';
+        }
+        
+        if (patternLower.includes('test') || patternLower.includes('valida')) {
+            return 'test_sistema';
+        }
+        
+        return 'sistema';
+    }
+    
+    /**
      * Processa richiesta con vocabolario
      */
     async processWithVocabulario(userInput) {
@@ -273,7 +322,7 @@ class VocabolarioMiddleware {
             console.log('📋 VOCABOLARIO: Request type mappato:', requestType);
             
             // Se è un tipo gestito dal middleware esistente
-            if (['fatturato', 'ordini', 'data', 'percorsi', 'clienti', 'prodotti_ordine'].includes(requestType)) {
+            if (['fatturato', 'ordini', 'data', 'percorsi', 'clienti', 'prodotti_ordine', 'clienti_database'].includes(requestType)) {
                 // Adatta i parametri al formato atteso (con risoluzione alias)
                 const adaptedParams = await this.adaptParamsForMiddleware(requestType, exactMatch.params);
                 

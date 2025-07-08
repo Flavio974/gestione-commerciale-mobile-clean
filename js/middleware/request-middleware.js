@@ -517,6 +517,9 @@ class RequestMiddleware {
             case 'clienti':
                 return await this.searchClienti(params);
                 
+            case 'clienti_database':
+                return await this.getClientiDatabase(params);
+                
             default:
                 return { 
                     success: false, 
@@ -1185,6 +1188,104 @@ class RequestMiddleware {
         } catch (error) {
             console.error('❌ Errore ricerca clienti:', error);
             return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * FUNZIONE 5: Interrogazione Clienti Database
+     */
+    async getClientiDatabase(params) {
+        try {
+            console.log('🗄️ MIDDLEWARE: Interrogazione clienti database');
+            
+            // Recupera dati dal localStorage
+            const savedVenduto = localStorage.getItem('ordiniFileData');
+            if (!savedVenduto) {
+                return {
+                    success: true,
+                    response: '❌ Database ordini vuoto. Nessun cliente presente.',
+                    data: { clienti: [] }
+                };
+            }
+            
+            const data = JSON.parse(savedVenduto);
+            
+            if (data.length <= 1) { // Solo header o vuoto
+                return {
+                    success: true,
+                    response: '❌ Database ordini vuoto. Nessun cliente presente.',
+                    data: { clienti: [] }
+                };
+            }
+            
+            // Analizza i clienti (colonna 7 = "Descrizione Cliente")
+            const uniqueClients = new Set();
+            const clientiDetails = new Map();
+            
+            data.forEach((row, index) => {
+                if (index === 0) return; // Skip header
+                
+                const numeroOrdine = row[0];
+                const dataOrdine = row[1];
+                const codiceCliente = row[6];
+                const nomeCliente = row[7];
+                const indirizzoConsegna = row[8];
+                const partitaIva = row[9];
+                const importo = parseFloat(row[16]) || 0;
+                
+                if (nomeCliente && nomeCliente.trim() !== '') {
+                    uniqueClients.add(nomeCliente);
+                    
+                    if (!clientiDetails.has(nomeCliente)) {
+                        clientiDetails.set(nomeCliente, {
+                            nome: nomeCliente,
+                            codice: codiceCliente,
+                            partitaIva: partitaIva,
+                            indirizzo: indirizzoConsegna,
+                            ordini: new Set(),
+                            totalAmount: 0
+                        });
+                    }
+                    
+                    const clientInfo = clientiDetails.get(nomeCliente);
+                    clientInfo.ordini.add(numeroOrdine);
+                    clientInfo.totalAmount += importo;
+                }
+            });
+            
+            // Ordina i clienti per totale importo
+            const clientiArray = Array.from(clientiDetails.values());
+            clientiArray.sort((a, b) => b.totalAmount - a.totalAmount);
+            
+            // Prepara lista clienti per risposta
+            const top5Clienti = clientiArray.slice(0, 5).map(cliente => 
+                `• ${cliente.nome} (${cliente.ordini.size} ordini, €${cliente.totalAmount.toFixed(2)})`
+            );
+            
+            const response = `🗄️ **Database Clienti**\n\n` +
+                `👥 **Totale clienti**: ${uniqueClients.size}\n` +
+                `📊 **Record totali**: ${data.length - 1}\n` +
+                `💰 **Valore complessivo**: €${clientiArray.reduce((sum, c) => sum + c.totalAmount, 0).toLocaleString('it-IT', {minimumFractionDigits: 2})}\n\n` +
+                `**🏆 Top 5 clienti per fatturato:**\n${top5Clienti.join('\n')}\n\n` +
+                `*Tutti i ${uniqueClients.size} clienti sono presenti nel database degli ordini.*`;
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    clienti: clientiArray,
+                    totaleClienti: uniqueClients.size,
+                    totaleRecord: data.length - 1,
+                    valoreComplessivo: clientiArray.reduce((sum, c) => sum + c.totalAmount, 0)
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore interrogazione clienti database:', error);
+            return { 
+                success: false, 
+                error: `Errore nell'analisi del database: ${error.message}` 
+            };
         }
     }
 }
