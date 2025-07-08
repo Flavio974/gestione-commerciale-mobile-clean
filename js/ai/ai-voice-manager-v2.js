@@ -1842,6 +1842,14 @@ class AIVoiceManagerV2 {
 
     async speak(text) {
         return new Promise((resolve) => {
+            // DISABILITA TTS per AIVoiceManagerV2 - lascia che index.html gestisca tutto
+            const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+            if (isIPad) {
+                console.log('🔇 AIVoiceManagerV2 SPEAK DISABILITATO su iPad - index.html gestisce TTS');
+                resolve();
+                return;
+            }
+            
             console.log('🔊 iPad SPEAK DEBUG:', {
                 text: text.substring(0, 50) + '...',
                 isSpeaking: this.isSpeaking,
