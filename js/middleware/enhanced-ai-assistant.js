@@ -323,42 +323,9 @@ if (typeof module !== 'undefined' && module.exports) {
 // Espone globalmente per integrazione
 window.EnhancedAIAssistant = EnhancedAIAssistant;
 
-// Inizializzazione ritardata per aspettare FlavioAIAssistant
-setTimeout(() => {
-    try {
-        if (typeof FlavioAIAssistant !== 'undefined') {
-            console.log('🔄 ENHANCED: Inizializzazione ritardata...');
-            window.EnhancedAI = new EnhancedAIAssistant();
-            
-            // Attendi che sia pronto e poi forza il rebinding automatico
-            window.EnhancedAI.initializationPromise.then(() => {
-                console.log('🔄 ENHANCED: Applicando rebinding automatico...');
-                autoRebindToEnhanced();
-            });
-            
-            console.log('✅ EnhancedAIAssistant inizializzato e disponibile globalmente');
-        } else {
-            console.log('⏳ ENHANCED: FlavioAIAssistant non ancora disponibile, nuovo tentativo...');
-            setTimeout(() => {
-                if (typeof FlavioAIAssistant !== 'undefined') {
-                    window.EnhancedAI = new EnhancedAIAssistant();
-                    
-                    // Rebinding anche al secondo tentativo
-                    window.EnhancedAI.initializationPromise.then(() => {
-                        console.log('🔄 ENHANCED: Applicando rebinding automatico (secondo tentativo)...');
-                        autoRebindToEnhanced();
-                    });
-                    
-                    console.log('✅ EnhancedAIAssistant inizializzato al secondo tentativo');
-                } else {
-                    console.error('❌ ENHANCED: FlavioAIAssistant non trovato dopo 2 tentativi');
-                }
-            }, 2000);
-        }
-    } catch (error) {
-        console.error('❌ ENHANCED: Errore inizializzazione:', error);
-    }
-}, 1000);
+// NOTA: L'inizializzazione di EnhancedAIAssistant ora avviene in index.html
+// per garantire che venga usato al posto di FlavioAIAssistant
+console.log('🔄 ENHANCED: EnhancedAIAssistant caricato, attesa inizializzazione da index.html...');
 
 /**
  * Funzione per rebinding automatico dell'interfaccia utente

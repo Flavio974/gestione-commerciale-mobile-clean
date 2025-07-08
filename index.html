@@ -2981,7 +2981,21 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Inizializza AI Assistant IMMEDIATAMENTE
       console.log('🚀 Inizializzazione AI Assistant...');
-      flavioAI = new FlavioAIAssistant();
+      
+      // IMPORTANTE: Usa EnhancedAIAssistant invece di FlavioAIAssistant
+      // per avere il VocabolarioMiddleware integrato
+      if (typeof EnhancedAIAssistant !== 'undefined') {
+        console.log('🔄 Usando EnhancedAIAssistant con VocabolarioMiddleware');
+        flavioAI = new EnhancedAIAssistant();
+        // Aspetta che sia completamente inizializzato
+        flavioAI.initializationPromise.then(() => {
+          console.log('✅ EnhancedAIAssistant completamente inizializzato');
+        });
+      } else {
+        console.log('⚠️ EnhancedAIAssistant non disponibile, usando FlavioAIAssistant');
+        flavioAI = new FlavioAIAssistant();
+      }
+      
       // Espone l'istanza globalmente per il sistema di navigazione
       window.FlavioAIAssistant = flavioAI;
       window.flavioAI = flavioAI; // Per Voice Manager
