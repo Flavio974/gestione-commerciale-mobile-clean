@@ -14,6 +14,7 @@ class AIVoiceManagerV2 {
         this.transcriptionBuffer = [];
         this.lastSpeechTime = Date.now();
         this.ttsActivated = false; // Flag per tracciare attivazione TTS
+        this.isSpeaking = false; // Flag per tracciare se il TTS sta parlando
         
         // Stato UI collapsible per iPhone
         this.isExpanded = false;
@@ -113,9 +114,17 @@ class AIVoiceManagerV2 {
             console.log('Riconoscimento terminato');
             this.isListening = false;
             
-            // In modalità auto, riavvia automaticamente
-            if (this.isAutoMode) {
-                setTimeout(() => this.startListening(), 500);
+            // In modalità auto, riavvia automaticamente SOLO se non stiamo parlando
+            if (this.isAutoMode && !this.isSpeaking) {
+                setTimeout(() => {
+                    // Doppio controllo: riavvia solo se non stiamo ancora parlando
+                    if (!this.isSpeaking && this.isAutoMode) {
+                        console.log('🔄 Riavvio automatico...');
+                        this.startListening();
+                    } else {
+                        console.log('⏸️ Riavvio sospeso - TTS in corso');
+                    }
+                }, 500);
             } else {
                 this.updateUIState('idle');
             }
@@ -853,8 +862,9 @@ class AIVoiceManagerV2 {
         if (!this.isListening) return;
         
         try {
-            console.log('⏸️ Pausa riconoscimento vocale');
+            console.log('⏸️ Pausa riconoscimento vocale per TTS');
             this.isListening = false;
+            this.isSpeaking = true; // Imposta che stiamo "parlando" per bloccare riavvii
             this.recognition.stop();
         } catch (error) {
             console.error('Errore pausa riconoscimento:', error);
@@ -867,14 +877,16 @@ class AIVoiceManagerV2 {
         
         try {
             console.log('▶️ Ripresa riconoscimento vocale');
+            this.isSpeaking = false; // Reset flag speaking
             this.isListening = true;
             this.recognition.continuous = true;
             this.recognition.start();
         } catch (error) {
             console.error('Errore ripresa riconoscimento:', error);
+            this.isSpeaking = false; // Reset anche in caso di errore
             // Se fallisce, riprova dopo un delay
             setTimeout(() => {
-                if (this.isAutoMode && !this.isListening) {
+                if (this.isAutoMode && !this.isListening && !this.isSpeaking) {
                     console.log('🔄 Retry ripresa riconoscimento...');
                     try {
                         this.isListening = true;
@@ -1047,11 +1059,13 @@ class AIVoiceManagerV2 {
             // Eventi
             utterance.onstart = () => {
                 console.log('🔊 TTS avviato');
+                this.isSpeaking = true; // Imposta flag speaking
                 this.updateUIState('speaking');
             };
             
             utterance.onend = () => {
                 console.log('🔊 TTS terminato');
+                this.isSpeaking = false; // Rimuovi flag speaking
                 
                 // Riattiva riconoscimento dopo un delay per evitare echi
                 if (wasListening && this.isAutoMode) {
@@ -1067,6 +1081,7 @@ class AIVoiceManagerV2 {
             
             utterance.onerror = (event) => {
                 console.error('❌ Errore TTS:', event);
+                this.isSpeaking = false; // Rimuovi flag speaking anche in caso di errore
                 
                 // Riattiva riconoscimento anche in caso di errore
                 if (wasListening && this.isAutoMode) {
