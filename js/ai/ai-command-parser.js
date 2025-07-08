@@ -5,6 +5,17 @@
 
 const AICommandParser = {
   /**
+   * Blocca TTS su iPad - usa solo index.html per TTS
+   */
+  speakSafe: function(text) {
+    const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+    if (!isIPad && window.AIVoiceManager && window.AIVoiceManager.speak) {
+      window.AIVoiceManager.speak(text);
+    }
+    // Su iPad, NON fare nulla - lascia che solo index.html gestisca il TTS
+  },
+
+  /**
    * Processa un comando vocale
    */
   processCommand: function(transcript) {
@@ -29,7 +40,7 @@ const AICommandParser = {
     
     // Se non c'è un comando dopo la wake word
     if (!cleanedTranscript) {
-      AIVoiceManager.speak('Sì, dimmi cosa posso fare per te.');
+      this.speakSafe('Sì, dimmi cosa posso fare per te.');
       // IMPORTANTE: Non resettare isWaitingForCommand qui
       // Il voice manager deve continuare ad ascoltare
       return;
@@ -51,7 +62,7 @@ const AICommandParser = {
       this.executeAction(action);
     } else {
       console.log('❌ Comando non riconosciuto:', cleanedTranscript);
-      AIVoiceManager.speak('Non ho capito il comando. Puoi ripetere?');
+      this.speakSafe('Non ho capito il comando. Puoi ripetere?');
     }
   },
   
@@ -306,7 +317,7 @@ const AICommandParser = {
         break;
         
       default:
-        AIVoiceManager.speak('Comando non riconosciuto.');
+        this.speakSafe('Comando non riconosciuto.');
     }
   },
   
@@ -328,9 +339,9 @@ const AICommandParser = {
       const tab = document.getElementById(tabId);
       if (tab) {
         tab.click();
-        AIVoiceManager.speak(`Apro la sezione ${target}.`);
+        this.speakSafe(`Apro la sezione ${target}.`);
       } else {
-        AIVoiceManager.speak(`Non riesco a trovare la sezione ${target}.`);
+        this.speakSafe(`Non riesco a trovare la sezione ${target}.`);
       }
     }
   },
@@ -346,9 +357,9 @@ const AICommandParser = {
       if (searchInput) {
         searchInput.value = query;
         searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-        AIVoiceManager.speak(`Cerco "${query}".`);
+        this.speakSafe(`Cerco "${query}".`);
       } else {
-        AIVoiceManager.speak('Non trovo un campo di ricerca in questa sezione.');
+        this.speakSafe('Non trovo un campo di ricerca in questa sezione.');
       }
     }
   },
@@ -389,7 +400,7 @@ const AICommandParser = {
           
           button.click();
           const targetName = target === 'evento' ? 'evento' : target;
-          AIVoiceManager.speak(`Creo un nuovo ${targetName}.`);
+          this.speakSafe(`Creo un nuovo ${targetName}.`);
           
           // Se è un evento, entra in modalità form
           if (target === 'evento') {
@@ -400,7 +411,7 @@ const AICommandParser = {
               if (taskForm && taskForm.style.display !== 'none') {
                 console.log('✅ Form aperto, entro in modalità form');
                 AIVoiceManager.enterFormMode();
-                AIVoiceManager.speak('Ora puoi dettare i campi. Dì "data oggi", "ora inizio 19", "descrizione" e poi il testo, "categoria lavoro".');
+                this.speakSafe('Ora puoi dettare i campi. Dì "data oggi", "ora inizio 19", "descrizione" e poi il testo, "categoria lavoro".');
               } else {
                 console.log('❌ Form non trovato o non visibile');
                 if (navigator.userAgent.includes('iPhone')) {
@@ -433,7 +444,7 @@ const AICommandParser = {
         }
         
         TimelineControls.openAddTaskPanel();
-        AIVoiceManager.speak('Apro il pannello per aggiungere un evento.');
+        this.speakSafe('Apro il pannello per aggiungere un evento.');
         
         setTimeout(() => {
           const taskForm = document.getElementById('taskFormContainer');
@@ -442,7 +453,7 @@ const AICommandParser = {
           if (taskForm && taskForm.style.display !== 'none') {
             console.log('✅ Form aperto con metodo diretto');
             AIVoiceManager.enterFormMode();
-            AIVoiceManager.speak('Ora puoi dettare i campi.');
+            this.speakSafe('Ora puoi dettare i campi.');
           } else {
             console.log('❌ Form non aperto con metodo diretto');
             if (navigator.userAgent.includes('iPhone')) {
@@ -475,7 +486,7 @@ const AICommandParser = {
         console.log('🔄 Fallback TimelineEvents...');
         try {
           TimelineEvents.addEvent(Timeline.state, window.TimelineConfig || {});
-          AIVoiceManager.speak('Evento aggiunto con fallback.');
+          this.speakSafe('Evento aggiunto con fallback.');
           setTimeout(() => AIVoiceManager.enterFormMode(), 300);
           return;
         } catch (error) {
@@ -489,7 +500,7 @@ const AICommandParser = {
       }
     }
     
-    AIVoiceManager.speak(`Non riesco a creare un nuovo ${target}.`);
+    this.speakSafe(`Non riesco a creare un nuovo ${target}.`);
   },
   
   /**
@@ -506,9 +517,9 @@ const AICommandParser = {
           const importBtn = document.querySelector('#importDDTFTBtn, .import-btn');
           if (importBtn) {
             importBtn.click();
-            AIVoiceManager.speak(`Apro l'importazione ${target === 'fattura' ? 'fatture' : 'DDT'}.`);
+            this.speakSafe(`Apro l'importazione ${target === 'fattura' ? 'fatture' : 'DDT'}.`);
           } else {
-            AIVoiceManager.speak('Non trovo il pulsante di importazione.');
+            this.speakSafe('Non trovo il pulsante di importazione.');
           }
         }, 300);
       }
@@ -524,9 +535,9 @@ const AICommandParser = {
       const exportBtn = activeTab.querySelector('.export-btn, [onclick*="export"], button:has(.fa-download)');
       if (exportBtn) {
         exportBtn.click();
-        AIVoiceManager.speak('Avvio esportazione.');
+        this.speakSafe('Avvio esportazione.');
       } else {
-        AIVoiceManager.speak('Non trovo il pulsante di esportazione in questa sezione.');
+        this.speakSafe('Non trovo il pulsante di esportazione in questa sezione.');
       }
     }
   },
@@ -541,7 +552,7 @@ const AICommandParser = {
       'month': 'questo mese'
     };
     
-    AIVoiceManager.speak(`Filtro per ${periodMap[period] || period}.`);
+    this.speakSafe(`Filtro per ${periodMap[period] || period}.`);
     
     // Implementa la logica di filtro specifica per ogni sezione
     // Per ora è un placeholder
@@ -568,7 +579,7 @@ const AICommandParser = {
         break;
     }
     
-    AIVoiceManager.speak(message || 'Non riesco a contare gli elementi.');
+    this.speakSafe(message || 'Non riesco a contare gli elementi.');
   },
   
   /**
@@ -588,7 +599,7 @@ const AICommandParser = {
       - "Aiuto" per sentire di nuovo questi comandi
     `;
     
-    AIVoiceManager.speak(helpMessage);
+    this.speakSafe(helpMessage);
   },
   
   /**
@@ -600,7 +611,7 @@ const AICommandParser = {
     if (taskForm && taskForm.style.display !== 'none') {
       TimelineControls.toggleTaskForm();
       AIVoiceManager.exitFormMode(); // Esci dalla modalità form
-      AIVoiceManager.speak('Chiudo il form eventi.');
+      this.speakSafe('Chiudo il form eventi.');
       return;
     }
     
@@ -611,15 +622,15 @@ const AICommandParser = {
       const closeBtn = openModal.querySelector('.close, .btn-close, [data-dismiss="modal"]');
       if (closeBtn) {
         closeBtn.click();
-        AIVoiceManager.speak('Chiudo.');
+        this.speakSafe('Chiudo.');
       } else {
         // Prova a nascondere direttamente
         openModal.style.display = 'none';
         openModal.classList.remove('show');
-        AIVoiceManager.speak('Chiudo.');
+        this.speakSafe('Chiudo.');
       }
     } else {
-      AIVoiceManager.speak('Non c\'è nulla da chiudere.');
+      this.speakSafe('Non c\'è nulla da chiudere.');
     }
   },
   
@@ -639,13 +650,13 @@ const AICommandParser = {
     
     const fieldId = fieldMap[field];
     if (!fieldId) {
-      AIVoiceManager.speak('Campo non riconosciuto.');
+      this.speakSafe('Campo non riconosciuto.');
       return;
     }
     
     const element = document.getElementById(fieldId);
     if (!element) {
-      AIVoiceManager.speak('Non trovo il campo da compilare. Assicurati che il form sia aperto.');
+      this.speakSafe('Non trovo il campo da compilare. Assicurati che il form sia aperto.');
       return;
     }
     
@@ -679,7 +690,7 @@ const AICommandParser = {
       'category': 'categoria'
     };
     
-    AIVoiceManager.speak(`Ho impostato ${fieldNames[field]} a ${value}.`);
+    this.speakSafe(`Ho impostato ${fieldNames[field]} a ${value}.`);
   },
   
   /**
@@ -693,15 +704,15 @@ const AICommandParser = {
       if (addBtn) {
         addBtn.click();
         AIVoiceManager.exitFormMode(); // Esci dalla modalità form
-        AIVoiceManager.speak('Evento salvato.');
+        this.speakSafe('Evento salvato.');
       } else {
-        AIVoiceManager.speak('Non trovo il pulsante di salvataggio.');
+        this.speakSafe('Non trovo il pulsante di salvataggio.');
       }
       return;
     }
     
     // Altri form potrebbero essere gestiti qui in futuro
-    AIVoiceManager.speak('Non c\'è nessun form da salvare.');
+    this.speakSafe('Non c\'è nessun form da salvare.');
   },
   
   /**
@@ -728,7 +739,7 @@ const AICommandParser = {
    */
   stopVoiceListening: function() {
     if (window.AIVoiceManager) {
-      AIVoiceManager.speak('Disattivo l\'ascolto. A presto!');
+      this.speakSafe('Disattivo l\'ascolto. A presto!');
       setTimeout(() => {
         AIVoiceManager.stopListening();
       }, 2000); // Aspetta che finisca di parlare
@@ -878,7 +889,7 @@ const AICommandParser = {
       }
       
       // Parla e attiva modalità form
-      AIVoiceManager.speak('Ho creato un nuovo evento. Ora puoi dettare i dettagli.');
+      this.speakSafe('Ho creato un nuovo evento. Ora puoi dettare i dettagli.');
       
       setTimeout(() => {
         AIVoiceManager.enterFormMode();
@@ -893,7 +904,7 @@ const AICommandParser = {
       if (navigator.userAgent.includes('iPhone')) {
         this.showDebugOnScreen('Timeline.state mancante');
       }
-      AIVoiceManager.speak('Errore: timeline non disponibile.');
+      this.speakSafe('Errore: timeline non disponibile.');
     }
   },
 
