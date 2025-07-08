@@ -329,12 +329,26 @@ setTimeout(() => {
         if (typeof FlavioAIAssistant !== 'undefined') {
             console.log('🔄 ENHANCED: Inizializzazione ritardata...');
             window.EnhancedAI = new EnhancedAIAssistant();
+            
+            // Attendi che sia pronto e poi forza il rebinding automatico
+            window.EnhancedAI.initializationPromise.then(() => {
+                console.log('🔄 ENHANCED: Applicando rebinding automatico...');
+                autoRebindToEnhanced();
+            });
+            
             console.log('✅ EnhancedAIAssistant inizializzato e disponibile globalmente');
         } else {
             console.log('⏳ ENHANCED: FlavioAIAssistant non ancora disponibile, nuovo tentativo...');
             setTimeout(() => {
                 if (typeof FlavioAIAssistant !== 'undefined') {
                     window.EnhancedAI = new EnhancedAIAssistant();
+                    
+                    // Rebinding anche al secondo tentativo
+                    window.EnhancedAI.initializationPromise.then(() => {
+                        console.log('🔄 ENHANCED: Applicando rebinding automatico (secondo tentativo)...');
+                        autoRebindToEnhanced();
+                    });
+                    
                     console.log('✅ EnhancedAIAssistant inizializzato al secondo tentativo');
                 } else {
                     console.error('❌ ENHANCED: FlavioAIAssistant non trovato dopo 2 tentativi');
@@ -345,5 +359,61 @@ setTimeout(() => {
         console.error('❌ ENHANCED: Errore inizializzazione:', error);
     }
 }, 1000);
+
+/**
+ * Funzione per rebinding automatico dell'interfaccia utente
+ */
+function autoRebindToEnhanced() {
+    try {
+        console.log('🔄 ENHANCED: Inizio rebinding automatico...');
+        
+        // Trova elementi UI
+        const sendBtn = document.getElementById('sendBtn');
+        const aiInput = document.getElementById('aiInput');
+        
+        if (!sendBtn || !aiInput) {
+            console.error('❌ ENHANCED: Elementi UI non trovati per rebinding');
+            return;
+        }
+        
+        // Verifica che EnhancedAI sia disponibile
+        if (!window.EnhancedAI) {
+            console.error('❌ ENHANCED: EnhancedAI non disponibile per rebinding');
+            return;
+        }
+        
+        // Rimuovi event listeners esistenti clonando gli elementi
+        const newSendBtn = sendBtn.cloneNode(true);
+        const newAiInput = aiInput.cloneNode(true);
+        
+        // Sostituisci elementi nel DOM
+        sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+        aiInput.parentNode.replaceChild(newAiInput, aiInput);
+        
+        // Aggiungi nuovi event listeners per EnhancedAI
+        newSendBtn.addEventListener('click', () => {
+            console.log('🔄 ENHANCED: Click send button (rebinded)');
+            window.EnhancedAI.sendMessage(false);
+        });
+        
+        newAiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                console.log('🔄 ENHANCED: Enter key pressed (rebinded)');
+                window.EnhancedAI.sendMessage(false);
+            }
+        });
+        
+        // Aggiorna riferimenti globali se esistono
+        if (window.FlavioAI) {
+            window.FlavioAI.sendBtn = newSendBtn;
+            window.FlavioAI.aiInput = newAiInput;
+        }
+        
+        console.log('✅ ENHANCED: Rebinding automatico completato con successo');
+        
+    } catch (error) {
+        console.error('❌ ENHANCED: Errore durante rebinding automatico:', error);
+    }
+}
 
 console.log('✅ EnhancedAIAssistant caricato (inizializzazione in corso...)');

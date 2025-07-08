@@ -95,6 +95,31 @@ class RequestMiddleware {
     }
     
     /**
+     * Normalizza nome cliente per matching più flessibile
+     */
+    normalizeClientName(clienteName) {
+        if (!clienteName || typeof clienteName !== 'string') {
+            return '';
+        }
+        
+        return clienteName
+            .toLowerCase()
+            .trim()
+            // Rimuovi punteggiatura finale (? ! .)
+            .replace(/[?!.]+$/, '')
+            // Normalizza abbreviazioni comuni
+            .replace(/\bs\.s\.s\./gi, 'sss')
+            .replace(/\bs\.s\./gi, 'ss')
+            .replace(/\bs\.r\.l\./gi, 'srl')
+            .replace(/\bs\.p\.a\./gi, 'spa')
+            .replace(/\baz\./gi, 'az')
+            .replace(/\bagr\./gi, 'agr')
+            // Normalizza spazi multipli
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+    
+    /**
      * Trova l'ordine più recente usando il campo data migliore disponibile
      */
     findLatestOrder(ordini) {
@@ -155,8 +180,35 @@ class RequestMiddleware {
         const dateValue = latest[bestField];
         let displayDate;
         
+        // Debug per vedere quale campo data è stato scelto e il valore
+        console.log('📅 DEBUG findLatestOrder:', {
+            bestField: bestField,
+            dateValue: dateValue,
+            originalOrder: latest,
+            allDateFields: {
+                data: latest.data,
+                data_ordine: latest.data_ordine,
+                data_consegna: latest.data_consegna,
+                data_documento: latest.data_documento,
+                created_at: latest.created_at,
+                timestamp: latest.timestamp,
+                date: latest.date
+            }
+        });
+        
         try {
             const date = new Date(dateValue);
+            // Debug della data parsata
+            console.log('📅 DEBUG Date parsing:', {
+                originalValue: dateValue,
+                parsedDate: date.toString(),
+                formatted: date.toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit', 
+                    year: 'numeric'
+                })
+            });
+            
             // Forza il formato GG/MM/AAAA italiano
             displayDate = date.toLocaleDateString('it-IT', {
                 day: '2-digit',
@@ -666,10 +718,38 @@ class RequestMiddleware {
                 ordini = supabaseData.historicalOrders?.sampleData || [];
             }
             
-            const clienteNorm = params.cliente.toLowerCase();
-            const ordiniCliente = ordini.filter(ordine => 
-                ordine.cliente && ordine.cliente.toLowerCase().includes(clienteNorm)
-            );
+            // Debug: stampa struttura del primo ordine
+            if (ordini.length > 0) {
+                console.log('📊 DEBUG: Struttura primo ordine:', ordini[0]);
+                console.log('📊 DEBUG: Campi disponibili:', Object.keys(ordini[0]));
+            }
+            
+            // Normalizza nome cliente per matching più flessibile
+            const clienteNorm = this.normalizeClientName(params.cliente);
+            console.log('📦 MIDDLEWARE: Nome cliente normalizzato:', clienteNorm);
+            
+            const ordiniCliente = ordini.filter(ordine => {
+                if (!ordine.cliente) return false;
+                
+                const nomeOrdineNorm = this.normalizeClientName(ordine.cliente);
+                const match = nomeOrdineNorm.includes(clienteNorm) || clienteNorm.includes(nomeOrdineNorm);
+                
+                if (match) {
+                    console.log('📦 MIDDLEWARE: Match trovato:', ordine.cliente, '→', nomeOrdineNorm);
+                    // Debug specifico per le date di questo ordine
+                    console.log('📅 DEBUG DATE ORDINE:', {
+                        data_ordine: ordine.data_ordine,
+                        data_consegna: ordine.data_consegna,
+                        data: ordine.data,
+                        date: ordine.date,
+                        created_at: ordine.created_at,
+                        timestamp: ordine.timestamp,
+                        numero_ordine: ordine.numero_ordine
+                    });
+                }
+                
+                return match;
+            });
             
             if (ordiniCliente.length === 0) {
                 return {
@@ -689,18 +769,46 @@ class RequestMiddleware {
             ordiniCliente.forEach(riga => {
                 const numeroOrdine = riga.numero_ordine;
                 if (!ordiniProdotti[numeroOrdine]) {
+                    // Cerca la data migliore disponibile
+                    const dataOrdine = riga.data_ordine || riga.data_consegna || riga.data || riga.date || 'N/A';
+                    
+                    // Debug per vedere quale data viene usata
+                    console.log('📅 DEBUG DATA USATA per ordine', numeroOrdine, ':', {
+                        data_finale: dataOrdine,
+                        data_ordine: riga.data_ordine,
+                        data_consegna: riga.data_consegna,
+                        data: riga.data,
+                        date: riga.date
+                    });
+                    
                     ordiniProdotti[numeroOrdine] = {
                         numero: numeroOrdine,
-                        data: riga.data_ordine || riga.data_consegna || 'N/A',
+                        data: dataOrdine,
                         prodotti: []
                     };
                 }
                 
                 if (riga.codice_prodotto || riga.descrizione_prodotto) {
+                    // Cerca la descrizione in vari campi possibili
+                    const descrizione = riga.descrizione_prodotto || 
+                                      riga.descrizione || 
+                                      riga.prodotto || 
+                                      riga.nome_prodotto || 
+                                      riga.product_name ||
+                                      riga.description ||
+                                      'N/A';
+                    
+                    // Cerca la quantità in vari campi possibili
+                    const quantita = riga.quantita || 
+                                   riga.qta || 
+                                   riga.qty || 
+                                   riga.quantity ||
+                                   'N/A';
+                    
                     ordiniProdotti[numeroOrdine].prodotti.push({
                         codice: riga.codice_prodotto || 'N/A',
-                        descrizione: riga.descrizione_prodotto || 'N/A',
-                        quantita: riga.quantita || 'N/A',
+                        descrizione: descrizione,
+                        quantita: quantita,
                         importo: riga.importo || 'N/A'
                     });
                 }
