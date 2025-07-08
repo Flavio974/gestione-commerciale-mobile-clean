@@ -313,7 +313,17 @@ class EnhancedAIAssistant {
         const input = document.getElementById('aiInput');
         if (input) {
             input.value = message;
-            return await this.sendMessage(true); // true = voice input
+            
+            // Salva l'ultimo messaggio per poter restituire la risposta
+            const messagesBefore = [...this.originalAssistant.messages];
+            
+            await this.sendMessage(true); // true = voice input
+            
+            // Trova la nuova risposta dell'assistant
+            const newMessages = this.originalAssistant.messages.slice(messagesBefore.length);
+            const assistantResponse = newMessages.find(msg => msg.role === 'assistant');
+            
+            return assistantResponse ? assistantResponse.content : null;
         }
     }
     

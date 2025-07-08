@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modalità AUTO su iPad</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f7;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1d1d1f;
+            text-align: center;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f4ff;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .command-list {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        
+        .command-list h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .command-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .command-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .command-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .wake-word {
+            color: #007AFF;
+            font-weight: bold;
+        }
+        
+        .example {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Test Modalità AUTO su iPad</h1>
+        
+        <div class="warning">
+            ⚠️ <strong>Importante:</strong> Prima di iniziare, assicurati di aver cliccato su "Test Audio" nell'app principale per attivare il TTS su iPad.
+        </div>
+        
+        <div class="test-section">
+            <h2>1. Simulazione Modalità AUTO</h2>
+            <p>Questo test simula la modalità AUTO con ascolto continuo e risposte vocali automatiche.</p>
+            
+            <button onclick="startAutoMode()">🚗 Avvia Modalità AUTO</button>
+            <button onclick="stopAutoMode()">🛑 Ferma Modalità AUTO</button>
+            
+            <div id="autoStatus" class="status">Modalità AUTO non attiva</div>
+            <div id="autoLog" class="log" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Test Wake Words</h2>
+            <p>Quando la modalità AUTO è attiva, prova questi comandi con la wake word:</p>
+            
+            <div class="command-list">
+                <h3>Wake Words supportate:</h3>
+                <ul>
+                    <li><span class="wake-word">Assistente</span></li>
+                    <li><span class="wake-word">Hey assistente</span></li>
+                    <li><span class="wake-word">Ok assistente</span></li>
+                    <li><span class="wake-word">Ehi assistente</span></li>
+                </ul>
+                
+                <h3>Esempi di comandi completi:</h3>
+                <ul>
+                    <li>"<span class="wake-word">Assistente</span>, che ore sono?" <span class="example">(test semplice)</span></li>
+                    <li>"<span class="wake-word">Hey assistente</span>, dimmi il fatturato totale" <span class="example">(comando business)</span></li>
+                    <li>"<span class="wake-word">Ok assistente</span>, mostrami gli ordini di oggi" <span class="example">(comando complesso)</span></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Test Risposte Audio</h2>
+            <p>Testa le risposte audio dirette senza riconoscimento vocale:</p>
+            
+            <button onclick="testSimpleResponse()">💬 Test Risposta Semplice</button>
+            <button onclick="testLongResponse()">📜 Test Risposta Lunga</button>
+            <button onclick="testMultipleResponses()">🔄 Test Risposte Multiple</button>
+            
+            <div id="responseStatus" class="status">Premi un pulsante per testare</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Test Integrazione Completa</h2>
+            <p>Simula l'intero flusso: riconoscimento → elaborazione → risposta vocale</p>
+            
+            <button onclick="testFullIntegration()">🔗 Test Integrazione Completa</button>
+            
+            <div id="integrationStatus" class="status">Pronto per il test completo</div>
+        </div>
+    </div>
+
+    <script>
+        let synthesis = window.speechSynthesis;
+        let recognition = null;
+        let isAutoMode = false;
+        let ttsVoice = null;
+        
+        // Inizializza
+        function init() {
+            // Trova voce italiana
+            const voices = synthesis.getVoices();
+            ttsVoice = voices.find(v => v.lang.startsWith('it')) || voices[0];
+            
+            // Setup recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'it-IT';
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                
+                recognition.onresult = handleRecognitionResult;
+                recognition.onerror = handleRecognitionError;
+                recognition.onend = handleRecognitionEnd;
+            }
+        }
+        
+        // Modalità AUTO
+        function startAutoMode() {
+            if (!recognition) {
+                updateStatus('autoStatus', '❌ Riconoscimento vocale non supportato', 'error');
+                return;
+            }
+            
+            isAutoMode = true;
+            document.getElementById('autoLog').style.display = 'block';
+            updateStatus('autoStatus', '🟢 Modalità AUTO ATTIVA - In ascolto...', 'success');
+            log('Modalità AUTO avviata');
+            
+            // Pre-attiva TTS
+            preActivateTTS();
+            
+            // Avvia riconoscimento
+            try {
+                recognition.start();
+                log('Riconoscimento vocale avviato');
+            } catch (error) {
+                log('Errore avvio: ' + error.message);
+            }
+        }
+        
+        function stopAutoMode() {
+            isAutoMode = false;
+            updateStatus('autoStatus', '🔴 Modalità AUTO FERMATA', '');
+            log('Modalità AUTO fermata');
+            
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch (error) {
+                    log('Errore stop: ' + error.message);
+                }
+            }
+        }
+        
+        function handleRecognitionResult(event) {
+            const result = event.results[event.results.length - 1];
+            const transcript = result[0].transcript;
+            const isFinal = result.isFinal;
+            
+            if (isFinal) {
+                log('📝 Trascritto: "' + transcript + '"');
+                
+                // Check wake word
+                const wakeWords = ['assistente', 'hey assistente', 'ok assistente', 'ehi assistente'];
+                const hasWakeWord = wakeWords.some(w => transcript.toLowerCase().includes(w));
+                
+                if (hasWakeWord) {
+                    log('✅ Wake word rilevata!');
+                    processCommand(transcript);
+                } else {
+                    log('⏭️ Nessuna wake word, ignoro');
+                }
+            }
+        }
+        
+        function handleRecognitionError(event) {
+            log('❌ Errore riconoscimento: ' + event.error);
+            
+            // Riavvia se in modalità auto
+            if (isAutoMode && event.error !== 'no-speech') {
+                setTimeout(() => {
+                    log('🔄 Riavvio riconoscimento...');
+                    try {
+                        recognition.start();
+                    } catch (error) {
+                        log('Errore riavvio: ' + error.message);
+                    }
+                }, 1000);
+            }
+        }
+        
+        function handleRecognitionEnd() {
+            log('Riconoscimento terminato');
+            
+            // Riavvia se in modalità auto
+            if (isAutoMode) {
+                setTimeout(() => {
+                    log('🔄 Riavvio automatico...');
+                    try {
+                        recognition.start();
+                    } catch (error) {
+                        log('Errore riavvio: ' + error.message);
+                    }
+                }, 500);
+            }
+        }
+        
+        function processCommand(transcript) {
+            log('🤖 Elaborazione comando...');
+            
+            // Simula elaborazione
+            setTimeout(() => {
+                const response = generateMockResponse(transcript);
+                log('💬 Risposta: ' + response);
+                speak(response);
+            }, 500);
+        }
+        
+        function generateMockResponse(command) {
+            const cmd = command.toLowerCase();
+            
+            if (cmd.includes('ore')) {
+                return 'Sono le ' + new Date().toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'});
+            } else if (cmd.includes('fatturato')) {
+                return 'Il fatturato totale è di 125.000 euro questo mese';
+            } else if (cmd.includes('ordini')) {
+                return 'Ci sono 42 ordini in sospeso da processare';
+            } else {
+                return 'Ho capito la tua richiesta. Sto elaborando i dati.';
+            }
+        }
+        
+        // Test risposte audio
+        function testSimpleResponse() {
+            updateStatus('responseStatus', 'Riproduzione in corso...', '');
+            speak('Questo è un test di risposta semplice. Il sistema audio funziona correttamente.');
+        }
+        
+        function testLongResponse() {
+            updateStatus('responseStatus', 'Riproduzione risposta lunga...', '');
+            const longText = `Ecco una risposta più lunga per testare il sistema TTS su iPad. 
+                Il fatturato del cliente Mario Rossi per questo mese è di 5.250 euro, 
+                con un totale di 15 ordini effettuati. L'ultimo ordine risale al 2 gennaio 2025 
+                e comprende 8 prodotti diversi per un totale di 340 euro.`;
+            speak(longText);
+        }
+        
+        function testMultipleResponses() {
+            updateStatus('responseStatus', 'Test risposte multiple...', '');
+            
+            speak('Prima risposta: controllo sistema audio.');
+            
+            setTimeout(() => {
+                speak('Seconda risposta: verifica coda TTS.');
+            }, 3000);
+            
+            setTimeout(() => {
+                speak('Terza risposta: test completato con successo!');
+            }, 6000);
+        }
+        
+        // Test integrazione
+        async function testFullIntegration() {
+            updateStatus('integrationStatus', '1/4 - Pre-attivazione TTS...', '');
+            await preActivateTTS();
+            
+            updateStatus('integrationStatus', '2/4 - Simulazione riconoscimento vocale...', '');
+            await delay(1000);
+            
+            const mockTranscript = 'Assistente, dimmi il fatturato totale';
+            updateStatus('integrationStatus', '3/4 - Elaborazione: "' + mockTranscript + '"', '');
+            await delay(1000);
+            
+            updateStatus('integrationStatus', '4/4 - Risposta vocale...', '');
+            speak('Il fatturato totale dell\'ultimo mese è di 87.500 euro, con un incremento del 15% rispetto al mese precedente.');
+        }
+        
+        // Utilities
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'it-IT';
+            utterance.voice = ttsVoice;
+            utterance.rate = 1.0;
+            
+            utterance.onend = () => {
+                updateStatus('responseStatus', '✅ Riproduzione completata', 'success');
+            };
+            
+            utterance.onerror = (event) => {
+                updateStatus('responseStatus', '❌ Errore TTS: ' + event.error, 'error');
+            };
+            
+            synthesis.cancel();
+            synthesis.speak(utterance);
+        }
+        
+        function preActivateTTS() {
+            return new Promise((resolve) => {
+                const silent = new SpeechSynthesisUtterance(' ');
+                silent.volume = 0.01;
+                silent.rate = 10;
+                
+                silent.onend = () => {
+                    log('✅ TTS pre-attivato');
+                    resolve();
+                };
+                
+                synthesis.speak(silent);
+            });
+        }
+        
+        function updateStatus(id, message, type) {
+            const element = document.getElementById(id);
+            element.textContent = message;
+            element.className = 'status ' + type;
+        }
+        
+        function log(message) {
+            const logDiv = document.getElementById('autoLog');
+            const time = new Date().toLocaleTimeString('it-IT');
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Inizializza quando le voci sono pronte
+        if (synthesis.getVoices().length === 0) {
+            synthesis.addEventListener('voiceschanged', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
