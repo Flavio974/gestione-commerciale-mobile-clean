@@ -829,14 +829,37 @@ class AIVoiceManagerV2 {
         const userAgent = navigator.userAgent;
         const isIOS = /iPad|iPhone|iPod/.test(userAgent);
         const isIPhone = /iPhone/.test(userAgent);
-        const isIPad = /iPad/.test(userAgent);
+        let isIPad = /iPad/.test(userAgent);
+        
+        // FORCE iPad mode per testing
+        const forceIPadMode = localStorage.getItem('force_ipad_mode') === 'true';
+        if (forceIPadMode) {
+            isIPad = true;
+            console.log('🔧 FORCE iPad MODE ATTIVATO');
+        }
+        
+        // Rileva anche simulatori iPad nel browser dev tools
+        const isIPadSimulator = (
+            navigator.maxTouchPoints > 0 && 
+            /Safari/.test(userAgent) && 
+            window.screen.width >= 768
+        );
+        
+        if (isIPadSimulator && !isIPad) {
+            isIPad = true;
+            console.log('🔧 iPad SIMULATOR rilevato');
+        }
         
         console.log('🔍 DEVICE DETECTION IN createUI:', {
             userAgent: userAgent,
             isIOS: isIOS,
             isIPhone: isIPhone,
             isIPad: isIPad,
-            ttsActivated: this.ttsActivated
+            forceIPadMode: forceIPadMode,
+            isIPadSimulator: isIPadSimulator,
+            ttsActivated: this.ttsActivated,
+            maxTouchPoints: navigator.maxTouchPoints,
+            screenWidth: window.screen.width
         });
         
         // Su iPad, mostra sempre il bottone di attivazione audio se TTS non è attivo
@@ -853,6 +876,8 @@ class AIVoiceManagerV2 {
             this.createIPadControls();
         } else {
             console.log('⚠️ NON iPad - isIPad:', isIPad, 'userAgent:', userAgent);
+            // Mostra pannello di debug se non è iPad
+            this.createDebugPanel();
         }
         
         console.log('🔍 Device Detection:', {
@@ -1830,3 +1855,116 @@ document.addEventListener('DOMContentLoaded', () => {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = AIVoiceManagerV2;
 }
+
+// Funzioni di debug globali per iPad testing
+window.enableIPadMode = function() {
+    localStorage.setItem('force_ipad_mode', 'true');
+    console.log('✅ Modalità iPad ATTIVATA - Ricarica la pagina per applicare');
+    console.log('💡 Usa disableIPadMode() per disattivare');
+};
+
+window.disableIPadMode = function() {
+    localStorage.removeItem('force_ipad_mode');
+    console.log('✅ Modalità iPad DISATTIVATA - Ricarica la pagina per applicare');
+};
+
+window.checkIPadMode = function() {
+    const isForced = localStorage.getItem('force_ipad_mode') === 'true';
+    console.log('🔍 Modalità iPad forzata:', isForced);
+    console.log('🔍 User Agent:', navigator.userAgent);
+    console.log('🔍 Touch Points:', navigator.maxTouchPoints);
+    console.log('🔍 Screen Width:', window.screen.width);
+    return isForced;
+};
+
+// Metodo per creare pannello di debug
+AIVoiceManagerV2.prototype.createDebugPanel = function() {
+    // Non creare se esiste già
+    if (document.getElementById('ipad-debug-panel')) return;
+    
+    console.log('🔧 Creando pannello debug per iPad testing...');
+    
+    const panel = document.createElement('div');
+    panel.id = 'ipad-debug-panel';
+    panel.style.cssText = `
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 0, 0, 0.1);
+        border: 2px solid #ff0000;
+        border-radius: 8px;
+        padding: 15px;
+        z-index: 9999;
+        font-family: monospace;
+        font-size: 12px;
+        color: #333;
+        backdrop-filter: blur(5px);
+        max-width: 250px;
+    `;
+    
+    panel.innerHTML = `
+        <div style="margin-bottom: 10px;">
+            <strong>🔧 iPad Debug Mode</strong>
+        </div>
+        <div style="margin-bottom: 10px; font-size: 10px;">
+            iPad non rilevato. Usa i controlli qui sotto per testare.
+        </div>
+        <button id="enable-ipad-btn" style="
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-right: 5px;
+        ">Attiva iPad Mode</button>
+        <button id="hide-debug-btn" style="
+            background: #666;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        ">Nascondi</button>
+        <div style="margin-top: 10px; font-size: 9px; color: #666;">
+            Dopo aver cliccato "Attiva iPad Mode", ricarica la pagina.
+        </div>
+    `;
+    
+    document.body.appendChild(panel);
+    
+    // Eventi
+    document.getElementById('enable-ipad-btn').addEventListener('click', () => {
+        localStorage.setItem('force_ipad_mode', 'true');
+        panel.innerHTML = `
+            <div style="color: #28a745; font-weight: bold;">
+                ✅ iPad Mode ATTIVATO!
+            </div>
+            <div style="margin: 10px 0; font-size: 10px;">
+                Ricarica la pagina per vedere i controlli iPad.
+            </div>
+            <button onclick="location.reload()" style="
+                background: #28a745;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 11px;
+                cursor: pointer;
+            ">Ricarica Pagina</button>
+        `;
+    });
+    
+    document.getElementById('hide-debug-btn').addEventListener('click', () => {
+        panel.remove();
+    });
+    
+    // Auto-nascondi dopo 10 secondi
+    setTimeout(() => {
+        if (panel.parentNode) {
+            panel.style.opacity = '0.3';
+        }
+    }, 10000);
+};
