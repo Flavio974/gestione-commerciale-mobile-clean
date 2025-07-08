@@ -41,6 +41,160 @@ class AIVoiceManagerV2 {
         
         this.init();
     }
+    
+    // Crea bottone di attivazione audio per iPad
+    createAudioActivationButton() {
+        // Verifica se esiste già
+        if (document.getElementById('ipad-audio-activation')) return;
+        
+        console.log('🎵 Creazione bottone attivazione audio per iPad...');
+        
+        // Crea overlay di attivazione
+        const overlay = document.createElement('div');
+        overlay.id = 'ipad-audio-activation';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            backdrop-filter: blur(5px);
+        `;
+        
+        // Crea contenuto
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        `;
+        
+        content.innerHTML = `
+            <h2 style="margin: 0 0 20px 0; color: #333;">🎤 Attivazione Audio</h2>
+            <p style="margin: 0 0 30px 0; color: #666; line-height: 1.5;">
+                Per funzionare correttamente su iPad, il sistema audio deve essere attivato manualmente.<br>
+                <strong>Clicca il pulsante qui sotto per attivare l'audio:</strong>
+            </p>
+            <button id="activate-audio-btn" style="
+                background: #007AFF;
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: 10px;
+                font-size: 18px;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+                transition: all 0.3s ease;
+            ">
+                🔊 Attiva Audio
+            </button>
+            <p style="margin: 20px 0 0 0; font-size: 12px; color: #999;">
+                Questa operazione deve essere fatta solo una volta per sessione
+            </p>
+        `;
+        
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+        
+        // Aggiungi evento click
+        const activateBtn = document.getElementById('activate-audio-btn');
+        activateBtn.addEventListener('click', () => {
+            console.log('🎵 Tentativo attivazione audio iPad...');
+            activateBtn.textContent = '⏳ Attivazione in corso...';
+            activateBtn.disabled = true;
+            
+            this.activateAudioForIPad(() => {
+                // Successo
+                overlay.style.animation = 'fadeOut 0.5s ease';
+                setTimeout(() => {
+                    overlay.remove();
+                    this.showNotification('✅ Audio attivato con successo!', 'success', 3000);
+                }, 500);
+            });
+        });
+        
+        // Aggiungi CSS per animazione
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            #activate-audio-btn:hover:not(:disabled) {
+                background: #0051D5 !important;
+                transform: scale(1.05);
+            }
+            #activate-audio-btn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Attivazione audio specifica per iPad
+    activateAudioForIPad(callback) {
+        console.log('🎵 Esecuzione attivazione audio iPad...');
+        
+        // Metodo 1: Utterance silenzioso per pre-attivazione
+        const silentUtterance = new SpeechSynthesisUtterance(' ');
+        silentUtterance.volume = 0.01;
+        silentUtterance.rate = 10;
+        
+        silentUtterance.onend = () => {
+            console.log('✅ Pre-attivazione TTS completata');
+            this.ttsActivated = true;
+            
+            // Metodo 2: Test con audio udibile per conferma
+            setTimeout(() => {
+                const testUtterance = new SpeechSynthesisUtterance('Sistema audio attivato correttamente');
+                testUtterance.lang = 'it-IT';
+                testUtterance.volume = 0.8;
+                testUtterance.rate = 1.0;
+                
+                if (this.ttsConfig.voice) {
+                    testUtterance.voice = this.ttsConfig.voice;
+                }
+                
+                testUtterance.onstart = () => {
+                    console.log('✅ TTS confermato funzionante su iPad');
+                };
+                
+                testUtterance.onend = () => {
+                    console.log('✅ Attivazione audio completata');
+                    if (callback) callback();
+                };
+                
+                testUtterance.onerror = (e) => {
+                    console.error('❌ Errore test TTS:', e);
+                    // Considera comunque attivato
+                    this.ttsActivated = true;
+                    if (callback) callback();
+                };
+                
+                this.synthesis.speak(testUtterance);
+            }, 200);
+        };
+        
+        silentUtterance.onerror = (e) => {
+            console.error('❌ Errore pre-attivazione:', e);
+            // Prova comunque il test
+            this.ttsActivated = true;
+            if (callback) callback();
+        };
+        
+        this.synthesis.cancel();
+        this.synthesis.speak(silentUtterance);
+    }
 
     async init() {
         // Verifica supporto browser
@@ -196,6 +350,11 @@ class AIVoiceManagerV2 {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const isIPhone = /iPhone/.test(navigator.userAgent);
         const isIPad = /iPad/.test(navigator.userAgent);
+        
+        // Su iPad, mostra sempre il bottone di attivazione audio se TTS non è attivo
+        if (isIPad && !this.ttsActivated) {
+            this.createAudioActivationButton();
+        }
         
         console.log('🔍 Device Detection:', {
             userAgent: navigator.userAgent,
@@ -1030,6 +1189,16 @@ class AIVoiceManagerV2 {
     async speak(text) {
         return new Promise((resolve) => {
             console.log('🔊 Avvio TTS per:', text);
+            
+            // Su iPad, verifica che TTS sia attivato
+            const isIPad = /iPad/.test(navigator.userAgent);
+            if (isIPad && !this.ttsActivated) {
+                console.log('⚠️ TTS non attivato su iPad, mostro prompt');
+                this.createAudioActivationButton();
+                this.showNotification('⚠️ Attiva prima l\'audio per sentire la risposta', 'error', 5000);
+                resolve();
+                return;
+            }
             
             // IMPORTANTE: Disattiva riconoscimento vocale mentre parla per evitare loop
             const wasListening = this.isListening;

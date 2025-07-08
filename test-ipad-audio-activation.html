@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Attivazione Audio iPad</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f7;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1d1d1f;
+            margin-bottom: 30px;
+        }
+        
+        .device-info {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+        }
+        
+        button:hover:not(:disabled) {
+            background: #0051D5;
+            transform: scale(1.05);
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 2px;
+        }
+        
+        .badge.ipad {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge.other {
+            background: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Test Attivazione Audio iPad</h1>
+        
+        <div class="device-info">
+            <h3>🔍 Informazioni Dispositivo</h3>
+            <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+            <p><strong>Dispositivo rilevato:</strong> <span id="deviceType"></span></p>
+            <p><strong>Supporto TTS:</strong> <span id="ttsSupport"></span></p>
+            <p><strong>Supporto Recognition:</strong> <span id="recognitionSupport"></span></p>
+        </div>
+        
+        <div id="status" class="status info">
+            Clicca "Attiva Audio" per iniziare il test
+        </div>
+        
+        <button id="activateBtn" onclick="activateAudio()">
+            🔊 Attiva Audio
+        </button>
+        
+        <button id="testBtn" onclick="testTTS()" disabled>
+            🎵 Test TTS
+        </button>
+        
+        <button id="recognitionBtn" onclick="testRecognition()" disabled>
+            🎙️ Test Recognition
+        </button>
+        
+        <div id="log" class="log" style="display: none;">
+            <h4>📋 Log delle operazioni:</h4>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let synthesis = window.speechSynthesis;
+        let recognition = null;
+        let ttsActivated = false;
+        let selectedVoice = null;
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeInfo();
+            setupRecognition();
+            loadVoices();
+        });
+        
+        function initializeInfo() {
+            const userAgent = navigator.userAgent;
+            const isIPad = /iPad/.test(userAgent);
+            const isIPhone = /iPhone/.test(userAgent);
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+            
+            document.getElementById('userAgent').textContent = userAgent;
+            
+            let deviceType = '';
+            if (isIPad) {
+                deviceType = '<span class="badge ipad">iPad</span>';
+            } else if (isIPhone) {
+                deviceType = '<span class="badge ipad">iPhone</span>';
+            } else if (isIOS) {
+                deviceType = '<span class="badge ipad">iOS</span>';
+            } else {
+                deviceType = '<span class="badge other">Desktop/Altro</span>';
+            }
+            document.getElementById('deviceType').innerHTML = deviceType;
+            
+            document.getElementById('ttsSupport').textContent = synthesis ? 'Supportato ✅' : 'Non supportato ❌';
+            
+            const hasRecognition = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+            document.getElementById('recognitionSupport').textContent = hasRecognition ? 'Supportato ✅' : 'Non supportato ❌';
+            
+            // Su iPad mostra immediatamente la necessità di attivazione
+            if (isIPad) {
+                updateStatus('⚠️ Su iPad l\'audio deve essere attivato manualmente. Clicca "Attiva Audio"', 'info');
+            }
+        }
+        
+        function setupRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'it-IT';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                
+                recognition.onresult = function(event) {
+                    const result = event.results[0][0].transcript;
+                    log('📝 Riconosciuto: "' + result + '"');
+                    updateStatus('✅ Riconoscimento completato: "' + result + '"', 'success');
+                };
+                
+                recognition.onerror = function(event) {
+                    log('❌ Errore recognition: ' + event.error);
+                    updateStatus('❌ Errore nel riconoscimento: ' + event.error, 'error');
+                };
+            }
+        }
+        
+        function loadVoices() {
+            function getVoices() {
+                const voices = synthesis.getVoices();
+                if (voices.length > 0) {
+                    // Trova voce italiana
+                    selectedVoice = voices.find(v => v.lang.startsWith('it')) || voices[0];
+                    log('🎤 Voce selezionata: ' + selectedVoice.name + ' (' + selectedVoice.lang + ')');
+                }
+            }
+            
+            if (synthesis.getVoices().length === 0) {
+                synthesis.addEventListener('voiceschanged', getVoices);
+            } else {
+                getVoices();
+            }
+        }
+        
+        function activateAudio() {
+            const btn = document.getElementById('activateBtn');
+            btn.textContent = '⏳ Attivazione...';
+            btn.disabled = true;
+            
+            log('🔄 Inizio attivazione audio...');
+            updateStatus('🔄 Attivazione audio in corso...', 'info');
+            
+            // Step 1: Pre-attivazione silenziosa
+            const silentUtterance = new SpeechSynthesisUtterance(' ');
+            silentUtterance.volume = 0.01;
+            silentUtterance.rate = 10;
+            
+            silentUtterance.onstart = function() {
+                log('🔇 Pre-attivazione silenziosa avviata');
+            };
+            
+            silentUtterance.onend = function() {
+                log('✅ Pre-attivazione completata');
+                ttsActivated = true;
+                
+                // Step 2: Test audio udibile
+                setTimeout(() => {
+                    const testUtterance = new SpeechSynthesisUtterance('Sistema audio attivato correttamente su iPad');
+                    testUtterance.lang = 'it-IT';
+                    testUtterance.volume = 0.8;
+                    testUtterance.rate = 1.0;
+                    
+                    if (selectedVoice) {
+                        testUtterance.voice = selectedVoice;
+                    }
+                    
+                    testUtterance.onstart = function() {
+                        log('🔊 Test audio avviato');
+                        updateStatus('🔊 Test audio in corso...', 'info');
+                    };
+                    
+                    testUtterance.onend = function() {
+                        log('✅ Attivazione completata con successo');
+                        updateStatus('✅ Audio attivato con successo! Ora puoi usare tutti i test.', 'success');
+                        
+                        // Abilita pulsanti
+                        document.getElementById('testBtn').disabled = false;
+                        document.getElementById('recognitionBtn').disabled = false;
+                        
+                        btn.textContent = '✅ Audio Attivato';
+                        btn.style.background = '#28a745';
+                    };
+                    
+                    testUtterance.onerror = function(event) {
+                        log('❌ Errore test audio: ' + event.error);
+                        updateStatus('⚠️ Attivazione parziale - potrebbero esserci problemi', 'error');
+                        btn.textContent = '⚠️ Problemi Audio';
+                        btn.disabled = false;
+                    };
+                    
+                    synthesis.speak(testUtterance);
+                }, 200);
+            };
+            
+            silentUtterance.onerror = function(event) {
+                log('❌ Errore pre-attivazione: ' + event.error);
+                updateStatus('❌ Errore durante l\'attivazione: ' + event.error, 'error');
+                btn.textContent = '❌ Errore Attivazione';
+                btn.disabled = false;
+            };
+            
+            synthesis.cancel();
+            synthesis.speak(silentUtterance);
+        }
+        
+        function testTTS() {
+            if (!ttsActivated) {
+                updateStatus('⚠️ Attiva prima l\'audio!', 'error');
+                return;
+            }
+            
+            log('🔊 Test TTS avviato');
+            updateStatus('🔊 Test TTS in corso...', 'info');
+            
+            const utterance = new SpeechSynthesisUtterance('Questo è un test del sistema text-to-speech. Se senti questa voce, tutto funziona correttamente su iPad.');
+            utterance.lang = 'it-IT';
+            utterance.volume = 0.8;
+            utterance.rate = 1.0;
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            
+            utterance.onend = function() {
+                log('✅ Test TTS completato');
+                updateStatus('✅ Test TTS completato con successo!', 'success');
+            };
+            
+            utterance.onerror = function(event) {
+                log('❌ Errore TTS: ' + event.error);
+                updateStatus('❌ Errore nel test TTS: ' + event.error, 'error');
+            };
+            
+            synthesis.speak(utterance);
+        }
+        
+        function testRecognition() {
+            if (!recognition) {
+                updateStatus('❌ Riconoscimento vocale non supportato', 'error');
+                return;
+            }
+            
+            log('🎙️ Test riconoscimento avviato');
+            updateStatus('🎙️ Parla ora... (prova a dire "ciao iPad")', 'info');
+            
+            try {
+                recognition.start();
+            } catch (error) {
+                log('❌ Errore avvio recognition: ' + error.message);
+                updateStatus('❌ Errore avvio riconoscimento: ' + error.message, 'error');
+            }
+        }
+        
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const logContent = document.getElementById('logContent');
+            
+            logDiv.style.display = 'block';
+            
+            const timestamp = new Date().toLocaleTimeString('it-IT');
+            logContent.innerHTML += `[${timestamp}] ${message}<br>`;
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+    </script>
+</body>
+</html>
