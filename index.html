@@ -1884,12 +1884,8 @@
                 this.hideThinking();
                 
                 if (isVoiceInput) {
-                  // Usa il nuovo Voice Manager V2 se disponibile
-                  if (window.AIVoiceManagerV2) {
-                    window.AIVoiceManagerV2.speak(result.response);
-                  } else if (this.voiceManager) {
-                    this.voiceManager.speak(result.response);
-                  }
+                  // DISABILITATO - Usa solo TTS principale alla fine per evitare doppia lettura
+                  console.log('🔇 ROUTE TTS DISABILITATO - Gestito da TTS principale');
                 }
                 return;
               } else {
@@ -1924,12 +1920,8 @@
                 this.hideThinking();
                 
                 if (isVoiceInput) {
-                  // Usa il nuovo Voice Manager V2 se disponibile
-                  if (window.AIVoiceManagerV2) {
-                    window.AIVoiceManagerV2.speak(result.response);
-                  } else if (this.voiceManager) {
-                    this.voiceManager.speak(result.response);
-                  }
+                  // DISABILITATO - Usa solo TTS principale alla fine per evitare doppia lettura
+                  console.log('🔇 ROUTE TTS DISABILITATO - Gestito da TTS principale');
                 }
                 return;
               } else {
