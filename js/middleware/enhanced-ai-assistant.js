@@ -23,6 +23,9 @@ class EnhancedAIAssistant {
         this.middlewareEnabled = true;
         this.debugMode = true;
         
+        // Proxy proprietà dall'assistant originale
+        this.costWarningAccepted = false;
+        
         console.log('✅ EnhancedAIAssistant inizializzato');
     }
     
@@ -239,6 +242,52 @@ class EnhancedAIAssistant {
     
     setProvider(provider) {
         return this.originalAssistant.setProvider(provider);
+    }
+    
+    // Metodo per aggiornare le opzioni del modello
+    updateModelOptions() {
+        return this.originalAssistant.updateModelOptions();
+    }
+    
+    // Altri metodi di configurazione
+    updateWakeWord() {
+        return this.originalAssistant.updateWakeWord();
+    }
+    
+    saveConfig() {
+        return this.originalAssistant.saveConfig();
+    }
+    
+    clearHistory() {
+        return this.originalAssistant.clearHistory();
+    }
+    
+    refreshSupabaseData() {
+        return this.originalAssistant.refreshSupabaseData();
+    }
+    
+    quickQuery(type) {
+        return this.originalAssistant.quickQuery(type);
+    }
+    
+    stopSpeaking() {
+        if (this.originalAssistant.stopSpeaking) {
+            return this.originalAssistant.stopSpeaking();
+        }
+    }
+    
+    toggleVoice() {
+        return this.originalAssistant.toggleVoice();
+    }
+    
+    switchToGPT() {
+        return this.originalAssistant.switchToGPT();
+    }
+    
+    startListening() {
+        if (this.originalAssistant.startListening) {
+            return this.originalAssistant.startListening();
+        }
     }
     
     // Metodi di interfaccia

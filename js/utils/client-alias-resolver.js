@@ -49,7 +49,7 @@ class ClientAliasResolver {
     async loadFromSupabase() {
         const { data, error } = await window.supabase
             .from('clients')
-            .select('id, nome, name');
+            .select('id, nome');
             
         if (error) {
             throw error;
