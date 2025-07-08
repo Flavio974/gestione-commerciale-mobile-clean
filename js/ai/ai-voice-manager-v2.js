@@ -332,6 +332,176 @@ class AIVoiceManagerV2 {
         
         this.synthesis.speak(testUtterance);
     }
+    
+    // Crea controlli semplificati per iPad
+    createIPadControls() {
+        // Verifica che non esistano già
+        if (document.getElementById('ipad-voice-controls')) return;
+        
+        console.log('🎨 Creando controlli voice semplificati per iPad...');
+        
+        // Crea contenitore principale
+        const container = document.createElement('div');
+        container.id = 'ipad-voice-controls';
+        container.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        `;
+        
+        // Titolo
+        const title = document.createElement('h4');
+        title.textContent = '🎤 Voice Controls';
+        title.style.cssText = `
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+            text-align: center;
+        `;
+        container.appendChild(title);
+        
+        // Controllo Wake Word
+        const wakeWordContainer = document.createElement('div');
+        wakeWordContainer.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+        `;
+        
+        const wakeWordToggle = document.createElement('input');
+        wakeWordToggle.type = 'checkbox';
+        wakeWordToggle.id = 'ipad-wake-word-toggle';
+        wakeWordToggle.checked = this.useWakeWord;
+        wakeWordToggle.style.cssText = `
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        `;
+        
+        const wakeWordLabel = document.createElement('label');
+        wakeWordLabel.htmlFor = 'ipad-wake-word-toggle';
+        wakeWordLabel.textContent = 'Usa "Hey Assistente"';
+        wakeWordLabel.style.cssText = `
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            user-select: none;
+        `;
+        
+        wakeWordContainer.appendChild(wakeWordToggle);
+        wakeWordContainer.appendChild(wakeWordLabel);
+        container.appendChild(wakeWordContainer);
+        
+        // Status
+        const status = document.createElement('div');
+        status.id = 'ipad-voice-status';
+        status.style.cssText = `
+            padding: 8px;
+            background: #e8f4ff;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+            color: #333;
+        `;
+        status.textContent = 'Ready';
+        container.appendChild(status);
+        
+        // Aggiungi al DOM
+        document.body.appendChild(container);
+        
+        // Setup eventi
+        wakeWordToggle.addEventListener('change', (e) => {
+            this.useWakeWord = e.target.checked;
+            console.log('🎵 iPad Wake word toggle cambiato:', this.useWakeWord);
+            this.updateIPadStatus();
+            this.showNotification(
+                this.useWakeWord ? '[INFO] Wake word attivate' : '[INFO] Wake word disattivate', 
+                'info'
+            );
+        });
+        
+        // Eventi touch per iPad
+        wakeWordLabel.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            wakeWordToggle.checked = !wakeWordToggle.checked;
+            wakeWordToggle.dispatchEvent(new Event('change'));
+        });
+        
+        // Rendi draggable per iPad
+        this.makeIPadControlsDraggable(container);
+        
+        console.log('✅ Controlli iPad creati con successo');
+    }
+    
+    // Aggiorna status nei controlli iPad
+    updateIPadStatus() {
+        const status = document.getElementById('ipad-voice-status');
+        if (status) {
+            if (this.useWakeWord) {
+                status.textContent = '🎤 Wake word ON - "Hey Assistente"';
+                status.style.background = '#d4edda';
+                status.style.color = '#155724';
+            } else {
+                status.textContent = '🔇 Wake word OFF';
+                status.style.background = '#f8d7da'; 
+                status.style.color = '#721c24';
+            }
+        }
+    }
+    
+    // Rende i controlli iPad draggabili
+    makeIPadControlsDraggable(element) {
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+        
+        element.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            
+            const rect = element.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+            
+            element.style.transition = 'none';
+            element.style.opacity = '0.8';
+        });
+        
+        element.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const currentX = touch.clientX;
+            const currentY = touch.clientY;
+            
+            const deltaX = currentX - startX;
+            const deltaY = currentY - startY;
+            
+            element.style.left = (initialX + deltaX) + 'px';
+            element.style.top = (initialY + deltaY) + 'px';
+        });
+        
+        element.addEventListener('touchend', () => {
+            isDragging = false;
+            element.style.transition = 'all 0.3s ease';
+            element.style.opacity = '1';
+        });
+    }
 
     async init() {
         // Verifica supporto browser
@@ -435,8 +605,18 @@ class AIVoiceManagerV2 {
         const voices = this.synthesis.getVoices();
         console.log('🎤 Voci disponibili:', voices.map(v => `${v.name} (${v.lang})`));
         
-        // Priorità specifiche per dispositivo
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        // Priorità specifiche per dispositivo - DEBUG MIGLIORATO
+        const userAgent = navigator.userAgent;
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+        const isIPad = /iPad/.test(userAgent);
+        const isIPhone = /iPhone/.test(userAgent);
+        
+        console.log('🔍 DEVICE DEBUG:', {
+            userAgent: userAgent,
+            isIOS: isIOS,
+            isIPad: isIPad,
+            isIPhone: isIPhone
+        });
         
         let priorities;
         if (isIOS) {
@@ -447,6 +627,7 @@ class AIVoiceManagerV2 {
                 { lang: 'it-IT', name: 'Luca' },
                 { lang: 'it-IT', name: '' } // Qualsiasi voce italiana
             ];
+            console.log('🔊 DEVICE: Priorità iOS selezionate');
         } else {
             // Priorità per desktop
             priorities = [
@@ -455,6 +636,7 @@ class AIVoiceManagerV2 {
                 { lang: 'it-IT', name: 'Alice' },
                 { lang: 'it-IT', name: '' } // Qualsiasi voce italiana
             ];
+            console.log('🔊 DEVICE: Priorità Desktop selezionate');
         }
 
         for (const priority of priorities) {
@@ -483,19 +665,34 @@ class AIVoiceManagerV2 {
     createUI() {
         console.log('🎨 Creazione UI Voice Controls V2...');
         
-        // Rilevamento dispositivo all'inizio
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const isIPhone = /iPhone/.test(navigator.userAgent);
-        const isIPad = /iPad/.test(navigator.userAgent);
+        // Rilevamento dispositivo all'inizio - MIGLIORATO
+        const userAgent = navigator.userAgent;
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+        const isIPhone = /iPhone/.test(userAgent);
+        const isIPad = /iPad/.test(userAgent);
+        
+        console.log('🔍 DEVICE DETECTION IN createUI:', {
+            userAgent: userAgent,
+            isIOS: isIOS,
+            isIPhone: isIPhone,
+            isIPad: isIPad,
+            ttsActivated: this.ttsActivated
+        });
         
         // Su iPad, mostra sempre il bottone di attivazione audio se TTS non è attivo
         if (isIPad && !this.ttsActivated) {
+            console.log('🎵 iPad rilevato - Creando overlay di attivazione...');
             this.createAudioActivationButton();
         }
         
         // Aggiungi anche bottone nel tab AI se siamo su iPad
         if (isIPad) {
+            console.log('🎵 iPad rilevato - Aggiungendo bottone nel tab AI...');
             this.addAudioButtonToAITab();
+            // Crea anche controlli semplificati per iPad
+            this.createIPadControls();
+        } else {
+            console.log('⚠️ NON iPad - isIPad:', isIPad, 'userAgent:', userAgent);
         }
         
         console.log('🔍 Device Detection:', {
