@@ -2109,10 +2109,12 @@
           if (shouldSpeak && 'speechSynthesis' in window) {
             console.log('🔊 RISPOSTA VOCALE ATTIVATA - Input era vocale!');
             
-            // Su iPad, usa SOLO speechSynthesis diretto (AIVoiceManagerV2.speak è disabilitato)
+            // 🚨 CRITICAL FIX v2.1 - Su iPad, usa SOLO speechSynthesis diretto
             const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
             if (isIPad) {
-              console.log('🔊 iPad: Uso SOLO speechSynthesis diretto - AIVoiceManagerV2.speak disabilitato');
+              console.log('🔊 🚨 CRITICAL FIX v2.1 ATTIVO - iPad: Uso SOLO speechSynthesis diretto');
+              console.log('🔇 AIVoiceManagerV2.speak completamente DISABILITATO');
+              console.log('🎯 Deploy timestamp: 2025-07-08 16:40 UTC');
             }
             
             // FERMA tutte le sintesi vocali in corso (incluso Voice Manager)
