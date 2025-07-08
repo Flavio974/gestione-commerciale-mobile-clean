@@ -160,6 +160,7 @@ window.DDTFTExportExcel = {
       'Tipo Documento',
       'Numero documento',      // minuscola come richiesto
       'Data Documento',
+      'Data Consegna',         // NUOVO CAMPO
       'Codice Cliente',
       'Descrizione Cliente',   // "Descrizione" invece di "Nome"
       'Indirizzo di Consegna',
@@ -330,6 +331,7 @@ window.DDTFTExportExcel = {
             (doc.type || doc.documentType || '').toUpperCase(),          // Tipo Documento (DDT/FT)
             documentNumber,                                               // Numero Documento
             doc.date || '',                                               // Data Documento
+            doc.deliveryDate || '',                                       // Data Consegna (NUOVO CAMPO)
             doc.clientCode || doc.codiceCliente || '',                   // Codice Cliente
             doc.clientName || '',                                         // Nome Cliente
             doc.deliveryAddress || '',                                    // Indirizzo Consegna
@@ -351,10 +353,10 @@ window.DDTFTExportExcel = {
             headers.forEach((header, idx) => {
               console.log(`  ${idx}. ${header}: "${row[idx]}"`);
             });
-            console.log('Descrizione prodotto (posizione 10):', row[10]);
-            console.log('Tipo descrizione:', typeof row[10]);
-            console.log('Verifica mapping - Codice Prodotto (pos 9):', row[9]);
-            console.log('Verifica mapping - Descrizione (pos 10):', row[10]);
+            console.log('Descrizione prodotto (posizione 11):', row[11]);
+            console.log('Tipo descrizione:', typeof row[11]);
+            console.log('Verifica mapping - Codice Prodotto (pos 10):', row[10]);
+            console.log('Verifica mapping - Descrizione (pos 11):', row[11]);
           }
           
           rows.push(row);
@@ -381,6 +383,7 @@ window.DDTFTExportExcel = {
           (doc.type || doc.documentType || '').toUpperCase(),           // Tipo Documento
           documentNumber,                                                // Numero Documento
           doc.date || '',                                                // Data Documento
+          doc.deliveryDate || '',                                        // Data Consegna (NUOVO CAMPO)
           doc.clientCode || doc.codiceCliente || '',                    // Codice Cliente
           doc.clientName || '',                                          // Nome Cliente
           doc.deliveryAddress || '',                                     // Indirizzo Consegna
@@ -406,12 +409,12 @@ window.DDTFTExportExcel = {
     let descrizioniVuoteOZero = 0;
     
     rows.forEach((row, index) => {
-      const descrizione = row[10]; // La descrizione è ora alla posizione 10 (0-based) per le nuove colonne
+      const descrizione = row[11]; // La descrizione è ora alla posizione 11 (0-based) dopo l'aggiunta di Data Consegna
       if (descrizione === "0" || descrizione === 0) {
         console.error(`❌ ERRORE FINALE: Riga ${index + 1} ha ancora descrizione "0"!`);
         descrizioniVuoteOZero++;
         // Sostituisci con stringa vuota per evitare "0" nell'export
-        row[10] = '';
+        row[11] = '';
       } else if (!descrizione) {
         console.warn(`⚠️ Riga ${index + 1} ha descrizione vuota`);
         descrizioniVuoteOZero++;
@@ -430,15 +433,15 @@ window.DDTFTExportExcel = {
   applyNumberFormats: function(ws, data) {
     // Indici delle colonne numeriche (0-based) - aggiornati per le nuove colonne
     const numericColumns = {
-      11: 'quantity',   // Pezzi
-      12: 'currency',   // Prezzo Unitario
-      13: 'percentage', // Sconto %
-      14: 'currency',   // Sconto Merce
-      15: 'currency'    // Importo
+      12: 'quantity',   // Pezzi
+      13: 'currency',   // Prezzo Unitario
+      14: 'percentage', // Sconto %
+      15: 'currency',   // Sconto Merce
+      16: 'currency'    // Importo
     };
     
     // Colonne che DEVONO rimanere testo (0-based) - aggiornate per le nuove colonne
-    const textColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Include Descrizione Prodotto (10)
+    const textColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // Include Descrizione Prodotto (11)
     
     // Unità di misura che richiedono decimali
     const decimalUnits = ['KG', 'LT', 'MT', 'GR', 'ML'];
@@ -456,8 +459,8 @@ window.DDTFTExportExcel = {
           // Forza il tipo stringa per le colonne di testo
           cell.t = 's';
           
-          // Controllo speciale per la colonna descrizione (indice 10 con le nuove colonne)
-          if (colIndex === 10) {
+          // Controllo speciale per la colonna descrizione (indice 11 con le nuove colonne)
+          if (colIndex === 11) {
             // FORZA sempre la descrizione come stringa
             if (cell.v === "0" || cell.v === 0 || cell.v === null || cell.v === undefined) {
               console.error(`❌ Cella ${cellAddress} (Descrizione) contiene valore errato: "${cell.v}"!`);

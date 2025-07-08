@@ -37,6 +37,7 @@ window.OrdiniExportCore = {
       const colWidths = [
         {wch: 15}, // Numero Ordine
         {wch: 12}, // Data Ordine
+        {wch: 12}, // Data Consegna (NUOVO CAMPO)
         {wch: 12}, // Tipo Documento
         {wch: 15}, // Numero documento
         {wch: 12}, // Data Documento
@@ -112,20 +113,21 @@ window.OrdiniExportCore = {
     data.push([
       'Numero Ordine',        // 1. Numero Ordine
       'Data Ordine',          // 2. Data Ordine
-      'Tipo Documento',       // 3. Tipo Documento
-      'Numero documento',     // 4. Numero documento (minuscola)
-      'Data Documento',       // 5. Data Documento
-      'Codice Cliente',       // 6. Codice Cliente
-      'Descrizione Cliente',  // 7. Descrizione Cliente (invece di solo "Cliente")
-      'Indirizzo di Consegna',// 8. Indirizzo di Consegna
-      'P.Iva',               // 9. P.Iva
-      'Codice Prodotto',      // 10. Codice Prodotto
-      'Descrizione Prodotto', // 11. Descrizione Prodotto (invece di solo "Prodotto")
-      'Pezzi',               // 12. Pezzi (invece di "Quantità")
-      'Prezzo Unitario',      // 13. Prezzo Unitario
-      'Sconto (%)',          // 14. Sconto (%)
-      'S.M.',                // 15. S.M.
-      'Importo'              // 16. Importo
+      'Data Consegna',        // 3. Data Consegna (NUOVO CAMPO)
+      'Tipo Documento',       // 4. Tipo Documento
+      'Numero documento',     // 5. Numero documento (minuscola)
+      'Data Documento',       // 6. Data Documento
+      'Codice Cliente',       // 7. Codice Cliente
+      'Descrizione Cliente',  // 8. Descrizione Cliente (invece di solo "Cliente")
+      'Indirizzo di Consegna',// 9. Indirizzo di Consegna
+      'P.Iva',               // 10. P.Iva
+      'Codice Prodotto',      // 11. Codice Prodotto
+      'Descrizione Prodotto', // 12. Descrizione Prodotto (invece di solo "Prodotto")
+      'Pezzi',               // 13. Pezzi (invece di "Quantità")
+      'Prezzo Unitario',      // 14. Prezzo Unitario
+      'Sconto (%)',          // 15. Sconto (%)
+      'S.M.',                // 16. S.M.
+      'Importo'              // 17. Importo
     ]);
     
     // Processa ogni ordine
@@ -229,20 +231,21 @@ window.OrdiniExportCore = {
           data.push([
             order.orderNumber || '',                      // 1. Numero Ordine
             order.orderDate || '',                        // 2. Data Ordine
-            'ORDINE',                                     // 3. Tipo Documento (per gli ordini è sempre "ORDINE")
-            '',                                           // 4. Numero documento (vuoto per ordini)
-            order.orderDate || '',                        // 5. Data Documento (uguale a Data Ordine per ordini)
-            order.clientCode || '',                       // 6. Codice Cliente
-            order.clientName || '',                       // 7. Descrizione Cliente
-            cleanAddress,                                 // 8. Indirizzo di Consegna (pulito)
-            order.vatNumber || '',                        // 9. P.Iva
-            product.code || '',                           // 10. Codice Prodotto
-            product.description || '',                    // 11. Descrizione Prodotto
-            quantity,                                     // 12. Pezzi
-            unitPrice,                                    // 13. Prezzo Unitario
-            discount || 0,                                // 14. Sconto (%)
-            sm || 0,                                      // 15. S.M.
-            importo                                       // 16. Importo
+            order.deliveryDate || '',                     // 3. Data Consegna (NUOVO CAMPO)
+            'ORDINE',                                     // 4. Tipo Documento (per gli ordini è sempre "ORDINE")
+            '',                                           // 5. Numero documento (vuoto per ordini)
+            order.orderDate || '',                        // 6. Data Documento (uguale a Data Ordine per ordini)
+            order.clientCode || '',                       // 7. Codice Cliente
+            order.clientName || '',                       // 8. Descrizione Cliente
+            cleanAddress,                                 // 9. Indirizzo di Consegna (pulito)
+            order.vatNumber || '',                        // 10. P.Iva
+            product.code || '',                           // 11. Codice Prodotto
+            product.description || '',                    // 12. Descrizione Prodotto
+            quantity,                                     // 13. Pezzi
+            unitPrice,                                    // 14. Prezzo Unitario
+            discount || 0,                                // 15. Sconto (%)
+            sm || 0,                                      // 16. S.M.
+            importo                                       // 17. Importo
           ]);
         });
       } else {
@@ -260,20 +263,21 @@ window.OrdiniExportCore = {
         data.push([
           order.orderNumber || '',                      // 1. Numero Ordine
           order.orderDate || '',                        // 2. Data Ordine
-          'ORDINE',                                     // 3. Tipo Documento
-          '',                                           // 4. Numero documento
-          order.orderDate || '',                        // 5. Data Documento
-          order.clientCode || '',                       // 6. Codice Cliente
-          order.clientName || '',                       // 7. Descrizione Cliente
-          cleanAddress,                                 // 8. Indirizzo di Consegna (pulito)
-          order.vatNumber || '',                        // 9. P.Iva
-          '',  // 10. Codice Prodotto vuoto
-          '',  // 11. Descrizione Prodotto vuoto
-          '',  // 12. Pezzi vuoto
-          '',  // 13. Prezzo Unitario vuoto
-          '',  // 14. Sconto vuoto
-          '',  // 15. S.M. vuoto
-          ''   // 16. Importo vuoto
+          order.deliveryDate || '',                     // 3. Data Consegna (NUOVO CAMPO)
+          'ORDINE',                                     // 4. Tipo Documento
+          '',                                           // 5. Numero documento
+          order.orderDate || '',                        // 6. Data Documento
+          order.clientCode || '',                       // 7. Codice Cliente
+          order.clientName || '',                       // 8. Descrizione Cliente
+          cleanAddress,                                 // 9. Indirizzo di Consegna (pulito)
+          order.vatNumber || '',                        // 10. P.Iva
+          '',  // 11. Codice Prodotto vuoto
+          '',  // 12. Descrizione Prodotto vuoto
+          '',  // 13. Pezzi vuoto
+          '',  // 14. Prezzo Unitario vuoto
+          '',  // 15. Sconto vuoto
+          '',  // 16. S.M. vuoto
+          ''   // 17. Importo vuoto
         ]);
       }
     });

@@ -406,7 +406,26 @@
         return 0;
       }
       
-      // Caso speciale: "1.234" senza virgola - trattalo come separatore migliaia se ha 3 cifre dopo il punto
+      // PRIORITÀ 1: Numero intero semplice (es: "10", "5", "100")
+      if (/^\d+$/.test(stringValue)) {
+        const parsed = parseInt(stringValue, 10);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      
+      // PRIORITÀ 2: Numero decimale semplice con virgola italiana (es: "5,50", "10,00")
+      if (/^\d+,\d+$/.test(stringValue)) {
+        const normalized = stringValue.replace(/,/g, '.');
+        const parsed = parseFloat(normalized);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      
+      // PRIORITÀ 3: Numero decimale con punto inglese (es: "5.50", "10.00")
+      if (/^\d+\.\d+$/.test(stringValue)) {
+        const parsed = parseFloat(stringValue);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      
+      // PRIORITÀ 4: Formato migliaia italiano "1.234" (solo se esattamente 3 cifre dopo il punto)
       if (/^\d{1,3}\.\d{3}$/.test(stringValue)) {
         // Es: "1.234" -> rimuovi punto -> "1234"
         const withoutThousands = stringValue.replace('.', '');
@@ -414,14 +433,7 @@
         return isNaN(parsed) ? 0 : parsed;
       }
       
-      // Se è un numero normale (formato inglese) con solo punto decimale
-      // ESCLUDI formato italiano migliaia "1.234" (già gestito sopra)
-      if (/^\d+\.?\d*$/.test(stringValue) && !/^\d{1,3}\.\d{3}$/.test(stringValue)) {
-        const parsed = parseFloat(stringValue);
-        return isNaN(parsed) ? 0 : parsed;
-      }
-      
-      // Se è formato italiano "1.234,56" o "1234,56"
+      // PRIORITÀ 5: Formato italiano completo "1.234,56" o "12.345.678,90"
       if (stringValue.includes(',')) {
         // Rimuovi tutti i punti (separatori migliaia) e sostituisci virgola con punto
         const normalized = stringValue
@@ -432,9 +444,8 @@
         return isNaN(parsed) ? 0 : parsed;
       }
       
-      // Se contiene solo punti (potrebbe essere separatore migliaia senza decimali)
+      // PRIORITÀ 6: Formato migliaia multipli "12.345.678"
       if (stringValue.includes('.') && !stringValue.includes(',')) {
-        // Se ha più di un punto, trattali come separatori migliaia
         const parts = stringValue.split('.');
         if (parts.length > 2) {
           // Rimuovi tutti i punti tranne l'ultimo (che diventa decimale)
@@ -525,7 +536,13 @@
         { input: "", expected: 0 },
         { input: null, expected: 0 },
         { input: "12.345.678,90", expected: 12345678.90 },
-        { input: "5,00", expected: 5.00 }
+        { input: "5,00", expected: 5.00 },
+        // Test specifici per quantità
+        { input: "10", expected: 10 },
+        { input: "5", expected: 5 },
+        { input: "100", expected: 100 },
+        { input: "1", expected: 1 },
+        { input: "25", expected: 25 }
       ];
 
       console.log('🧪 TEST PARSER NUMERI ITALIANI:');

@@ -53,6 +53,7 @@ class DDTExtractor {
       importDate: new Date().toISOString(),
       documentNumber: this.extractDocumentNumber(),
       date: this.extractDate(),
+      deliveryDate: this.extractDeliveryDate(),
       clientName: this.extractClientName(),
       clientCode: this.extractClientCode(),
       vatNumber: this.extractVatNumber(),
@@ -161,6 +162,30 @@ class DDTExtractor {
       }
     }
     
+    return '';
+  }
+
+  extractDeliveryDate() {
+    this.log('📅 Estrazione data di consegna DDT');
+    
+    const patterns = [
+      /DATA\s+(?:DI\s+)?CONSEGNA[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /CONSEGNA[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /DELIVERY\s+DATE[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /DATA\s+CONSEGNA[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /CONSEGNA\s+(?:IL\s+)?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i
+    ];
+
+    for (const pattern of patterns) {
+      const match = this.text.match(pattern);
+      if (match) {
+        const date = convertDateFormat(match[1]);
+        this.log(`📅 Data consegna trovata: ${date}`);
+        return date;
+      }
+    }
+    
+    this.log('⚠️ Data di consegna non trovata nel documento');
     return '';
   }
 
@@ -390,6 +415,7 @@ class FatturaExtractor {
       importDate: new Date().toISOString(),
       documentNumber: this.extractDocumentNumber(),
       date: this.extractDate(),
+      deliveryDate: this.extractDeliveryDate(),
       clientName: this.extractClientName(),
       clientCode: this.extractClientCode(),
       vatNumber: this.extractVatNumber(),
@@ -450,6 +476,30 @@ class FatturaExtractor {
       }
     }
     
+    return '';
+  }
+
+  extractDeliveryDate() {
+    this.log('📅 Estrazione data di consegna Fattura');
+    
+    const patterns = [
+      /DATA\s+(?:DI\s+)?CONSEGNA[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /CONSEGNA[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /DELIVERY\s+DATE[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /DATA\s+CONSEGNA[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+      /CONSEGNA\s+(?:IL\s+)?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i
+    ];
+
+    for (const pattern of patterns) {
+      const match = this.text.match(pattern);
+      if (match) {
+        const date = convertDateFormat(match[1]);
+        this.log(`📅 Data consegna trovata: ${date}`);
+        return date;
+      }
+    }
+    
+    this.log('⚠️ Data di consegna non trovata nel documento');
     return '';
   }
 
