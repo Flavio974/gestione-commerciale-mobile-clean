@@ -1845,8 +1845,9 @@ class AIVoiceManagerV2 {
             // DISABILITA TTS per AIVoiceManagerV2 - lascia che index.html gestisca tutto
             const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
             if (isIPad) {
-                console.log('🔇 AIVoiceManagerV2 SPEAK DISABILITATO su iPad - index.html gestisce TTS');
-                console.log('⚡ FORCE DEPLOY - Timestamp:', new Date().toISOString());
+                console.log('🔇 🚨 CRITICAL FIX v2.1 - AIVoiceManagerV2 TTS COMPLETAMENTE DISABILITATO su iPad');
+                console.log('⚡ Deploy timestamp:', new Date().toISOString());
+                console.log('🎯 ONLY index.html speechSynthesis active');
                 resolve();
                 return;
             }

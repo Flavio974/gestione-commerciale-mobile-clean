@@ -1,0 +1,13 @@
+FORCE NETLIFY DEPLOY
+===================
+Timestamp: 2025-07-08 16:33:00 UTC
+Deploy ID: CRITICAL_TTS_FIX_v2.1
+Status: FORCE REBUILD REQUIRED
+
+Changes:
+- Disabled AIVoiceManagerV2.speak() on iPad
+- Disabled route TTS calls  
+- Single TTS system: index.html only
+- Version bumped to v2.1
+
+🚨 CRITICAL FIX for double reading on iPad
