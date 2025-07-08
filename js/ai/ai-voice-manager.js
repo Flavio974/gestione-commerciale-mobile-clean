@@ -263,6 +263,13 @@ const AIVoiceManager = {
    * Inizializzazione
    */
   init: function() {
+    // Su iPad, se AIVoiceManagerV2 esiste, NON inizializzare questo sistema
+    const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+    if (isIPad) {
+      console.log('🔇 iPad rilevato - Sistema vecchio NON inizializzato (AIVoiceManagerV2 gestisce tutto)');
+      return false;
+    }
+    
     // Check HTTPS
     if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
       console.error('❌ HTTPS richiesto per il riconoscimento vocale');
@@ -770,12 +777,11 @@ const AIVoiceManager = {
   speak: function(text) {
     console.log('🔊 Voice Manager - Parlando:', text);
     
-    // Su iPad, se AIVoiceManagerV2 è attivo, non usare questo sistema
+    // Su iPad, se AIVoiceManagerV2 è attivo, DISABILITA completamente questo sistema
     const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
     if (isIPad && window.AIVoiceManagerV2) {
-      console.log('🔇 iPad: Delego speak() al nuovo AIVoiceManagerV2');
-      window.AIVoiceManagerV2.speak(text);
-      return;
+      console.log('🔇 iPad: Sistema vecchio DISABILITATO - AIVoiceManagerV2 gestisce tutto');
+      return; // NON fare nulla - lascia che solo il nuovo sistema gestisca
     }
     
     // Rileva dispositivi iOS

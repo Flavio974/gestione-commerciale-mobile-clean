@@ -219,12 +219,15 @@ class AIVoiceManagerV2 {
                 ipadControls = document.createElement('div');
                 ipadControls.id = 'ipad-audio-controls';
                 ipadControls.style.cssText = `
-                    background: #f8f9fa;
+                    background: rgba(248, 249, 250, 0.95);
                     border: 2px solid #007AFF;
                     border-radius: 12px;
                     padding: 20px;
                     margin: 20px 0;
                     text-align: center;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 4px 15px rgba(0,122,255,0.2);
+                    transition: all 0.3s ease;
                 `;
                 
                 ipadControls.innerHTML = `
@@ -415,13 +418,15 @@ class AIVoiceManagerV2 {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             z-index: 9998;
             display: flex;
             flex-direction: column;
             gap: 10px;
             backdrop-filter: blur(10px);
             min-width: 200px;
+            border: 2px solid rgba(0,122,255,0.3);
+            animation: slideInLeft 0.3s ease;
         `;
         
         // Titolo
@@ -520,6 +525,45 @@ class AIVoiceManagerV2 {
         
         // Aggiungi al DOM
         document.body.appendChild(container);
+        
+        // Aggiungi CSS per animazioni se non esiste
+        if (!document.getElementById('ipad-voice-css')) {
+            const style = document.createElement('style');
+            style.id = 'ipad-voice-css';
+            style.textContent = `
+                @keyframes slideInLeft {
+                    from {
+                        transform: translateX(-100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                
+                #ipad-voice-controls {
+                    transition: all 0.3s ease;
+                }
+                
+                #ipad-voice-controls:hover {
+                    transform: scale(1.02);
+                    box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+                }
+                
+                @keyframes slideInFromTop {
+                    from {
+                        transform: translateY(-100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
         
         // Setup eventi
         wakeWordToggle.addEventListener('change', (e) => {
@@ -1892,7 +1936,7 @@ AIVoiceManagerV2.prototype.createDebugPanel = function() {
         position: fixed;
         top: 10px;
         left: 10px;
-        background: rgba(255, 0, 0, 0.1);
+        background: rgba(255, 0, 0, 0.15);
         border: 2px solid #ff0000;
         border-radius: 8px;
         padding: 15px;
@@ -1902,6 +1946,9 @@ AIVoiceManagerV2.prototype.createDebugPanel = function() {
         color: #333;
         backdrop-filter: blur(5px);
         max-width: 250px;
+        box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+        animation: slideInFromTop 0.3s ease;
+        transition: all 0.3s ease;
     `;
     
     panel.innerHTML = `
