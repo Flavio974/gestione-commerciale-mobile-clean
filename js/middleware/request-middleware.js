@@ -409,6 +409,22 @@ class RequestMiddleware {
             return 'settimane_future';
         }
         
+        // Controlla richieste di ordini per settimana specifica
+        if (/(?:nella|in)\s+settimana\s+(?:numero\s+)?(\d+).*(?:ordini|quanti|numero)/i.test(input) ||
+            /(?:ordini|quanti).*(?:nella|in)\s+settimana\s+(?:numero\s+)?(\d+)/i.test(input) ||
+            /settimana\s+(?:numero\s+)?(\d+).*(?:ordini|quanti)/i.test(input)) {
+            console.log('🎯 MATCH DIRETTO: Ordini per settimana specifica');
+            return 'ordini_per_settimana';
+        }
+        
+        // Controlla richieste di fatturato per settimana specifica
+        if (/(?:nella|in)\s+settimana\s+(?:numero\s+)?(\d+).*(?:fatturato|venduto|incasso)/i.test(input) ||
+            /(?:fatturato|venduto|incasso).*(?:nella|in)\s+settimana\s+(?:numero\s+)?(\d+)/i.test(input) ||
+            /settimana\s+(?:numero\s+)?(\d+).*(?:fatturato|venduto)/i.test(input)) {
+            console.log('🎯 MATCH DIRETTO: Fatturato per settimana specifica');
+            return 'fatturato_per_settimana';
+        }
+        
         // Controlla richieste di dettagli settimana specifica
         if (/settimana\s+(?:numero\s+)?(\d+).*(?:data|date|inizio|fine|inizia|finisce|quando|mese)/i.test(input) ||
             /(?:inizio|fine).*settimana\s+(?:numero\s+)?(\d+)/i.test(input) ||
@@ -594,6 +610,20 @@ class RequestMiddleware {
                 const settimaneMatch = input.match(/tra\s+(\d+)\s+settimane?|in\s+(\d+)\s+settimane?|dopo\s+(\d+)\s+settimane?/i);
                 if (settimaneMatch) {
                     params.numeroSettimane = parseInt(settimaneMatch[1] || settimaneMatch[2] || settimaneMatch[3], 10);
+                }
+                break;
+                
+            case 'ordini_per_settimana':
+                const ordiniSettimanaMatch = input.match(/(?:nella|in)\s+settimana\s+(?:numero\s+)?(\d+)|settimana\s+(?:numero\s+)?(\d+).*(?:ordini|quanti)/i);
+                if (ordiniSettimanaMatch) {
+                    params.numeroSettimana = parseInt(ordiniSettimanaMatch[1] || ordiniSettimanaMatch[2], 10);
+                }
+                break;
+                
+            case 'fatturato_per_settimana':
+                const fatturatoSettimanaMatch = input.match(/(?:nella|in)\s+settimana\s+(?:numero\s+)?(\d+)|settimana\s+(?:numero\s+)?(\d+).*(?:fatturato|venduto)/i);
+                if (fatturatoSettimanaMatch) {
+                    params.numeroSettimana = parseInt(fatturatoSettimanaMatch[1] || fatturatoSettimanaMatch[2], 10);
                 }
                 break;
                 
@@ -791,6 +821,12 @@ class RequestMiddleware {
                 
             case 'dettagli_settimana':
                 return await this.getDettagliSettimana(params);
+                
+            case 'ordini_per_settimana':
+                return await this.getOrdiniPerSettimana(params);
+                
+            case 'fatturato_per_settimana':
+                return await this.getFatturatoPerSettimana(params);
                 
             case 'orario_corrente':
                 return await this.getOrarioCorrente(params);
@@ -2466,6 +2502,191 @@ class RequestMiddleware {
             console.error('❌ Errore dettagli settimana specifica:', error);
             return { success: false, error: error.message };
         }
+    }
+
+    /**
+     * FUNZIONE NUOVA: Ordini per settimana specifica
+     */
+    async getOrdiniPerSettimana(params) {
+        try {
+            console.log('📊 MIDDLEWARE: Ricerca ordini per settimana', params.numeroSettimana);
+            
+            const numeroSettimana = params.numeroSettimana || 1;
+            const anno = new Date().getFullYear();
+            
+            // Carica i dati degli ordini
+            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            if (ordini.length === 0) {
+                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
+                const supabaseData = await this.supabaseAI.getAllData();
+                ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
+            
+            if (ordini.length === 0) {
+                return {
+                    success: true,
+                    response: '❌ Nessun ordine presente nel database',
+                    data: { ordini: 0, settimana: numeroSettimana }
+                };
+            }
+            
+            // Filtra ordini per settimana specifica
+            const ordiniSettimana = this.filterOrdersByWeek(ordini, numeroSettimana, anno);
+            
+            // Conta ordini unici
+            const ordiniUnici = new Set();
+            ordiniSettimana.forEach(ordine => {
+                if (ordine.numero_ordine) {
+                    ordiniUnici.add(ordine.numero_ordine);
+                }
+            });
+            
+            // Calcola date settimana per la risposta
+            const weekDates = this.getWeekDates(anno, numeroSettimana);
+            const dataInizio = weekDates.start.toLocaleDateString('it-IT');
+            const dataFine = weekDates.end.toLocaleDateString('it-IT');
+            
+            const response = `📊 **Ordini Settimana ${numeroSettimana}**\n\n` +
+                `📅 **Periodo**: ${dataInizio} - ${dataFine}\n` +
+                `🛒 **Ordini totali**: ${ordiniUnici.size}\n` +
+                `📋 **Righe ordine**: ${ordiniSettimana.length}\n\n` +
+                `✅ Nella settimana ${numeroSettimana} sono stati fatti ${ordiniUnici.size} ordini`;
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    ordiniTotali: ordiniUnici.size,
+                    righeOrdine: ordiniSettimana.length,
+                    settimana: numeroSettimana,
+                    anno: anno,
+                    dataInizio: dataInizio,
+                    dataFine: dataFine,
+                    ordiniDettaglio: ordiniSettimana
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore ricerca ordini per settimana:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * FUNZIONE NUOVA: Fatturato per settimana specifica
+     */
+    async getFatturatoPerSettimana(params) {
+        try {
+            console.log('💰 MIDDLEWARE: Calcolo fatturato per settimana', params.numeroSettimana);
+            
+            const numeroSettimana = params.numeroSettimana || 1;
+            const anno = new Date().getFullYear();
+            
+            // Carica i dati degli ordini
+            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            if (ordini.length === 0) {
+                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
+                const supabaseData = await this.supabaseAI.getAllData();
+                ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
+            
+            if (ordini.length === 0) {
+                return {
+                    success: true,
+                    response: '❌ Nessun ordine presente nel database',
+                    data: { fatturato: 0, settimana: numeroSettimana }
+                };
+            }
+            
+            // Filtra ordini per settimana specifica
+            const ordiniSettimana = this.filterOrdersByWeek(ordini, numeroSettimana, anno);
+            
+            // Calcola fatturato totale
+            let fatturatoTotale = 0;
+            const ordiniUnici = new Set();
+            
+            ordiniSettimana.forEach(ordine => {
+                const importo = parseFloat(ordine.importo) || 0;
+                fatturatoTotale += importo;
+                
+                if (ordine.numero_ordine) {
+                    ordiniUnici.add(ordine.numero_ordine);
+                }
+            });
+            
+            // Calcola date settimana per la risposta
+            const weekDates = this.getWeekDates(anno, numeroSettimana);
+            const dataInizio = weekDates.start.toLocaleDateString('it-IT');
+            const dataFine = weekDates.end.toLocaleDateString('it-IT');
+            
+            const response = `💰 **Fatturato Settimana ${numeroSettimana}**\n\n` +
+                `📅 **Periodo**: ${dataInizio} - ${dataFine}\n` +
+                `💶 **Fatturato totale**: €${fatturatoTotale.toFixed(2)}\n` +
+                `🛒 **Ordini**: ${ordiniUnici.size}\n` +
+                `📋 **Righe ordine**: ${ordiniSettimana.length}\n\n` +
+                `✅ Nella settimana ${numeroSettimana} è stato prodotto un fatturato di €${fatturatoTotale.toFixed(2)}`;
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    fatturatoTotale: fatturatoTotale,
+                    ordiniTotali: ordiniUnici.size,
+                    righeOrdine: ordiniSettimana.length,
+                    settimana: numeroSettimana,
+                    anno: anno,
+                    dataInizio: dataInizio,
+                    dataFine: dataFine,
+                    ordiniDettaglio: ordiniSettimana
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore calcolo fatturato per settimana:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * FUNZIONE HELPER: Filtra ordini per settimana specifica
+     */
+    filterOrdersByWeek(ordini, numeroSettimana, anno) {
+        return ordini.filter(ordine => {
+            // Cerca la data migliore disponibile
+            const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp'];
+            
+            for (const field of dateFields) {
+                if (ordine[field] && ordine[field] !== null && ordine[field] !== '') {
+                    let dataOrdine = null;
+                    
+                    // Usa parser italiano per date corrette
+                    if (window.ItalianDateParser) {
+                        // Prima prova il parser Supabase per date ISO che rappresentano formato americano
+                        dataOrdine = window.ItalianDateParser.parseSupabaseDateToItalian(ordine[field]);
+                        
+                        // Se non funziona, usa il parser generico
+                        if (!dataOrdine) {
+                            dataOrdine = window.ItalianDateParser.parseDate(ordine[field]);
+                        }
+                    } else {
+                        // Fallback
+                        dataOrdine = new Date(ordine[field]);
+                    }
+                    
+                    if (dataOrdine && !isNaN(dataOrdine.getTime())) {
+                        const settimanaOrdine = this.getWeekNumber(dataOrdine);
+                        const annoOrdine = dataOrdine.getFullYear();
+                        
+                        // Controlla se l'ordine è nella settimana richiesta
+                        if (settimanaOrdine === numeroSettimana && annoOrdine === anno) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        });
     }
 
     /**
