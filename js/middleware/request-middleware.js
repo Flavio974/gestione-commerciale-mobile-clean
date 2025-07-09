@@ -388,6 +388,13 @@ class RequestMiddleware {
             return 'valore_medio';
         }
         
+        // Controlla PRIMA richieste di solo numero prossima settimana
+        if (/(?:dammi\s+solo|solo)\s+.*(?:numero|n\.?).*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input) ||
+            /(?:dammi\s+solo|solo)\s+.*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input)) {
+            console.log('🎯 MATCH DIRETTO: Solo numero prossima settimana');
+            return 'solo_numero_settimana';
+        }
+        
         // Controlla richieste di settimane future/calcoli
         if (/la\s+prossima\s+settimana|settimana\s+prossima|che\s+settimana\s+sarà|settimana\s+successiva/i.test(input)) {
             console.log('🎯 MATCH DIRETTO: Prossima settimana');
@@ -449,8 +456,7 @@ class RequestMiddleware {
         // Controlla richieste di solo numero settimana (deve essere DOPO i controlli specifici)
         if (/(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*(?:numero|n\.?)\s+.*settimana.*(?:degli\s+ordini|caricati)/i.test(input) ||
             /^settimana\s*\??$/i.test(input) ||
-            /(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*settimana.*(?:degli\s+ordini|caricati)/i.test(input) ||
-            /(?:dammi\s+solo|solo)\s+.*numero.*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input)) {
+            /(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*settimana.*(?:degli\s+ordini|caricati)/i.test(input)) {
             console.log('🎯 PATTERN SOLO NUMERO SETTIMANA MATCH:', input);
             return 'solo_numero_settimana';
         }
