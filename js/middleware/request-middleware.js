@@ -335,16 +335,6 @@ class RequestMiddleware {
             return 'ordini';
         }
         
-        // Controlla richieste di solo numero settimana
-        if (/(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*(?:numero|n\.?)\s+.*settimana.*(?:ordini|degli\s+ordini|caricati)?/i.test(input) ||
-            /(?:quale|che)\s+settimana\s+(?:numero|n\.?)/i.test(input) ||
-            /settimana\s+(?:numero|n\.?)/i.test(input) ||
-            /^settimana\s*\??$/i.test(input) ||
-            /(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*settimana.*(?:ordini|degli\s+ordini|caricati)/i.test(input)) {
-            console.log('🎯 PATTERN SOLO NUMERO SETTIMANA MATCH:', input);
-            return 'solo_numero_settimana';
-        }
-        
         // Controlla richieste di date generiche degli ordini
         if ((/quale.*data.*ordini|in.*quale.*data.*ordini|quando.*ordini|date.*ordini|settimana.*ordini|generati.*ordini/i.test(input) ||
             /ordini.*generati|ordini.*fatti|ordini.*creati|ordini.*data|ordini.*quando|ordini.*settimana/i.test(input) ||
@@ -453,6 +443,14 @@ class RequestMiddleware {
         if (/che\s+giorno\s+è\s+oggi|data\s+di\s+oggi|data\s+corrente|oggi\s+che\s+giorno\s+è|data\s+odierna|giorno\s+corrente/i.test(input)) {
             console.log('🎯 MATCH DIRETTO: Data corrente');
             return 'data_corrente';
+        }
+        
+        // Controlla richieste di solo numero settimana (deve essere DOPO i controlli specifici)
+        if (/(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*(?:numero|n\.?)\s+.*settimana.*(?:degli\s+ordini|caricati)/i.test(input) ||
+            /^settimana\s*\??$/i.test(input) ||
+            /(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*settimana.*(?:degli\s+ordini|caricati)/i.test(input)) {
+            console.log('🎯 PATTERN SOLO NUMERO SETTIMANA MATCH:', input);
+            return 'solo_numero_settimana';
         }
         
         if (this.operativeKeywords.clienti.some(kw => inputLower.includes(kw))) {
