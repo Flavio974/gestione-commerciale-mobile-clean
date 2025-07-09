@@ -337,7 +337,8 @@ class RequestMiddleware {
         
         // Controlla richieste di date generiche degli ordini
         if ((/quale.*data.*ordini|in.*quale.*data.*ordini|quando.*ordini|date.*ordini|settimana.*ordini|generati.*ordini/i.test(input) ||
-            /ordini.*generati|ordini.*fatti|ordini.*creati|ordini.*data|ordini.*quando|ordini.*settimana/i.test(input)) &&
+            /ordini.*generati|ordini.*fatti|ordini.*creati|ordini.*data|ordini.*quando|ordini.*settimana/i.test(input) ||
+            /quando.*sono.*stati.*fatti|quando.*stati.*fatti|fatti.*ordini|creati.*ordini|data.*fatti|settimana.*fatti/i.test(input)) &&
             !(/(?:quanti|numero|numeri).*(?:ordini?)/i.test(input))) {
             console.log('🎯 PATTERN DATE ORDINI GENERICHE MATCH:', input);
             return 'date_ordini_generiche';
@@ -1854,11 +1855,11 @@ class RequestMiddleware {
                                 window.ItalianDateParser.parseDate(ordine.data) : new Date(ordine.data);
                             
                             if (date && !isNaN(date.getTime())) {
-                                const weekInfo = this.getWeekNumber(date);
+                                const settimana = this.getWeekNumber(date);
                                 return {
                                     ...ordine,
-                                    settimana: weekInfo.week,
-                                    anno: weekInfo.year
+                                    settimana: settimana,
+                                    anno: date.getFullYear()
                                 };
                             }
                         }
