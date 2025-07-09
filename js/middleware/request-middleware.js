@@ -302,6 +302,13 @@ class RequestMiddleware {
             return 'solo_numero_settimana';
         }
         
+        // CONTROLLO ULTRA-PRIORITARIO: Numero settimana futura (tra X settimane)
+        if (/(?:dammi|dimmi)\s+.*(?:numero|n\.?).*settimana.*tra\s+\d+\s+settimane?/i.test(input) ||
+            /(?:dammi|dimmi)\s+.*(?:numero|n\.?).*tra\s+\d+\s+settimane?/i.test(input)) {
+            console.log('🎯 MATCH ULTRA-PRIORITARIO: Numero settimana futura');
+            return 'settimane_future';
+        }
+        
         // CONTROLLO PRIORITARIO: Richieste sui prodotti degli ordini
         if ((inputLower.includes('prodotti') || inputLower.includes('composto')) && 
             (inputLower.includes('ordine') || inputLower.includes('cliente'))) {
@@ -2453,6 +2460,16 @@ class RequestMiddleware {
             const settimanaCorrente = this.getWeekNumber(now);
             const settimanaFutura = this.getWeekNumber(dataFutura);
             const anno = dataFutura.getFullYear();
+            
+            // Controlla se è una richiesta di solo numero
+            if (params.originalInput && /(?:dammi|dimmi)\s+.*(?:numero|n\.?)/i.test(params.originalInput)) {
+                console.log('📅 MIDDLEWARE: Richiesta solo numero settimana futura');
+                return {
+                    success: true,
+                    response: `${settimanaFutura}`,
+                    data: { settimana: settimanaFutura }
+                };
+            }
             
             const response = `📅 **Settimana Futura**\n\n` +
                 `📊 **Settimana corrente**: ${settimanaCorrente}\n` +
