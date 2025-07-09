@@ -390,6 +390,18 @@ class RequestMiddleware {
             return 'settimana_corrente';
         }
         
+        // Controlla richieste di ora/orario corrente
+        if (/che\s+ore\s+sono|che\s+ora\s+è|orario\s+attuale|ora\s+corrente|dimmi\s+l['']?ora|ora\s+esatta|orario\s+esatto/i.test(input)) {
+            console.log('🎯 MATCH DIRETTO: Orario corrente');
+            return 'orario_corrente';
+        }
+        
+        // Controlla richieste di data corrente  
+        if (/che\s+giorno\s+è\s+oggi|data\s+di\s+oggi|data\s+corrente|oggi\s+che\s+giorno\s+è|data\s+odierna|giorno\s+corrente/i.test(input)) {
+            console.log('🎯 MATCH DIRETTO: Data corrente');
+            return 'data_corrente';
+        }
+        
         if (this.operativeKeywords.clienti.some(kw => inputLower.includes(kw))) {
             return 'clienti';
         }
@@ -716,6 +728,12 @@ class RequestMiddleware {
                 
             case 'settimana_corrente':
                 return await this.getSettimanaCorrente(params);
+                
+            case 'orario_corrente':
+                return await this.getOrarioCorrente(params);
+                
+            case 'data_corrente':
+                return await this.getDataCorrente(params);
                 
             default:
                 return { 
@@ -1960,7 +1978,85 @@ class RequestMiddleware {
     }
     
     /**
-     * FUNZIONE 10: Interrogazione Clienti Database
+     * FUNZIONE 10: Orario corrente
+     */
+    async getOrarioCorrente(params) {
+        try {
+            console.log('🕐 MIDDLEWARE: Richiesta orario corrente');
+            
+            const now = new Date();
+            const ore = now.getHours();
+            const minuti = now.getMinutes();
+            const secondi = now.getSeconds();
+            
+            // Formattazione orario
+            const orarioFormattato = `${ore.toString().padStart(2, '0')}:${minuti.toString().padStart(2, '0')}:${secondi.toString().padStart(2, '0')}`;
+            
+            const response = `🕐 **Orario Corrente**\n\n` +
+                `⏰ **Ora esatta**: ${orarioFormattato}\n` +
+                `🕐 Sono le ${ore} e ${minuti} minuti${secondi > 0 ? ` e ${secondi} secondi` : ''}`;
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    ore: ore,
+                    minuti: minuti,
+                    secondi: secondi,
+                    orarioFormattato: orarioFormattato,
+                    timestamp: now.toISOString()
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore recupero orario corrente:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    /**
+     * FUNZIONE 11: Data corrente
+     */
+    async getDataCorrente(params) {
+        try {
+            console.log('📅 MIDDLEWARE: Richiesta data corrente');
+            
+            const now = new Date();
+            const dataCompleta = now.toLocaleDateString('it-IT', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            const dataBreve = now.toLocaleDateString('it-IT');
+            const settimana = this.getWeekNumber(now);
+            
+            const response = `📅 **Data Corrente**\n\n` +
+                `🗓️ **Oggi è**: ${dataCompleta}\n` +
+                `📆 **Data**: ${dataBreve}\n` +
+                `📊 **Settimana**: ${settimana} del ${now.getFullYear()}`;
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    dataCompleta: dataCompleta,
+                    dataBreve: dataBreve,
+                    settimana: settimana,
+                    anno: now.getFullYear(),
+                    timestamp: now.toISOString()
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore recupero data corrente:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    /**
+     * FUNZIONE 12: Interrogazione Clienti Database
      */
     async getClientiDatabase(params) {
         try {
