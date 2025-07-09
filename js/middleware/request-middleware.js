@@ -297,7 +297,8 @@ class RequestMiddleware {
         
         // CONTROLLO ULTRA-PRIORITARIO: Solo numero prossima settimana (deve essere PRIMO)
         if (/(?:dammi\s+solo|solo)\s+.*(?:numero|n\.?).*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input) ||
-            /(?:dammi\s+solo|solo)\s+.*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input)) {
+            /(?:dammi\s+solo|solo)\s+.*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input) ||
+            /(?:dammi|dimmi)\s+.*(?:numero|n\.?).*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input)) {
             console.log('🎯 MATCH ULTRA-PRIORITARIO: Solo numero prossima settimana');
             return 'solo_numero_settimana';
         }
