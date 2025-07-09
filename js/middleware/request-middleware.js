@@ -384,6 +384,12 @@ class RequestMiddleware {
             return 'valore_medio';
         }
         
+        // Controlla richieste di data/settimana corrente
+        if (/in\s+che\s+settimana\s+siamo|quale\s+settimana\s+siamo|settimana\s+corrente|settimana\s+oggi|che\s+settimana\s+è|settimana\s+attuale/i.test(input)) {
+            console.log('🎯 MATCH DIRETTO: Settimana corrente');
+            return 'settimana_corrente';
+        }
+        
         if (this.operativeKeywords.clienti.some(kw => inputLower.includes(kw))) {
             return 'clienti';
         }
@@ -707,6 +713,9 @@ class RequestMiddleware {
                 
             case 'valore_medio':
                 return await this.getValoreMedio(params);
+                
+            case 'settimana_corrente':
+                return await this.getSettimanaCorrente(params);
                 
             default:
                 return { 
@@ -1912,7 +1921,46 @@ class RequestMiddleware {
     }
     
     /**
-     * FUNZIONE 9: Interrogazione Clienti Database
+     * FUNZIONE 9: Settimana corrente
+     */
+    async getSettimanaCorrente(params) {
+        try {
+            console.log('📅 MIDDLEWARE: Richiesta settimana corrente');
+            
+            const now = new Date();
+            const settimana = this.getWeekNumber(now);
+            const anno = now.getFullYear();
+            const dataCorrente = now.toLocaleDateString('it-IT', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            const response = `📅 **Settimana Corrente**\n\n` +
+                `🗓️ **Data**: ${dataCorrente}\n` +
+                `📊 **Settimana**: ${settimana} dell'anno ${anno}\n\n` +
+                `✅ Siamo nella settimana ${settimana} dell'anno ${anno}`;
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    settimana: settimana,
+                    anno: anno,
+                    dataCorrente: dataCorrente,
+                    timestamp: now.toISOString()
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore calcolo settimana corrente:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    /**
+     * FUNZIONE 10: Interrogazione Clienti Database
      */
     async getClientiDatabase(params) {
         try {
