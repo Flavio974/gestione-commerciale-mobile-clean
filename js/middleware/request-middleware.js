@@ -13,7 +13,10 @@ class RequestMiddleware {
             ordini: ['ordini', 'ordine', 'acquisti', 'numero', 'quanti'],
             data: ['data', 'quando', 'ultimo'],
             percorsi: ['tempo', 'distanza', 'percorso', 'viaggio', 'minuti', 'km'],
-            clienti: ['cliente', 'clienti', 'zona', 'nome']
+            clienti: ['cliente', 'clienti', 'zona', 'nome'],
+            valore_massimo: ['valore', 'elevato', 'maggiore', 'massimo', 'più alto', 'superiore'],
+            valore_minimo: ['valore', 'minimo', 'più basso', 'inferiore', 'minore', 'più piccolo'],
+            valore_medio: ['valore', 'medio', 'media', 'mediamente', 'in media', 'average']
         };
         
         // Pattern regex per estrazione parametri
@@ -42,7 +45,21 @@ class RequestMiddleware {
             // Pattern per prodotti negli ordini di un cliente
             prodottiOrdine: /(?:prodotti|composto).*(?:ordine.*cliente|cliente)[\s:]*([^?]+?)(?:\?|$)/i,
             tempoPercorso: /(?:tempo|minuti).*(?:da|dalla)\s+([^a]+?)\s+(?:a|alla)\s+([^?\n]+?)(?:\?|$)/i,
-            clientiZona: /clienti.*(?:in|nella|di|della)\s+([^?\n]+?)(?:\?|$)/i
+            clientiZona: /clienti.*(?:in|nella|di|della)\s+([^?\n]+?)(?:\?|$)/i,
+            // Pattern per valore massimo degli ordini
+            valoreMaxOrdine: /(?:chi|quale|cliente|attribuito).*(?:ordine|ordini).*(?:valore|importo).*(?:più\s+elevato|massimo|maggiore|superiore|più\s+alto)/i,
+            clienteValoreMax: /(?:cliente|di\s+chi).*(?:ordine|ordini).*(?:valore|importo).*(?:più\s+elevato|massimo|maggiore|superiore|più\s+alto)/i,
+            // Pattern per valore minimo degli ordini
+            valoreMinOrdine: /(?:chi|quale|cliente|attribuito).*(?:ordine|ordini).*(?:valore|importo).*(?:più\s+basso|minimo|minore|inferiore|più\s+piccolo)/i,
+            clienteValoreMin: /(?:cliente|di\s+chi).*(?:ordine|ordini).*(?:valore|importo).*(?:più\s+basso|minimo|minore|inferiore|più\s+piccolo)/i,
+            // Pattern per valore medio degli ordini
+            valoreMedioOrdine: /(?:quale|quanto|valore|importo).*(?:medio|media|mediamente|in\s+media).*(?:ordine|ordini|fatturato|vendite)/i,
+            fatturatotMedio: /(?:fatturato|vendite|incasso).*(?:medio|media|mediamente|in\s+media)/i,
+            // Pattern per periodi temporali nelle domande di valore
+            periodoTemporale: /(?:nella|nel|durante|in)?\s*(?:settimana|mese|giorno|anno|trimestre|semestre)\s*(\d+|scorso|scorsa|corrente|attuale|ultimo|ultima|questo|questa)?\s*(?:del)?\s*(\d{4})?/i,
+            settimanaSpecifica: /settimana\s*(\d+)(?:\s*del\s*(\d{4}))?/i,
+            meseSpecifico: /mese\s*(\d+|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)(?:\s*del\s*(\d{4}))?/i,
+            giornoSpecifico: /giorno\s*(\d+)(?:\s*del\s*mese)?(?:\s*(\d+))?(?:\s*del\s*(\d{4}))?/i
         };
         
         // Memoria dell'ultimo cliente consultato per contesto
@@ -339,6 +356,21 @@ class RequestMiddleware {
             return 'percorsi';
         }
         
+        // Controlla richieste di valore massimo prima delle richieste generiche su clienti
+        if (this.patterns.valoreMaxOrdine.test(input) || this.patterns.clienteValoreMax.test(input)) {
+            return 'valore_massimo';
+        }
+        
+        // Controlla richieste di valore minimo
+        if (this.patterns.valoreMinOrdine.test(input) || this.patterns.clienteValoreMin.test(input)) {
+            return 'valore_minimo';
+        }
+        
+        // Controlla richieste di valore medio
+        if (this.patterns.valoreMedioOrdine.test(input) || this.patterns.fatturatotMedio.test(input)) {
+            return 'valore_medio';
+        }
+        
         if (this.operativeKeywords.clienti.some(kw => inputLower.includes(kw))) {
             return 'clienti';
         }
@@ -489,9 +521,140 @@ class RequestMiddleware {
                     params.zona = clientiMatch[1].trim();
                 }
                 break;
+                
+            case 'valore_massimo':
+            case 'valore_minimo':
+            case 'valore_medio':
+                // Estrai parametri temporali
+                const periodoParams = this.extractTemporalParameters(input);
+                if (periodoParams) {
+                    params.periodo = periodoParams;
+                }
+                break;
         }
         
         return params;
+    }
+    
+    /**
+     * Estrae parametri temporali dalle richieste (versione precedente - rimuovere per evitare duplicati)
+     */
+    extractTemporalParametersOld(input) {
+        const params = {};
+        
+        // Controlla settimana specifica
+        const settimanaMatch = input.match(this.patterns.settimanaSpecifica);
+        if (settimanaMatch) {
+            params.tipoPeriodo = 'settimana';
+            params.numeroSettimana = parseInt(settimanaMatch[1]);
+            params.anno = settimanaMatch[2] ? parseInt(settimanaMatch[2]) : new Date().getFullYear();
+            return params;
+        }
+        
+        // Controlla mese specifico
+        const meseMatch = input.match(this.patterns.meseSpecifico);
+        if (meseMatch) {
+            params.tipoPeriodo = 'mese';
+            if (isNaN(parseInt(meseMatch[1]))) {
+                // Nome del mese
+                const mesi = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+                             'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+                params.numeroMese = mesi.indexOf(meseMatch[1].toLowerCase()) + 1;
+            } else {
+                params.numeroMese = parseInt(meseMatch[1]);
+            }
+            params.anno = meseMatch[2] ? parseInt(meseMatch[2]) : new Date().getFullYear();
+            return params;
+        }
+        
+        // Controlla giorno specifico
+        const giornoMatch = input.match(this.patterns.giornoSpecifico);
+        if (giornoMatch) {
+            params.tipoPeriodo = 'giorno';
+            params.numeroGiorno = parseInt(giornoMatch[1]);
+            params.numeroMese = giornoMatch[2] ? parseInt(giornoMatch[2]) : new Date().getMonth() + 1;
+            params.anno = giornoMatch[3] ? parseInt(giornoMatch[3]) : new Date().getFullYear();
+            return params;
+        }
+        
+        // Controlla periodo generico
+        const periodoMatch = input.match(this.patterns.periodoTemporale);
+        if (periodoMatch) {
+            const tipoPeriodo = periodoMatch[0].match(/(settimana|mese|giorno|anno|trimestre|semestre)/i);
+            if (tipoPeriodo) {
+                params.tipoPeriodo = tipoPeriodo[1].toLowerCase();
+                params.periodoDescrizione = periodoMatch[1] || 'corrente';
+                params.anno = periodoMatch[2] ? parseInt(periodoMatch[2]) : new Date().getFullYear();
+            }
+        }
+        
+        return params;
+    }
+    
+    /**
+     * Filtra i dati storici per periodo temporale specifico (versione precedente - rimuovere per evitare duplicati)
+     */
+    filterDataByPeriodOld(data, params) {
+        if (!params.tipoPeriodo) {
+            return data; // Nessun filtro temporale
+        }
+        
+        return data.filter(row => {
+            const dataConsegna = new Date(row.data_consegna || row.data_ordine);
+            if (isNaN(dataConsegna.getTime())) {
+                return false; // Data non valida
+            }
+            
+            const anno = dataConsegna.getFullYear();
+            const mese = dataConsegna.getMonth() + 1;
+            const giorno = dataConsegna.getDate();
+            
+            switch (params.tipoPeriodo) {
+                case 'settimana':
+                    if (params.numeroSettimana && params.anno) {
+                        const settimanaAnno = this.getWeekNumber(dataConsegna);
+                        return settimanaAnno.week === params.numeroSettimana && 
+                               settimanaAnno.year === params.anno;
+                    }
+                    break;
+                    
+                case 'mese':
+                    if (params.numeroMese && params.anno) {
+                        return mese === params.numeroMese && anno === params.anno;
+                    }
+                    break;
+                    
+                case 'giorno':
+                    if (params.numeroGiorno && params.numeroMese && params.anno) {
+                        return giorno === params.numeroGiorno && 
+                               mese === params.numeroMese && 
+                               anno === params.anno;
+                    }
+                    break;
+                    
+                case 'anno':
+                    if (params.anno) {
+                        return anno === params.anno;
+                    }
+                    break;
+            }
+            
+            return false;
+        });
+    }
+    
+    /**
+     * Calcola il numero della settimana per una data
+     */
+    getWeekNumber(date) {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return {
+            week: Math.ceil((((d - yearStart) / 86400000) + 1) / 7),
+            year: d.getUTCFullYear()
+        };
     }
 
     /**
@@ -519,6 +682,15 @@ class RequestMiddleware {
                 
             case 'clienti_database':
                 return await this.getClientiDatabase(params);
+                
+            case 'valore_massimo':
+                return await this.getClienteValoreMassimo(params);
+                
+            case 'valore_minimo':
+                return await this.getClienteValoreMinimo(params);
+                
+            case 'valore_medio':
+                return await this.getValoreMedio(params);
                 
             default:
                 return { 
@@ -1148,16 +1320,14 @@ class RequestMiddleware {
         try {
             console.log('👥 MIDDLEWARE: Ricerca clienti zona:', params.zona);
             
-            // Usa dati già caricati senza ricaricare
-            const clienti = this.supabaseAI.clients || [];
-            
+            // Se non c'è una zona specificata, chiama getClientiDatabase per ottenere i clienti dagli ordini
             if (!params.zona) {
-                return {
-                    success: true,
-                    response: `👥 Totale clienti: ${clienti.length}`,
-                    data: { clienti: clienti.length }
-                };
+                console.log('👥 MIDDLEWARE: Nessuna zona specificata, chiamo getClientiDatabase()');
+                return await this.getClientiDatabase(params);
             }
+            
+            // Usa dati già caricati senza ricaricare per ricerche per zona
+            const clienti = this.supabaseAI.clients || [];
             
             const zonaNorm = params.zona.toLowerCase();
             const clientiZona = clienti.filter(cliente => {
@@ -1192,13 +1362,472 @@ class RequestMiddleware {
     }
 
     /**
-     * FUNZIONE 5: Interrogazione Clienti Database
+     * FUNZIONE 5: Cliente con ordine di valore massimo
+     */
+    async getClienteValoreMassimo(params) {
+        try {
+            console.log('💰 MIDDLEWARE: Ricerca cliente con valore massimo ordine', params);
+            
+            // Usa la stessa logica di getClientiDatabase per ottenere i dati
+            const supabaseAI = this.supabaseAI;
+            if (supabaseAI && supabaseAI.isConnected && supabaseAI.isConnected()) {
+                const allData = await supabaseAI.getAllData();
+                let historicalData = allData.historical || [];
+                
+                // Applica filtro temporale se presente
+                if (params.periodo) {
+                    historicalData = this.filterDataByPeriod(historicalData, params.periodo);
+                }
+                
+                if (historicalData.length > 0) {
+                    // Trova il cliente con il valore massimo
+                    const clientiMap = new Map();
+                    
+                    historicalData.forEach(row => {
+                        const cliente = row.cliente;
+                        const importo = parseFloat(row.importo) || 0;
+                        
+                        if (cliente && cliente.trim() !== '') {
+                            if (!clientiMap.has(cliente)) {
+                                clientiMap.set(cliente, 0);
+                            }
+                            clientiMap.set(cliente, clientiMap.get(cliente) + importo);
+                        }
+                    });
+                    
+                    // Trova il cliente con il valore massimo
+                    let maxCliente = null;
+                    let maxValore = 0;
+                    
+                    for (const [cliente, valore] of clientiMap.entries()) {
+                        if (valore > maxValore) {
+                            maxValore = valore;
+                            maxCliente = cliente;
+                        }
+                    }
+                    
+                    if (maxCliente) {
+                        const periodoText = params.periodo ? ` nella ${params.periodo.descrizione}` : '';
+                        return {
+                            success: true,
+                            response: `🏆 Il cliente con l'ordine di valore più elevato${periodoText} è:\n\n💰 **${maxCliente}** con un fatturato di **€${maxValore.toFixed(2)}**`,
+                            data: { 
+                                cliente: maxCliente,
+                                valore: maxValore,
+                                periodo: params.periodo
+                            }
+                        };
+                    }
+                }
+            }
+            
+            return {
+                success: true,
+                response: '❌ Nessun ordine trovato nel database.',
+                data: {}
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore ricerca cliente valore massimo:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * FUNZIONE 6: Cliente con ordine di valore minimo
+     */
+    async getClienteValoreMinimo(params) {
+        try {
+            console.log('💸 MIDDLEWARE: Ricerca cliente con valore minimo ordine', params);
+            
+            // Usa la stessa logica di getClientiDatabase per ottenere i dati
+            const supabaseAI = this.supabaseAI;
+            if (supabaseAI && supabaseAI.isConnected && supabaseAI.isConnected()) {
+                const allData = await supabaseAI.getAllData();
+                let historicalData = allData.historical || [];
+                
+                // Applica filtro temporale se presente
+                if (params.periodo) {
+                    historicalData = this.filterDataByPeriod(historicalData, params.periodo);
+                }
+                
+                if (historicalData.length > 0) {
+                    // Trova il cliente con il valore minimo
+                    const clientiMap = new Map();
+                    
+                    historicalData.forEach(row => {
+                        const cliente = row.cliente;
+                        const importo = parseFloat(row.importo) || 0;
+                        
+                        if (cliente && cliente.trim() !== '') {
+                            if (!clientiMap.has(cliente)) {
+                                clientiMap.set(cliente, 0);
+                            }
+                            clientiMap.set(cliente, clientiMap.get(cliente) + importo);
+                        }
+                    });
+                    
+                    // Trova il cliente con il valore minimo
+                    let minCliente = null;
+                    let minValore = Infinity;
+                    
+                    for (const [cliente, valore] of clientiMap.entries()) {
+                        if (valore < minValore) {
+                            minValore = valore;
+                            minCliente = cliente;
+                        }
+                    }
+                    
+                    if (minCliente && minValore !== Infinity) {
+                        const periodoText = params.periodo ? ` nella ${params.periodo.descrizione}` : '';
+                        return {
+                            success: true,
+                            response: `📉 Il cliente con l'ordine di valore più basso${periodoText} è:\n\n💸 **${minCliente}** con un fatturato di **€${minValore.toFixed(2)}**`,
+                            data: { 
+                                cliente: minCliente,
+                                valore: minValore,
+                                periodo: params.periodo
+                            }
+                        };
+                    }
+                }
+            }
+            
+            return {
+                success: true,
+                response: '❌ Nessun ordine trovato nel database.',
+                data: {}
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore ricerca cliente valore minimo:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * FUNZIONE 7: Valore medio degli ordini
+     */
+    async getValoreMedio(params) {
+        try {
+            console.log('📊 MIDDLEWARE: Calcolo valore medio ordini', params);
+            
+            // Usa la stessa logica di getClientiDatabase per ottenere i dati
+            const supabaseAI = this.supabaseAI;
+            if (supabaseAI && supabaseAI.isConnected && supabaseAI.isConnected()) {
+                const allData = await supabaseAI.getAllData();
+                let historicalData = allData.historical || [];
+                
+                // Applica filtro temporale se presente
+                if (params.periodo) {
+                    historicalData = this.filterDataByPeriod(historicalData, params.periodo);
+                }
+                
+                if (historicalData.length > 0) {
+                    // Calcola il valore medio per cliente
+                    const clientiMap = new Map();
+                    
+                    historicalData.forEach(row => {
+                        const cliente = row.cliente;
+                        const importo = parseFloat(row.importo) || 0;
+                        
+                        if (cliente && cliente.trim() !== '') {
+                            if (!clientiMap.has(cliente)) {
+                                clientiMap.set(cliente, 0);
+                            }
+                            clientiMap.set(cliente, clientiMap.get(cliente) + importo);
+                        }
+                    });
+                    
+                    // Calcola statistiche
+                    const valori = Array.from(clientiMap.values());
+                    const totaleFatturato = valori.reduce((sum, val) => sum + val, 0);
+                    const valoreMedio = totaleFatturato / valori.length;
+                    
+                    // Trova il cliente più vicino alla media
+                    let clienteVicinoMedia = null;
+                    let differenzaMinima = Infinity;
+                    
+                    for (const [cliente, valore] of clientiMap.entries()) {
+                        const differenza = Math.abs(valore - valoreMedio);
+                        if (differenza < differenzaMinima) {
+                            differenzaMinima = differenza;
+                            clienteVicinoMedia = cliente;
+                        }
+                    }
+                    
+                    const periodoText = params.periodo ? ` nella ${params.periodo.descrizione}` : '';
+                    return {
+                        success: true,
+                        response: `📊 **Statistiche Valore Ordini${periodoText}:**\n\n📈 **Valore medio:** €${valoreMedio.toFixed(2)}\n💰 **Fatturato totale:** €${totaleFatturato.toFixed(2)}\n👥 **Numero clienti:** ${valori.length}\n\n🎯 **Cliente più vicino alla media:** ${clienteVicinoMedia} (€${clientiMap.get(clienteVicinoMedia).toFixed(2)})`,
+                        data: { 
+                            valoreMedio: valoreMedio,
+                            totaleFatturato: totaleFatturato,
+                            numeroClienti: valori.length,
+                            clienteVicinoMedia: clienteVicinoMedia,
+                            valoreClienteVicinoMedia: clientiMap.get(clienteVicinoMedia),
+                            periodo: params.periodo
+                        }
+                    };
+                }
+            }
+            
+            return {
+                success: true,
+                response: '❌ Nessun ordine trovato nel database.',
+                data: {}
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore calcolo valore medio:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Estrae parametri temporali da domande di valore
+     */
+    extractTemporalParameters(text) {
+        const lowerText = text.toLowerCase();
+        
+        // Settimana specifica
+        const weekMatch = lowerText.match(this.patterns.settimanaSpecifica);
+        if (weekMatch) {
+            const weekNum = parseInt(weekMatch[1]);
+            const year = weekMatch[2] ? parseInt(weekMatch[2]) : new Date().getFullYear();
+            return {
+                tipo: 'settimana',
+                valore: weekNum,
+                anno: year,
+                descrizione: `settimana ${weekNum} del ${year}`
+            };
+        }
+        
+        // Mese specifico
+        const monthMatch = lowerText.match(this.patterns.meseSpecifico);
+        if (monthMatch) {
+            const monthInput = monthMatch[1];
+            const year = monthMatch[2] ? parseInt(monthMatch[2]) : new Date().getFullYear();
+            
+            let monthNum;
+            if (isNaN(parseInt(monthInput))) {
+                // Nome del mese
+                const mesi = {
+                    'gennaio': 1, 'febbraio': 2, 'marzo': 3, 'aprile': 4,
+                    'maggio': 5, 'giugno': 6, 'luglio': 7, 'agosto': 8,
+                    'settembre': 9, 'ottobre': 10, 'novembre': 11, 'dicembre': 12
+                };
+                monthNum = mesi[monthInput.toLowerCase()];
+            } else {
+                monthNum = parseInt(monthInput);
+            }
+            
+            if (monthNum >= 1 && monthNum <= 12) {
+                return {
+                    tipo: 'mese',
+                    valore: monthNum,
+                    anno: year,
+                    descrizione: `mese ${monthNum} del ${year}`
+                };
+            }
+        }
+        
+        // Giorno specifico
+        const dayMatch = lowerText.match(this.patterns.giornoSpecifico);
+        if (dayMatch) {
+            const dayNum = parseInt(dayMatch[1]);
+            const monthNum = dayMatch[2] ? parseInt(dayMatch[2]) : new Date().getMonth() + 1;
+            const year = dayMatch[3] ? parseInt(dayMatch[3]) : new Date().getFullYear();
+            
+            return {
+                tipo: 'giorno',
+                valore: dayNum,
+                mese: monthNum,
+                anno: year,
+                descrizione: `giorno ${dayNum}/${monthNum}/${year}`
+            };
+        }
+        
+        // Periodi generici
+        const periodoMatch = lowerText.match(this.patterns.periodoTemporale);
+        if (periodoMatch) {
+            const periodo = periodoMatch[0];
+            if (periodo.includes('settimana')) {
+                return {
+                    tipo: 'settimana',
+                    valore: 'corrente',
+                    descrizione: 'settimana corrente'
+                };
+            }
+            if (periodo.includes('mese')) {
+                return {
+                    tipo: 'mese',
+                    valore: 'corrente',
+                    descrizione: 'mese corrente'
+                };
+            }
+            if (periodo.includes('giorno')) {
+                return {
+                    tipo: 'giorno',
+                    valore: 'corrente',
+                    descrizione: 'giorno corrente'
+                };
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Filtra i dati storici per periodo temporale
+     */
+    filterDataByPeriod(data, periodo) {
+        if (!periodo) return data;
+        
+        const now = new Date();
+        
+        return data.filter(item => {
+            const itemDate = this.parseItemDate(item);
+            if (!itemDate) return false;
+            
+            switch (periodo.tipo) {
+                case 'settimana':
+                    if (periodo.valore === 'corrente') {
+                        return this.getWeekNumber(itemDate) === this.getWeekNumber(now) &&
+                               itemDate.getFullYear() === now.getFullYear();
+                    } else {
+                        return this.getWeekNumber(itemDate) === periodo.valore &&
+                               itemDate.getFullYear() === periodo.anno;
+                    }
+                    
+                case 'mese':
+                    if (periodo.valore === 'corrente') {
+                        return itemDate.getMonth() === now.getMonth() &&
+                               itemDate.getFullYear() === now.getFullYear();
+                    } else {
+                        return itemDate.getMonth() + 1 === periodo.valore &&
+                               itemDate.getFullYear() === periodo.anno;
+                    }
+                    
+                case 'giorno':
+                    if (periodo.valore === 'corrente') {
+                        return itemDate.toDateString() === now.toDateString();
+                    } else {
+                        return itemDate.getDate() === periodo.valore &&
+                               itemDate.getMonth() + 1 === periodo.mese &&
+                               itemDate.getFullYear() === periodo.anno;
+                    }
+                    
+                default:
+                    return true;
+            }
+        });
+    }
+    
+    /**
+     * Parsing date dai dati storici
+     */
+    parseItemDate(item) {
+        const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp'];
+        
+        for (const field of dateFields) {
+            if (item[field]) {
+                const date = new Date(item[field]);
+                if (!isNaN(date.getTime())) {
+                    return date;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Calcola il numero della settimana
+     */
+    getWeekNumber(date) {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+    
+    /**
+     * FUNZIONE 8: Interrogazione Clienti Database
      */
     async getClientiDatabase(params) {
         try {
             console.log('🗄️ MIDDLEWARE: Interrogazione clienti database');
             
-            // Recupera dati dal localStorage
+            // Prova prima con i dati Supabase
+            const supabaseAI = this.supabaseAI;
+            console.log('🔍 DEBUG: this.supabaseAI disponibile?', !!supabaseAI);
+            console.log('🔍 DEBUG: this.supabaseAI.isConnected?', supabaseAI && supabaseAI.isConnected && supabaseAI.isConnected());
+            
+            if (supabaseAI && supabaseAI.isConnected && supabaseAI.isConnected()) {
+                const allData = await supabaseAI.getAllData();
+                const historicalData = allData.historical || [];
+                
+                console.log('🔍 DEBUG: historicalData length:', historicalData.length);
+                console.log('🔍 DEBUG: primi 2 record historical:', historicalData.slice(0, 2));
+                
+                if (historicalData.length > 0) {
+                    // Estrai clienti dai dati storici Supabase
+                    const clientiMap = new Map();
+                    
+                    historicalData.forEach((row, index) => {
+                        const cliente = row.cliente;
+                        const importo = parseFloat(row.importo) || 0;
+                        const numeroOrdine = row.numero_ordine;
+                        
+                        if (index < 3) {
+                            console.log(`🔍 DEBUG: Row ${index}:`, {
+                                cliente,
+                                importo,
+                                numeroOrdine,
+                                raw: row
+                            });
+                        }
+                        
+                        if (cliente && cliente.trim() !== '') {
+                            if (!clientiMap.has(cliente)) {
+                                clientiMap.set(cliente, {
+                                    nome: cliente,
+                                    partitaIva: row.partita_iva || '',
+                                    indirizzo: row.indirizzo_consegna || '',
+                                    ordini: new Set(),
+                                    totalAmount: 0
+                                });
+                            }
+                            
+                            const clientInfo = clientiMap.get(cliente);
+                            clientInfo.ordini.add(numeroOrdine);
+                            clientInfo.totalAmount += importo;
+                        }
+                    });
+                    
+                    console.log('🔍 DEBUG: clientiMap size:', clientiMap.size);
+                    console.log('🔍 DEBUG: clientiMap keys:', Array.from(clientiMap.keys()));
+                    
+                    // Ordina i clienti per totale importo
+                    const clientiArray = Array.from(clientiMap.values());
+                    clientiArray.sort((a, b) => b.totalAmount - a.totalAmount);
+                    
+                    // Prepara lista clienti per risposta
+                    const top5Clienti = clientiArray.slice(0, 5).map(cliente => 
+                        `• ${cliente.nome} (${cliente.ordini.size} ordini, €${cliente.totalAmount.toFixed(2)})`
+                    );
+                    
+                    return {
+                        success: true,
+                        response: `👥 Totale clienti: ${clientiArray.length}\n\n📊 Top 5 clienti per fatturato:\n${top5Clienti.join('\n')}\n\n💰 Fatturato totale: €${clientiArray.reduce((sum, c) => sum + c.totalAmount, 0).toFixed(2)}`,
+                        data: { clienti: clientiArray }
+                    };
+                }
+            }
+            
+            // Fallback: Recupera dati dal localStorage
             const savedVenduto = localStorage.getItem('ordiniFileData');
             if (!savedVenduto) {
                 return {

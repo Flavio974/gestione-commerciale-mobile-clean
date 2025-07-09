@@ -5,11 +5,35 @@
 
 const AICommandParser = {
   /**
-   * COMPLETAMENTE DISABILITATO - SOLO index.html deve parlare
+   * Parla in modo sicuro - per comandi diretti come data/ora
    */
   speakSafe: function(text) {
-    console.log('🔇 🚨 AICommandParser TTS COMPLETAMENTE DISABILITATO - SOLO index.html parla');
-    return; // NON fare nulla - lascia che solo index.html gestisca il TTS
+    console.log('🔊 AICommandParser - Parlando:', text);
+    
+    // Per comandi diretti come data/ora, dobbiamo parlare direttamente
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'it-IT';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      utterance.onstart = () => {
+        console.log('🔊 TTS iniziato per comando diretto');
+      };
+      
+      utterance.onend = () => {
+        console.log('🔊 TTS completato');
+      };
+      
+      utterance.onerror = (e) => {
+        console.error('❌ Errore TTS:', e);
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    }
   },
 
   /**
@@ -163,6 +187,37 @@ const AICommandParser = {
       }
     }
     
+    // Comandi per data e ora - prima le domande combinate
+    // Data prima, poi ora
+    if (command.includes('che giorno è oggi e che ore sono') || 
+        command.includes('che giorno è e che ore sono') ||
+        command.includes('dimmi che giorno è e che ore sono') ||
+        command.includes('che giorno è oggi e dimmi l\'ora') ||
+        command.includes('voglio sapere che giorno è oggi e che ore sono') ||
+        command.includes('data e ora')) {
+      return { type: 'info', target: 'date-time' };
+    }
+    
+    // Ora prima, poi data
+    if (command.includes('che ore sono e che giorno è') ||
+        command.includes('che ora è e che giorno è') ||
+        command.includes('dimmi l\'ora e che giorno è') ||
+        command.includes('ora e data')) {
+      return { type: 'info', target: 'time-date' };
+    }
+    
+    // Poi le domande singole per l'ora
+    if (command.includes('che ore sono') || command.includes('che ora è') || 
+        command.includes('dimmi l\'ora') || command.includes('ora attuale')) {
+      return { type: 'info', target: 'time' };
+    }
+    
+    // Infine le domande singole per la data
+    if (command.includes('che giorno è') || command.includes('data di oggi') || 
+        command.includes('oggi è') || command.includes('dimmi la data')) {
+      return { type: 'info', target: 'date' };
+    }
+    
     // Comandi per compilare campi form - Date
     // Prima controlla se c'è una data nel formato dd/mm/yyyy o dd/mm
     const dateMatch = command.match(/(\d{1,2})[\/\-\s](\d{1,2})(?:[\/\-\s](\d{2,4}))?/) || 
@@ -311,6 +366,10 @@ const AICommandParser = {
         
       case 'test':
         this.testIPhone();
+        break;
+        
+      case 'info':
+        this.getInfo(action.target);
         break;
         
       default:
@@ -592,11 +651,56 @@ const AICommandParser = {
       - "Importa DDT" per importare documenti
       - "Esporta Excel" per esportare i dati
       - "Quanti ordini" per sapere il numero di ordini
+      - "Che ore sono" per sapere l'ora attuale
+      - "Che giorno è" per sapere la data di oggi
+      - "Data e ora" per avere data e ora complete
       - "Disattiva ascolto" o "Basta" per spegnere l'assistente
       - "Aiuto" per sentire di nuovo questi comandi
     `;
     
     this.speakSafe(helpMessage);
+  },
+  
+  /**
+   * Fornisce informazioni su data e ora
+   */
+  getInfo: function(target) {
+    const now = new Date();
+    const options = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    
+    switch(target) {
+      case 'time':
+        const ore = now.getHours();
+        const minuti = now.getMinutes();
+        const secondi = now.getSeconds();
+        const timeString = `Sono le ${ore} e ${minuti} minuti${secondi > 0 ? ` e ${secondi} secondi` : ''}`;
+        this.speakSafe(timeString);
+        break;
+        
+      case 'date':
+        const dateString = now.toLocaleDateString('it-IT', options);
+        this.speakSafe(`Oggi è ${dateString}`);
+        break;
+        
+      case 'datetime':
+        const dateTimeOptions = {
+          ...options,
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric'
+        };
+        const fullDateTime = now.toLocaleString('it-IT', dateTimeOptions);
+        this.speakSafe(`Sono le ${now.getHours()} e ${now.getMinutes()} minuti di ${now.toLocaleDateString('it-IT', options)}`);
+        break;
+        
+      default:
+        this.speakSafe('Informazione non disponibile');
+    }
   },
   
   /**

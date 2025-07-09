@@ -151,6 +151,8 @@ class EnhancedAIAssistant {
             }
             
             // TTS se input vocale
+            // DISABILITATO: Il TTS viene già gestito in index.html per evitare doppia lettura
+            /*
             if (isVoiceInput) {
                 console.log('🔊 ENHANCED: Attivazione TTS per risposta middleware');
                 
@@ -161,6 +163,7 @@ class EnhancedAIAssistant {
                     this.originalAssistant.voiceManager.speak(middlewareResult.response);
                 }
             }
+            */
             
             // Traccia l'interazione
             this.trackMiddlewareUsage(middlewareResult);
@@ -442,4 +445,4 @@ function autoRebindToEnhanced() {
     }
 }
 
-console.log('✅ EnhancedAIAssistant caricato (inizializzazione in corso...)');
+console.log('✅ EnhancedAIAssistant caricato (inizializzazione in corso...)');// Deploy timestamp: Wed Jul  9 19:20:27 CEST 2025

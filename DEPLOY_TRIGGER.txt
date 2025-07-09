@@ -1,17 +1,15 @@
-FORCE NETLIFY DEPLOY - ATTEMPT #2
-===================================
-Timestamp: 2025-07-08 16:37:00 UTC
-Deploy ID: CRITICAL_TTS_FIX_v2.1_RETRY
+FORCE NETLIFY DEPLOY - FIX DOUBLE TTS
+=====================================
+Timestamp: 2025-07-09 19:25:00 UTC
+Deploy ID: TTS_DUPLICATE_FIX_MIDDLEWARE
 Status: MANUAL DEPLOY TRIGGER ACTIVATED
 
-Previous deploys cleared - forcing fresh build
-
 CRITICAL CHANGES APPLIED:
-✅ AIVoiceManagerV2.speak() → DISABLED on iPad
-✅ Route TTS calls → DISABLED completely  
-✅ Single TTS system → index.html speechSynthesis ONLY
-✅ Version → v2.1
-✅ Console logs → Enhanced for debugging
+✅ enhanced-ai-assistant.js → TTS DISABLED (line 154-166)
+✅ Double reading fix → COMPLETED
+✅ Only index.html TTS → ACTIVE
+✅ Version → v3.0
+✅ Middleware TTS → COMMENTED OUT
 
-🚨 FINAL SOLUTION: Only ONE TTS system active on iPad
-🎯 NO MORE DOUBLE READING
+🚨 SOLUTION: Disabled duplicate TTS in middleware
+🎯 MESSAGES NOW READ ONLY ONCE

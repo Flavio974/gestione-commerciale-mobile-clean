@@ -55,6 +55,28 @@ appuntamenti di oggi
 appuntamenti di domani
 appuntamenti della settimana
 
+# CATEGORIA: Data e Ora
+che ore sono
+che ora è
+dimmi l'ora
+ora attuale
+che giorno è
+data di oggi
+oggi è
+dimmi la data
+data e ora
+ora e data
+forniscimi data e ora attuale
+dammi data e ora precise
+che giorno è oggi e che ore sono
+che giorno è e che ore sono
+dimmi che giorno è e che ore sono
+che giorno è oggi e dimmi l'ora
+voglio sapere che giorno è oggi e che ore sono
+che ore sono e che giorno è
+che ora è e che giorno è
+dimmi l'ora e che giorno è
+
 # CATEGORIA: Analisi e Report
 consegne previste [PERIODO]
 stato ordini [CLIENTE]
@@ -96,6 +118,11 @@ clienti presenti nel sistema
 database clienti
 interroga clienti database
 visualizza clienti
+gli ordini nel database a che clienti appartengono
+ordini database che clienti
+a che clienti appartengono gli ordini
+ordini tabella clienti appartengono
+che clienti hanno ordini nel database
 
 # ESEMPI ALIAS SUPPORTATI
 # ESSEMME → Essemme Conad Montegrosso

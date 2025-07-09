@@ -1812,6 +1812,44 @@ class AIVoiceManagerV2 {
             console.log('Testo pulito dopo rimozione wake word:', transcript);
         }
         
+        // Controlla se è una richiesta di data/ora
+        const lowerTranscript = transcript.toLowerCase();
+        
+        // Prima controlla le domande combinate (data + ora)
+        // Controlla se chiede prima la data poi l'ora
+        if (lowerTranscript.includes('che giorno è oggi e che ore sono') || 
+            lowerTranscript.includes('che giorno è e che ore sono') ||
+            lowerTranscript.includes('dimmi che giorno è e che ore sono') ||
+            lowerTranscript.includes('che giorno è oggi e dimmi l\'ora') ||
+            lowerTranscript.includes('voglio sapere che giorno è oggi e che ore sono') ||
+            lowerTranscript.includes('data e ora')) {
+            this.provideDateFirstThenTime();
+            return;
+        }
+        
+        // Controlla se chiede prima l'ora poi la data
+        if (lowerTranscript.includes('che ore sono e che giorno è') ||
+            lowerTranscript.includes('che ora è e che giorno è') ||
+            lowerTranscript.includes('dimmi l\'ora e che giorno è') ||
+            lowerTranscript.includes('ora e data')) {
+            this.provideTimeFirstThenDate();
+            return;
+        }
+        
+        // Poi controlla le domande singole per l'ora
+        if (lowerTranscript.includes('che ore sono') || lowerTranscript.includes('che ora è') || 
+            lowerTranscript.includes('dimmi l\'ora') || lowerTranscript.includes('ora attuale')) {
+            this.provideTimeInfo();
+            return;
+        }
+        
+        // Infine controlla le domande singole per la data
+        if (lowerTranscript.includes('che giorno è') || lowerTranscript.includes('data di oggi') || 
+            lowerTranscript.includes('oggi è') || lowerTranscript.includes('dimmi la data')) {
+            this.provideDateInfo();
+            return;
+        }
+        
         // Invia all'assistente AI (prova entrambi i nomi)
         const assistant = window.FlavioAIAssistant || window.flavioAI;
         
@@ -1839,11 +1877,143 @@ class AIVoiceManagerV2 {
             this.showNotification('Assistente AI non disponibile', 'error');
         }
     }
+    
+    /**
+     * Fornisce informazioni sull'ora corrente
+     */
+    provideTimeInfo() {
+        const now = new Date();
+        const ore = now.getHours();
+        const minuti = now.getMinutes();
+        const secondi = now.getSeconds();
+        const timeString = `Sono le ${ore} e ${minuti} minuti${secondi > 0 ? ` e ${secondi} secondi` : ''}`;
+        
+        console.log('🕐 DEBUG TIME INFO:');
+        console.log('   - Raw Date object:', now);
+        console.log('   - ISO String:', now.toISOString());
+        console.log('   - Locale String:', now.toLocaleString('it-IT'));
+        console.log('   - Timezone Offset:', now.getTimezoneOffset());
+        console.log('   - Final timeString:', timeString);
+        
+        this.speak(timeString);
+    }
+    
+    /**
+     * Fornisce informazioni sulla data corrente
+     */
+    provideDateInfo() {
+        const now = new Date();
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        const dateString = now.toLocaleDateString('it-IT', options);
+        const response = `Oggi è ${dateString}`;
+        
+        console.log('📅 DEBUG DATE INFO:');
+        console.log('   - Raw Date object:', now);
+        console.log('   - ISO String:', now.toISOString());
+        console.log('   - Locale String:', now.toLocaleString('it-IT'));
+        console.log('   - Timezone Offset:', now.getTimezoneOffset());
+        console.log('   - Final response:', response);
+        
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce data prima, poi ora (per "che giorno è e che ore sono")
+     * Formato: Giorno settimana, data, ora (ore, minuti, secondi)
+     */
+    provideDateFirstThenTime() {
+        const now = new Date();
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        const dateString = now.toLocaleDateString('it-IT', options);
+        const ore = now.getHours();
+        const minuti = now.getMinutes();
+        const secondi = now.getSeconds();
+        const response = `Oggi è ${dateString} e sono le ${ore}, ${minuti} minuti e ${secondi} secondi`;
+        
+        console.log('📅 Fornisco data prima, poi ora:', response);
+        this.speak(response);
+    }
+
+    /**
+     * Fornisce ora prima, poi data (per "che ore sono e che giorno è")
+     * Formato: Ora (ore, minuti, secondi), giorno settimana, giorno, mese, anno
+     */
+    provideTimeFirstThenDate() {
+        const now = new Date();
+        const ore = now.getHours();
+        const minuti = now.getMinutes();
+        const secondi = now.getSeconds();
+        
+        const giornoSettimana = now.toLocaleDateString('it-IT', { weekday: 'long' });
+        const giorno = now.getDate();
+        const mese = now.toLocaleDateString('it-IT', { month: 'long' });
+        const anno = now.getFullYear();
+        
+        const response = `Sono le ${ore}, ${minuti} minuti e ${secondi} secondi di ${giornoSettimana} ${giorno} ${mese} ${anno}`;
+        
+        console.log('🕐 Fornisco ora prima, poi data:', response);
+        this.speak(response);
+    }
+
+    /**
+     * Fornisce informazioni complete su data e ora (mantenuto per compatibilità)
+     */
+    provideDateTimeInfo() {
+        // Fallback alla funzione data-prima-ora per compatibilità
+        this.provideDateFirstThenTime();
+    }
 
     async speak(text) {
         return new Promise((resolve) => {
-            // COMPLETAMENTE DISABILITATO - SOLO index.html deve parlare
-            console.log('🔇 🚨 AIVoiceManagerV2 TTS COMPLETAMENTE DISABILITATO - SOLO index.html parla');
+            console.log('🔊 AIVoiceManagerV2 - Parlando:', text);
+            
+            // Per comandi diretti come data/ora, parliamo direttamente
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'it-IT';
+                utterance.rate = this.ttsConfig.rate || 1.0;
+                utterance.pitch = this.ttsConfig.pitch || 1.0;
+                utterance.volume = this.ttsConfig.volume || 1.0;
+                
+                if (this.ttsConfig.voice) {
+                    utterance.voice = this.ttsConfig.voice;
+                }
+                
+                utterance.onstart = () => {
+                    console.log('🔊 TTS iniziato per comando diretto V2');
+                    this.isSpeaking = true;
+                    this.updateUIState('speaking');
+                };
+                
+                utterance.onend = () => {
+                    console.log('🔊 TTS completato V2');
+                    this.isSpeaking = false;
+                    this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
+                    resolve();
+                };
+                
+                utterance.onerror = (e) => {
+                    console.error('❌ Errore TTS V2:', e);
+                    this.isSpeaking = false;
+                    resolve();
+                };
+                
+                window.speechSynthesis.speak(utterance);
+                return; // Importante: ritorna qui per evitare il codice disabilitato sotto
+            }
+            
             resolve();
             return;
             

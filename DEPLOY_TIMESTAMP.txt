@@ -1,0 +1,4 @@
+LATEST DEPLOYMENT - Wed Jul  9 22:28:38 CEST 2025
+Version: 1.0.0
+URL: https://dancing-kashata-353af9.netlify.app
+Deploy ID: 686ed0cfada70ff969590026
