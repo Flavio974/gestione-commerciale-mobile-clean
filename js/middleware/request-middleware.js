@@ -335,6 +335,14 @@ class RequestMiddleware {
             return 'ordini';
         }
         
+        // Controlla richieste di date generiche degli ordini
+        if ((/quale.*data.*ordini|in.*quale.*data.*ordini|quando.*ordini|date.*ordini|settimana.*ordini|generati.*ordini/i.test(input) ||
+            /ordini.*generati|ordini.*fatti|ordini.*creati|ordini.*data|ordini.*quando|ordini.*settimana/i.test(input)) &&
+            !(/(?:quanti|numero|numeri).*(?:ordini?)/i.test(input))) {
+            console.log('🎯 PATTERN DATE ORDINI GENERICHE MATCH:', input);
+            return 'date_ordini_generiche';
+        }
+        
         // Controlla le richieste di data (più specifiche)
         // Se contiene parole chiave per date è probabilmente una richiesta di data
         // Escludi "database" e richieste di conteggio dalla parola "data"
@@ -673,6 +681,9 @@ class RequestMiddleware {
                 
             case 'data':
                 return await this.getUltimaData(params);
+                
+            case 'date_ordini_generiche':
+                return await this.getDateOrdiniGeneriche(params);
                 
             case 'percorsi':
                 return await this.calculatePercorso(params);
@@ -1763,7 +1774,140 @@ class RequestMiddleware {
     }
     
     /**
-     * FUNZIONE 8: Interrogazione Clienti Database
+     * FUNZIONE 8: Date ordini generiche - analizza tutte le date degli ordini
+     */
+    async getDateOrdiniGeneriche(params) {
+        try {
+            console.log('📅 MIDDLEWARE: Analisi date ordini generiche');
+            
+            // Usa la stessa logica di getClientiDatabase per ottenere i dati
+            const supabaseAI = this.supabaseAI;
+            if (supabaseAI && supabaseAI.isConnected && supabaseAI.isConnected()) {
+                const allData = await supabaseAI.getAllData();
+                const historicalData = allData.historical || [];
+                
+                if (historicalData.length > 0) {
+                    // Raggruppa ordini per numero_ordine con le loro date
+                    const ordiniMap = new Map();
+                    const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp'];
+                    
+                    historicalData.forEach(row => {
+                        const numeroOrdine = row.numero_ordine;
+                        const cliente = row.cliente;
+                        
+                        if (numeroOrdine && cliente) {
+                            if (!ordiniMap.has(numeroOrdine)) {
+                                // Trova la data migliore per questo ordine
+                                let dataOrdine = null;
+                                let fieldUsed = null;
+                                
+                                for (const field of dateFields) {
+                                    if (row[field] && row[field] !== null && row[field] !== '') {
+                                        // Usa parser italiano se disponibile
+                                        if (window.ItalianDateParser) {
+                                            const parsedDate = window.ItalianDateParser.parseDate(row[field]);
+                                            if (parsedDate) {
+                                                dataOrdine = row[field];
+                                                fieldUsed = field;
+                                                break;
+                                            }
+                                        } else if (!isNaN(Date.parse(row[field]))) {
+                                            dataOrdine = row[field];
+                                            fieldUsed = field;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                ordiniMap.set(numeroOrdine, {
+                                    numero: numeroOrdine,
+                                    cliente: cliente,
+                                    data: dataOrdine,
+                                    dataField: fieldUsed,
+                                    displayDate: dataOrdine ? this.formatDate(dataOrdine) : 'Data non disponibile'
+                                });
+                            }
+                        }
+                    });
+                    
+                    // Converti in array e ordina per data
+                    const ordiniArray = Array.from(ordiniMap.values());
+                    const ordiniConData = ordiniArray.filter(o => o.data);
+                    const ordiniSenzaData = ordiniArray.filter(o => !o.data);
+                    
+                    // Ordina per data decrescente
+                    ordiniConData.sort((a, b) => {
+                        const dateA = window.ItalianDateParser ? 
+                            window.ItalianDateParser.parseDate(a.data) : new Date(a.data);
+                        const dateB = window.ItalianDateParser ? 
+                            window.ItalianDateParser.parseDate(b.data) : new Date(b.data);
+                        return dateB - dateA;
+                    });
+                    
+                    // Combina ordinati per data + quelli senza data
+                    const tuttiOrdini = [...ordiniConData, ...ordiniSenzaData];
+                    
+                    // Calcola settimane
+                    const ordiniConSettimana = tuttiOrdini.map(ordine => {
+                        if (ordine.data) {
+                            const date = window.ItalianDateParser ? 
+                                window.ItalianDateParser.parseDate(ordine.data) : new Date(ordine.data);
+                            
+                            if (date && !isNaN(date.getTime())) {
+                                const weekInfo = this.getWeekNumber(date);
+                                return {
+                                    ...ordine,
+                                    settimana: weekInfo.week,
+                                    anno: weekInfo.year
+                                };
+                            }
+                        }
+                        return ordine;
+                    });
+                    
+                    // Crea risposta dettagliata
+                    let response = `📅 **Analisi Date Ordini**\n\n`;
+                    response += `🔢 **Ordini totali**: ${tuttiOrdini.length}\n`;
+                    response += `📊 **Con data**: ${ordiniConData.length}\n`;
+                    if (ordiniSenzaData.length > 0) {
+                        response += `⚠️ **Senza data**: ${ordiniSenzaData.length}\n`;
+                    }
+                    response += `\n**📋 Dettaglio ordini:**\n`;
+                    
+                    ordiniConSettimana.forEach((ordine, index) => {
+                        const settimanaInfo = ordine.settimana ? 
+                            ` (Settimana ${ordine.settimana}/${ordine.anno})` : '';
+                        response += `${index + 1}. **${ordine.numero}** - ${ordine.cliente}\n`;
+                        response += `   📅 Data: ${ordine.displayDate}${settimanaInfo}\n\n`;
+                    });
+                    
+                    return {
+                        success: true,
+                        response: response,
+                        data: { 
+                            ordini: ordiniConSettimana,
+                            totale: tuttiOrdini.length,
+                            conData: ordiniConData.length,
+                            senzaData: ordiniSenzaData.length
+                        }
+                    };
+                }
+            }
+            
+            return {
+                success: true,
+                response: '❌ Nessun ordine trovato nel database.',
+                data: { ordini: [] }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore analisi date ordini generiche:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    /**
+     * FUNZIONE 9: Interrogazione Clienti Database
      */
     async getClientiDatabase(params) {
         try {
