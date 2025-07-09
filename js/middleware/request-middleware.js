@@ -295,6 +295,13 @@ class RequestMiddleware {
         const inputLower = input.toLowerCase();
         console.log('🔍 CLASSIFY REQUEST:', input, 'lowercase:', inputLower);
         
+        // CONTROLLO ULTRA-PRIORITARIO: Solo numero prossima settimana (deve essere PRIMO)
+        if (/(?:dammi\s+solo|solo)\s+.*(?:numero|n\.?).*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input) ||
+            /(?:dammi\s+solo|solo)\s+.*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input)) {
+            console.log('🎯 MATCH ULTRA-PRIORITARIO: Solo numero prossima settimana');
+            return 'solo_numero_settimana';
+        }
+        
         // CONTROLLO PRIORITARIO: Richieste sui prodotti degli ordini
         if ((inputLower.includes('prodotti') || inputLower.includes('composto')) && 
             (inputLower.includes('ordine') || inputLower.includes('cliente'))) {
@@ -388,12 +395,6 @@ class RequestMiddleware {
             return 'valore_medio';
         }
         
-        // Controlla PRIMA richieste di solo numero prossima settimana
-        if (/(?:dammi\s+solo|solo)\s+.*(?:numero|n\.?).*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input) ||
-            /(?:dammi\s+solo|solo)\s+.*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input)) {
-            console.log('🎯 MATCH DIRETTO: Solo numero prossima settimana');
-            return 'solo_numero_settimana';
-        }
         
         // Controlla richieste di settimane future/calcoli
         if (/la\s+prossima\s+settimana|settimana\s+prossima|che\s+settimana\s+sarà|settimana\s+successiva/i.test(input)) {
