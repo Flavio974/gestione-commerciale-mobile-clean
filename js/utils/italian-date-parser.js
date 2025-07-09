@@ -8,6 +8,99 @@ window.ItalianDateParser = (function() {
     'use strict';
     
     /**
+     * Parse date in formato americano MM/DD/YYYY e convertila in italiano DD/MM/YYYY
+     * Per dati provenienti da Supabase
+     */
+    function parseAmericanDateToItalian(dateStr) {
+        if (!dateStr) return null;
+        
+        // Rimuovi spazi e normalizza separatori
+        const cleanStr = dateStr.toString().trim().replace(/[\-\.]/g, '/');
+        
+        // Pattern per formato americano MM/DD/YYYY o MM/DD/YY
+        const americanPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/;
+        const match = cleanStr.match(americanPattern);
+        
+        if (!match) {
+            console.warn('⚠️ Formato data americano non riconosciuto:', dateStr);
+            return null;
+        }
+        
+        const month = parseInt(match[1], 10);
+        const day = parseInt(match[2], 10);
+        let year = parseInt(match[3], 10);
+        
+        // Validazione base
+        if (day < 1 || day > 31 || month < 1 || month > 12) {
+            console.warn('⚠️ Data americana non valida:', dateStr);
+            return null;
+        }
+        
+        // Gestione anni a 2 cifre
+        if (year < 100) {
+            const currentYear = new Date().getFullYear();
+            const currentCentury = Math.floor(currentYear / 100) * 100;
+            
+            if (year > 50) {
+                year = (currentCentury - 100) + year;
+            } else {
+                year = currentCentury + year;
+            }
+        }
+        
+        // Crea data FORZANDO formato americano MM/DD/YYYY
+        const date = new Date(year, month - 1, day);
+        
+        // Verifica che la data sia valida
+        if (date.getFullYear() !== year || 
+            date.getMonth() !== (month - 1) || 
+            date.getDate() !== day) {
+            console.warn('⚠️ Data americana risultante non valida:', dateStr);
+            return null;
+        }
+        
+        console.log(`✅ Data americana convertita: ${dateStr} → ${day}/${month}/${year}`);
+        return date;
+    }
+
+    /**
+     * Parse date da Supabase che è in formato ISO YYYY-MM-DD ma rappresenta date americane
+     * Es: 2025-02-01 su Supabase significa 2 gennaio (01/02 in formato americano)
+     */
+    function parseSupabaseDateToItalian(dateStr) {
+        if (!dateStr) return null;
+        
+        // Rimuovi spazi
+        const cleanStr = dateStr.toString().trim();
+        
+        // Pattern per formato ISO YYYY-MM-DD
+        const isoPattern = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+        const match = cleanStr.match(isoPattern);
+        
+        if (!match) {
+            console.warn('⚠️ Formato data ISO non riconosciuto:', dateStr);
+            return null;
+        }
+        
+        const year = parseInt(match[1], 10);
+        const month = parseInt(match[2], 10);
+        const day = parseInt(match[3], 10);
+        
+        // Validazione base
+        if (day < 1 || day > 31 || month < 1 || month > 12) {
+            console.warn('⚠️ Data ISO non valida:', dateStr);
+            return null;
+        }
+        
+        // IMPORTANTE: Su Supabase 2025-02-01 significa 2 gennaio (formato americano MM/DD)
+        // Quindi month/day sono invertiti rispetto al normale ISO
+        const date = new Date(year, day - 1, month);
+        
+        console.log(`✅ Data Supabase convertita: ${dateStr} → ${month}/${day}/${year} (da formato americano)`);
+        return date;
+    }
+
+    /**
      * Parse date FORZANDO il formato italiano DD/MM/YYYY
      * Ignora completamente l'interpretazione americana MM/DD/YYYY
      */
@@ -165,6 +258,8 @@ window.ItalianDateParser = (function() {
     return {
         parseDate,
         parseItalianDateStrict,
+        parseAmericanDateToItalian,
+        parseSupabaseDateToItalian,
         formatItalianDate,
         toItalianString,
         testParser
