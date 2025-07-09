@@ -263,6 +263,7 @@ class RequestMiddleware {
             
             // 3. Estrazione parametri dalla richiesta
             const params = this.extractParameters(userInput, requestType);
+            params.originalInput = userInput; // Aggiungi l'input originale ai parametri
             console.log('🔧 MIDDLEWARE: Parametri estratti:', params);
             
             // 4. Elaborazione diretta
@@ -448,7 +449,8 @@ class RequestMiddleware {
         // Controlla richieste di solo numero settimana (deve essere DOPO i controlli specifici)
         if (/(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*(?:numero|n\.?)\s+.*settimana.*(?:degli\s+ordini|caricati)/i.test(input) ||
             /^settimana\s*\??$/i.test(input) ||
-            /(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*settimana.*(?:degli\s+ordini|caricati)/i.test(input)) {
+            /(?:voglio\s+solo|solo|dimmi\s+solo|dammi\s+solo)\s+.*settimana.*(?:degli\s+ordini|caricati)/i.test(input) ||
+            /(?:dammi\s+solo|solo)\s+.*numero.*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input)) {
             console.log('🎯 PATTERN SOLO NUMERO SETTIMANA MATCH:', input);
             return 'solo_numero_settimana';
         }
@@ -2072,6 +2074,21 @@ class RequestMiddleware {
     async getSoloNumeroSettimana(params) {
         try {
             console.log('📅 MIDDLEWARE: Richiesta solo numero settimana ordini');
+            
+            // Controlla se è una richiesta per la prossima settimana
+            if (params.originalInput && /(?:prossima\s+settimana|settimana\s+prossima)/i.test(params.originalInput)) {
+                console.log('📅 MIDDLEWARE: Richiesta numero prossima settimana');
+                const now = new Date();
+                const prossimaSettimana = new Date(now);
+                prossimaSettimana.setDate(now.getDate() + 7);
+                const settimanaSuccessiva = this.getWeekNumber(prossimaSettimana);
+                
+                return {
+                    success: true,
+                    response: `${settimanaSuccessiva}`,
+                    data: { settimana: settimanaSuccessiva }
+                };
+            }
             
             // Riusa la logica di getDateOrdiniGeneriche ma restituisce solo il numero
             let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
