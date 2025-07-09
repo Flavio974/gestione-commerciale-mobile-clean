@@ -2514,12 +2514,23 @@ class RequestMiddleware {
             const numeroSettimana = params.numeroSettimana || 1;
             const anno = new Date().getFullYear();
             
-            // Carica i dati degli ordini
+            // Carica i dati degli ordini - usa la stessa logica delle altre funzioni
             let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
             if (ordini.length === 0) {
                 console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
                 const supabaseData = await this.supabaseAI.getAllData();
                 ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
+            
+            // Se ancora non ci sono dati, prova con .historical
+            if (ordini.length === 0) {
+                const allData = await this.supabaseAI.getAllData();
+                ordini = allData.historical || [];
+            }
+            
+            console.log('📊 DEBUG: Ordini caricati:', ordini.length);
+            if (ordini.length > 0) {
+                console.log('📊 DEBUG: Primo ordine:', ordini[0]);
             }
             
             if (ordini.length === 0) {
@@ -2533,6 +2544,8 @@ class RequestMiddleware {
             // Filtra ordini per settimana specifica
             const ordiniSettimana = this.filterOrdersByWeek(ordini, numeroSettimana, anno);
             
+            console.log('📊 DEBUG: Ordini filtrati per settimana', numeroSettimana, ':', ordiniSettimana.length);
+            
             // Conta ordini unici
             const ordiniUnici = new Set();
             ordiniSettimana.forEach(ordine => {
@@ -2540,6 +2553,8 @@ class RequestMiddleware {
                     ordiniUnici.add(ordine.numero_ordine);
                 }
             });
+            
+            console.log('📊 DEBUG: Ordini unici:', ordiniUnici.size);
             
             // Calcola date settimana per la risposta
             const weekDates = this.getWeekDates(anno, numeroSettimana);
@@ -2582,12 +2597,23 @@ class RequestMiddleware {
             const numeroSettimana = params.numeroSettimana || 1;
             const anno = new Date().getFullYear();
             
-            // Carica i dati degli ordini
+            // Carica i dati degli ordini - usa la stessa logica delle altre funzioni
             let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
             if (ordini.length === 0) {
                 console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
                 const supabaseData = await this.supabaseAI.getAllData();
                 ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
+            
+            // Se ancora non ci sono dati, prova con .historical
+            if (ordini.length === 0) {
+                const allData = await this.supabaseAI.getAllData();
+                ordini = allData.historical || [];
+            }
+            
+            console.log('💰 DEBUG: Ordini caricati:', ordini.length);
+            if (ordini.length > 0) {
+                console.log('💰 DEBUG: Primo ordine:', ordini[0]);
             }
             
             if (ordini.length === 0) {
@@ -2651,7 +2677,10 @@ class RequestMiddleware {
      * FUNZIONE HELPER: Filtra ordini per settimana specifica
      */
     filterOrdersByWeek(ordini, numeroSettimana, anno) {
-        return ordini.filter(ordine => {
+        console.log('🔍 DEBUG: Filtro ordini per settimana', numeroSettimana, 'anno', anno);
+        console.log('🔍 DEBUG: Ordini da filtrare:', ordini.length);
+        
+        return ordini.filter((ordine, index) => {
             // Cerca la data migliore disponibile
             const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp'];
             
@@ -2677,8 +2706,13 @@ class RequestMiddleware {
                         const settimanaOrdine = this.getWeekNumber(dataOrdine);
                         const annoOrdine = dataOrdine.getFullYear();
                         
+                        if (index < 3) { // Debug solo i primi 3 ordini
+                            console.log(`🔍 DEBUG: Ordine ${index}, field ${field}: ${ordine[field]} -> settimana ${settimanaOrdine}, anno ${annoOrdine}`);
+                        }
+                        
                         // Controlla se l'ordine è nella settimana richiesta
                         if (settimanaOrdine === numeroSettimana && annoOrdine === anno) {
+                            console.log(`✅ DEBUG: Match trovato per ordine ${ordine.numero_ordine}`);
                             return true;
                         }
                     }
