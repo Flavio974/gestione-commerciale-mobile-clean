@@ -784,6 +784,7 @@
 
     /**
      * Parse date da formato Excel a formato italiano DD/MM/YYYY
+     * FIXED: Usa parser italiano robusto per evitare confusione MM/DD vs DD/MM
      */
     parseDate(dateValue) {
       if (!dateValue) return null;
@@ -809,31 +810,71 @@
           });
         }
         
-        // Se è una stringa in formato DD/MM/YYYY italiano, mantienila così
-        if (typeof dateValue === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateValue)) {
-          return dateValue;
+        // Se è una stringa in formato DD/MM/YYYY italiano, validala e mantienila
+        if (typeof dateValue === 'string' && /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(dateValue)) {
+          // Usa parser italiano robusto se disponibile
+          if (window.ItalianDateParser) {
+            const parsedDate = window.ItalianDateParser.parseDate(dateValue);
+            if (parsedDate) {
+              return parsedDate.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              });
+            }
+          }
+          
+          // Fallback: parsing manuale formato DD/MM/YYYY
+          const parts = dateValue.split('/');
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10);
+          let year = parseInt(parts[2], 10);
+          
+          // Validazione
+          if (day < 1 || day > 31 || month < 1 || month > 12) {
+            console.warn('⚠️ Data non valida:', dateValue);
+            return null;
+          }
+          
+          // Gestione anni a 2 cifre
+          if (year < 100) {
+            const currentYear = new Date().getFullYear();
+            const currentCentury = Math.floor(currentYear / 100) * 100;
+            year = year < 50 ? currentCentury + year : (currentCentury - 100) + year;
+          }
+          
+          // Crea data FORZANDO il formato italiano
+          const date = new Date(year, month - 1, day);
+          if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('it-IT', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+          }
         }
         
         // Se è una stringa in formato ISO YYYY-MM-DD, convertila
         if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
           const parts = dateValue.split('-');
-          const year = parts[0];
-          const month = parts[1];
-          const day = parts[2];
-          return `${day}/${month}/${year}`;
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10);
+          const day = parseInt(parts[2], 10);
+          
+          const date = new Date(year, month - 1, day);
+          if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('it-IT', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+          }
         }
         
-        // Se è una stringa, prova a parsarla e convertila in formato italiano
-        const date = new Date(dateValue);
-        if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString('it-IT', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          });
-        }
-        
+        // DEPRECATO: Evita new Date(dateValue) per date ambigue
+        console.warn('⚠️ Formato data non riconosciuto:', dateValue);
         return null;
+        
       } catch (err) {
         console.warn('⚠️ Errore parsing data:', dateValue, err);
         return null;

@@ -1725,13 +1725,22 @@ class RequestMiddleware {
     }
     
     /**
-     * Parsing date dai dati storici
+     * Parsing date dai dati storici - FIXED per formato italiano
      */
     parseItemDate(item) {
         const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp'];
         
         for (const field of dateFields) {
             if (item[field]) {
+                // Usa parser italiano robusto se disponibile
+                if (window.ItalianDateParser) {
+                    const date = window.ItalianDateParser.parseDate(item[field]);
+                    if (date) {
+                        return date;
+                    }
+                }
+                
+                // Fallback: parsing standard (meno affidabile per date ambigue)
                 const date = new Date(item[field]);
                 if (!isNaN(date.getTime())) {
                     return date;

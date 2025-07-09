@@ -7,36 +7,51 @@ window.DDTFTParsingUtils = (function() {
     'use strict';
     
     /**
-     * Parsing e normalizzazione date
+     * Parsing e normalizzazione date - FIXED per formato italiano
      */
     function parseItalianDate(dateStr) {
         if (!dateStr) return null;
         
-        // Normalizza separatori
+        // Usa parser robusto se disponibile
+        if (window.ItalianDateParser) {
+            const result = window.ItalianDateParser.toItalianString(dateStr);
+            if (result) return result;
+        }
+        
+        // Fallback: parsing manuale
         let normalized = dateStr.replace(/[\-\.]/g, '/');
         
         // Gestisci date con anno a 2 cifre
         const parts = normalized.split('/');
         if (parts.length === 3) {
-            const day = parts[0].padStart(2, '0');
-            const month = parts[1].padStart(2, '0');
-            let year = parts[2];
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
+            let year = parseInt(parts[2], 10);
+            
+            // Validazione
+            if (day < 1 || day > 31 || month < 1 || month > 12) {
+                console.warn('⚠️ Data non valida:', dateStr);
+                return null;
+            }
             
             // Converti anno a 2 cifre
-            if (year.length === 2) {
+            if (year < 100) {
                 const currentYear = new Date().getFullYear();
                 const century = Math.floor(currentYear / 100) * 100;
-                const yearNum = parseInt(year);
                 
                 // Se l'anno è > 50, assumiamo secolo precedente
-                if (yearNum > 50) {
-                    year = (century - 100) + yearNum;
+                if (year > 50) {
+                    year = (century - 100) + year;
                 } else {
-                    year = century + yearNum;
+                    year = century + year;
                 }
             }
             
-            return `${day}/${month}/${year}`;
+            // Formatta con zero padding
+            const dayStr = String(day).padStart(2, '0');
+            const monthStr = String(month).padStart(2, '0');
+            
+            return `${dayStr}/${monthStr}/${year}`;
         }
         
         return normalized;
