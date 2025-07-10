@@ -137,8 +137,33 @@ class SemanticIntentEngine {
             }
         }
         
-        // Ordina per confidenza
-        return matches.sort((a, b) => b.confidence - a.confidence);
+        // PRIORITÀ: Se ci sono marker temporali, metti data_temporale in cima
+        const hasTemporalMarkers = fullText.includes('domani') || 
+                                  fullText.includes('ieri') || 
+                                  fullText.includes('dopodomani') || 
+                                  fullText.includes('dopo domani') || 
+                                  fullText.includes('altro ieri') || 
+                                  fullText.includes('ieri l\'altro') ||
+                                  fullText.includes('sarà') ||
+                                  fullText.includes('avremo') ||
+                                  fullText.includes('era') ||
+                                  fullText.includes('avevamo') ||
+                                  fullText.includes('tra') ||
+                                  fullText.includes('fra');
+        
+        if (hasTemporalMarkers) {
+            // Metti data_temporale per primo se presente
+            matches.sort((a, b) => {
+                if (a.domain === 'data_temporale' && b.domain !== 'data_temporale') return -1;
+                if (b.domain === 'data_temporale' && a.domain !== 'data_temporale') return 1;
+                return b.confidence - a.confidence;
+            });
+        } else {
+            // Ordina per confidenza normale
+            matches.sort((a, b) => b.confidence - a.confidence);
+        }
+        
+        return matches;
     }
 
     /**
