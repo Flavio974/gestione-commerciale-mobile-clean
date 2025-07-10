@@ -1852,10 +1852,10 @@ class RequestMiddleware {
             switch (periodo.tipo) {
                 case 'settimana':
                     if (periodo.valore === 'corrente') {
-                        return this.getWeekNumber(itemDate) === this.getWeekNumber(now) &&
+                        return this.getWeekNumberSimple(itemDate) === this.getWeekNumberSimple(now) &&
                                itemDate.getFullYear() === now.getFullYear();
                     } else {
-                        return this.getWeekNumber(itemDate) === periodo.valore &&
+                        return this.getWeekNumberSimple(itemDate) === periodo.valore &&
                                itemDate.getFullYear() === periodo.anno;
                     }
                     
@@ -1911,9 +1911,9 @@ class RequestMiddleware {
     }
     
     /**
-     * Calcola il numero della settimana
+     * Calcola il numero della settimana (versione semplice)
      */
-    getWeekNumber(date) {
+    getWeekNumberSimple(date) {
         const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
         const dayNum = d.getUTCDay() || 7;
         d.setUTCDate(d.getUTCDate() + 4 - dayNum);
@@ -2025,7 +2025,7 @@ class RequestMiddleware {
                                 window.ItalianDateParser.parseItalianDateStrict(ordine.data) : new Date(ordine.data);
                             
                             if (date && !isNaN(date.getTime())) {
-                                const settimana = this.getWeekNumber(date);
+                                const settimana = this.getWeekNumberSimple(date);
                                 console.log(`🔍 DEBUG SETTIMANA: ${ordine.data} → ${date.toLocaleDateString('it-IT')} → Settimana ${settimana}`);
                                 return {
                                     ...ordine,
@@ -2098,7 +2098,7 @@ class RequestMiddleware {
                 const now = new Date();
                 const prossimaSettimana = new Date(now);
                 prossimaSettimana.setDate(now.getDate() + 7);
-                const settimanaSuccessiva = this.getWeekNumber(prossimaSettimana);
+                const settimanaSuccessiva = this.getWeekNumberSimple(prossimaSettimana);
                 
                 return {
                     success: true,
@@ -2162,7 +2162,7 @@ class RequestMiddleware {
                             window.ItalianDateParser.parseItalianDateStrict(ordine.data) : new Date(ordine.data);
                         
                         if (date && !isNaN(date.getTime())) {
-                            const settimana = this.getWeekNumber(date);
+                            const settimana = this.getWeekNumberSimple(date);
                             settimane.add(settimana);
                         }
                     }
@@ -2212,7 +2212,7 @@ class RequestMiddleware {
             console.log('📅 MIDDLEWARE: Richiesta settimana corrente');
             
             const now = new Date();
-            const settimana = this.getWeekNumber(now);
+            const settimana = this.getWeekNumberSimple(now);
             const anno = now.getFullYear();
             const dataCorrente = now.toLocaleDateString('it-IT', {
                 weekday: 'long',
@@ -2296,7 +2296,7 @@ class RequestMiddleware {
             });
             
             const dataBreve = now.toLocaleDateString('it-IT');
-            const settimana = this.getWeekNumber(now);
+            const settimana = this.getWeekNumberSimple(now);
             
             const response = `📅 **Data Corrente**\n\n` +
                 `🗓️ **Oggi è**: ${dataCompleta}\n` +
@@ -2421,8 +2421,8 @@ class RequestMiddleware {
             const prossimaSettimana = new Date(now);
             prossimaSettimana.setDate(now.getDate() + 7);
             
-            const settimanaCorrente = this.getWeekNumber(now);
-            const settimanaSuccessiva = this.getWeekNumber(prossimaSettimana);
+            const settimanaCorrente = this.getWeekNumberSimple(now);
+            const settimanaSuccessiva = this.getWeekNumberSimple(prossimaSettimana);
             const anno = prossimaSettimana.getFullYear();
             
             const response = `📅 **Settimana Successiva**\n\n` +
@@ -2460,8 +2460,8 @@ class RequestMiddleware {
             const dataFutura = new Date(now);
             dataFutura.setDate(now.getDate() + (settimaneAggiungere * 7));
             
-            const settimanaCorrente = this.getWeekNumber(now);
-            const settimanaFutura = this.getWeekNumber(dataFutura);
+            const settimanaCorrente = this.getWeekNumberSimple(now);
+            const settimanaFutura = this.getWeekNumberSimple(dataFutura);
             const anno = dataFutura.getFullYear();
             
             // Controlla se è una richiesta di solo numero
@@ -2745,7 +2745,7 @@ class RequestMiddleware {
                     }
                     
                     if (dataOrdine && !isNaN(dataOrdine.getTime())) {
-                        const settimanaOrdine = this.getWeekNumber(dataOrdine);
+                        const settimanaOrdine = this.getWeekNumberSimple(dataOrdine);
                         const annoOrdine = dataOrdine.getFullYear();
                         
                         if (index < 3) { // Debug solo i primi 3 ordini
