@@ -1812,67 +1812,53 @@ class AIVoiceManagerV2 {
             console.log('Testo pulito dopo rimozione wake word:', transcript);
         }
         
-        // Controlla se è una richiesta di data/ora SEMPLICE (non settimane)
+        // 🧠 SISTEMA SEMANTICO INTELLIGENTE - Sostituisce pattern rigidi
         const lowerTranscript = transcript.toLowerCase();
         
-        // IMPORTANTE: Le richieste di settimana devono essere gestite LOCALMENTE per avere la data corretta
-        const isWeekRequest = lowerTranscript.includes('settimana') || 
+        // Usa il sistema semantico per riconoscere intent temporali
+        let temporalIntent = null;
+        if (window.semanticEngine) {
+            temporalIntent = window.semanticEngine.getBestTemporalMatch(transcript);
+            console.log('🧠 SEMANTIC INTENT:', temporalIntent);
+        }
+        
+        // Fallback ai pattern rigidi se semantico non disponibile
+        const isWeekRequest = temporalIntent?.domain === 'settimana' || 
+                             lowerTranscript.includes('settimana') || 
                              lowerTranscript.includes('week') ||
                              lowerTranscript.includes('che settimana') ||
                              lowerTranscript.includes('numero settimana') ||
                              lowerTranscript.includes('settimana dell\'anno') ||
                              lowerTranscript.includes('settimana siamo');
         
-        // RICHIESTE TEMPORALI - gestisci localmente per data corretta
-        const isMonthRequest = lowerTranscript.includes('che mese') || 
-                              lowerTranscript.includes('in che mese') ||
-                              lowerTranscript.includes('quale mese') ||
-                              lowerTranscript.includes('mese siamo') ||
-                              lowerTranscript.includes('dimmi il mese') ||
-                              lowerTranscript.includes('voglio sapere in che mese') ||
-                              lowerTranscript.includes('mese corrente') ||
-                              lowerTranscript.includes('mese attuale');
+        // 🧠 SISTEMA SEMANTICO - Determina tutti i tipi di richiesta temporale
+        const isMonthRequest = temporalIntent?.domain === 'mese' || 
+                              lowerTranscript.includes('che mese') || 
+                              lowerTranscript.includes('in che mese');
         
-        const isYearRequest = lowerTranscript.includes('che anno') ||
-                             lowerTranscript.includes('in che anno') ||
-                             lowerTranscript.includes('quale anno') ||
-                             lowerTranscript.includes('anno siamo') ||
-                             lowerTranscript.includes('dimmi l\'anno') ||
-                             lowerTranscript.includes('anno corrente') ||
-                             lowerTranscript.includes('anno attuale');
+        const isYearRequest = temporalIntent?.domain === 'anno' ||
+                             lowerTranscript.includes('che anno') ||
+                             lowerTranscript.includes('in che anno');
         
-        const isQuarterRequest = lowerTranscript.includes('che trimestre') ||
-                                lowerTranscript.includes('in che trimestre') ||
-                                lowerTranscript.includes('quale trimestre') ||
-                                lowerTranscript.includes('trimestre siamo') ||
-                                lowerTranscript.includes('dimmi il trimestre') ||
-                                lowerTranscript.includes('trimestre corrente') ||
-                                lowerTranscript.includes('trimestre attuale');
+        const isQuarterRequest = temporalIntent?.domain === 'trimestre' ||
+                                lowerTranscript.includes('che trimestre') ||
+                                lowerTranscript.includes('in che trimestre');
         
-        const isQuadrimesterRequest = lowerTranscript.includes('che quadrimestre') ||
-                                     lowerTranscript.includes('in che quadrimestre') ||
-                                     lowerTranscript.includes('quale quadrimestre') ||
-                                     lowerTranscript.includes('quadrimestre siamo') ||
-                                     lowerTranscript.includes('dimmi il quadrimestre') ||
-                                     lowerTranscript.includes('quadrimestre corrente');
+        const isQuadrimesterRequest = temporalIntent?.domain === 'quadrimestre' ||
+                                     lowerTranscript.includes('che quadrimestre') ||
+                                     lowerTranscript.includes('in che quadrimestre');
         
-        const isSemesterRequest = lowerTranscript.includes('che semestre') ||
-                                 lowerTranscript.includes('in che semestre') ||
-                                 lowerTranscript.includes('quale semestre') ||
-                                 lowerTranscript.includes('semestre siamo') ||
-                                 lowerTranscript.includes('dimmi il semestre') ||
-                                 lowerTranscript.includes('semestre corrente');
+        const isSemesterRequest = temporalIntent?.domain === 'semestre' ||
+                                 lowerTranscript.includes('che semestre') ||
+                                 lowerTranscript.includes('in che semestre');
         
-        const isSeasonRequest = lowerTranscript.includes('che stagione') ||
-                               lowerTranscript.includes('in che stagione') ||
-                               lowerTranscript.includes('quale stagione') ||
-                               lowerTranscript.includes('stagione siamo') ||
-                               lowerTranscript.includes('dimmi la stagione') ||
-                               lowerTranscript.includes('stagione corrente');
+        const isSeasonRequest = temporalIntent?.domain === 'stagione' ||
+                               lowerTranscript.includes('che stagione') ||
+                               lowerTranscript.includes('in che stagione');
         
-        const isDayOfWeekRequest = lowerTranscript.includes('che giorno della settimana') ||
-                                  lowerTranscript.includes('giorno della settimana è') ||
-                                  lowerTranscript.includes('dimmi che giorno della settimana');
+        const isDayOfWeekRequest = temporalIntent?.domain === 'giorno_settimana' ||
+                                  lowerTranscript.includes('che giorno della settimana') ||
+                                  lowerTranscript.includes('giorno della settimana è');
         
         // ROUTING RICHIESTE TEMPORALI - gestione locale con data corretta
         if (isWeekRequest) {
