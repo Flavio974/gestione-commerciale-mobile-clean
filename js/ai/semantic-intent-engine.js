@@ -48,12 +48,12 @@ class SemanticIntentEngine {
                 context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno', 'ieri', 'era', 'dopo domani', 'altro ieri', 'ieri l\'altro']
             },
             data_corrente: {
-                keywords: ['che data è oggi', 'data di oggi', 'data corrente', 'in che data siamo', 'che giorno è oggi', 'dimmi che data è oggi', 'che data è'],
+                keywords: ['che data è oggi', 'data di oggi', 'data corrente', 'in che data siamo', 'che giorno è oggi', 'dimmi che data è oggi', 'che data è', 'che data abbiamo'],
                 synonyms: ['data attuale', 'oggi che data', 'che data abbiamo oggi', 'dimmi che data è'],
                 context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora', 'siamo', 'abbiamo', 'è']
             },
             data_temporale: {
-                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi', 'che data sarà domani', 'che data sarà dopo domani', 'tra un giorno', 'tra una settimana', 'tra un mese', 'tra due giorni', 'tra tre giorni', 'settimana prossima', 'mese prossimo', 'anno prossimo', 'settimana scorsa', 'mese scorso', 'anno scorso', 'fra poco', 'tra poco', 'a breve', 'stamattina', 'stasera', 'stanotte', 'domani che data avremo', 'che data avremo domani', 'ma domani che data avremo'],
+                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi', 'che data sarà domani', 'che data sarà dopo domani', 'che data avremo dopodomani', 'che data avremo dopo domani', 'tra un giorno', 'tra una settimana', 'tra un mese', 'tra due giorni', 'tra tre giorni', 'settimana prossima', 'mese prossimo', 'anno prossimo', 'settimana scorsa', 'mese scorso', 'anno scorso', 'fra poco', 'tra poco', 'a breve', 'stamattina', 'stasera', 'stanotte', 'domani che data avremo', 'che data avremo domani', 'ma domani che data avremo', 'dopodomani che data sarà', 'tra due giorni che data avremo'],
                 synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data', 'tra un giorno', 'tra una settimana', 'tra un mese', 'fra giorni', 'fra settimane', 'fra mesi', 'data domani', 'data ieri', 'la prossima settimana', 'il prossimo mese', 'il prossimo anno', 'la scorsa settimana', 'il mese scorso', 'l\'anno scorso', 'stamani', 'data avremo domani', 'avremo domani', 'data di domani'],
                 context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data', 'tra', 'fra', 'giorni', 'settimane', 'mesi', 'anni', 'ore', 'minuti', 'un', 'una', 'due', 'tre', 'quattro', 'cinque', 'prossima', 'prossimo', 'scorsa', 'scorso', 'poco', 'breve', 'mattina', 'sera', 'notte', 'ma']
             }
@@ -258,8 +258,10 @@ class SemanticIntentEngine {
             return 1.0; // Massima confidenza per richieste temporali con marker
         }
         
-        // Se NON ha marker temporali e contiene "che data è", forza data_corrente
-        const isGenericDataQuestion = fullText.includes('che data è') && !hasTemporalMarkers;
+        // Se NON ha marker temporali e contiene SOLO "che data è", forza data_corrente
+        const isGenericDataQuestion = fullText.includes('che data è') && !hasTemporalMarkers &&
+                                     !fullText.includes('sarà') && !fullText.includes('avremo') &&
+                                     !fullText.includes('era') && !fullText.includes('avevamo');
         if (isGenericDataQuestion && temporalMatches.length > 0 && temporalMatches[0].domain === 'data_corrente') {
             return 1.0; // Massima confidenza per data corrente generica
         }
