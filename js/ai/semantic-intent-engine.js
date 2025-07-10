@@ -53,9 +53,9 @@ class SemanticIntentEngine {
                 context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora', 'siamo']
             },
             data_temporale: {
-                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri'],
-                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data'],
-                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data']
+                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi'],
+                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data', 'tra un giorno', 'tra una settimana', 'tra un mese'],
+                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data', 'tra', 'giorni', 'settimane', 'mesi']
             }
         };
 
@@ -311,6 +311,15 @@ class SemanticIntentEngine {
             'che data era l\'altro ieri',
             'che data avevamo l\'altro ieri',
             'l\'altro ieri che data era',
+            // NUOVI TEST per "tra X giorni/settimane/mesi"
+            'che data avremo tra 7 giorni',
+            'che data sarà tra 3 giorni',
+            'tra 5 giorni che data sarà',
+            'che data avremo tra 2 settimane',
+            'tra una settimana che data sarà',
+            'che data avremo tra 3 mesi',
+            'tra un mese che data sarà',
+            'tra 10 giorni',
             'ciao come stai',  // Dovrebbe fallire
             'ordini del cliente'  // Dovrebbe fallire
         ];

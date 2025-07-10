@@ -2094,7 +2094,8 @@ class AIVoiceManagerV2 {
                                      lowerTranscript.includes('data di dopodomani') ||
                                      lowerTranscript.includes('data di dopo domani') ||
                                      lowerTranscript.includes('data di ieri') ||
-                                     lowerTranscript.includes('dimmi la data di');
+                                     lowerTranscript.includes('dimmi la data di') ||
+                                     /tra\s+(\d+)\s+(giorni?|settimane?|mesi?)/i.test(lowerTranscript);
         
         if (isDateRequest) {
             console.log('📅 Richiesta data corrente - gestisco localmente');
@@ -2116,8 +2117,25 @@ class AIVoiceManagerV2 {
         let targetDate = new Date(now);
         let dayModifier = 'oggi';
         
+        // NUOVO: Gestione pattern "tra X giorni/settimane/mesi"
+        const relativeMatch = lowerTranscript.match(/tra\s+(\d+)\s+(giorni?|settimane?|mesi?)/i);
+        if (relativeMatch) {
+            const amount = parseInt(relativeMatch[1]);
+            const unit = relativeMatch[2].toLowerCase();
+            
+            if (unit.startsWith('giorno') || unit.startsWith('giorni')) {
+                targetDate.setDate(now.getDate() + amount);
+                dayModifier = `tra ${amount} ${amount === 1 ? 'giorno' : 'giorni'}`;
+            } else if (unit.startsWith('settimana') || unit.startsWith('settimane')) {
+                targetDate.setDate(now.getDate() + (amount * 7));
+                dayModifier = `tra ${amount} ${amount === 1 ? 'settimana' : 'settimane'}`;
+            } else if (unit.startsWith('mese') || unit.startsWith('mesi')) {
+                targetDate.setMonth(now.getMonth() + amount);
+                dayModifier = `tra ${amount} ${amount === 1 ? 'mese' : 'mesi'}`;
+            }
+        }
         // Determina il giorno target - ORDINE IMPORTANTE: controlla prima le parole più lunghe!
-        if (lowerTranscript.includes('dopodomani') || lowerTranscript.includes('dopo domani')) {
+        else if (lowerTranscript.includes('dopodomani') || lowerTranscript.includes('dopo domani')) {
             targetDate.setDate(now.getDate() + 2);
             dayModifier = 'dopodomani';
         } else if (lowerTranscript.includes('domani')) {
@@ -2157,7 +2175,7 @@ class AIVoiceManagerV2 {
         
         // Determina il verbo da usare
         let verb = 'è';
-        if (lowerTranscript.includes('sarà') || lowerTranscript.includes('avremo')) {
+        if (lowerTranscript.includes('sarà') || lowerTranscript.includes('avremo') || relativeMatch) {
             verb = 'sarà';
         } else if (lowerTranscript.includes('era') || lowerTranscript.includes('avevamo')) {
             verb = 'era';
@@ -2167,6 +2185,7 @@ class AIVoiceManagerV2 {
         
         console.log('📅 DEBUG DATE TEMPORAL INFO:');
         console.log('   - Transcript:', transcript);
+        console.log('   - Relative match:', relativeMatch);
         console.log('   - Day modifier:', dayModifier);
         console.log('   - Target date:', targetDate);
         console.log('   - Response:', response);
