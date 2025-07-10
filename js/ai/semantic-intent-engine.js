@@ -281,15 +281,33 @@ window.SemanticIntentEngine = SemanticIntentEngine;
 
 // Auto-inizializzazione per test immediato
 document.addEventListener('DOMContentLoaded', () => {
-    window.semanticEngine = new SemanticIntentEngine();
-    
-    // Test automatico se in modalità debug
-    if (localStorage.getItem('debug_semantic') === 'true') {
-        window.semanticEngine.runTests();
+    try {
+        if (!window.semanticEngine) {
+            window.semanticEngine = new SemanticIntentEngine();
+        }
+        
+        // Test automatico se in modalità debug
+        if (localStorage.getItem('debug_semantic') === 'true') {
+            window.semanticEngine.runTests();
+        }
+        
+        console.log('✅ SemanticIntentEngine disponibile globalmente come window.semanticEngine');
+        console.log('🧪 Per testare: window.semanticEngine.runTests()');
+    } catch (error) {
+        console.error('❌ Errore inizializzazione SemanticIntentEngine:', error);
     }
-    
-    console.log('✅ SemanticIntentEngine disponibile globalmente come window.semanticEngine');
-    console.log('🧪 Per testare: window.semanticEngine.runTests()');
 });
 
-export default SemanticIntentEngine;
+// Inizializzazione manuale di fallback
+window.initSemanticEngine = function() {
+    try {
+        if (!window.semanticEngine) {
+            window.semanticEngine = new SemanticIntentEngine();
+            console.log('✅ SemanticIntentEngine inizializzato manualmente');
+        }
+        return window.semanticEngine;
+    } catch (error) {
+        console.error('❌ Errore inizializzazione manuale SemanticIntentEngine:', error);
+        return null;
+    }
+};
