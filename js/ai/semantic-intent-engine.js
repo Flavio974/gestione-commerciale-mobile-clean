@@ -45,7 +45,7 @@ class SemanticIntentEngine {
             giorno_settimana: {
                 keywords: ['giorno della settimana', 'giorno settimana'],
                 synonyms: ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica'],
-                context: ['oggi', 'corrente', 'questo']
+                context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno']
             }
         };
 
@@ -55,7 +55,7 @@ class SemanticIntentEngine {
             locative: ['in che', 'nel', 'nella', 'dentro', 'all\'interno'],
             request: ['dimmi', 'dicci', 'spiegami', 'voglio sapere', 'mi serve', 'ho bisogno'],
             state: ['siamo', 'sono', 'è', 'ci troviamo', 'stiamo'],
-            time_modifiers: ['adesso', 'ora', 'attualmente', 'in questo momento', 'oggi', 'corrente', 'attuale'],
+            time_modifiers: ['adesso', 'ora', 'attualmente', 'in questo momento', 'oggi', 'corrente', 'attuale', 'domani', 'ieri'],
             direct_request: ['per favore', 'per cortesia', 'grazie', 'prego', 'per piacere']
         };
 
@@ -277,6 +277,8 @@ class SemanticIntentEngine {
             'settimana numero 5',
             'mese attuale grazie',
             'semestre corrente prego',
+            'domani che giorno della settimana sarà',
+            'che giorno sarà domani',
             'ciao come stai',  // Dovrebbe fallire
             'ordini del cliente'  // Dovrebbe fallire
         ];

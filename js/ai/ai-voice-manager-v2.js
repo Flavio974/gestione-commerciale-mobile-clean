@@ -1858,10 +1858,18 @@ class AIVoiceManagerV2 {
         
         const isDayOfWeekRequest = temporalIntent?.domain === 'giorno_settimana' ||
                                   lowerTranscript.includes('che giorno della settimana') ||
-                                  lowerTranscript.includes('giorno della settimana è');
+                                  lowerTranscript.includes('giorno della settimana è') ||
+                                  lowerTranscript.includes('giorno della settimana sarà') ||
+                                  lowerTranscript.includes('domani che giorno') ||
+                                  lowerTranscript.includes('che giorno sarà');
         
         // ROUTING RICHIESTE TEMPORALI - gestione locale con data corretta
-        if (isWeekRequest) {
+        // IMPORTANTE: Controlla prima il giorno della settimana per evitare conflitti con settimana dell'anno
+        if (isDayOfWeekRequest) {
+            console.log('📅 Richiesta giorno settimana rilevata - gestisco localmente');
+            this.provideDayOfWeekInfo(transcript);
+            return;
+        } else if (isWeekRequest) {
             console.log('🗓️ Richiesta settimana rilevata - gestisco localmente');
             this.provideWeekInfo();
             return;
@@ -1888,10 +1896,6 @@ class AIVoiceManagerV2 {
         } else if (isSeasonRequest) {
             console.log('🌸 Richiesta stagione rilevata - gestisco localmente');
             this.provideSeasonInfo();
-            return;
-        } else if (isDayOfWeekRequest) {
-            console.log('📅 Richiesta giorno settimana rilevata - gestisco localmente');
-            this.provideDayOfWeekInfo();
             return;
         } else {
             // Solo per richieste data/ora semplici, gestisci localmente
@@ -2190,16 +2194,32 @@ class AIVoiceManagerV2 {
     }
     
     /**
-     * Fornisce informazioni sul giorno della settimana corrente
+     * Fornisce informazioni sul giorno della settimana corrente o futuro
      */
-    provideDayOfWeekInfo() {
-        const now = new Date();
+    provideDayOfWeekInfo(transcript = '') {
         const dayNames = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-        const dayName = dayNames[now.getDay()];
         
-        const response = `Oggi è ${dayName}`;
+        // Controlla se si chiede informazioni su domani
+        const lowerTranscript = transcript.toLowerCase();
+        const isAboutTomorrow = lowerTranscript.includes('domani') || lowerTranscript.includes('sarà');
         
-        console.log('📅 DEBUG DAY OF WEEK INFO: Giorno', dayName);
+        let response;
+        let debugInfo;
+        
+        if (isAboutTomorrow) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowDayName = dayNames[tomorrow.getDay()];
+            response = `Domani sarà ${tomorrowDayName}`;
+            debugInfo = `Domani: ${tomorrowDayName}`;
+        } else {
+            const now = new Date();
+            const todayDayName = dayNames[now.getDay()];
+            response = `Oggi è ${todayDayName}`;
+            debugInfo = `Oggi: ${todayDayName}`;
+        }
+        
+        console.log('📅 DEBUG DAY OF WEEK INFO:', debugInfo);
         this.speak(response);
     }
 
