@@ -1823,10 +1823,23 @@ class AIVoiceManagerV2 {
                              lowerTranscript.includes('settimana dell\'anno') ||
                              lowerTranscript.includes('settimana siamo');
         
+        // RICHIESTE MESE - gestisci localmente per data corretta
+        const isMonthRequest = lowerTranscript.includes('che mese') || 
+                              lowerTranscript.includes('in che mese') ||
+                              lowerTranscript.includes('mese siamo') ||
+                              lowerTranscript.includes('dimmi il mese') ||
+                              lowerTranscript.includes('voglio sapere in che mese') ||
+                              lowerTranscript.includes('mese corrente') ||
+                              lowerTranscript.includes('mese attuale');
+        
         // Se è una richiesta di settimana, gestisci localmente con data corretta
         if (isWeekRequest) {
             console.log('🗓️ Richiesta settimana rilevata - gestisco localmente con data corretta');
             this.provideWeekInfo();
+            return;
+        } else if (isMonthRequest) {
+            console.log('📅 Richiesta mese rilevata - gestisco localmente con data corretta');
+            this.provideMonthInfo();
             return;
         } else {
             // Solo per richieste data/ora semplici, gestisci localmente
@@ -2008,6 +2021,32 @@ class AIVoiceManagerV2 {
         console.log('   - Data corrente:', now.toString());
         console.log('   - Anno:', now.getFullYear());
         console.log('   - Settimana calcolata:', weekNumber);
+        console.log('   - Risposta finale:', response);
+        
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce informazioni sul mese corrente
+     */
+    provideMonthInfo() {
+        const now = new Date();
+        const monthNames = [
+            'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+            'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
+        ];
+        
+        const monthNumber = now.getMonth() + 1; // 0-indexed, quindi +1
+        const monthName = monthNames[now.getMonth()];
+        const year = now.getFullYear();
+        
+        const response = `Siamo nel mese di ${monthName}, il ${monthNumber}° mese dell'anno ${year}`;
+        
+        console.log('📅 DEBUG MONTH INFO:');
+        console.log('   - Data corrente:', now.toString());
+        console.log('   - Mese numero:', monthNumber);
+        console.log('   - Nome mese:', monthName);
+        console.log('   - Anno:', year);
         console.log('   - Risposta finale:', response);
         
         this.speak(response);
