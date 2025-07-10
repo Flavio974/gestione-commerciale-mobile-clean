@@ -2078,7 +2078,11 @@ class AIVoiceManagerV2 {
                              lowerTranscript.includes('che data è') ||
                              lowerTranscript.includes('data di oggi') ||
                              lowerTranscript.includes('data corrente') ||
-                             lowerTranscript.includes('in che data siamo');
+                             lowerTranscript.includes('in che data siamo') ||
+                             lowerTranscript.includes('che data abbiamo') ||
+                             lowerTranscript.includes('che data è oggi') ||
+                             lowerTranscript.includes('dimmi che data è') ||
+                             lowerTranscript.includes('dimmi la data');
         
         const isDateTemporalRequest = temporalIntent?.domain === 'data_temporale' ||
                                      lowerTranscript.includes('che data sarà') ||
@@ -2095,7 +2099,7 @@ class AIVoiceManagerV2 {
                                      lowerTranscript.includes('data di dopo domani') ||
                                      lowerTranscript.includes('data di ieri') ||
                                      lowerTranscript.includes('dimmi la data di') ||
-                                     /tra\s+(\d+)\s+(giorni?|settimane?|mesi?)/i.test(lowerTranscript);
+                                     /(tra|fra)\s+(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese)/i.test(lowerTranscript);
         
         if (isDateRequest) {
             console.log('📅 Richiesta data corrente - gestisco localmente');
@@ -2117,19 +2121,27 @@ class AIVoiceManagerV2 {
         let targetDate = new Date(now);
         let dayModifier = 'oggi';
         
-        // NUOVO: Gestione pattern "tra X giorni/settimane/mesi"
-        const relativeMatch = lowerTranscript.match(/tra\s+(\d+)\s+(giorni?|settimane?|mesi?)/i);
+        // NUOVO: Gestione pattern "tra/fra X giorni/settimane/mesi" (numeri e parole)
+        const relativeMatch = lowerTranscript.match(/(tra|fra)\s+(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese)/i);
         if (relativeMatch) {
-            const amount = parseInt(relativeMatch[1]);
-            const unit = relativeMatch[2].toLowerCase();
+            // Converte numeri scritti in lettere
+            const numberMap = {
+                'un': 1, 'una': 1, 'due': 2, 'tre': 3, 'quattro': 4, 'cinque': 5,
+                'sei': 6, 'sette': 7, 'otto': 8, 'nove': 9, 'dieci': 10
+            };
             
-            if (unit.startsWith('giorno') || unit.startsWith('giorni')) {
+            const preposition = relativeMatch[1]; // "tra" o "fra"
+            const amountStr = relativeMatch[2].toLowerCase();
+            const amount = isNaN(amountStr) ? numberMap[amountStr] : parseInt(amountStr);
+            const unit = relativeMatch[3].toLowerCase();
+            
+            if (unit.startsWith('giorno') || unit === 'giorni') {
                 targetDate.setDate(now.getDate() + amount);
                 dayModifier = `tra ${amount} ${amount === 1 ? 'giorno' : 'giorni'}`;
-            } else if (unit.startsWith('settimana') || unit.startsWith('settimane')) {
+            } else if (unit.startsWith('settimana') || unit === 'settimane') {
                 targetDate.setDate(now.getDate() + (amount * 7));
                 dayModifier = `tra ${amount} ${amount === 1 ? 'settimana' : 'settimane'}`;
-            } else if (unit.startsWith('mese') || unit.startsWith('mesi')) {
+            } else if (unit.startsWith('mese') || unit === 'mesi') {
                 targetDate.setMonth(now.getMonth() + amount);
                 dayModifier = `tra ${amount} ${amount === 1 ? 'mese' : 'mesi'}`;
             }

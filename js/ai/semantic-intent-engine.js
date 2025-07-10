@@ -48,14 +48,14 @@ class SemanticIntentEngine {
                 context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno', 'ieri', 'era', 'dopo domani', 'altro ieri', 'ieri l\'altro']
             },
             data_corrente: {
-                keywords: ['che data è', 'data di oggi', 'data corrente', 'in che data siamo'],
-                synonyms: ['che data', 'data attuale', 'oggi che data'],
-                context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora', 'siamo']
+                keywords: ['che data è', 'data di oggi', 'data corrente', 'in che data siamo', 'che data è oggi', 'che giorno è oggi', 'dimmi che data è'],
+                synonyms: ['che data', 'data attuale', 'oggi che data', 'che data abbiamo', 'che data', 'dimmi la data'],
+                context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora', 'siamo', 'abbiamo', 'è', 'dimmi']
             },
             data_temporale: {
-                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi'],
-                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data', 'tra un giorno', 'tra una settimana', 'tra un mese'],
-                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data', 'tra', 'giorni', 'settimane', 'mesi']
+                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi', 'che data sarà domani', 'che data sarà dopo domani', 'tra un giorno', 'tra una settimana', 'tra un mese', 'tra due giorni', 'tra tre giorni'],
+                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data', 'tra un giorno', 'tra una settimana', 'tra un mese', 'fra giorni', 'fra settimane', 'fra mesi', 'data domani', 'data ieri'],
+                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data', 'tra', 'fra', 'giorni', 'settimane', 'mesi', 'un', 'una', 'due', 'tre']
             }
         };
 
@@ -216,12 +216,12 @@ class SemanticIntentEngine {
         
         // Base: presenza di dominio temporale
         if (temporalMatches.length > 0) {
-            confidence += temporalMatches[0].confidence * 0.6;
+            confidence += temporalMatches[0].confidence * 0.7; // Aumentato da 0.6 a 0.7
         }
         
         // Bonus: presenza di pattern interrogativo
         if (questionIntent.detected) {
-            confidence += questionIntent.confidence * 0.3;
+            confidence += questionIntent.confidence * 0.2; // Ridotto da 0.3 a 0.2
         }
         
         // Bonus speciale: richieste dirette con time_modifiers o direct_request
@@ -229,18 +229,24 @@ class SemanticIntentEngine {
         const hasDirectRequest = this.questionPatterns.direct_request.some(req => fullText.includes(req));
         
         if (hasTimeModifier || hasDirectRequest) {
-            confidence += 0.2; // Bonus extra per richieste dirette temporali
+            confidence += 0.15; // Ridotto da 0.2 a 0.15
+        }
+        
+        // Bonus per pattern "tra/fra X tempo"
+        const hasRelativePattern = /(tra|fra)\s+(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese)/i.test(fullText);
+        if (hasRelativePattern) {
+            confidence += 0.2; // Bonus per pattern relativi
         }
         
         // Bonus: lunghezza appropriata (evita match accidentali)
         const wordCount = fullText.split(' ').length;
-        if (wordCount >= 2 && wordCount <= 10) {
-            confidence += 0.1;
+        if (wordCount >= 2 && wordCount <= 15) { // Esteso da 10 a 15 parole
+            confidence += 0.05; // Ridotto da 0.1 a 0.05
         }
         
-        // Penalty: testo troppo generico
-        if (fullText.length < 5) {
-            confidence *= 0.5;
+        // Penalty ridotta: testo troppo generico
+        if (fullText.length < 3) { // Ridotto da 5 a 3
+            confidence *= 0.7; // Meno penalizzante (era 0.5)
         }
         
         return Math.min(confidence, 1.0);
@@ -320,6 +326,17 @@ class SemanticIntentEngine {
             'che data avremo tra 3 mesi',
             'tra un mese che data sarà',
             'tra 10 giorni',
+            // NUOVI TEST per verificare fix pattern
+            'che data è',
+            'dimmi che data è',
+            'che data sarà domani',
+            'che data abbiamo oggi',
+            'che data abbiamo',
+            'fra un mese che data sarà',
+            'fra 15 giorni',
+            'fra una settimana',
+            'tra due settimane',
+            'tra tre mesi',
             'ciao come stai',  // Dovrebbe fallire
             'ordini del cliente'  // Dovrebbe fallire
         ];
