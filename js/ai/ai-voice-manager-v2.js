@@ -1815,16 +1815,19 @@ class AIVoiceManagerV2 {
         // Controlla se è una richiesta di data/ora SEMPLICE (non settimane)
         const lowerTranscript = transcript.toLowerCase();
         
-        // IMPORTANTE: Le richieste di settimana devono andare all'AI, non essere gestite localmente
+        // IMPORTANTE: Le richieste di settimana devono essere gestite LOCALMENTE per avere la data corretta
         const isWeekRequest = lowerTranscript.includes('settimana') || 
                              lowerTranscript.includes('week') ||
                              lowerTranscript.includes('che settimana') ||
-                             lowerTranscript.includes('numero settimana');
+                             lowerTranscript.includes('numero settimana') ||
+                             lowerTranscript.includes('settimana dell\'anno') ||
+                             lowerTranscript.includes('settimana siamo');
         
-        // Se è una richiesta di settimana, lascia che vada all'AI
+        // Se è una richiesta di settimana, gestisci localmente con data corretta
         if (isWeekRequest) {
-            console.log('🗓️ Richiesta settimana rilevata - invio all\'AI Assistant');
-            // Non fare return, continua al processing AI
+            console.log('🗓️ Richiesta settimana rilevata - gestisco localmente con data corretta');
+            this.provideWeekInfo();
+            return;
         } else {
             // Solo per richieste data/ora semplici, gestisci localmente
             
@@ -1984,6 +1987,30 @@ class AIVoiceManagerV2 {
     provideDateTimeInfo() {
         // Fallback alla funzione data-prima-ora per compatibilità
         this.provideDateFirstThenTime();
+    }
+    
+    /**
+     * Fornisce informazioni sulla settimana dell'anno corrente
+     */
+    provideWeekInfo() {
+        const now = new Date();
+        
+        // Calcolo settimana ISO 8601 (stesso algoritmo del sistema)
+        const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const weekNumber = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        
+        const response = `Siamo nella settimana ${weekNumber} dell'anno ${now.getFullYear()}`;
+        
+        console.log('🗓️ DEBUG WEEK INFO:');
+        console.log('   - Data corrente:', now.toString());
+        console.log('   - Anno:', now.getFullYear());
+        console.log('   - Settimana calcolata:', weekNumber);
+        console.log('   - Risposta finale:', response);
+        
+        this.speak(response);
     }
 
     async speak(text) {
