@@ -1877,11 +1877,28 @@ class AIVoiceManagerV2 {
                              lowerTranscript.includes('data di oggi') ||
                              lowerTranscript.includes('data corrente');
         
+        const isDateTemporalRequest = temporalIntent?.domain === 'data_temporale' ||
+                                     lowerTranscript.includes('che data sarà') ||
+                                     lowerTranscript.includes('che data avremo') ||
+                                     lowerTranscript.includes('che data era') ||
+                                     lowerTranscript.includes('che data avevamo') ||
+                                     lowerTranscript.includes('domani che data') ||
+                                     lowerTranscript.includes('ieri che data') ||
+                                     lowerTranscript.includes('dopo domani che data') ||
+                                     lowerTranscript.includes('altro ieri che data') ||
+                                     lowerTranscript.includes('data di domani') ||
+                                     lowerTranscript.includes('data di ieri') ||
+                                     lowerTranscript.includes('dimmi la data di');
+        
         // ROUTING RICHIESTE TEMPORALI - gestione locale con data corretta
         // IMPORTANTE: Controlla prima "che data è" per evitare conflitti con middleware business
         if (isDateRequest) {
             console.log('📅 Richiesta data corrente rilevata - gestisco localmente');
             this.provideDateInfo();
+            return;
+        } else if (isDateTemporalRequest) {
+            console.log('📅 Richiesta data temporale rilevata - gestisco localmente');
+            this.provideDateTemporalInfo(transcript);
             return;
         } else if (isDayOfWeekRequest) {
             console.log('📅 Richiesta giorno settimana rilevata - gestisco localmente');
@@ -2031,6 +2048,119 @@ class AIVoiceManagerV2 {
         console.log('   - Locale String:', now.toLocaleString('it-IT'));
         console.log('   - Timezone Offset:', now.getTimezoneOffset());
         console.log('   - Final response:', response);
+        
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce informazioni sulla data con modificatori temporali (domani, ieri, ecc.)
+     */
+    /**
+     * Funzione pubblica per gestire richieste temporali da altri sistemi
+     */
+    handleTemporalRequest(transcript) {
+        console.log('🎯 AIVoiceManagerV2.handleTemporalRequest chiamato per:', transcript);
+        
+        // Usa il sistema semantico per riconoscere intent temporali
+        let temporalIntent = null;
+        if (window.semanticEngine) {
+            temporalIntent = window.semanticEngine.getBestTemporalMatch(transcript);
+            console.log('🧠 SEMANTIC INTENT:', temporalIntent);
+        }
+        
+        const lowerTranscript = transcript.toLowerCase();
+        
+        // Verifica quale tipo di richiesta temporale è
+        const isDateRequest = temporalIntent?.domain === 'data_corrente' ||
+                             lowerTranscript.includes('che data è') ||
+                             lowerTranscript.includes('data di oggi') ||
+                             lowerTranscript.includes('data corrente') ||
+                             lowerTranscript.includes('in che data siamo');
+        
+        const isDateTemporalRequest = temporalIntent?.domain === 'data_temporale' ||
+                                     lowerTranscript.includes('che data sarà') ||
+                                     lowerTranscript.includes('che data avremo') ||
+                                     lowerTranscript.includes('che data era') ||
+                                     lowerTranscript.includes('che data avevamo') ||
+                                     lowerTranscript.includes('domani che data') ||
+                                     lowerTranscript.includes('ieri che data') ||
+                                     lowerTranscript.includes('dopo domani che data') ||
+                                     lowerTranscript.includes('altro ieri che data') ||
+                                     lowerTranscript.includes('data di domani') ||
+                                     lowerTranscript.includes('data di ieri') ||
+                                     lowerTranscript.includes('dimmi la data di');
+        
+        if (isDateRequest) {
+            console.log('📅 Richiesta data corrente - gestisco localmente');
+            this.provideDateInfo();
+            return true;
+        } else if (isDateTemporalRequest) {
+            console.log('📅 Richiesta data temporale - gestisco localmente');
+            this.provideDateTemporalInfo(transcript);
+            return true;
+        }
+        
+        console.log('❌ Richiesta non riconosciuta come temporale');
+        return false;
+    }
+
+    provideDateTemporalInfo(transcript) {
+        const lowerTranscript = transcript.toLowerCase();
+        const now = new Date();
+        let targetDate = new Date(now);
+        let dayModifier = 'oggi';
+        
+        // Determina il giorno target
+        if (lowerTranscript.includes('domani')) {
+            targetDate.setDate(now.getDate() + 1);
+            dayModifier = 'domani';
+        } else if (lowerTranscript.includes('dopo domani')) {
+            targetDate.setDate(now.getDate() + 2);
+            dayModifier = 'dopodomani';
+        } else if (lowerTranscript.includes('ieri')) {
+            if (lowerTranscript.includes('altro ieri') || lowerTranscript.includes('ieri l\'altro')) {
+                targetDate.setDate(now.getDate() - 2);
+                dayModifier = 'l\'altro ieri';
+            } else {
+                targetDate.setDate(now.getDate() - 1);
+                dayModifier = 'ieri';
+            }
+        }
+        
+        // Gestione pattern "dimmi la data di"
+        if (lowerTranscript.includes('dimmi la data di')) {
+            if (lowerTranscript.includes('dimmi la data di domani')) {
+                targetDate.setDate(now.getDate() + 1);
+                dayModifier = 'domani';
+            } else if (lowerTranscript.includes('dimmi la data di ieri')) {
+                targetDate.setDate(now.getDate() - 1);
+                dayModifier = 'ieri';
+            }
+        }
+        
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        const dateString = targetDate.toLocaleDateString('it-IT', options);
+        
+        // Determina il verbo da usare
+        let verb = 'è';
+        if (lowerTranscript.includes('sarà') || lowerTranscript.includes('avremo')) {
+            verb = 'sarà';
+        } else if (lowerTranscript.includes('era') || lowerTranscript.includes('avevamo')) {
+            verb = 'era';
+        }
+        
+        const response = `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} ${verb} ${dateString}`;
+        
+        console.log('📅 DEBUG DATE TEMPORAL INFO:');
+        console.log('   - Transcript:', transcript);
+        console.log('   - Day modifier:', dayModifier);
+        console.log('   - Target date:', targetDate);
+        console.log('   - Response:', response);
         
         this.speak(response);
     }

@@ -125,6 +125,15 @@ class EnhancedAIAssistant {
                 }
             }
             
+            // ULTIMA VERIFICA: Controlla se è una richiesta temporale che deve essere gestita dal voice manager
+            if (isVoiceInput && window.aiVoiceManagerV2) {
+                const handled = window.aiVoiceManagerV2.handleTemporalRequest(message);
+                if (handled) {
+                    console.log('✅ ENHANCED: Richiesta temporale gestita dal AIVoiceManagerV2');
+                    return; // Non continuare con l'AI
+                }
+            }
+            
             // Fallback all'AI originale se middleware non gestisce
             console.log('🔄 ENHANCED: Fallback a FlavioAIAssistant originale...');
             
