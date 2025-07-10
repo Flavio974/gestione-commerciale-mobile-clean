@@ -295,11 +295,13 @@ class RequestMiddleware {
         const inputLower = input.toLowerCase();
         console.log('🔍 CLASSIFY REQUEST:', input, 'lowercase:', inputLower);
         
-        // CONTROLLO ULTRA-PRIORITARIO: Qualsiasi richiesta di numero settimana (deve essere PRIMO)
-        if (/(?:dammi|dimmi|voglio)\s+.*(?:numero|n\.?).*settimana/i.test(input) ||
-            /(?:numero|n\.?)\s+.*settimana/i.test(input) ||
-            /settimana\s+numero/i.test(input)) {
-            console.log('🎯 MATCH ULTRA-PRIORITARIO: Numero settimana generico');
+        // CONTROLLO ULTRA-PRIORITARIO: Richieste specifiche di SOLO numero settimana (deve essere PRIMO)
+        if (/(?:dammi\s+solo|solo)\s+.*(?:numero|n\.?).*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input) ||
+            /(?:dammi\s+solo|solo)\s+.*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input) ||
+            /(?:dammi|dimmi|voglio)\s+(?:solo\s+)?(?:il\s+)?numero\s+(?:della\s+)?settimana(?:\s+corrente|\s+attuale|\s+odierna)?$/i.test(input) ||
+            /^numero\s+(?:della\s+)?settimana$/i.test(input) ||
+            /^settimana\s+numero$/i.test(input)) {
+            console.log('🎯 MATCH ULTRA-PRIORITARIO: Solo numero settimana specifico');
             return 'solo_numero_settimana';
         }
         
