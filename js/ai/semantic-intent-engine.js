@@ -46,6 +46,11 @@ class SemanticIntentEngine {
                 keywords: ['giorno della settimana', 'giorno settimana'],
                 synonyms: ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica'],
                 context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno', 'ieri', 'era', 'dopo domani', 'altro ieri', 'ieri l\'altro']
+            },
+            data_corrente: {
+                keywords: ['che data è', 'data di oggi', 'data corrente'],
+                synonyms: ['che data', 'data attuale', 'oggi che data'],
+                context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora']
             }
         };
 
@@ -53,7 +58,7 @@ class SemanticIntentEngine {
         this.questionPatterns = {
             interrogative: ['che', 'quale', 'quali', 'cosa', 'come', 'quando'],
             locative: ['in che', 'nel', 'nella', 'dentro', 'all\'interno'],
-            request: ['dimmi', 'dicci', 'spiegami', 'voglio sapere', 'mi serve', 'ho bisogno'],
+            request: ['dimmi', 'dicci', 'spiegami', 'voglio sapere', 'mi serve', 'ho bisogno', 'che data è', 'che data è oggi'],
             state: ['siamo', 'sono', 'è', 'ci troviamo', 'stiamo'],
             time_modifiers: ['adesso', 'ora', 'attualmente', 'in questo momento', 'oggi', 'corrente', 'attuale', 'domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro'],
             direct_request: ['per favore', 'per cortesia', 'grazie', 'prego', 'per piacere']
@@ -285,6 +290,10 @@ class SemanticIntentEngine {
             'che giorno era ieri',
             'altro ieri che giorno era',
             'ieri l\'altro che giorno era',
+            'che data è',
+            'che data è oggi',
+            'data di oggi',
+            'dimmi che data è',
             'ciao come stai',  // Dovrebbe fallire
             'ordini del cliente'  // Dovrebbe fallire
         ];

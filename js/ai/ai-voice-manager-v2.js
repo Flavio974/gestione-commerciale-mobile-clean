@@ -1872,9 +1872,18 @@ class AIVoiceManagerV2 {
                                   lowerTranscript.includes('altro ieri') ||
                                   lowerTranscript.includes('ieri l\'altro');
         
+        const isDateRequest = temporalIntent?.domain === 'data_corrente' ||
+                             lowerTranscript.includes('che data è') ||
+                             lowerTranscript.includes('data di oggi') ||
+                             lowerTranscript.includes('data corrente');
+        
         // ROUTING RICHIESTE TEMPORALI - gestione locale con data corretta
-        // IMPORTANTE: Controlla prima il giorno della settimana per evitare conflitti con settimana dell'anno
-        if (isDayOfWeekRequest) {
+        // IMPORTANTE: Controlla prima "che data è" per evitare conflitti con middleware business
+        if (isDateRequest) {
+            console.log('📅 Richiesta data corrente rilevata - gestisco localmente');
+            this.provideDateInfo();
+            return;
+        } else if (isDayOfWeekRequest) {
             console.log('📅 Richiesta giorno settimana rilevata - gestisco localmente');
             this.provideDayOfWeekInfo(transcript);
             return;
@@ -1908,6 +1917,16 @@ class AIVoiceManagerV2 {
             return;
         } else {
             // Solo per richieste data/ora semplici, gestisci localmente
+            
+            // IMPORTANTE: Gestisci "che data è" come richiesta temporale PRIMA del middleware business
+            if (lowerTranscript.includes('che data è') || 
+                lowerTranscript.includes('che data è oggi') ||
+                lowerTranscript.includes('dimmi che data è') ||
+                lowerTranscript.includes('voglio sapere che data è')) {
+                console.log('📅 Richiesta data corrente rilevata - gestisco localmente');
+                this.provideDateInfo();
+                return;
+            }
             
             // Prima controlla le domande combinate (data + ora)
             if (lowerTranscript.includes('che giorno è oggi e che ore sono') || 
