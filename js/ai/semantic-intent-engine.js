@@ -49,7 +49,7 @@ class SemanticIntentEngine {
             },
             data_corrente: {
                 keywords: ['che data è oggi', 'data di oggi', 'data corrente', 'in che data siamo', 'che giorno è oggi', 'dimmi che data è oggi', 'che data è'],
-                synonyms: ['data attuale', 'oggi che data', 'che data abbiamo oggi', 'che data', 'dimmi che data'],
+                synonyms: ['data attuale', 'oggi che data', 'che data abbiamo oggi', 'dimmi che data è'],
                 context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora', 'siamo', 'abbiamo', 'è']
             },
             data_temporale: {
@@ -214,19 +214,27 @@ class SemanticIntentEngine {
     calculateConfidence(temporalMatches, questionIntent, fullText) {
         let confidence = 0;
         
-        // SPECIALE: Detecta "che data è" senza marker temporali come data_corrente
-        const isGenericDataQuestion = fullText.includes('che data è') && 
-                                     !fullText.includes('domani') && 
-                                     !fullText.includes('ieri') && 
-                                     !fullText.includes('dopodomani') && 
-                                     !fullText.includes('dopo domani') && 
-                                     !fullText.includes('altro ieri') && 
-                                     !fullText.includes('ieri l\'altro') &&
-                                     !fullText.includes('sarà') &&
-                                     !fullText.includes('avremo') &&
-                                     !fullText.includes('era') &&
-                                     !fullText.includes('avevamo');
+        // SPECIALE: Priorità per data temporale con marker temporali
+        const hasTemporalMarkers = fullText.includes('domani') || 
+                                  fullText.includes('ieri') || 
+                                  fullText.includes('dopodomani') || 
+                                  fullText.includes('dopo domani') || 
+                                  fullText.includes('altro ieri') || 
+                                  fullText.includes('ieri l\'altro') ||
+                                  fullText.includes('sarà') ||
+                                  fullText.includes('avremo') ||
+                                  fullText.includes('era') ||
+                                  fullText.includes('avevamo') ||
+                                  fullText.includes('tra') ||
+                                  fullText.includes('fra');
         
+        // Se ha marker temporali e c'è un match data_temporale, forza alta confidenza
+        if (hasTemporalMarkers && temporalMatches.length > 0 && temporalMatches[0].domain === 'data_temporale') {
+            return 1.0; // Massima confidenza per richieste temporali con marker
+        }
+        
+        // Se NON ha marker temporali e contiene "che data è", forza data_corrente
+        const isGenericDataQuestion = fullText.includes('che data è') && !hasTemporalMarkers;
         if (isGenericDataQuestion && temporalMatches.length > 0 && temporalMatches[0].domain === 'data_corrente') {
             return 1.0; // Massima confidenza per data corrente generica
         }

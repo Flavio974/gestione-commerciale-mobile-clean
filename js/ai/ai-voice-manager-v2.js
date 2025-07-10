@@ -2191,7 +2191,7 @@ class AIVoiceManagerV2 {
                 dayModifier = `tra ${amount} ${amount === 1 ? 'giorno' : 'giorni'}`;
             } else if (unit.startsWith('settimana') || unit === 'settimane') {
                 targetDate.setDate(now.getDate() + (amount * 7));
-                dayModifier = `tra ${amount} ${amount === 1 ? 'settimana' : 'settimane'}`;
+                dayModifier = `tra ${amountStr === 'una' ? 'una' : amount} ${amount === 1 ? 'settimana' : 'settimane'}`;
             } else if (unit.startsWith('mese') || unit === 'mesi') {
                 targetDate.setMonth(now.getMonth() + amount);
                 dayModifier = `tra ${amount} ${amount === 1 ? 'mese' : 'mesi'}`;
