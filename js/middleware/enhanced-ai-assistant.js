@@ -42,8 +42,14 @@ class EnhancedAIAssistant {
                     // Inizializza middleware
                     this.middleware = new RequestMiddleware(this.originalAssistant.supabaseAI);
                     
-                    // Inizializza VocabolarioMiddleware
-                    this.vocabolarioMiddleware = new VocabolarioMiddleware(this.middleware);
+                    // Inizializza ImprovedVocabolarioMiddleware se disponibile, altrimenti VocabolarioMiddleware
+                    if (typeof ImprovedVocabolarioMiddleware !== 'undefined') {
+                        console.log('🚀 Utilizzo ImprovedVocabolarioMiddleware');
+                        this.vocabolarioMiddleware = new ImprovedVocabolarioMiddleware(this.middleware);
+                    } else {
+                        console.log('📋 Utilizzo VocabolarioMiddleware standard');
+                        this.vocabolarioMiddleware = new VocabolarioMiddleware(this.middleware);
+                    }
                     
                     resolve();
                 } else {
@@ -89,6 +95,9 @@ class EnhancedAIAssistant {
                 if (middlewareResult.handled) {
                     console.log('✅ ENHANCED: VocabolarioMiddleware ha gestito la richiesta');
                     
+                    // Aggiungi indicatore sorgente
+                    middlewareResult.source = middlewareResult.source || 'APP';
+                    
                     // Gestisci risposta diretta del middleware
                     await this.handleMiddlewareResponse(middlewareResult, isVoiceInput);
                     return;
@@ -96,10 +105,22 @@ class EnhancedAIAssistant {
                     console.log('🧠 ENHANCED: VocabolarioMiddleware ha passato la richiesta all\'AI');
                     console.log('📝 ENHANCED: Motivo:', middlewareResult.reason);
                     
+                    // Se ci sono suggerimenti, mostrali
+                    if (middlewareResult.suggestions && middlewareResult.suggestions.length > 0) {
+                        console.log('💡 ENHANCED: Suggerimenti disponibili:', middlewareResult.suggestions);
+                        await this.showSuggestions(middlewareResult.suggestions);
+                    }
+                    
                     // Se è stato trovato un match ma non gestito, aggiungi contesto per l'AI
                     if (middlewareResult.matchFound) {
                         console.log('🔍 ENHANCED: Match trovato nel vocabolario, aggiungo contesto per AI');
-                        await this.addVocabularioContextToAI(message, middlewareResult);
+                        await this.addVocabolarioContextToAI(message, middlewareResult);
+                    }
+                    
+                    // Se c'è stato un errore, mostra messaggio user-friendly
+                    if (middlewareResult.error) {
+                        console.error('❌ ENHANCED: Errore nel middleware:', middlewareResult.message);
+                        this.showErrorMessage(middlewareResult.message);
                     }
                 }
             }
@@ -134,10 +155,16 @@ class EnhancedAIAssistant {
         try {
             console.log('📤 ENHANCED: Gestione risposta middleware');
             
+            // Formatta risposta con indicatore sorgente
+            let formattedResponse = middlewareResult.response;
+            if (middlewareResult.source === 'APP') {
+                formattedResponse = `${middlewareResult.response}\n\n[📱 Elaborato localmente]`;
+            }
+            
             // Aggiungi risposta alla chat
             this.originalAssistant.messages.push({ 
                 role: 'assistant', 
-                content: middlewareResult.response 
+                content: formattedResponse 
             });
             
             // Aggiorna interfaccia
@@ -148,6 +175,8 @@ class EnhancedAIAssistant {
             if (this.debugMode) {
                 console.log('📊 MIDDLEWARE DATA:', middlewareResult.data);
                 console.log('🏷️ MIDDLEWARE TYPE:', middlewareResult.type);
+                console.log('🎯 MATCH TYPE:', middlewareResult.matchType);
+                console.log('📈 CONFIDENCE:', middlewareResult.confidence);
             }
             
             // TTS se input vocale
@@ -349,27 +378,75 @@ class EnhancedAIAssistant {
     }
     
     /**
-     * Statistiche middleware
+     * Mostra suggerimenti all'utente
+     */
+    async showSuggestions(suggestions) {
+        try {
+            for (const suggestion of suggestions) {
+                if (suggestion.type === 'client_correction') {
+                    const message = `💡 Forse intendevi uno di questi clienti: ${suggestion.suggestions.join(', ')}?`;
+                    this.originalAssistant.messages.push({ 
+                        role: 'system', 
+                        content: message 
+                    });
+                } else if (suggestion.type === 'similar_commands') {
+                    const message = `💡 Comandi simili disponibili:\n${suggestion.commands.map(c => `• ${c}`).join('\n')}`;
+                    this.originalAssistant.messages.push({ 
+                        role: 'system', 
+                        content: message 
+                    });
+                }
+            }
+            this.originalAssistant.updateChat();
+        } catch (error) {
+            console.error('❌ Errore mostrando suggerimenti:', error);
+        }
+    }
+    
+    /**
+     * Mostra messaggio di errore user-friendly
+     */
+    showErrorMessage(message) {
+        try {
+            this.originalAssistant.messages.push({ 
+                role: 'system', 
+                content: `⚠️ ${message}` 
+            });
+            this.originalAssistant.updateChat();
+            this.originalAssistant.hideThinking();
+        } catch (error) {
+            console.error('❌ Errore mostrando messaggio errore:', error);
+        }
+    }
+    
+    /**
+     * Statistiche middleware avanzate
      */
     getMiddlewareStats() {
         try {
             const usage = JSON.parse(localStorage.getItem('middlewareUsage') || '[]');
-            const stats = {
+            const basicStats = {
                 totalRequests: usage.length,
                 handledByType: {},
                 averageResponseLength: 0
             };
             
             usage.forEach(u => {
-                stats.handledByType[u.type] = (stats.handledByType[u.type] || 0) + 1;
-                stats.averageResponseLength += u.responseLength;
+                basicStats.handledByType[u.type] = (basicStats.handledByType[u.type] || 0) + 1;
+                basicStats.averageResponseLength += u.responseLength;
             });
             
             if (usage.length > 0) {
-                stats.averageResponseLength = Math.round(stats.averageResponseLength / usage.length);
+                basicStats.averageResponseLength = Math.round(basicStats.averageResponseLength / usage.length);
             }
             
-            return stats;
+            // Se abbiamo ImprovedVocabolarioMiddleware, aggiungi stats avanzate
+            if (this.vocabolarioMiddleware && this.vocabolarioMiddleware.getStats) {
+                const advancedStats = this.vocabolarioMiddleware.getStats();
+                return { ...basicStats, ...advancedStats };
+            }
+            
+            return basicStats;
         } catch (error) {
             console.error('❌ Errore recupero statistiche:', error);
             return { error: error.message };
