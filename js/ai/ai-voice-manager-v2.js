@@ -1826,6 +1826,7 @@ class AIVoiceManagerV2 {
         // RICHIESTE TEMPORALI - gestisci localmente per data corretta
         const isMonthRequest = lowerTranscript.includes('che mese') || 
                               lowerTranscript.includes('in che mese') ||
+                              lowerTranscript.includes('quale mese') ||
                               lowerTranscript.includes('mese siamo') ||
                               lowerTranscript.includes('dimmi il mese') ||
                               lowerTranscript.includes('voglio sapere in che mese') ||
@@ -1834,6 +1835,7 @@ class AIVoiceManagerV2 {
         
         const isYearRequest = lowerTranscript.includes('che anno') ||
                              lowerTranscript.includes('in che anno') ||
+                             lowerTranscript.includes('quale anno') ||
                              lowerTranscript.includes('anno siamo') ||
                              lowerTranscript.includes('dimmi l\'anno') ||
                              lowerTranscript.includes('anno corrente') ||
@@ -1841,24 +1843,29 @@ class AIVoiceManagerV2 {
         
         const isQuarterRequest = lowerTranscript.includes('che trimestre') ||
                                 lowerTranscript.includes('in che trimestre') ||
+                                lowerTranscript.includes('quale trimestre') ||
                                 lowerTranscript.includes('trimestre siamo') ||
                                 lowerTranscript.includes('dimmi il trimestre') ||
-                                lowerTranscript.includes('trimestre corrente');
+                                lowerTranscript.includes('trimestre corrente') ||
+                                lowerTranscript.includes('trimestre attuale');
         
         const isQuadrimesterRequest = lowerTranscript.includes('che quadrimestre') ||
                                      lowerTranscript.includes('in che quadrimestre') ||
+                                     lowerTranscript.includes('quale quadrimestre') ||
                                      lowerTranscript.includes('quadrimestre siamo') ||
                                      lowerTranscript.includes('dimmi il quadrimestre') ||
                                      lowerTranscript.includes('quadrimestre corrente');
         
         const isSemesterRequest = lowerTranscript.includes('che semestre') ||
                                  lowerTranscript.includes('in che semestre') ||
+                                 lowerTranscript.includes('quale semestre') ||
                                  lowerTranscript.includes('semestre siamo') ||
                                  lowerTranscript.includes('dimmi il semestre') ||
                                  lowerTranscript.includes('semestre corrente');
         
         const isSeasonRequest = lowerTranscript.includes('che stagione') ||
                                lowerTranscript.includes('in che stagione') ||
+                               lowerTranscript.includes('quale stagione') ||
                                lowerTranscript.includes('stagione siamo') ||
                                lowerTranscript.includes('dimmi la stagione') ||
                                lowerTranscript.includes('stagione corrente');
