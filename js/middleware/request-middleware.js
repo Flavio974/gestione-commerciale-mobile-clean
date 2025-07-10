@@ -255,6 +255,12 @@ class RequestMiddleware {
             const requestType = this.classifyRequest(userInput);
             console.log('📊 MIDDLEWARE: Tipo richiesta:', requestType);
             
+            // BLOCCO PRIORITARIO: Richieste temporali devono essere gestite dal sistema semantico
+            if (requestType === 'temporal_blocked') {
+                console.log('🚫 MIDDLEWARE: Richiesta temporale BLOCCATA - passa al sistema semantico');
+                return { handled: false, reason: 'Richiesta temporale - sistema semantico' };
+            }
+            
             // 2. Se non è operativa, passa all'AI
             if (requestType === 'strategic' || requestType === 'unknown') {
                 console.log('🧠 MIDDLEWARE: Richiesta strategica/sconosciuta -> AI');
@@ -294,6 +300,19 @@ class RequestMiddleware {
     classifyRequest(input) {
         const inputLower = input.toLowerCase();
         console.log('🔍 CLASSIFY REQUEST:', input, 'lowercase:', inputLower);
+        
+        // BLOCCO ASSOLUTO: Richieste di data/giorno corrente - NON DEVONO MAI essere gestite qui!
+        if (inputLower.includes('che data è') ||
+            inputLower.includes('data di oggi') ||
+            inputLower.includes('data corrente') ||
+            inputLower.includes('in che data siamo') ||
+            inputLower.includes('che giorno è') ||
+            inputLower.includes('che data sarà') ||
+            inputLower.includes('che data era') ||
+            inputLower.includes('che data avevamo')) {
+            console.log('🚫 BLOCCO ASSOLUTO: Richiesta temporale - deve essere gestita dal sistema semantico');
+            return 'temporal_blocked';
+        }
         
         // CONTROLLO ULTRA-PRIORITARIO: Richieste specifiche di SOLO numero settimana (deve essere PRIMO)
         if (/(?:dammi\s+solo|solo)\s+.*(?:numero|n\.?).*(?:prossima\s+settimana|settimana\s+prossima)/i.test(input) ||

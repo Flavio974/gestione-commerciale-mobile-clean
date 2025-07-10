@@ -48,9 +48,14 @@ class SemanticIntentEngine {
                 context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno', 'ieri', 'era', 'dopo domani', 'altro ieri', 'ieri l\'altro']
             },
             data_corrente: {
-                keywords: ['che data è', 'data di oggi', 'data corrente'],
+                keywords: ['che data è', 'data di oggi', 'data corrente', 'in che data siamo'],
                 synonyms: ['che data', 'data attuale', 'oggi che data'],
-                context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora']
+                context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora', 'siamo']
+            },
+            data_temporale: {
+                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri'],
+                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data'],
+                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data']
             }
         };
 
@@ -58,8 +63,8 @@ class SemanticIntentEngine {
         this.questionPatterns = {
             interrogative: ['che', 'quale', 'quali', 'cosa', 'come', 'quando'],
             locative: ['in che', 'nel', 'nella', 'dentro', 'all\'interno'],
-            request: ['dimmi', 'dicci', 'spiegami', 'voglio sapere', 'mi serve', 'ho bisogno', 'che data è', 'che data è oggi'],
-            state: ['siamo', 'sono', 'è', 'ci troviamo', 'stiamo'],
+            request: ['dimmi', 'dicci', 'spiegami', 'voglio sapere', 'mi serve', 'ho bisogno', 'che data è', 'che data è oggi', 'che data sarà', 'che data era'],
+            state: ['siamo', 'sono', 'è', 'ci troviamo', 'stiamo', 'sarà', 'era', 'avremo'],
             time_modifiers: ['adesso', 'ora', 'attualmente', 'in questo momento', 'oggi', 'corrente', 'attuale', 'domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro'],
             direct_request: ['per favore', 'per cortesia', 'grazie', 'prego', 'per piacere']
         };
@@ -294,6 +299,18 @@ class SemanticIntentEngine {
             'che data è oggi',
             'data di oggi',
             'dimmi che data è',
+            // NUOVI TEST per data + temporale
+            'che data sarà domani',
+            'che data avremo domani',
+            'domani che data sarà',
+            'che data era ieri',
+            'che data avevamo ieri',
+            'ieri che data era',
+            'che data sarà dopo domani',
+            'dopo domani che data sarà',
+            'che data era l\'altro ieri',
+            'che data avevamo l\'altro ieri',
+            'l\'altro ieri che data era',
             'ciao come stai',  // Dovrebbe fallire
             'ordini del cliente'  // Dovrebbe fallire
         ];
