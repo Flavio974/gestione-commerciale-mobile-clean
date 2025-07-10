@@ -1883,10 +1883,13 @@ class AIVoiceManagerV2 {
                                      lowerTranscript.includes('che data era') ||
                                      lowerTranscript.includes('che data avevamo') ||
                                      lowerTranscript.includes('domani che data') ||
+                                     lowerTranscript.includes('dopodomani che data') ||
                                      lowerTranscript.includes('ieri che data') ||
                                      lowerTranscript.includes('dopo domani che data') ||
                                      lowerTranscript.includes('altro ieri che data') ||
                                      lowerTranscript.includes('data di domani') ||
+                                     lowerTranscript.includes('data di dopodomani') ||
+                                     lowerTranscript.includes('data di dopo domani') ||
                                      lowerTranscript.includes('data di ieri') ||
                                      lowerTranscript.includes('dimmi la data di');
         
@@ -2083,10 +2086,13 @@ class AIVoiceManagerV2 {
                                      lowerTranscript.includes('che data era') ||
                                      lowerTranscript.includes('che data avevamo') ||
                                      lowerTranscript.includes('domani che data') ||
+                                     lowerTranscript.includes('dopodomani che data') ||
                                      lowerTranscript.includes('ieri che data') ||
                                      lowerTranscript.includes('dopo domani che data') ||
                                      lowerTranscript.includes('altro ieri che data') ||
                                      lowerTranscript.includes('data di domani') ||
+                                     lowerTranscript.includes('data di dopodomani') ||
+                                     lowerTranscript.includes('data di dopo domani') ||
                                      lowerTranscript.includes('data di ieri') ||
                                      lowerTranscript.includes('dimmi la data di');
         
@@ -2110,13 +2116,13 @@ class AIVoiceManagerV2 {
         let targetDate = new Date(now);
         let dayModifier = 'oggi';
         
-        // Determina il giorno target
-        if (lowerTranscript.includes('domani')) {
-            targetDate.setDate(now.getDate() + 1);
-            dayModifier = 'domani';
-        } else if (lowerTranscript.includes('dopo domani')) {
+        // Determina il giorno target - ORDINE IMPORTANTE: controlla prima le parole più lunghe!
+        if (lowerTranscript.includes('dopodomani') || lowerTranscript.includes('dopo domani')) {
             targetDate.setDate(now.getDate() + 2);
             dayModifier = 'dopodomani';
+        } else if (lowerTranscript.includes('domani')) {
+            targetDate.setDate(now.getDate() + 1);
+            dayModifier = 'domani';
         } else if (lowerTranscript.includes('ieri')) {
             if (lowerTranscript.includes('altro ieri') || lowerTranscript.includes('ieri l\'altro')) {
                 targetDate.setDate(now.getDate() - 2);
@@ -2127,9 +2133,12 @@ class AIVoiceManagerV2 {
             }
         }
         
-        // Gestione pattern "dimmi la data di"
+        // Gestione pattern "dimmi la data di" - ORDINE IMPORTANTE!
         if (lowerTranscript.includes('dimmi la data di')) {
-            if (lowerTranscript.includes('dimmi la data di domani')) {
+            if (lowerTranscript.includes('dimmi la data di dopodomani') || lowerTranscript.includes('dimmi la data di dopo domani')) {
+                targetDate.setDate(now.getDate() + 2);
+                dayModifier = 'dopodomani';
+            } else if (lowerTranscript.includes('dimmi la data di domani')) {
                 targetDate.setDate(now.getDate() + 1);
                 dayModifier = 'domani';
             } else if (lowerTranscript.includes('dimmi la data di ieri')) {
