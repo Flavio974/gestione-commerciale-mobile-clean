@@ -1862,9 +1862,15 @@ class AIVoiceManagerV2 {
                                   lowerTranscript.includes('giorno della settimana sarà') ||
                                   lowerTranscript.includes('giorno della settimana era') ||
                                   lowerTranscript.includes('domani che giorno') ||
+                                  lowerTranscript.includes('dopo domani che giorno') ||
                                   lowerTranscript.includes('ieri che giorno') ||
+                                  lowerTranscript.includes('altro ieri che giorno') ||
+                                  lowerTranscript.includes('ieri l\'altro che giorno') ||
                                   lowerTranscript.includes('che giorno sarà') ||
-                                  lowerTranscript.includes('che giorno era');
+                                  lowerTranscript.includes('che giorno era') ||
+                                  lowerTranscript.includes('dopo domani') ||
+                                  lowerTranscript.includes('altro ieri') ||
+                                  lowerTranscript.includes('ieri l\'altro');
         
         // ROUTING RICHIESTE TEMPORALI - gestione locale con data corretta
         // IMPORTANTE: Controlla prima il giorno della settimana per evitare conflitti con settimana dell'anno
@@ -2197,25 +2203,39 @@ class AIVoiceManagerV2 {
     }
     
     /**
-     * Fornisce informazioni sul giorno della settimana (oggi, domani, ieri)
+     * Fornisce informazioni sul giorno della settimana (ieri l'altro, ieri, oggi, domani, dopo domani)
      */
     provideDayOfWeekInfo(transcript = '') {
         const dayNames = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
         
-        // Controlla se si chiede informazioni su domani, ieri o oggi
+        // Controlla il tipo di richiesta temporale
         const lowerTranscript = transcript.toLowerCase();
-        const isAboutTomorrow = lowerTranscript.includes('domani') || lowerTranscript.includes('sarà');
-        const isAboutYesterday = lowerTranscript.includes('ieri') || lowerTranscript.includes('era');
+        const isAboutDayAfterTomorrow = lowerTranscript.includes('dopo domani');
+        const isAboutTomorrow = lowerTranscript.includes('domani') && !isAboutDayAfterTomorrow;
+        const isAboutDayBeforeYesterday = lowerTranscript.includes('altro ieri') || lowerTranscript.includes('ieri l\'altro');
+        const isAboutYesterday = (lowerTranscript.includes('ieri') || lowerTranscript.includes('era')) && !isAboutDayBeforeYesterday;
         
         let response;
         let debugInfo;
         
-        if (isAboutTomorrow) {
+        if (isAboutDayAfterTomorrow) {
+            const dayAfterTomorrow = new Date();
+            dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+            const dayAfterTomorrowName = dayNames[dayAfterTomorrow.getDay()];
+            response = `Dopo domani sarà ${dayAfterTomorrowName}`;
+            debugInfo = `Dopo domani: ${dayAfterTomorrowName}`;
+        } else if (isAboutTomorrow) {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowDayName = dayNames[tomorrow.getDay()];
             response = `Domani sarà ${tomorrowDayName}`;
             debugInfo = `Domani: ${tomorrowDayName}`;
+        } else if (isAboutDayBeforeYesterday) {
+            const dayBeforeYesterday = new Date();
+            dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 2);
+            const dayBeforeYesterdayName = dayNames[dayBeforeYesterday.getDay()];
+            response = `L'altro ieri era ${dayBeforeYesterdayName}`;
+            debugInfo = `L'altro ieri: ${dayBeforeYesterdayName}`;
         } else if (isAboutYesterday) {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);

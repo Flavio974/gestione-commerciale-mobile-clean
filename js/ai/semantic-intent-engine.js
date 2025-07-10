@@ -45,7 +45,7 @@ class SemanticIntentEngine {
             giorno_settimana: {
                 keywords: ['giorno della settimana', 'giorno settimana'],
                 synonyms: ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica'],
-                context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno', 'ieri', 'era']
+                context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno', 'ieri', 'era', 'dopo domani', 'altro ieri', 'ieri l\'altro']
             }
         };
 
@@ -55,7 +55,7 @@ class SemanticIntentEngine {
             locative: ['in che', 'nel', 'nella', 'dentro', 'all\'interno'],
             request: ['dimmi', 'dicci', 'spiegami', 'voglio sapere', 'mi serve', 'ho bisogno'],
             state: ['siamo', 'sono', 'è', 'ci troviamo', 'stiamo'],
-            time_modifiers: ['adesso', 'ora', 'attualmente', 'in questo momento', 'oggi', 'corrente', 'attuale', 'domani', 'ieri'],
+            time_modifiers: ['adesso', 'ora', 'attualmente', 'in questo momento', 'oggi', 'corrente', 'attuale', 'domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro'],
             direct_request: ['per favore', 'per cortesia', 'grazie', 'prego', 'per piacere']
         };
 
@@ -279,8 +279,12 @@ class SemanticIntentEngine {
             'semestre corrente prego',
             'domani che giorno della settimana sarà',
             'che giorno sarà domani',
+            'dopo domani che giorno sarà',
+            'che giorno sarà dopo domani',
             'ieri che giorno della settimana era',
             'che giorno era ieri',
+            'altro ieri che giorno era',
+            'ieri l\'altro che giorno era',
             'ciao come stai',  // Dovrebbe fallire
             'ordini del cliente'  // Dovrebbe fallire
         ];
