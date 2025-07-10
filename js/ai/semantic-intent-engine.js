@@ -55,7 +55,8 @@ class SemanticIntentEngine {
             locative: ['in che', 'nel', 'nella', 'dentro', 'all\'interno'],
             request: ['dimmi', 'dicci', 'spiegami', 'voglio sapere', 'mi serve', 'ho bisogno'],
             state: ['siamo', 'sono', 'è', 'ci troviamo', 'stiamo'],
-            time_modifiers: ['adesso', 'ora', 'attualmente', 'in questo momento', 'oggi', 'corrente', 'attuale']
+            time_modifiers: ['adesso', 'ora', 'attualmente', 'in questo momento', 'oggi', 'corrente', 'attuale'],
+            direct_request: ['per favore', 'per cortesia', 'grazie', 'prego', 'per piacere']
         };
 
         console.log('🧠 SemanticIntentEngine inizializzato');
@@ -213,6 +214,14 @@ class SemanticIntentEngine {
             confidence += questionIntent.confidence * 0.3;
         }
         
+        // Bonus speciale: richieste dirette con time_modifiers o direct_request
+        const hasTimeModifier = this.questionPatterns.time_modifiers.some(mod => fullText.includes(mod));
+        const hasDirectRequest = this.questionPatterns.direct_request.some(req => fullText.includes(req));
+        
+        if (hasTimeModifier || hasDirectRequest) {
+            confidence += 0.2; // Bonus extra per richieste dirette temporali
+        }
+        
         // Bonus: lunghezza appropriata (evita match accidentali)
         const wordCount = fullText.split(' ').length;
         if (wordCount >= 2 && wordCount <= 10) {
@@ -263,8 +272,11 @@ class SemanticIntentEngine {
             'voglio sapere il trimestre corrente',
             'mi dici che stagione è',
             'anno attuale per favore',
+            'settimana corrente per cortesia',
             'in che quadrimestre ci troviamo',
             'settimana numero 5',
+            'mese attuale grazie',
+            'semestre corrente prego',
             'ciao come stai',  // Dovrebbe fallire
             'ordini del cliente'  // Dovrebbe fallire
         ];
