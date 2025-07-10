@@ -45,7 +45,7 @@ class SemanticIntentEngine {
             giorno_settimana: {
                 keywords: ['giorno della settimana', 'giorno settimana'],
                 synonyms: ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica'],
-                context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno']
+                context: ['oggi', 'corrente', 'questo', 'domani', 'sarà', 'che giorno', 'ieri', 'era']
             }
         };
 
@@ -279,6 +279,8 @@ class SemanticIntentEngine {
             'semestre corrente prego',
             'domani che giorno della settimana sarà',
             'che giorno sarà domani',
+            'ieri che giorno della settimana era',
+            'che giorno era ieri',
             'ciao come stai',  // Dovrebbe fallire
             'ordini del cliente'  // Dovrebbe fallire
         ];
