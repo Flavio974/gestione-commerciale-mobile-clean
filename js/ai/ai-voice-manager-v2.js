@@ -1823,7 +1823,7 @@ class AIVoiceManagerV2 {
                              lowerTranscript.includes('settimana dell\'anno') ||
                              lowerTranscript.includes('settimana siamo');
         
-        // RICHIESTE MESE - gestisci localmente per data corretta
+        // RICHIESTE TEMPORALI - gestisci localmente per data corretta
         const isMonthRequest = lowerTranscript.includes('che mese') || 
                               lowerTranscript.includes('in che mese') ||
                               lowerTranscript.includes('mese siamo') ||
@@ -1832,14 +1832,73 @@ class AIVoiceManagerV2 {
                               lowerTranscript.includes('mese corrente') ||
                               lowerTranscript.includes('mese attuale');
         
-        // Se è una richiesta di settimana, gestisci localmente con data corretta
+        const isYearRequest = lowerTranscript.includes('che anno') ||
+                             lowerTranscript.includes('in che anno') ||
+                             lowerTranscript.includes('anno siamo') ||
+                             lowerTranscript.includes('dimmi l\'anno') ||
+                             lowerTranscript.includes('anno corrente') ||
+                             lowerTranscript.includes('anno attuale');
+        
+        const isQuarterRequest = lowerTranscript.includes('che trimestre') ||
+                                lowerTranscript.includes('in che trimestre') ||
+                                lowerTranscript.includes('trimestre siamo') ||
+                                lowerTranscript.includes('dimmi il trimestre') ||
+                                lowerTranscript.includes('trimestre corrente');
+        
+        const isQuadrimesterRequest = lowerTranscript.includes('che quadrimestre') ||
+                                     lowerTranscript.includes('in che quadrimestre') ||
+                                     lowerTranscript.includes('quadrimestre siamo') ||
+                                     lowerTranscript.includes('dimmi il quadrimestre') ||
+                                     lowerTranscript.includes('quadrimestre corrente');
+        
+        const isSemesterRequest = lowerTranscript.includes('che semestre') ||
+                                 lowerTranscript.includes('in che semestre') ||
+                                 lowerTranscript.includes('semestre siamo') ||
+                                 lowerTranscript.includes('dimmi il semestre') ||
+                                 lowerTranscript.includes('semestre corrente');
+        
+        const isSeasonRequest = lowerTranscript.includes('che stagione') ||
+                               lowerTranscript.includes('in che stagione') ||
+                               lowerTranscript.includes('stagione siamo') ||
+                               lowerTranscript.includes('dimmi la stagione') ||
+                               lowerTranscript.includes('stagione corrente');
+        
+        const isDayOfWeekRequest = lowerTranscript.includes('che giorno della settimana') ||
+                                  lowerTranscript.includes('giorno della settimana è') ||
+                                  lowerTranscript.includes('dimmi che giorno della settimana');
+        
+        // ROUTING RICHIESTE TEMPORALI - gestione locale con data corretta
         if (isWeekRequest) {
-            console.log('🗓️ Richiesta settimana rilevata - gestisco localmente con data corretta');
+            console.log('🗓️ Richiesta settimana rilevata - gestisco localmente');
             this.provideWeekInfo();
             return;
         } else if (isMonthRequest) {
-            console.log('📅 Richiesta mese rilevata - gestisco localmente con data corretta');
+            console.log('📅 Richiesta mese rilevata - gestisco localmente');
             this.provideMonthInfo();
+            return;
+        } else if (isYearRequest) {
+            console.log('📆 Richiesta anno rilevata - gestisco localmente');
+            this.provideYearInfo();
+            return;
+        } else if (isQuarterRequest) {
+            console.log('📊 Richiesta trimestre rilevata - gestisco localmente');
+            this.provideQuarterInfo();
+            return;
+        } else if (isQuadrimesterRequest) {
+            console.log('📈 Richiesta quadrimestre rilevata - gestisco localmente');
+            this.provideQuadrimesterInfo();
+            return;
+        } else if (isSemesterRequest) {
+            console.log('📋 Richiesta semestre rilevata - gestisco localmente');
+            this.provideSemesterInfo();
+            return;
+        } else if (isSeasonRequest) {
+            console.log('🌸 Richiesta stagione rilevata - gestisco localmente');
+            this.provideSeasonInfo();
+            return;
+        } else if (isDayOfWeekRequest) {
+            console.log('📅 Richiesta giorno settimana rilevata - gestisco localmente');
+            this.provideDayOfWeekInfo();
             return;
         } else {
             // Solo per richieste data/ora semplici, gestisci localmente
@@ -2049,6 +2108,105 @@ class AIVoiceManagerV2 {
         console.log('   - Anno:', year);
         console.log('   - Risposta finale:', response);
         
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce informazioni sull'anno corrente
+     */
+    provideYearInfo() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const response = `Siamo nell'anno ${year}`;
+        
+        console.log('📆 DEBUG YEAR INFO: Anno', year);
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce informazioni sul trimestre corrente
+     */
+    provideQuarterInfo() {
+        const now = new Date();
+        const month = now.getMonth() + 1; // 0-indexed
+        const quarter = Math.ceil(month / 3);
+        const year = now.getFullYear();
+        
+        const quarterNames = ['primo', 'secondo', 'terzo', 'quarto'];
+        const response = `Siamo nel ${quarterNames[quarter-1]} trimestre dell'anno ${year}`;
+        
+        console.log('📊 DEBUG QUARTER INFO: Trimestre', quarter, 'del', year);
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce informazioni sul quadrimestre corrente
+     */
+    provideQuadrimesterInfo() {
+        const now = new Date();
+        const month = now.getMonth() + 1; // 0-indexed
+        const quadrimester = Math.ceil(month / 4);
+        const year = now.getFullYear();
+        
+        const quadrimesterNames = ['primo', 'secondo', 'terzo'];
+        const response = `Siamo nel ${quadrimesterNames[quadrimester-1]} quadrimestre dell'anno ${year}`;
+        
+        console.log('📈 DEBUG QUADRIMESTER INFO: Quadrimestre', quadrimester, 'del', year);
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce informazioni sul semestre corrente
+     */
+    provideSemesterInfo() {
+        const now = new Date();
+        const month = now.getMonth() + 1; // 0-indexed
+        const semester = Math.ceil(month / 6);
+        const year = now.getFullYear();
+        
+        const semesterNames = ['primo', 'secondo'];
+        const response = `Siamo nel ${semesterNames[semester-1]} semestre dell'anno ${year}`;
+        
+        console.log('📋 DEBUG SEMESTER INFO: Semestre', semester, 'del', year);
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce informazioni sulla stagione corrente
+     */
+    provideSeasonInfo() {
+        const now = new Date();
+        const month = now.getMonth() + 1; // 0-indexed
+        const day = now.getDate();
+        
+        let season;
+        if ((month === 12 && day >= 21) || month === 1 || month === 2 || (month === 3 && day < 20)) {
+            season = 'inverno';
+        } else if ((month === 3 && day >= 20) || month === 4 || month === 5 || (month === 6 && day < 21)) {
+            season = 'primavera';
+        } else if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 22)) {
+            season = 'estate';
+        } else {
+            season = 'autunno';
+        }
+        
+        const response = `Siamo in ${season}`;
+        
+        console.log('🌸 DEBUG SEASON INFO: Stagione', season);
+        this.speak(response);
+    }
+    
+    /**
+     * Fornisce informazioni sul giorno della settimana corrente
+     */
+    provideDayOfWeekInfo() {
+        const now = new Date();
+        const dayNames = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+        const dayName = dayNames[now.getDay()];
+        
+        const response = `Oggi è ${dayName}`;
+        
+        console.log('📅 DEBUG DAY OF WEEK INFO: Giorno', dayName);
         this.speak(response);
     }
 
