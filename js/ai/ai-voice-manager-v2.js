@@ -1875,7 +1875,17 @@ class AIVoiceManagerV2 {
                                   lowerTranscript.includes('ieri l\'altro');
         
         const isDateRequest = temporalIntent?.domain === 'data_corrente' ||
-                             lowerTranscript.includes('che data è') ||
+                             (lowerTranscript.includes('che data è') && 
+                              !lowerTranscript.includes('domani') && 
+                              !lowerTranscript.includes('ieri') && 
+                              !lowerTranscript.includes('dopodomani') && 
+                              !lowerTranscript.includes('dopo domani') && 
+                              !lowerTranscript.includes('altro ieri') && 
+                              !lowerTranscript.includes('ieri l\'altro') &&
+                              !lowerTranscript.includes('sarà') &&
+                              !lowerTranscript.includes('avremo') &&
+                              !lowerTranscript.includes('era') &&
+                              !lowerTranscript.includes('avevamo')) ||
                              lowerTranscript.includes('data di oggi') ||
                              lowerTranscript.includes('data corrente');
         
@@ -1896,14 +1906,14 @@ class AIVoiceManagerV2 {
                                      lowerTranscript.includes('dimmi la data di');
         
         // ROUTING RICHIESTE TEMPORALI - gestione locale con data corretta
-        // IMPORTANTE: Controlla prima "che data è" per evitare conflitti con middleware business
-        if (isDateRequest) {
-            console.log('📅 Richiesta data corrente rilevata - gestisco localmente');
-            this.provideDateInfo();
-            return;
-        } else if (isDateTemporalRequest) {
+        // IMPORTANTE: Controlla PRIMA richieste temporali, poi quelle correnti
+        if (isDateTemporalRequest) {
             console.log('📅 Richiesta data temporale rilevata - gestisco localmente');
             this.provideDateTemporalInfo(transcript);
+            return;
+        } else if (isDateRequest) {
+            console.log('📅 Richiesta data corrente rilevata - gestisco localmente');
+            this.provideDateInfo();
             return;
         } else if (isDayOfWeekRequest) {
             console.log('📅 Richiesta giorno settimana rilevata - gestisco localmente');
