@@ -1812,42 +1812,55 @@ class AIVoiceManagerV2 {
             console.log('Testo pulito dopo rimozione wake word:', transcript);
         }
         
-        // Controlla se è una richiesta di data/ora
+        // Controlla se è una richiesta di data/ora SEMPLICE (non settimane)
         const lowerTranscript = transcript.toLowerCase();
         
-        // Prima controlla le domande combinate (data + ora)
-        // Controlla se chiede prima la data poi l'ora
-        if (lowerTranscript.includes('che giorno è oggi e che ore sono') || 
-            lowerTranscript.includes('che giorno è e che ore sono') ||
-            lowerTranscript.includes('dimmi che giorno è e che ore sono') ||
-            lowerTranscript.includes('che giorno è oggi e dimmi l\'ora') ||
-            lowerTranscript.includes('voglio sapere che giorno è oggi e che ore sono') ||
-            lowerTranscript.includes('data e ora')) {
-            this.provideDateFirstThenTime();
-            return;
-        }
+        // IMPORTANTE: Le richieste di settimana devono andare all'AI, non essere gestite localmente
+        const isWeekRequest = lowerTranscript.includes('settimana') || 
+                             lowerTranscript.includes('week') ||
+                             lowerTranscript.includes('che settimana') ||
+                             lowerTranscript.includes('numero settimana');
         
-        // Controlla se chiede prima l'ora poi la data
-        if (lowerTranscript.includes('che ore sono e che giorno è') ||
-            lowerTranscript.includes('che ora è e che giorno è') ||
-            lowerTranscript.includes('dimmi l\'ora e che giorno è') ||
-            lowerTranscript.includes('ora e data')) {
-            this.provideTimeFirstThenDate();
-            return;
-        }
-        
-        // Poi controlla le domande singole per l'ora
-        if (lowerTranscript.includes('che ore sono') || lowerTranscript.includes('che ora è') || 
-            lowerTranscript.includes('dimmi l\'ora') || lowerTranscript.includes('ora attuale')) {
-            this.provideTimeInfo();
-            return;
-        }
-        
-        // Infine controlla le domande singole per la data
-        if (lowerTranscript.includes('che giorno è') || lowerTranscript.includes('data di oggi') || 
-            lowerTranscript.includes('oggi è') || lowerTranscript.includes('dimmi la data')) {
-            this.provideDateInfo();
-            return;
+        // Se è una richiesta di settimana, lascia che vada all'AI
+        if (isWeekRequest) {
+            console.log('🗓️ Richiesta settimana rilevata - invio all\'AI Assistant');
+            // Non fare return, continua al processing AI
+        } else {
+            // Solo per richieste data/ora semplici, gestisci localmente
+            
+            // Prima controlla le domande combinate (data + ora)
+            if (lowerTranscript.includes('che giorno è oggi e che ore sono') || 
+                lowerTranscript.includes('che giorno è e che ore sono') ||
+                lowerTranscript.includes('dimmi che giorno è e che ore sono') ||
+                lowerTranscript.includes('che giorno è oggi e dimmi l\'ora') ||
+                lowerTranscript.includes('voglio sapere che giorno è oggi e che ore sono') ||
+                lowerTranscript.includes('data e ora')) {
+                this.provideDateFirstThenTime();
+                return;
+            }
+            
+            // Controlla se chiede prima l'ora poi la data
+            if (lowerTranscript.includes('che ore sono e che giorno è') ||
+                lowerTranscript.includes('che ora è e che giorno è') ||
+                lowerTranscript.includes('dimmi l\'ora e che giorno è') ||
+                lowerTranscript.includes('ora e data')) {
+                this.provideTimeFirstThenDate();
+                return;
+            }
+            
+            // Poi controlla le domande singole per l'ora
+            if (lowerTranscript.includes('che ore sono') || lowerTranscript.includes('che ora è') || 
+                lowerTranscript.includes('dimmi l\'ora') || lowerTranscript.includes('ora attuale')) {
+                this.provideTimeInfo();
+                return;
+            }
+            
+            // Infine controlla le domande singole per la data (ma non settimane)
+            if (lowerTranscript.includes('che giorno è') || lowerTranscript.includes('data di oggi') || 
+                lowerTranscript.includes('oggi è') || lowerTranscript.includes('dimmi la data')) {
+                this.provideDateInfo();
+                return;
+            }
         }
         
         // Invia all'assistente AI (prova entrambi i nomi)
