@@ -1977,7 +1977,30 @@ class AIVoiceManagerV2 {
         return new Promise((resolve) => {
             console.log('🔊 AIVoiceManagerV2 - Parlando:', text);
             
-            // Per comandi diretti come data/ora, parliamo direttamente
+            // PREVENZIONE DOPPIA CHIAMATA - Se già sta parlando, ignora
+            if (this.isSpeaking) {
+                console.log('⚠️ PREVENZIONE LOOP: TTS già in corso, ignoro nuova chiamata');
+                resolve();
+                return;
+            }
+            
+            // PREVENZIONE DUPLICATI - Controlla se è lo stesso testo in poco tempo
+            const now = Date.now();
+            const timeDiff = now - (this.lastSpokenTime || 0);
+            if (this.lastSpokenText === text && timeDiff < 3000) {
+                console.log('⚠️ PREVENZIONE DUPLICATI: Stesso testo in', timeDiff, 'ms, ignoro');
+                resolve();
+                return;
+            }
+            
+            // IMPORTANTE: Disattiva riconoscimento vocale mentre parla per evitare loop
+            const wasListening = this.isListening;
+            if (wasListening && this.isAutoMode) {
+                console.log('🔇 Disattivo riconoscimento temporaneamente per evitare loop');
+                this.pauseListening();
+            }
+            
+            // Cancella code precedenti
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 
@@ -1992,129 +2015,51 @@ class AIVoiceManagerV2 {
                 }
                 
                 utterance.onstart = () => {
-                    console.log('🔊 TTS iniziato per comando diretto V2');
-                    this.isSpeaking = true;
+                    console.log('🔊 TTS avviato');
+                    this.isSpeaking = true; // Imposta flag speaking
+                    this.lastSpokenText = text; // Salva ultimo testo
+                    this.lastSpokenTime = Date.now(); // Salva timestamp
                     this.updateUIState('speaking');
                 };
                 
                 utterance.onend = () => {
-                    console.log('🔊 TTS completato V2');
-                    this.isSpeaking = false;
+                    console.log('🔊 TTS terminato');
+                    this.isSpeaking = false; // Rimuovi flag speaking
+                    
+                    // Riattiva riconoscimento dopo un delay per evitare echi
+                    if (wasListening && this.isAutoMode) {
+                        setTimeout(() => {
+                            console.log('🔊 Riattivo riconoscimento dopo TTS');
+                            this.resumeListening();
+                        }, 1500); // 1.5 secondi di pausa per evitare echi
+                    }
+                    
                     this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
                     resolve();
                 };
                 
                 utterance.onerror = (e) => {
-                    console.error('❌ Errore TTS V2:', e);
-                    this.isSpeaking = false;
+                    console.error('❌ Errore TTS:', e);
+                    this.isSpeaking = false; // Rimuovi flag speaking anche in caso di errore
+                    
+                    // Riattiva riconoscimento anche in caso di errore
+                    if (wasListening && this.isAutoMode) {
+                        setTimeout(() => {
+                            console.log('🔊 Riattivo riconoscimento dopo errore TTS');
+                            this.resumeListening();
+                        }, 500);
+                    }
+                    
+                    this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
                     resolve();
                 };
                 
                 window.speechSynthesis.speak(utterance);
-                return; // Importante: ritorna qui per evitare il codice disabilitato sotto
-            }
-            
-            resolve();
-            return;
-            
-            console.log('🔊 iPad SPEAK DEBUG:', {
-                text: text.substring(0, 50) + '...',
-                isSpeaking: this.isSpeaking,
-                isListening: this.isListening,
-                isAutoMode: this.isAutoMode,
-                timestamp: new Date().toISOString()
-            });
-            
-            // PREVENZIONE DOPPIA CHIAMATA - Se già sta parlando, ignora
-            if (this.isSpeaking) {
-                console.log('⚠️ PREVENZIONE LOOP: TTS già in corso, ignoro nuova chiamata');
+            } else {
+                // Fallback per browser senza speechSynthesis
+                console.log('⚠️ speechSynthesis non disponibile');
                 resolve();
-                return;
             }
-            
-            // PREVENZIONE DUPLICATI - Controlla se è lo stesso testo in poco tempo
-            const now = Date.now();
-            const timeDiff = now - this.lastSpokenTime;
-            if (this.lastSpokenText === text && timeDiff < 3000) {
-                console.log('⚠️ PREVENZIONE DUPLICATI: Stesso testo in', timeDiff, 'ms, ignoro');
-                resolve();
-                return;
-            }
-            
-            // Su iPad, verifica che TTS sia attivato (già dichiarato isIPad sopra)
-            if (isIPad && !this.ttsActivated) {
-                console.log('⚠️ TTS non attivato su iPad, mostro prompt');
-                this.createAudioActivationButton();
-                this.showNotification('⚠️ Attiva prima l\'audio per sentire la risposta', 'error', 5000);
-                resolve();
-                return;
-            }
-            
-            // IMPORTANTE: Disattiva riconoscimento vocale mentre parla per evitare loop
-            const wasListening = this.isListening;
-            if (wasListening && this.isAutoMode) {
-                console.log('🔇 iPad: Disattivo riconoscimento temporaneamente per evitare loop');
-                this.pauseListening();
-            }
-            
-            // Cancella code precedenti
-            this.synthesis.cancel();
-            
-            // Prepara utterance
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'it-IT';
-            utterance.rate = this.ttsConfig.rate;
-            utterance.pitch = this.ttsConfig.pitch;
-            utterance.volume = this.ttsConfig.volume;
-            
-            if (this.ttsConfig.voice) {
-                utterance.voice = this.ttsConfig.voice;
-                console.log('🎤 Voce selezionata:', this.ttsConfig.voice.name);
-            }
-            
-            // Avvia sintesi vocale
-            this.synthesis.speak(utterance);
-            
-            // Eventi
-            utterance.onstart = () => {
-                console.log('🔊 iPad TTS avviato');
-                this.isSpeaking = true; // Imposta flag speaking
-                this.lastSpokenText = text; // Salva ultimo testo
-                this.lastSpokenTime = Date.now(); // Salva timestamp
-                this.updateUIState('speaking');
-            };
-            
-            utterance.onend = () => {
-                console.log('🔊 TTS terminato');
-                this.isSpeaking = false; // Rimuovi flag speaking
-                
-                // Riattiva riconoscimento dopo un delay per evitare echi
-                if (wasListening && this.isAutoMode) {
-                    setTimeout(() => {
-                        console.log('🔊 Riattivo riconoscimento dopo TTS');
-                        this.resumeListening();
-                    }, 1000); // 1 secondo di pausa per evitare echi
-                }
-                
-                this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
-                resolve();
-            };
-            
-            utterance.onerror = (event) => {
-                console.error('❌ Errore TTS:', event);
-                this.isSpeaking = false; // Rimuovi flag speaking anche in caso di errore
-                
-                // Riattiva riconoscimento anche in caso di errore
-                if (wasListening && this.isAutoMode) {
-                    setTimeout(() => {
-                        console.log('🔊 Riattivo riconoscimento dopo errore TTS');
-                        this.resumeListening();
-                    }, 500);
-                }
-                
-                this.updateUIState(this.isAutoMode ? 'listening' : 'idle');
-                resolve();
-            };
         });
     }
 
