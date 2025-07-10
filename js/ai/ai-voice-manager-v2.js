@@ -2099,7 +2099,7 @@ class AIVoiceManagerV2 {
                                      lowerTranscript.includes('data di dopo domani') ||
                                      lowerTranscript.includes('data di ieri') ||
                                      lowerTranscript.includes('dimmi la data di') ||
-                                     /(tra|fra)\s+(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese)/i.test(lowerTranscript);
+                                     /(tra|fra|dopo|di\s+qui\s+a|entro)\s+(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici|quindici|venti|trenta|quaranta|cinquanta|sessanta|settanta|ottanta|novanta|cento)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese|anni?|anno|ore|ora|minuti?|minuto)/i.test(lowerTranscript);
         
         if (isDateRequest) {
             console.log('📅 Richiesta data corrente - gestisco localmente');
@@ -2121,19 +2121,58 @@ class AIVoiceManagerV2 {
         let targetDate = new Date(now);
         let dayModifier = 'oggi';
         
-        // NUOVO: Gestione pattern "tra/fra X giorni/settimane/mesi" (numeri e parole)
-        const relativeMatch = lowerTranscript.match(/(tra|fra)\s+(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese)/i);
+        // NUOVO: Gestione COMPLETA pattern temporali relativi
+        const relativeMatch = lowerTranscript.match(/(tra|fra|dopo|di\s+qui\s+a|entro|in)\s+(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici|quindici|venti|trenta|quaranta|cinquanta|sessanta|settanta|ottanta|novanta|cento)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese|anni?|anno|ore|ora|minuti?|minuto)/i);
+        
+        // Pattern AGGIUNTIVI per espressioni idiomatiche italiane
+        let idiomaticMatch = null;
+        
+        // "la settimana prossima", "il mese prossimo", "l'anno prossimo"
+        if (lowerTranscript.includes('settimana prossima') || lowerTranscript.includes('la prossima settimana')) {
+            idiomaticMatch = {type: 'settimana', amount: 1, text: 'la settimana prossima'};
+        } else if (lowerTranscript.includes('mese prossimo') || lowerTranscript.includes('il prossimo mese')) {
+            idiomaticMatch = {type: 'mese', amount: 1, text: 'il mese prossimo'};
+        } else if (lowerTranscript.includes('anno prossimo') || lowerTranscript.includes('il prossimo anno')) {
+            idiomaticMatch = {type: 'anno', amount: 1, text: 'l\'anno prossimo'};
+        }
+        // "la settimana scorsa", "il mese scorso", "l'anno scorso"
+        else if (lowerTranscript.includes('settimana scorsa') || lowerTranscript.includes('la scorsa settimana')) {
+            idiomaticMatch = {type: 'settimana', amount: -1, text: 'la settimana scorsa'};
+        } else if (lowerTranscript.includes('mese scorso') || lowerTranscript.includes('il mese scorso')) {
+            idiomaticMatch = {type: 'mese', amount: -1, text: 'il mese scorso'};
+        } else if (lowerTranscript.includes('anno scorso') || lowerTranscript.includes('l\'anno scorso')) {
+            idiomaticMatch = {type: 'anno', amount: -1, text: 'l\'anno scorso'};
+        }
+        // "fra poco", "tra poco", "a breve"
+        else if (lowerTranscript.includes('fra poco') || lowerTranscript.includes('tra poco') || lowerTranscript.includes('a breve')) {
+            idiomaticMatch = {type: 'ore', amount: 1, text: 'tra poco'};
+        }
+        // "stamattina", "stasera", "stanotte", "stamani"
+        else if (lowerTranscript.includes('stamattina') || lowerTranscript.includes('stamani')) {
+            idiomaticMatch = {type: 'today_morning', text: 'stamattina'};
+        } else if (lowerTranscript.includes('stasera')) {
+            idiomaticMatch = {type: 'today_evening', text: 'stasera'};
+        } else if (lowerTranscript.includes('stanotte')) {
+            idiomaticMatch = {type: 'today_night', text: 'stanotte'};
+        }
+        
+        // Gestione pattern numerici relativi
         if (relativeMatch) {
-            // Converte numeri scritti in lettere
+            // Mappa COMPLETA numeri scritti
             const numberMap = {
                 'un': 1, 'una': 1, 'due': 2, 'tre': 3, 'quattro': 4, 'cinque': 5,
-                'sei': 6, 'sette': 7, 'otto': 8, 'nove': 9, 'dieci': 10
+                'sei': 6, 'sette': 7, 'otto': 8, 'nove': 9, 'dieci': 10,
+                'undici': 11, 'dodici': 12, 'quindici': 15, 'venti': 20, 'trenta': 30,
+                'quaranta': 40, 'cinquanta': 50, 'sessanta': 60, 'settanta': 70,
+                'ottanta': 80, 'novanta': 90, 'cento': 100
             };
             
-            const preposition = relativeMatch[1]; // "tra" o "fra"
+            const preposition = relativeMatch[1];
             const amountStr = relativeMatch[2].toLowerCase();
             const amount = isNaN(amountStr) ? numberMap[amountStr] : parseInt(amountStr);
             const unit = relativeMatch[3].toLowerCase();
+            
+            console.log('🔥 RELATIVE MATCH TROVATO:', {preposition, amountStr, amount, unit});
             
             if (unit.startsWith('giorno') || unit === 'giorni') {
                 targetDate.setDate(now.getDate() + amount);
@@ -2144,6 +2183,42 @@ class AIVoiceManagerV2 {
             } else if (unit.startsWith('mese') || unit === 'mesi') {
                 targetDate.setMonth(now.getMonth() + amount);
                 dayModifier = `tra ${amount} ${amount === 1 ? 'mese' : 'mesi'}`;
+            } else if (unit.startsWith('anno') || unit === 'anni') {
+                targetDate.setFullYear(now.getFullYear() + amount);
+                dayModifier = `tra ${amount} ${amount === 1 ? 'anno' : 'anni'}`;
+            } else if (unit.startsWith('ora') || unit === 'ore') {
+                targetDate.setHours(now.getHours() + amount);
+                dayModifier = `tra ${amount} ${amount === 1 ? 'ora' : 'ore'}`;
+            } else if (unit.startsWith('minuto') || unit === 'minuti') {
+                targetDate.setMinutes(now.getMinutes() + amount);
+                dayModifier = `tra ${amount} ${amount === 1 ? 'minuto' : 'minuti'}`;
+            }
+        }
+        // Gestione pattern idiomatici
+        else if (idiomaticMatch) {
+            console.log('🔥 IDIOMATIC MATCH TROVATO:', idiomaticMatch);
+            
+            if (idiomaticMatch.type === 'settimana') {
+                targetDate.setDate(now.getDate() + (idiomaticMatch.amount * 7));
+                dayModifier = idiomaticMatch.text;
+            } else if (idiomaticMatch.type === 'mese') {
+                targetDate.setMonth(now.getMonth() + idiomaticMatch.amount);
+                dayModifier = idiomaticMatch.text;
+            } else if (idiomaticMatch.type === 'anno') {
+                targetDate.setFullYear(now.getFullYear() + idiomaticMatch.amount);
+                dayModifier = idiomaticMatch.text;
+            } else if (idiomaticMatch.type === 'ore') {
+                targetDate.setHours(now.getHours() + idiomaticMatch.amount);
+                dayModifier = idiomaticMatch.text;
+            } else if (idiomaticMatch.type === 'today_morning') {
+                targetDate.setHours(8, 0, 0, 0); // 8:00 AM
+                dayModifier = 'stamattina';
+            } else if (idiomaticMatch.type === 'today_evening') {
+                targetDate.setHours(19, 0, 0, 0); // 7:00 PM
+                dayModifier = 'stasera';
+            } else if (idiomaticMatch.type === 'today_night') {
+                targetDate.setHours(23, 0, 0, 0); // 11:00 PM
+                dayModifier = 'stanotte';
             }
         }
         // Determina il giorno target - ORDINE IMPORTANTE: controlla prima le parole più lunghe!
@@ -2187,7 +2262,7 @@ class AIVoiceManagerV2 {
         
         // Determina il verbo da usare
         let verb = 'è';
-        if (lowerTranscript.includes('sarà') || lowerTranscript.includes('avremo') || relativeMatch) {
+        if (lowerTranscript.includes('sarà') || lowerTranscript.includes('avremo') || relativeMatch || idiomaticMatch) {
             verb = 'sarà';
         } else if (lowerTranscript.includes('era') || lowerTranscript.includes('avevamo')) {
             verb = 'era';
@@ -2198,6 +2273,7 @@ class AIVoiceManagerV2 {
         console.log('📅 DEBUG DATE TEMPORAL INFO:');
         console.log('   - Transcript:', transcript);
         console.log('   - Relative match:', relativeMatch);
+        console.log('   - Idiomatic match:', idiomaticMatch);
         console.log('   - Day modifier:', dayModifier);
         console.log('   - Target date:', targetDate);
         console.log('   - Response:', response);

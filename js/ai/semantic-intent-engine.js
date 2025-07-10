@@ -53,9 +53,9 @@ class SemanticIntentEngine {
                 context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora', 'siamo', 'abbiamo', 'è', 'dimmi']
             },
             data_temporale: {
-                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi', 'che data sarà domani', 'che data sarà dopo domani', 'tra un giorno', 'tra una settimana', 'tra un mese', 'tra due giorni', 'tra tre giorni'],
-                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data', 'tra un giorno', 'tra una settimana', 'tra un mese', 'fra giorni', 'fra settimane', 'fra mesi', 'data domani', 'data ieri'],
-                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data', 'tra', 'fra', 'giorni', 'settimane', 'mesi', 'un', 'una', 'due', 'tre']
+                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi', 'che data sarà domani', 'che data sarà dopo domani', 'tra un giorno', 'tra una settimana', 'tra un mese', 'tra due giorni', 'tra tre giorni', 'settimana prossima', 'mese prossimo', 'anno prossimo', 'settimana scorsa', 'mese scorso', 'anno scorso', 'fra poco', 'tra poco', 'a breve', 'stamattina', 'stasera', 'stanotte'],
+                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data', 'tra un giorno', 'tra una settimana', 'tra un mese', 'fra giorni', 'fra settimane', 'fra mesi', 'data domani', 'data ieri', 'la prossima settimana', 'il prossimo mese', 'il prossimo anno', 'la scorsa settimana', 'il mese scorso', 'l\'anno scorso', 'stamani'],
+                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data', 'tra', 'fra', 'giorni', 'settimane', 'mesi', 'anni', 'ore', 'minuti', 'un', 'una', 'due', 'tre', 'quattro', 'cinque', 'prossima', 'prossimo', 'scorsa', 'scorso', 'poco', 'breve', 'mattina', 'sera', 'notte']
             }
         };
 
