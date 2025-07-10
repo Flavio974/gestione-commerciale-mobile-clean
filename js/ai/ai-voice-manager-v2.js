@@ -1863,12 +1863,14 @@ class AIVoiceManagerV2 {
                                   lowerTranscript.includes('giorno della settimana era') ||
                                   lowerTranscript.includes('domani che giorno') ||
                                   lowerTranscript.includes('dopo domani che giorno') ||
+                                  lowerTranscript.includes('dopodomani che giorno') ||
                                   lowerTranscript.includes('ieri che giorno') ||
                                   lowerTranscript.includes('altro ieri che giorno') ||
                                   lowerTranscript.includes('ieri l\'altro che giorno') ||
                                   lowerTranscript.includes('che giorno sarà') ||
                                   lowerTranscript.includes('che giorno era') ||
                                   lowerTranscript.includes('dopo domani') ||
+                                  lowerTranscript.includes('dopodomani') ||
                                   lowerTranscript.includes('altro ieri') ||
                                   lowerTranscript.includes('ieri l\'altro');
         
@@ -2473,9 +2475,9 @@ class AIVoiceManagerV2 {
     provideDayOfWeekInfo(transcript = '') {
         const dayNames = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
         
-        // Controlla il tipo di richiesta temporale
+        // Controlla il tipo di richiesta temporale - ORDINE IMPORTANTE!
         const lowerTranscript = transcript.toLowerCase();
-        const isAboutDayAfterTomorrow = lowerTranscript.includes('dopo domani');
+        const isAboutDayAfterTomorrow = lowerTranscript.includes('dopodomani') || lowerTranscript.includes('dopo domani');
         const isAboutTomorrow = lowerTranscript.includes('domani') && !isAboutDayAfterTomorrow;
         const isAboutDayBeforeYesterday = lowerTranscript.includes('altro ieri') || lowerTranscript.includes('ieri l\'altro');
         const isAboutYesterday = (lowerTranscript.includes('ieri') || lowerTranscript.includes('era')) && !isAboutDayBeforeYesterday;
