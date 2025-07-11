@@ -1295,7 +1295,16 @@
   <!-- Middleware System -->
   <script src="js/middleware/request-middleware.js"></script>
   <script src="js/middleware/vocabolario-middleware.js"></script>
+  
+  <!-- AI Middleware Intelligente con Vocabolario Dinamico -->
+  <script src="js/middleware/vocabulary-manager.js"></script>
+  <script src="js/middleware/vocabulary-sync.js"></script>
+  <script src="js/middleware/temporal-parser.js"></script>
+  <script src="js/middleware/ai-middleware.js"></script>
+  <script src="js/middleware/middleware-integration.js"></script>
+  <script src="js/middleware/middleware-tests.js"></script>
   <script src="js/middleware/enhanced-ai-assistant.js"></script>
+  <script src="js/middleware/unified-ai-system.js"></script>
   
   <!-- Keep Alive per Replit -->
   <script src="js/keep-alive.js"></script>
@@ -1864,17 +1873,38 @@
         this.showThinking();
         
         try {
+          // CONTROLLO PRIORITARIO: Query conversazionale (prima di caricare dati)
+          const isPureConversational = this.isPureConversationalQuery(message);
+          let skipSupabaseLoad = false;
+          let conversationalData = null;
+          
+          if (isPureConversational) {
+            console.log('💬 Query conversazionale rilevata - SKIP caricamento dati Supabase');
+            skipSupabaseLoad = true;
+            conversationalData = {
+              conversationalMode: true,
+              timestamp: new Date().toISOString(),
+              message: "Risposta conversazionale - nessun dato aziendale necessario"
+            };
+          }
+          
           // NUOVA LOGICA: Analizza se è una richiesta di percorso
           const routeRequest = this.detectRouteRequest(message);
           console.log('🛣️ Analisi richiesta percorso:', routeRequest);
           
-          // Raccogli dati da Supabase (forza refresh)
-          this.showStatus('Recupero dati da Supabase...', 'info');
-          const supabaseData = await this.supabaseAI.getAllData(true); // true = forza refresh
-          
+          // Raccogli dati da Supabase SOLO se necessario
+          let supabaseData = null;
           let formattedData;
           
-          if (routeRequest.isRouteRequest) {
+          if (!skipSupabaseLoad) {
+            this.showStatus('Recupero dati da Supabase...', 'info');
+            supabaseData = await this.supabaseAI.getAllData(true); // true = forza refresh
+          } else {
+            // Per query conversazionali, usa dati minimi
+            formattedData = conversationalData;
+          }
+          
+          if (!skipSupabaseLoad && routeRequest.isRouteRequest) {
             // CASO SPECIALE: Richiesta di percorso - PRIORITÀ ASSOLUTA
             console.log('🎯 Richiesta percorso specifica, filtro dati...');
             console.log('🔍 Cerco percorso:', routeRequest.partenza, '→', routeRequest.arrivo);
@@ -1906,7 +1936,12 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  message: message,
+                  message: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}\n\n${message}`,
                   supabaseData: formattedData,
                   model: this.model,
                   history: this.messages.slice(-4),
@@ -1942,7 +1977,12 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  message: message,
+                  message: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}\n\n${message}`,
                   supabaseData: formattedData,
                   model: this.model,
                   history: this.messages.slice(-4),
@@ -2003,37 +2043,33 @@
           }
           
           // PROTEZIONE 2: Sistema unificato di filtraggio intelligente
-          console.log('🤖 ANALISI INTELLIGENTE QUERY...');
-          const queryInfo = this.detectQueryType(message);
-          
           let finalData;
           
-          // NUOVO: Controlla se è una query puramente conversazionale
-          const isPureConversational = this.isPureConversationalQuery(message);
-          
-          if (isPureConversational) {
-            console.log('💬 Query puramente conversazionale - nessun dato necessario');
-            finalData = {
-              conversationalMode: true,
-              timestamp: new Date().toISOString(),
-              message: "Risposta conversazionale - non sono necessari dati aziendali"
-            };
-          } else if (queryInfo.needsData || needsOrderData) {
-            console.log(`🎯 Query richiede dati: ${queryInfo.dataTypes.join(', ')}`);
-            console.log(`🔍 Filtri rilevati:`, queryInfo.filters);
+          // Se abbiamo già determinato che è conversazionale, usa quei dati
+          if (skipSupabaseLoad) {
+            console.log('💬 Usando dati conversazionali pre-definiti');
+            finalData = formattedData; // Già impostato sopra
+          } else {
+            console.log('🤖 ANALISI INTELLIGENTE QUERY...');
+            const queryInfo = this.detectQueryType(message);
             
-            // Usa il nuovo sistema di filtraggio unificato
-            finalData = this.applyIntelligentFilters(formattedData, queryInfo);
-            
-            // Se il payload è ancora troppo grande per GPT-3.5
-            const tempSize = JSON.stringify(finalData).length;
-            if (this.model === 'gpt-3.5-turbo' && tempSize > 60000) { // ~15K token
-              console.warn('⚠️ Payload ancora troppo grande per GPT-3.5, applico ulteriori riduzioni');
+            if (queryInfo.needsData || needsOrderData) {
+              console.log(`🎯 Query richiede dati: ${queryInfo.dataTypes.join(', ')}`);
+              console.log(`🔍 Filtri rilevati:`, queryInfo.filters);
+              
+              // Usa il nuovo sistema di filtraggio unificato
+              finalData = this.applyIntelligentFilters(formattedData, queryInfo);
+              
+              // Se il payload è ancora troppo grande per GPT-3.5
+              const tempSize = JSON.stringify(finalData).length;
+              if (this.model === 'gpt-3.5-turbo' && tempSize > 60000) { // ~15K token
+                console.warn('⚠️ Payload ancora troppo grande per GPT-3.5, applico ulteriori riduzioni');
+                finalData = this.getMinimalStats(formattedData);
+              }
+            } else {
+              console.log('💬 Query conversazionale - uso dati minimi');
               finalData = this.getMinimalStats(formattedData);
             }
-          } else {
-            console.log('💬 Query conversazionale - uso dati minimi');
-            finalData = this.getMinimalStats(formattedData);
           }
           
           // PROTEZIONE 3: Log costo effettivo e controllo limiti modello
@@ -2056,18 +2092,27 @@
           this.costWarningAccepted = false;
           
           // DEBUG: Log dei dati Supabase per verificare il contenuto
-          console.log('🔍 DEBUG SUPABASE: Raw data:', supabaseData);
-          console.log('🔍 DEBUG SUPABASE: Formatted data:', formattedData);
-          console.log('🔍 DEBUG TIMELINE: Timeline events:', formattedData.allEvents);
+          // DEBUG per query non conversazionali
+          if (!skipSupabaseLoad) {
+            console.log('🔍 DEBUG SUPABASE: Raw data:', supabaseData);
+            console.log('🔍 DEBUG SUPABASE: Formatted data:', formattedData);
+            console.log('🔍 DEBUG TIMELINE: Timeline events:', formattedData.allEvents);
+          }
           
-          // Chiama backend PHP
+          // Chiama backend PHP - UNA SOLA VOLTA per qualsiasi tipo di query
+          console.log('🚀 CHIAMATA API - skipSupabaseLoad:', skipSupabaseLoad, ', finalData size:', JSON.stringify(finalData).length);
           const response = await fetch(this.apiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              message: message,
+              message: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}\n\n${message}`,
               supabaseData: finalData,
               model: this.model,
               history: this.messages.slice(-10), // Ultimi 10 messaggi per contesto
@@ -2155,6 +2200,18 @@
               console.log('🎯 Deploy timestamp: 2025-07-08 16:40 UTC');
             }
             
+            // PROTEZIONE ANTI-DOPPIA LETTURA
+            if (window._ttsAlreadySpoken === data.response) {
+              console.log('🛡️ TTS già eseguito per questa risposta - SKIP');
+              return;
+            }
+            window._ttsAlreadySpoken = data.response;
+            
+            // Reset dopo 5 secondi per permettere risposte future identiche
+            setTimeout(() => {
+              window._ttsAlreadySpoken = null;
+            }, 5000);
+            
             // FERMA tutte le sintesi vocali in corso (incluso Voice Manager)
             console.log('🔊 FERMANDO tutte le sintesi vocali precedenti...');
             window.speechSynthesis.cancel();
@@ -2182,6 +2239,13 @@
             };
             
             console.log('🔊 Chiamando speechSynthesis.speak()...');
+            console.log('🔊 DETTAGLI TTS:', {
+              text: data.response.substring(0, 50) + '...',
+              lang: utterance.lang,
+              isIPad: isIPad,
+              speaking: window.speechSynthesis.speaking,
+              pending: window.speechSynthesis.pending
+            });
             window.speechSynthesis.speak(utterance);
             
             // Debug stato sintesi dopo 1 secondo
@@ -3021,10 +3085,23 @@
       // Inizializza AI Assistant IMMEDIATAMENTE
       console.log('🚀 Inizializzazione AI Assistant...');
       
-      // IMPORTANTE: Usa EnhancedAIAssistant invece di FlavioAIAssistant
-      // per avere il VocabolarioMiddleware integrato
-      if (typeof EnhancedAIAssistant !== 'undefined') {
-        console.log('🔄 Usando EnhancedAIAssistant con VocabolarioMiddleware');
+      // IMPORTANTE: Usa UnifiedAIAssistant per il sistema completo
+      // Combina EnhancedAIAssistant con il nuovo vocabolario dinamico
+      if (typeof UnifiedAIAssistant !== 'undefined') {
+        console.log('🎯 Usando UnifiedAIAssistant - Sistema unificato con vocabolario dinamico');
+        flavioAI = new UnifiedAIAssistant();
+        // Aspetta che sia completamente inizializzato
+        flavioAI.initializationPromise.then(() => {
+          console.log('✅ UnifiedAIAssistant completamente inizializzato');
+          
+          // Disabilita il vecchio middleware-integration per evitare conflitti
+          if (window.middlewareIntegration) {
+            window.middlewareIntegration.deactivate();
+            console.log('🔄 Middleware-integration disattivato per evitare conflitti');
+          }
+        });
+      } else if (typeof EnhancedAIAssistant !== 'undefined') {
+        console.log('🔄 Fallback a EnhancedAIAssistant');
         flavioAI = new EnhancedAIAssistant();
         // Aspetta che sia completamente inizializzato
         flavioAI.initializationPromise.then(() => {
