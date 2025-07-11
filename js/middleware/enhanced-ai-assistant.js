@@ -78,6 +78,13 @@ class EnhancedAIAssistant {
             console.log('🔄 ENHANCED: Processando messaggio:', message);
             console.log('🎤 ENHANCED: Input vocale:', isVoiceInput);
             
+            // 📅 INTERCETTA RICHIESTE TEMPORALI PRIMA DEL MIDDLEWARE
+            if (this.shouldHandleTemporalRequest(message)) {
+                console.log('📅 ENHANCED: Richiesta temporale rilevata - gestisco localmente');
+                await this.handleTemporalRequest(message, isVoiceInput);
+                return;
+            }
+            
             // Aggiungi messaggio utente alla chat
             this.originalAssistant.messages.push({ role: 'user', content: message });
             this.originalAssistant.updateChat();
@@ -460,6 +467,124 @@ class EnhancedAIAssistant {
             console.error('❌ Errore recupero statistiche:', error);
             return { error: error.message };
         }
+    }
+
+    /**
+     * Verifica se la richiesta è temporale e deve essere gestita localmente
+     */
+    shouldHandleTemporalRequest(message) {
+        const lowerMessage = message.toLowerCase();
+        
+        // Pattern "giorni fa"
+        const hasGiorniFa = /\d+\s+giorni\s+fa/.test(lowerMessage) || 
+                           /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(lowerMessage);
+        
+        // Pattern date temporali
+        const hasTemporalDate = lowerMessage.includes('che data era') ||
+                               lowerMessage.includes('che data sarà') ||
+                               lowerMessage.includes('che data avremo') ||
+                               lowerMessage.includes('data di ieri') ||
+                               lowerMessage.includes('data di domani') ||
+                               lowerMessage.includes('giorni fa che data');
+        
+        // Pattern giorni della settimana temporali
+        const hasTemporalDay = (lowerMessage.includes('che giorno era') && hasGiorniFa) ||
+                              lowerMessage.includes('domani che giorno') ||
+                              lowerMessage.includes('ieri che giorno');
+        
+        return hasGiorniFa || hasTemporalDate || hasTemporalDay;
+    }
+
+    /**
+     * Gestisce una richiesta temporale localmente
+     */
+    async handleTemporalRequest(message, isVoiceInput) {
+        try {
+            console.log('📅 TEMPORAL: Gestendo richiesta temporale:', message);
+            
+            // Aggiungi messaggio utente alla chat
+            this.originalAssistant.messages.push({ role: 'user', content: message });
+            this.originalAssistant.updateChat();
+            
+            // Pulisci input
+            const input = document.getElementById('aiInput');
+            if (input) input.value = '';
+            
+            // Calcola la risposta temporale
+            const response = this.calculateTemporalResponse(message);
+            
+            // Aggiungi risposta dell'assistente
+            this.originalAssistant.messages.push({ role: 'assistant', content: response });
+            this.originalAssistant.updateChat();
+            
+            // TTS se richiesto
+            if (isVoiceInput && window.speechSynthesis) {
+                this.originalAssistant.speak(response);
+            }
+            
+            console.log('✅ TEMPORAL: Risposta temporale generata:', response);
+            
+        } catch (error) {
+            console.error('❌ TEMPORAL: Errore gestione richiesta temporale:', error);
+            
+            // Fallback al sistema normale
+            console.log('🔄 TEMPORAL: Fallback al sistema AI normale');
+            // Rimetti il messaggio nell'input e processa normalmente
+            const input = document.getElementById('aiInput');
+            if (input) input.value = message;
+            await this.sendMessage(isVoiceInput);
+        }
+    }
+
+    /**
+     * Calcola la risposta per una richiesta temporale
+     */
+    calculateTemporalResponse(message) {
+        const lowerMessage = message.toLowerCase();
+        const now = new Date();
+        let targetDate = new Date(now);
+        let dayModifier = 'oggi';
+        
+        console.log('📅 TEMPORAL CALC: Data corrente:', now.toISOString());
+        
+        // Pattern "X giorni fa"
+        const pastMatch = lowerMessage.match(/(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+(giorni?|giorno)\s+fa/i);
+        
+        if (pastMatch) {
+            const numberMap = {
+                'un': 1, 'una': 1, 'due': 2, 'tre': 3, 'quattro': 4, 'cinque': 5,
+                'sei': 6, 'sette': 7, 'otto': 8, 'nove': 9, 'dieci': 10
+            };
+            
+            const amountStr = pastMatch[1].toLowerCase();
+            const amount = isNaN(amountStr) ? numberMap[amountStr] : parseInt(amountStr);
+            
+            console.log('📅 TEMPORAL CALC: Pattern giorni fa trovato:', {amountStr, amount});
+            
+            targetDate.setDate(now.getDate() - amount);
+            dayModifier = `${amount} ${amount === 1 ? 'giorno' : 'giorni'} fa`;
+            
+            console.log('📅 TEMPORAL CALC: Data calcolata:', targetDate.toISOString());
+        }
+        
+        // Formatta la risposta
+        const options = {
+            weekday: 'long',
+            year: 'numeric', 
+            month: 'long',
+            day: 'numeric'
+        };
+        
+        const dateString = targetDate.toLocaleDateString('it-IT', options);
+        
+        if (lowerMessage.includes('che data era') || lowerMessage.includes('che data c\'era')) {
+            return `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} era ${dateString}.`;
+        } else if (lowerMessage.includes('che giorno era')) {
+            const dayName = targetDate.toLocaleDateString('it-IT', { weekday: 'long' });
+            return `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} era ${dayName}.`;
+        }
+        
+        return `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} era ${dateString}.`;
     }
 }
 
