@@ -79,7 +79,12 @@ exports.handler = async (event, context) => {
             messages: [
               {
                 role: 'system',
-                content: supabaseData ? JSON.stringify(supabaseData) : 'You are a helpful assistant.'
+                content: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}\n\n${supabaseData ? JSON.stringify(supabaseData) : 'You are a helpful assistant.'}`
               },
               {
                 role: 'user',
@@ -134,7 +139,12 @@ exports.handler = async (event, context) => {
             messages: [
               {
                 role: 'user',
-                content: `${supabaseData ? JSON.stringify(supabaseData) : ''}\n\n${message}`
+                content: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}\n\n${supabaseData ? JSON.stringify(supabaseData) : ''}\n\n${message}`
               }
             ]
           })

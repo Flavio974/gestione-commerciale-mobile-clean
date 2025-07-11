@@ -78,12 +78,12 @@ class EnhancedAIAssistant {
             console.log('🔄 ENHANCED: Processando messaggio:', message);
             console.log('🎤 ENHANCED: Input vocale:', isVoiceInput);
             
-            // 📅 INTERCETTA RICHIESTE TEMPORALI PRIMA DEL MIDDLEWARE
-            if (this.shouldHandleTemporalRequest(message)) {
-                console.log('📅 ENHANCED: Richiesta temporale rilevata - gestisco localmente');
-                await this.handleTemporalRequest(message, isVoiceInput);
-                return;
-            }
+            // 📅 TEMPORALE DISABILITATO - Lasciamo che l'AI gestisca tutto con data corrente
+            // if (this.shouldHandleTemporalRequest(message)) {
+            //     console.log('📅 ENHANCED: Richiesta temporale rilevata - gestisco localmente');
+            //     await this.handleTemporalRequest(message, isVoiceInput);
+            //     return;
+            // }
             
             // Aggiungi messaggio utente alla chat
             this.originalAssistant.messages.push({ role: 'user', content: message });
