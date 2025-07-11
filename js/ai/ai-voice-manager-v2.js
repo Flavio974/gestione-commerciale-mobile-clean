@@ -1885,9 +1885,14 @@ class AIVoiceManagerV2 {
                               !lowerTranscript.includes('sarà') &&
                               !lowerTranscript.includes('avremo') &&
                               !lowerTranscript.includes('era') &&
-                              !lowerTranscript.includes('avevamo')) ||
-                             lowerTranscript.includes('data di oggi') ||
-                             lowerTranscript.includes('data corrente');
+                              !lowerTranscript.includes('avevamo') &&
+                              // ESCLUDI pattern "giorni fa"
+                              !/\d+\s+giorni\s+fa/.test(lowerTranscript) &&
+                              !/(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(lowerTranscript) &&
+                              !lowerTranscript.includes('giorni fa') &&
+                              !lowerTranscript.includes('fa che data')) ||
+                             (lowerTranscript.includes('data di oggi') && !lowerTranscript.includes('giorni fa')) ||
+                             (lowerTranscript.includes('data corrente') && !lowerTranscript.includes('giorni fa'));
         
         const isDateTemporalRequest = temporalIntent?.domain === 'data_temporale' ||
                                      lowerTranscript.includes('che data sarà') ||
@@ -1903,17 +1908,46 @@ class AIVoiceManagerV2 {
                                      lowerTranscript.includes('data di dopodomani') ||
                                      lowerTranscript.includes('data di dopo domani') ||
                                      lowerTranscript.includes('data di ieri') ||
-                                     lowerTranscript.includes('dimmi la data di');
+                                     lowerTranscript.includes('dimmi la data di') ||
+                                     // PATTERN "X giorni fa che data era"
+                                     /\d+\s+giorni\s+fa/.test(lowerTranscript) ||
+                                     /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(lowerTranscript) ||
+                                     lowerTranscript.includes('giorni fa che data') ||
+                                     lowerTranscript.includes('fa che data');
         
         // ROUTING RICHIESTE TEMPORALI - gestione locale con data corretta
         // IMPORTANTE: Controlla PRIMA richieste temporali, poi quelle correnti
+        
+        // DEBUG: Log dettagliato per capire la classificazione
+        console.log('🔍 ROUTING DEBUG:', {
+            transcript: transcript,
+            temporalIntent: temporalIntent,
+            isDateTemporalRequest: isDateTemporalRequest,
+            isDateRequest: isDateRequest,
+            hasGiorniFa: /\d+\s+giorni\s+fa/.test(lowerTranscript) || /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(lowerTranscript)
+        });
+        
         if (isDateTemporalRequest) {
             console.log('📅 Richiesta data temporale rilevata - gestisco localmente');
             this.provideDateTemporalInfo(transcript);
             return;
         } else if (isDateRequest) {
             console.log('📅 Richiesta data corrente rilevata - gestisco localmente');
-            this.provideDateInfo();
+            
+            // FIX: Controlla se contiene modificatori temporali come "domani", "ieri", etc.
+            const lowerTranscript = transcript.toLowerCase();
+            const hasTemporalModifier = lowerTranscript.includes('domani') || 
+                                      lowerTranscript.includes('ieri') || 
+                                      lowerTranscript.includes('dopo domani') || 
+                                      lowerTranscript.includes('l\'altro ieri') ||
+                                      lowerTranscript.includes('altro ieri');
+            
+            if (hasTemporalModifier) {
+                console.log('📅 CORREZIONE: Rilevato modificatore temporale, uso provideDateTemporalInfo');
+                this.provideDateTemporalInfo(transcript);
+            } else {
+                this.provideDateInfo();
+            }
             return;
         } else if (isDayOfWeekRequest) {
             console.log('📅 Richiesta giorno settimana rilevata - gestisco localmente');
@@ -2008,8 +2042,9 @@ class AIVoiceManagerV2 {
                 
                 // Mostra risposta in chat
                 if (response) {
-                    // Leggi risposta vocalmente
-                    await this.speak(response);
+                    // DISABILITATO: Il TTS viene già gestito in index.html per evitare doppia lettura su iPad
+                    // await this.speak(response);
+                    console.log('🔇 TTS disabilitato qui - viene gestito in index.html');
                 } else {
                     console.log('Nessuna risposta ricevuta dall\'AI');
                 }
@@ -2133,8 +2168,11 @@ class AIVoiceManagerV2 {
         let targetDate = new Date(now);
         let dayModifier = 'oggi';
         
-        // NUOVO: Gestione COMPLETA pattern temporali relativi
+        // NUOVO: Gestione COMPLETA pattern temporali relativi (futuro E passato)
         const relativeMatch = lowerTranscript.match(/(tra|fra|dopo|di\s+qui\s+a|entro|in)\s+(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici|quindici|venti|trenta|quaranta|cinquanta|sessanta|settanta|ottanta|novanta|cento)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese|anni?|anno|ore|ora|minuti?|minuto)/i);
+        
+        // PATTERN PER IL PASSATO: "X giorni fa", "X settimane fa", etc.
+        const pastMatch = lowerTranscript.match(/(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici|quindici|venti|trenta|quaranta|cinquanta|sessanta|settanta|ottanta|novanta|cento)\s+(giorni?|giorno|settimane?|settimana|mesi?|mese|anni?|anno)\s+fa/i);
         
         // Pattern AGGIUNTIVI per espressioni idiomatiche italiane
         let idiomaticMatch = null;
@@ -2168,8 +2206,39 @@ class AIVoiceManagerV2 {
             idiomaticMatch = {type: 'today_night', text: 'stanotte'};
         }
         
-        // Gestione pattern numerici relativi
-        if (relativeMatch) {
+        // Gestione pattern numerici per il PASSATO
+        if (pastMatch) {
+            // Mappa COMPLETA numeri scritti
+            const numberMap = {
+                'un': 1, 'una': 1, 'due': 2, 'tre': 3, 'quattro': 4, 'cinque': 5,
+                'sei': 6, 'sette': 7, 'otto': 8, 'nove': 9, 'dieci': 10,
+                'undici': 11, 'dodici': 12, 'quindici': 15, 'venti': 20, 'trenta': 30,
+                'quaranta': 40, 'cinquanta': 50, 'sessanta': 60, 'settanta': 70,
+                'ottanta': 80, 'novanta': 90, 'cento': 100
+            };
+            
+            const amountStr = pastMatch[1].toLowerCase();
+            const amount = isNaN(amountStr) ? numberMap[amountStr] : parseInt(amountStr);
+            const unit = pastMatch[2].toLowerCase();
+            
+            console.log('🔥 PAST MATCH TROVATO:', {amountStr, amount, unit});
+            
+            if (unit.startsWith('giorno') || unit === 'giorni') {
+                targetDate.setDate(now.getDate() - amount);
+                dayModifier = `${amount} ${amount === 1 ? 'giorno' : 'giorni'} fa`;
+            } else if (unit.startsWith('settiman') || unit === 'settimane') {
+                targetDate.setDate(now.getDate() - (amount * 7));
+                dayModifier = `${amount} ${amount === 1 ? 'settimana' : 'settimane'} fa`;
+            } else if (unit.startsWith('mes') || unit === 'mesi') {
+                targetDate.setMonth(now.getMonth() - amount);
+                dayModifier = `${amount} ${amount === 1 ? 'mese' : 'mesi'} fa`;
+            } else if (unit.startsWith('ann') || unit === 'anni') {
+                targetDate.setFullYear(now.getFullYear() - amount);
+                dayModifier = `${amount} ${amount === 1 ? 'anno' : 'anni'} fa`;
+            }
+        }
+        // Gestione pattern numerici relativi FUTURI
+        else if (relativeMatch) {
             // Mappa COMPLETA numeri scritti
             const numberMap = {
                 'un': 1, 'una': 1, 'due': 2, 'tre': 3, 'quattro': 4, 'cinque': 5,
