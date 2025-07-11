@@ -78,6 +78,15 @@ class EnhancedAIAssistant {
             console.log('🔄 ENHANCED: Processando messaggio:', message);
             console.log('🎤 ENHANCED: Input vocale:', isVoiceInput);
             
+            // 📅 AGGIUNGI DATA CORRENTE A TUTTI I MESSAGGI
+            const messageWithDate = `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            })}\n\n${message}`;
+            console.log('📅 ENHANCED: Messaggio con data corrente:', messageWithDate);
+            
             // 📅 TEMPORALE DISABILITATO - Lasciamo che l'AI gestisca tutto con data corrente
             // if (this.shouldHandleTemporalRequest(message)) {
             //     console.log('📅 ENHANCED: Richiesta temporale rilevata - gestisco localmente');
@@ -86,7 +95,7 @@ class EnhancedAIAssistant {
             // }
             
             // Aggiungi messaggio utente alla chat
-            this.originalAssistant.messages.push({ role: 'user', content: message });
+            this.originalAssistant.messages.push({ role: 'user', content: messageWithDate });
             this.originalAssistant.updateChat();
             input.value = '';
             
@@ -97,7 +106,7 @@ class EnhancedAIAssistant {
             if (this.middlewareEnabled) {
                 console.log('📋 ENHANCED: Tentativo elaborazione con VocabolarioMiddleware...');
                 
-                const middlewareResult = await this.vocabolarioMiddleware.processWithVocabulario(message);
+                const middlewareResult = await this.vocabolarioMiddleware.processWithVocabulario(messageWithDate);
                 
                 if (middlewareResult.handled) {
                     console.log('✅ ENHANCED: VocabolarioMiddleware ha gestito la richiesta');
@@ -121,7 +130,7 @@ class EnhancedAIAssistant {
                     // Se è stato trovato un match ma non gestito, aggiungi contesto per l'AI
                     if (middlewareResult.matchFound) {
                         console.log('🔍 ENHANCED: Match trovato nel vocabolario, aggiungo contesto per AI');
-                        await this.addVocabolarioContextToAI(message, middlewareResult);
+                        await this.addVocabolarioContextToAI(messageWithDate, middlewareResult);
                     }
                     
                     // Se c'è stato un errore, mostra messaggio user-friendly
@@ -134,7 +143,7 @@ class EnhancedAIAssistant {
             
             // ULTIMA VERIFICA: Controlla se è una richiesta temporale che deve essere gestita dal voice manager
             if (isVoiceInput && window.aiVoiceManagerV2) {
-                const handled = window.aiVoiceManagerV2.handleTemporalRequest(message);
+                const handled = window.aiVoiceManagerV2.handleTemporalRequest(messageWithDate);
                 if (handled) {
                     console.log('✅ ENHANCED: Richiesta temporale gestita dal AIVoiceManagerV2');
                     return; // Non continuare con l'AI
@@ -145,7 +154,7 @@ class EnhancedAIAssistant {
             console.log('🔄 ENHANCED: Fallback a FlavioAIAssistant originale...');
             
             // Ripristina l'input per l'assistant originale
-            input.value = message;
+            input.value = messageWithDate;
             
             // Rimuovi il messaggio già aggiunto per evitare duplicati
             this.originalAssistant.messages.pop();
