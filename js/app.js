@@ -55,18 +55,67 @@ const App = {
       this.updateClock();
       this.clockInterval = setInterval(() => this.updateClock(), 1000);
       
-      // FORCE DEMO TAB VISIBILITY - FIX FINALE
+      // FORCE DEMO TAB VISIBILITY - CREA DINAMICAMENTE SE NON ESISTE
       setTimeout(() => {
-        const demoTab = document.getElementById('tab-demo');
-        if (demoTab) {
-          console.log('🔥 FORCE DEMO TAB VISIBLE');
+        let demoTab = document.getElementById('tab-demo');
+        if (!demoTab) {
+          console.log('🔧 DEMO TAB NON TROVATO - Creazione dinamica...');
+          
+          // Trova il container della navigazione
+          const navContainer = document.getElementById('main-navigation');
+          if (navContainer) {
+            // Crea il tab demo
+            demoTab = document.createElement('div');
+            demoTab.id = 'tab-demo';
+            demoTab.className = 'tab-link';
+            demoTab.setAttribute('data-target', 'demo-content');
+            demoTab.innerHTML = '🇮🇹 Demo Date';
+            demoTab.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; background: linear-gradient(135deg, #00b894, #00a085) !important; color: white !important; font-weight: bold !important; border: 3px solid #ff6b6b !important; box-shadow: 0 4px 15px rgba(255,107,107,0.5) !important; padding: 10px 15px !important; margin: 5px !important; border-radius: 5px !important; cursor: pointer !important;';
+            
+            // Aggiungi il tab al container
+            navContainer.appendChild(demoTab);
+            console.log('✅ DEMO TAB CREATO DINAMICAMENTE!');
+            
+            // Ora crea anche il contenuto se non esiste
+            let demoContent = document.getElementById('demo-content');
+            if (!demoContent) {
+              demoContent = document.createElement('div');
+              demoContent.id = 'demo-content';
+              demoContent.className = 'tab-content';
+              demoContent.innerHTML = `
+                <div style="padding: 20px;">
+                  <h2>🇮🇹 Sistema Date Italiane</h2>
+                  <p>Sistema completo per la gestione delle date in formato italiano.</p>
+                  
+                  <div style="margin: 20px 0;">
+                    <button onclick="testItalianDateSystem()" class="btn btn-primary">🧪 Test Sistema Date</button>
+                  </div>
+                  
+                  <div id="quick-test-results" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; display: none;">
+                    <h4>Risultati Test:</h4>
+                    <div id="test-output"></div>
+                  </div>
+                </div>
+              `;
+              
+              // Trova dove inserire il contenuto
+              const contentContainer = document.querySelector('.main-content, #main-content, .container');
+              if (contentContainer) {
+                contentContainer.appendChild(demoContent);
+                console.log('✅ DEMO CONTENT CREATO!');
+              }
+            }
+            
+          } else {
+            console.error('❌ Container navigazione non trovato!');
+          }
+        } else {
+          console.log('🔥 DEMO TAB ESISTENTE - Forzando visibilità...');
           demoTab.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; background: linear-gradient(135deg, #00b894, #00a085) !important; color: white !important; font-weight: bold !important; border: 3px solid #ff6b6b !important; box-shadow: 0 4px 15px rgba(255,107,107,0.5) !important; position: relative !important; z-index: 999 !important;';
           if (demoTab.parentElement) {
             demoTab.parentElement.style.display = 'flex';
           }
           console.log('🔥 DEMO TAB FORCED VISIBLE');
-        } else {
-          console.error('❌ DEMO TAB NON TROVATO!');
         }
       }, 2000);
       
