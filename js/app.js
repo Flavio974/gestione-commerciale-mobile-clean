@@ -76,24 +76,72 @@ const App = {
             navContainer.appendChild(demoTab);
             console.log('✅ DEMO TAB CREATO DINAMICAMENTE!');
             
+            // Aggiungi gestore click per la navigazione
+            demoTab.addEventListener('click', (e) => {
+              e.preventDefault();
+              console.log('🔥 DEMO TAB CLICKED!');
+              
+              // Nascondi tutti i contenuti
+              const allContents = document.querySelectorAll('.tab-content');
+              allContents.forEach(content => content.classList.remove('active'));
+              
+              // Rimuovi active da tutti i tab
+              const allTabs = document.querySelectorAll('.tab-link');
+              allTabs.forEach(tab => tab.classList.remove('active'));
+              
+              // Attiva questo tab
+              demoTab.classList.add('active');
+              
+              // Mostra il contenuto demo
+              const demoContent = document.getElementById('demo-content');
+              if (demoContent) {
+                demoContent.classList.add('active');
+                demoContent.style.display = 'block';
+                console.log('✅ DEMO CONTENT MOSTRATO!');
+              } else {
+                console.error('❌ Demo content non trovato!');
+              }
+            });
+            
             // Ora crea anche il contenuto se non esiste
             let demoContent = document.getElementById('demo-content');
             if (!demoContent) {
               demoContent = document.createElement('div');
               demoContent.id = 'demo-content';
               demoContent.className = 'tab-content';
+              demoContent.style.cssText = 'display: none; padding: 20px; background: white; border-radius: 8px; margin: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
               demoContent.innerHTML = `
-                <div style="padding: 20px;">
-                  <h2>🇮🇹 Sistema Date Italiane</h2>
-                  <p>Sistema completo per la gestione delle date in formato italiano.</p>
+                <div style="max-width: 800px; margin: 0 auto;">
+                  <h2 style="color: #00b894; margin-bottom: 20px;">🇮🇹 Sistema Date Italiane</h2>
+                  <p style="font-size: 16px; color: #666; margin-bottom: 30px;">Sistema completo per la gestione delle date in formato italiano con validazione, conversione e calcoli avanzati.</p>
                   
-                  <div style="margin: 20px 0;">
-                    <button onclick="testItalianDateSystem()" class="btn btn-primary">🧪 Test Sistema Date</button>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
+                    <button onclick="testItalianDateSystem()" class="btn btn-primary" style="padding: 15px 20px; font-size: 16px; background: linear-gradient(135deg, #00b894, #00a085); border: none; border-radius: 8px; color: white; cursor: pointer; transition: all 0.3s ease;">
+                      🧪 Test Sistema Date
+                    </button>
+                    <button onclick="window.open('demo-italian-dates.html', '_blank')" class="btn btn-secondary" style="padding: 15px 20px; font-size: 16px; background: #6c757d; border: none; border-radius: 8px; color: white; cursor: pointer; transition: all 0.3s ease;">
+                      📱 Demo Completa
+                    </button>
+                    <button onclick="window.open('test-italian-dates.html', '_blank')" class="btn btn-info" style="padding: 15px 20px; font-size: 16px; background: #17a2b8; border: none; border-radius: 8px; color: white; cursor: pointer; transition: all 0.3s ease;">
+                      🧪 Test Suite
+                    </button>
                   </div>
                   
-                  <div id="quick-test-results" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; display: none;">
-                    <h4>Risultati Test:</h4>
-                    <div id="test-output"></div>
+                  <div id="quick-test-results" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; display: none; border-left: 4px solid #00b894;">
+                    <h4 style="color: #00b894; margin-bottom: 15px;">Risultati Test:</h4>
+                    <div id="test-output" style="font-family: monospace; font-size: 14px;"></div>
+                  </div>
+                  
+                  <div style="margin-top: 40px; padding: 20px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                    <h4 style="color: #2e7d32; margin-bottom: 15px;">✨ Funzionalità Disponibili:</h4>
+                    <ul style="color: #2e7d32; line-height: 1.8;">
+                      <li><strong>Validazione Date:</strong> Formato italiano DD/MM/YYYY</li>
+                      <li><strong>Conversioni:</strong> Italiano ↔ ISO 8601 ↔ JavaScript Date</li>
+                      <li><strong>Calcoli:</strong> Giorni lavorativi, festività, range date</li>
+                      <li><strong>Festività:</strong> Pasqua automatica + festività italiane</li>
+                      <li><strong>UI Components:</strong> Calendar picker, range selector</li>
+                      <li><strong>Formato Relativo:</strong> "oggi", "domani", "2 giorni fa"</li>
+                    </ul>
                   </div>
                 </div>
               `;
