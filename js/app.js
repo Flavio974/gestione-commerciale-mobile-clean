@@ -55,6 +55,21 @@ const App = {
       this.updateClock();
       this.clockInterval = setInterval(() => this.updateClock(), 1000);
       
+      // FORCE DEMO TAB VISIBILITY - FIX FINALE
+      setTimeout(() => {
+        const demoTab = document.getElementById('tab-demo');
+        if (demoTab) {
+          console.log('🔥 FORCE DEMO TAB VISIBLE');
+          demoTab.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; background: linear-gradient(135deg, #00b894, #00a085) !important; color: white !important; font-weight: bold !important; border: 3px solid #ff6b6b !important; box-shadow: 0 4px 15px rgba(255,107,107,0.5) !important; position: relative !important; z-index: 999 !important;';
+          if (demoTab.parentElement) {
+            demoTab.parentElement.style.display = 'flex';
+          }
+          console.log('🔥 DEMO TAB FORCED VISIBLE');
+        } else {
+          console.error('❌ DEMO TAB NON TROVATO!');
+        }
+      }, 2000);
+      
       
     } catch (error) {
       console.error('❌ Errore durante inizializzazione:', error);
@@ -297,6 +312,26 @@ const App = {
       setTimeout(() => splash.remove(), 300);
     }
     
+    // DEBUG: Verifica scheda demo
+    setTimeout(() => {
+      const demoTab = document.getElementById('tab-demo');
+      console.log('🔍 DEBUG DEMO TAB:', {
+        exists: !!demoTab,
+        visible: demoTab ? getComputedStyle(demoTab).display : 'N/A',
+        opacity: demoTab ? getComputedStyle(demoTab).opacity : 'N/A',
+        position: demoTab ? demoTab.getBoundingClientRect() : 'N/A',
+        classes: demoTab ? demoTab.className : 'N/A',
+        style: demoTab ? demoTab.style.cssText : 'N/A'
+      });
+      
+      if (demoTab) {
+        demoTab.style.display = 'block';
+        demoTab.style.visibility = 'visible';
+        demoTab.style.opacity = '1';
+        console.log('🔧 Forced demo tab visibility');
+      }
+    }, 1000);
+    
     // Mostra tab corrente
     const activeTab = document.querySelector(`[data-target="${this.state.currentTab}-content"]`);
     if (activeTab) {
@@ -368,3 +403,239 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Rendi App disponibile globalmente
 window.App = App;
+
+/**
+ * Funzione di test veloce per il sistema date italiano
+ */
+function testItalianDateSystem() {
+  const resultsDiv = document.getElementById('quick-test-results');
+  const outputDiv = document.getElementById('test-output');
+  
+  if (!window.ItalianDateSystem) {
+    outputDiv.innerHTML = '<div style="color: red;">❌ Sistema Date Italiano non caricato!</div>';
+    resultsDiv.style.display = 'block';
+    return;
+  }
+  
+  let output = '<div style="color: green;">✅ Sistema Date Italiano caricato correttamente!</div><br>';
+  
+  try {
+    // Test validazione
+    const validDate = window.ItalianDateSystem.isValidItalianDate('15/03/2025');
+    const invalidDate = window.ItalianDateSystem.isValidItalianDate('32/01/2025');
+    output += `<strong>Test Validazione:</strong><br>`;
+    output += `• 15/03/2025: ${validDate ? '✅ Valida' : '❌ Non valida'}<br>`;
+    output += `• 32/01/2025: ${!invalidDate ? '✅ Correttamente rifiutata' : '❌ Erroneamente accettata'}<br><br>`;
+    
+    // Test conversione
+    const isoDate = window.ItalianDateSystem.italianToISO('15/03/2025');
+    const backToItalian = window.ItalianDateSystem.ISOToItalian(isoDate);
+    output += `<strong>Test Conversione:</strong><br>`;
+    output += `• 15/03/2025 → ${isoDate} → ${backToItalian}<br>`;
+    output += `• Roundtrip: ${backToItalian === '15/03/2025' ? '✅ Perfetto' : '❌ Errore'}<br><br>`;
+    
+    // Test formattazione
+    const today = new Date();
+    const formatted = window.ItalianDateSystem.formatDateItalian(today);
+    const relative = window.ItalianDateSystem.formatRelativeDate(today);
+    output += `<strong>Test Formattazione:</strong><br>`;
+    output += `• Data oggi: ${formatted}<br>`;
+    output += `• Formato relativo: ${relative}<br><br>`;
+    
+    // Test festività
+    const isChristmas = window.ItalianDateSystem.isFestivita('25/12/2025');
+    const holidayName = window.ItalianDateSystem.getNomeFestivita('25/12/2025');
+    output += `<strong>Test Festività:</strong><br>`;
+    output += `• 25/12/2025 è festività: ${isChristmas ? '✅ Sì' : '❌ No'}<br>`;
+    output += `• Nome festività: ${holidayName || 'N/A'}<br><br>`;
+    
+    // Test calendario
+    if (window.ItalianCalendar) {
+      output += `<strong>Componenti UI:</strong><br>`;
+      output += `• ItalianCalendar: ✅ Disponibile<br>`;
+      output += `• ItalianDateRangePicker: ${window.ItalianDateRangePicker ? '✅ Disponibile' : '❌ Non trovato'}<br><br>`;
+    }
+    
+    output += '<div style="color: green; font-weight: bold;">🎉 Tutti i test completati con successo!</div>';
+    
+  } catch (error) {
+    output += `<div style="color: red;">❌ Errore durante i test: ${error.message}</div>`;
+  }
+  
+  outputDiv.innerHTML = output;
+  resultsDiv.style.display = 'block';
+}
+
+// Rendi la funzione disponibile globalmente
+window.testItalianDateSystem = testItalianDateSystem;
+
+/**
+ * Funzioni demo per la scheda date italiane
+ */
+
+// Demo validazione date
+function validateDateDemo() {
+  const input = document.getElementById('dateInput').value;
+  const result = document.getElementById('dateValidationResult');
+  
+  if (!input) {
+    result.innerHTML = '<div style="color: orange;">⚠️ Inserisci una data per la validazione</div>';
+    return;
+  }
+  
+  try {
+    if (window.ItalianDateSystem && window.ItalianDateSystem.isValidItalianDate) {
+      const isValid = window.ItalianDateSystem.isValidItalianDate(input);
+      if (isValid) {
+        const formatted = window.ItalianDateSystem.formatDateItalian(new Date(window.ItalianDateSystem.italianToISO(input)));
+        result.innerHTML = `<div style="color: green; background: #d4edda; padding: 10px; border-radius: 4px;">
+          ✅ Data valida!<br>
+          📅 Formato: ${formatted}<br>
+          🗓️ Data originale: ${input}
+        </div>`;
+      } else {
+        result.innerHTML = '<div style="color: red; background: #f8d7da; padding: 10px; border-radius: 4px;">❌ Data non valida! Usa il formato DD/MM/YYYY</div>';
+      }
+    } else {
+      result.innerHTML = '<div style="color: red;">❌ Sistema date italiano non caricato</div>';
+    }
+  } catch (error) {
+    result.innerHTML = `<div style="color: red;">❌ Errore: ${error.message}</div>`;
+  }
+}
+
+// Demo conversione date
+function convertDateDemo() {
+  const input = document.getElementById('conversionInput').value;
+  const result = document.getElementById('conversionResult');
+  
+  if (!input) {
+    result.innerHTML = '<div style="color: orange;">⚠️ Inserisci una data per la conversione</div>';
+    return;
+  }
+  
+  try {
+    if (window.ItalianDateSystem) {
+      const isoDate = window.ItalianDateSystem.italianToISO(input);
+      const backToItalian = window.ItalianDateSystem.ISOToItalian(isoDate);
+      const jsDate = new Date(isoDate);
+      
+      result.innerHTML = `<div style="background: #d1ecf1; padding: 10px; border-radius: 4px;">
+        <strong>🔄 Conversioni:</strong><br>
+        📅 Italiano: ${input}<br>
+        🌍 ISO 8601: ${isoDate}<br>
+        💻 JavaScript: ${jsDate.toLocaleDateString('it-IT')}<br>
+        ↩️ Ritorno italiano: ${backToItalian}<br>
+        ✅ Roundtrip: ${input === backToItalian ? 'Perfetto' : 'Errore'}
+      </div>`;
+    } else {
+      result.innerHTML = '<div style="color: red;">❌ Sistema date italiano non caricato</div>';
+    }
+  } catch (error) {
+    result.innerHTML = `<div style="color: red; background: #f8d7da; padding: 10px; border-radius: 4px;">❌ Errore: ${error.message}</div>`;
+  }
+}
+
+// Demo calcolo giorni
+function calculateDaysDemo() {
+  const start = document.getElementById('startDate').value;
+  const end = document.getElementById('endDate').value;
+  const result = document.getElementById('calculationResult');
+  
+  if (!start || !end) {
+    result.innerHTML = '<div style="color: orange;">⚠️ Inserisci entrambe le date</div>';
+    return;
+  }
+  
+  try {
+    if (window.ItalianDateSystem) {
+      const days = window.ItalianDateSystem.calcolaGiorni(start, end);
+      result.innerHTML = `<div style="background: #d4edda; padding: 10px; border-radius: 4px;">
+        <strong>📊 Calcolo Giorni:</strong><br>
+        📅 Da: ${start}<br>
+        📅 A: ${end}<br>
+        🧮 Totale giorni: <strong>${days}</strong>
+      </div>`;
+    } else {
+      result.innerHTML = '<div style="color: red;">❌ Sistema date italiano non caricato</div>';
+    }
+  } catch (error) {
+    result.innerHTML = `<div style="color: red; background: #f8d7da; padding: 10px; border-radius: 4px;">❌ Errore: ${error.message}</div>`;
+  }
+}
+
+// Demo calcolo giorni lavorativi
+function calculateWorkingDaysDemo() {
+  const start = document.getElementById('startDate').value;
+  const end = document.getElementById('endDate').value;
+  const result = document.getElementById('calculationResult');
+  
+  if (!start || !end) {
+    result.innerHTML = '<div style="color: orange;">⚠️ Inserisci entrambe le date</div>';
+    return;
+  }
+  
+  try {
+    if (window.ItalianDateSystem) {
+      const totalDays = window.ItalianDateSystem.calcolaGiorni(start, end);
+      const workingDays = window.ItalianDateSystem.calcolaGiorniLavorativi(start, end);
+      result.innerHTML = `<div style="background: #fff3cd; padding: 10px; border-radius: 4px;">
+        <strong>💼 Calcolo Giorni Lavorativi:</strong><br>
+        📅 Da: ${start}<br>
+        📅 A: ${end}<br>
+        🧮 Totale giorni: ${totalDays}<br>
+        💼 Giorni lavorativi: <strong>${workingDays}</strong><br>
+        🏖️ Weekend/festivi: ${totalDays - workingDays}
+      </div>`;
+    } else {
+      result.innerHTML = '<div style="color: red;">❌ Sistema date italiano non caricato</div>';
+    }
+  } catch (error) {
+    result.innerHTML = `<div style="color: red; background: #f8d7da; padding: 10px; border-radius: 4px;">❌ Errore: ${error.message}</div>`;
+  }
+}
+
+// Demo verifica festività
+function checkHolidayDemo() {
+  const input = document.getElementById('holidayInput').value;
+  const result = document.getElementById('holidayResult');
+  
+  if (!input) {
+    result.innerHTML = '<div style="color: orange;">⚠️ Inserisci una data</div>';
+    return;
+  }
+  
+  try {
+    if (window.ItalianDateSystem) {
+      const isHoliday = window.ItalianDateSystem.isFestivita(input);
+      const holidayName = window.ItalianDateSystem.getNomeFestivita(input);
+      
+      if (isHoliday) {
+        result.innerHTML = `<div style="background: #f8d7da; padding: 10px; border-radius: 4px;">
+          <strong>🎉 Festività Rilevata!</strong><br>
+          📅 Data: ${input}<br>
+          🎊 Festività: <strong>${holidayName}</strong><br>
+          ❌ Non è un giorno lavorativo
+        </div>`;
+      } else {
+        result.innerHTML = `<div style="background: #d4edda; padding: 10px; border-radius: 4px;">
+          <strong>💼 Giorno Lavorativo</strong><br>
+          📅 Data: ${input}<br>
+          ✅ Non è una festività<br>
+          💼 È un giorno lavorativo normale
+        </div>`;
+      }
+    } else {
+      result.innerHTML = '<div style="color: red;">❌ Sistema date italiano non caricato</div>';
+    }
+  } catch (error) {
+    result.innerHTML = `<div style="color: red; background: #f8d7da; padding: 10px; border-radius: 4px;">❌ Errore: ${error.message}</div>`;
+  }
+}
+
+// Rendi le funzioni disponibili globalmente
+window.validateDateDemo = validateDateDemo;
+window.convertDateDemo = convertDateDemo;
+window.calculateDaysDemo = calculateDaysDemo;
+window.calculateWorkingDaysDemo = calculateWorkingDaysDemo;
+window.checkHolidayDemo = checkHolidayDemo;
