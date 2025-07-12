@@ -718,6 +718,7 @@
     <nav id="main-navigation" class="tabs">
       <div id="tab-timeline" class="tab-link active" data-target="timeline-content">Timeline</div>
       <div id="tab-data" class="tab-link" data-target="data-content">Gestione Dati</div>
+      <div id="tab-demo" class="tab-link" data-target="demo-content" style="display: block !important; visibility: visible !important; opacity: 1 !important; background: linear-gradient(135deg, #00b894, #00a085) !important; color: white !important; font-weight: bold !important; border: 3px solid #ff6b6b !important; box-shadow: 0 4px 15px rgba(255,107,107,0.5) !important;">🇮🇹 Demo Date</div>
       <div id="tab-planner" class="tab-link" data-target="planner-content">Pianificazione</div>
       <div id="tab-clients" class="tab-link" data-target="clients-content">Clienti</div>
       <div id="tab-travels" class="tab-link" data-target="travels-content">Percorsi</div>
@@ -785,6 +786,90 @@
       <div id="ai-content" class="tab-content">
         <!-- Contenuto AI verrà caricato dinamicamente -->
       </div>
+
+      <!-- TAB DEMO DATE ITALIANE -->
+      <div id="demo-content" class="tab-content">
+        <div style="padding: 20px;">
+          <h3>🇮🇹 Sistema Date Italiano - Demo Interattiva</h3>
+          
+          <!-- Test Veloce -->
+          <div style="margin: 20px 0; text-align: center;">
+            <button onclick="testItalianDateSystem()" class="btn btn-info" style="padding: 12px 30px; font-size: 16px;">
+              ⚡ Test Sistema Date Italiano
+            </button>
+          </div>
+          
+          <div id="quick-test-results" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; display: none;">
+            <h4>Risultati Test:</h4>
+            <div id="test-output"></div>
+          </div>
+
+          <!-- Demo Validazione Date -->
+          <div style="margin: 30px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>📅 Validazione Date Italiane</h4>
+            <div style="margin: 15px 0;">
+              <label>Inserisci una data (formato DD/MM/YYYY):</label>
+              <input type="text" id="dateInput" placeholder="es. 15/03/2025" style="margin: 10px 0; padding: 10px; width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+              <button onclick="validateDateDemo()" class="btn btn-primary" style="margin-left: 10px;">Valida</button>
+            </div>
+            <div id="dateValidationResult" style="margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
+          </div>
+
+          <!-- Demo Conversione Date -->
+          <div style="margin: 30px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>🔄 Conversione Date</h4>
+            <div style="margin: 15px 0;">
+              <label>Data italiana da convertire:</label>
+              <input type="text" id="conversionInput" placeholder="es. 25/12/2025" style="margin: 10px 0; padding: 10px; width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+              <button onclick="convertDateDemo()" class="btn btn-primary" style="margin-left: 10px;">Converti</button>
+            </div>
+            <div id="conversionResult" style="margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
+          </div>
+
+          <!-- Demo Calcoli -->
+          <div style="margin: 30px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>🧮 Calcoli con Date</h4>
+            <div style="margin: 15px 0;">
+              <div style="margin: 10px 0;">
+                <label>Data inizio:</label>
+                <input type="text" id="startDate" placeholder="01/01/2025" style="margin: 5px; padding: 8px; width: 150px; border: 1px solid #ddd; border-radius: 4px;">
+              </div>
+              <div style="margin: 10px 0;">
+                <label>Data fine:</label>
+                <input type="text" id="endDate" placeholder="31/12/2025" style="margin: 5px; padding: 8px; width: 150px; border: 1px solid #ddd; border-radius: 4px;">
+              </div>
+              <button onclick="calculateDaysDemo()" class="btn btn-primary">Calcola Giorni</button>
+              <button onclick="calculateWorkingDaysDemo()" class="btn btn-secondary" style="margin-left: 10px;">Giorni Lavorativi</button>
+            </div>
+            <div id="calculationResult" style="margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
+          </div>
+
+          <!-- Demo Festività -->
+          <div style="margin: 30px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>🎉 Verifica Festività</h4>
+            <div style="margin: 15px 0;">
+              <label>Verifica se una data è festiva:</label>
+              <input type="text" id="holidayInput" placeholder="25/12/2025" style="margin: 10px 0; padding: 10px; width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+              <button onclick="checkHolidayDemo()" class="btn btn-primary" style="margin-left: 10px;">Verifica</button>
+            </div>
+            <div id="holidayResult" style="margin-top: 10px; padding: 10px; border-radius: 4px;"></div>
+          </div>
+
+          <!-- Link ai File Completi -->
+          <div style="margin: 30px 0; padding: 20px; background: #e3f2fd; border-radius: 8px;">
+            <h4>📁 Demo e Test Completi</h4>
+            <p>Per demo più avanzate e test completi:</p>
+            <div style="margin: 15px 0;">
+              <a href="demo-italian-dates.html" target="_blank" class="btn btn-primary" style="margin-right: 10px;">
+                📱 Demo Completa
+              </a>
+              <a href="test-italian-dates.html" target="_blank" class="btn btn-secondary">
+                🧪 Test Suite Completa
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Debug Info (hidden by default) -->
@@ -793,8 +878,19 @@
 
   <!-- JavaScript Modules -->
   <script src="config/api-config.js"></script>
+  <script src="config/temporal-settings.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/utils/italian-date-parser.js"></script>
+  <script src="js/utils/italian-date-manager.js"></script>
+  <script src="js/utils/italian-date-system.js"></script>
+  <script src="js/utils/italian-calendar.js"></script>
+  <script src="js/utils/temporal-parser.js"></script>
+  <script src="js/middleware/temporal-integration.js"></script>
+  <script src="js/middleware/ai-date-corrector.js"></script>
+  <script src="js/middleware/ai-wrapper-forced-date.js"></script>
+  <script src="tests/temporal-parser.test.js"></script>
+  <script src="tests/test-italian-date-format.js"></script>
+  <script src="tests/test-nuclear-date-fix.js"></script>
   <script src="js/app.js"></script>
   <script src="js/navigation.js"></script>
   <script src="js/api.js"></script>
@@ -1445,7 +1541,7 @@
             </div>
             <!-- Timer artificiali rimossi per evitare blocchi -->
             <button class="btn btn-primary" onclick="flavioAI.saveConfig()">Salva Configurazione</button>
-            <button class="btn btn-secondary" onclick="flavioAI.clearHistory()">Cancella Cronologia</button>
+            <button class="btn btn-secondary" onclick="(() => { const chat = document.getElementById('aiChatMessages') || document.querySelector('.ai-chat-messages'); if(chat) { chat.innerHTML = ''; localStorage.removeItem('ai_conversation_history'); localStorage.removeItem('gc_mobile_ai_history'); alert('Cronologia cancellata!'); } else { alert('Nessuna cronologia da cancellare'); } })()">Cancella Cronologia</button>
             <button class="btn btn-warning" onclick="flavioAI.refreshSupabaseData()">Aggiorna Dati</button>
           </div>
           
@@ -3921,6 +4017,59 @@
   <script src="debug-data.js"></script>
   <script src="debug-essemme-detailed.js"></script>
   <script src="debug-date-field.js"></script>
+
+  <!-- FORCE DEMO TAB VISIBILITY - SCRIPT INLINE -->
+  <script>
+    console.log('🔥 INLINE SCRIPT: Forzando visibilità scheda demo...');
+    
+    function forceDemoTabVisibility() {
+      const demoTab = document.getElementById('tab-demo');
+      console.log('🔍 INLINE: Cercando tab demo...', !!demoTab);
+      
+      if (demoTab) {
+        console.log('🔥 INLINE: DEMO TAB TROVATO! Forzando visibilità...');
+        demoTab.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; background: linear-gradient(135deg, #00b894, #00a085) !important; color: white !important; font-weight: bold !important; border: 3px solid #ff6b6b !important; box-shadow: 0 4px 15px rgba(255,107,107,0.5) !important; position: relative !important; z-index: 999 !important; order: 3 !important;';
+        
+        // Forza anche il container parent
+        if (demoTab.parentElement) {
+          demoTab.parentElement.style.display = 'flex';
+          demoTab.parentElement.style.flexWrap = 'wrap';
+          console.log('🔥 INLINE: Parent container aggiornato');
+        }
+        
+        console.log('🔥 INLINE: DEMO TAB FORCED VISIBLE SUCCESS!');
+        return true;
+      } else {
+        console.error('❌ INLINE: DEMO TAB NON TROVATO!');
+        return false;
+      }
+    }
+    
+    // Prova immediata
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(forceDemoTabVisibility, 100);
+        setTimeout(forceDemoTabVisibility, 1000);
+        setTimeout(forceDemoTabVisibility, 3000);
+      });
+    } else {
+      forceDemoTabVisibility();
+      setTimeout(forceDemoTabVisibility, 1000);
+      setTimeout(forceDemoTabVisibility, 3000);
+    }
+    
+    // Prova ogni 5 secondi per i primi 30 secondi
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      console.log(`🔄 INLINE: Tentativo ${attempts}/6 di forzatura demo tab...`);
+      
+      if (forceDemoTabVisibility() || attempts >= 6) {
+        clearInterval(interval);
+        console.log('🏁 INLINE: Terminato controllo demo tab');
+      }
+    }, 5000);
+  </script>
 
 </body>
 </html>
