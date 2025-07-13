@@ -2025,16 +2025,50 @@
   <script src="js/middleware/vocabolario-middleware.js"></script>
   
   <!-- AI Middleware Intelligente con Vocabolario Dinamico -->
-  <!-- ✅ SCOMMENTATO PER FIX ERRORI TEMPORAL -->
-  <script src="js/middleware/vocabulary-manager.js"></script>
-  <script src="js/middleware/vocabulary-sync.js"></script>
-  <script src="js/middleware/temporal-parser.js"></script>
-  <script src="js/middleware/ai-middleware.js"></script>
-  <script src="js/middleware/middleware-integration.js"></script>
-  <script src="js/middleware/middleware-tests.js"></script>
+  <!-- ❌ TEMPORANEAMENTE DISABILITATO - PROBLEMI NETLIFY DEPLOY -->
+  <!-- <script src="js/middleware/vocabulary-manager.js"></script> -->
+  <!-- <script src="js/middleware/vocabulary-sync.js"></script> -->
+  <!-- <script src="js/middleware/temporal-parser.js"></script> -->
+  <!-- <script src="js/middleware/ai-middleware.js"></script> -->
+  <!-- <script src="js/middleware/middleware-integration.js"></script> -->
+  <!-- <script src="js/middleware/middleware-tests.js"></script> -->
   <!-- <script src="js/middleware/enhanced-ai-assistant.js"></script> -->
   <!-- <script src="js/middleware/unified-ai-system.js"></script> -->
   
+  <!-- ✅ TEMPORAL CONFIG INLINE - FIX NETLIFY DEPLOY ISSUES -->
+  <script>
+    // Configurazione temporale inline per evitare problemi Netlify
+    const TEMPORAL_CONFIG = {
+      locale: 'it-IT',
+      timezone: 'Europe/Rome',
+      primoGiornoSettimana: 1,
+      formatoOutput: 'dd/mm/yyyy',
+      formatoISO: 'yyyy-mm-dd',
+      fallbackSeNonCapisce: 'oggi',
+      logDebug: true,
+      tolleranzaFuzzyMatching: 0.8,
+      maxGiorniRange: 365,
+      aliasMesi: {
+        'gen': 'gennaio', 'feb': 'febbraio', 'mar': 'marzo', 'apr': 'aprile',
+        'mag': 'maggio', 'giu': 'giugno', 'lug': 'luglio', 'ago': 'agosto',
+        'set': 'settembre', 'ott': 'ottobre', 'nov': 'novembre', 'dic': 'dicembre'
+      },
+      aliasGiorni: {
+        'lun': 'lunedì', 'mar': 'martedì', 'mer': 'mercoledì', 'gio': 'giovedì',
+        'ven': 'venerdì', 'sab': 'sabato', 'dom': 'domenica'
+      },
+      parolaChiaveTemporali: [
+        'oggi', 'ieri', 'domani', 'settimana', 'mese', 'anno',
+        'giorni', 'prossimo', 'scorso', 'corrente', 'passato',
+        'fa', 'tra', 'fra', 'dopo', 'prima', 'weekend', 'fine'
+      ]
+    };
+    
+    // Disponibile globalmente
+    window.TEMPORAL_CONFIG = TEMPORAL_CONFIG;
+    console.log('[TEMPORAL] ✅ Configurazione caricata inline (fix Netlify)');
+  </script>
+
   <!-- Keep Alive per Replit -->
   <script src="js/keep-alive.js"></script>
   
