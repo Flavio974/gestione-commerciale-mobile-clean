@@ -1,0 +1,8 @@
+# ✅ NETLIFY REDIRECTS MINIMALI - FIX JS FILES
+
+# Passthrough esplicito per file JavaScript
+/config/*.js /config/:splat 200
+/js/*.js /js/:splat 200
+
+# SPA fallback - SOLO se file non esiste
+/* /index.html 200
