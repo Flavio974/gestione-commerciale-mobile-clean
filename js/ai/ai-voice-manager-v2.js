@@ -435,6 +435,7 @@ class AIVoiceManagerV2 {
             display: flex;
             flex-direction: column;
             gap: 10px;
+            pointer-events: auto;
             backdrop-filter: blur(10px);
             min-width: 200px;
             border: 2px solid rgba(0,122,255,0.3);
@@ -991,11 +992,15 @@ class AIVoiceManagerV2 {
         const isIPhone = /iPhone/.test(userAgent);
         let isIPad = /iPad/.test(userAgent);
         
-        // FORCE iPad mode per testing
+        // FORCE iPad mode SOLO per veri iPad o test esplicito
         const forceIPadMode = localStorage.getItem('force_ipad_mode') === 'true';
-        if (forceIPadMode) {
+        const isRealIPad = /iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
+        
+        if (forceIPadMode && isRealIPad) {
             isIPad = true;
-            console.log('🔧 FORCE iPad MODE ATTIVATO');
+            console.log('🔧 FORCE iPad MODE ATTIVATO (dispositivo iPad reale)');
+        } else if (forceIPadMode && !isRealIPad) {
+            console.log('🚫 FORCE iPad MODE IGNORATO (non è un iPad reale)');
         }
         
         // Rileva anche simulatori iPad nel browser dev tools
@@ -1052,6 +1057,9 @@ class AIVoiceManagerV2 {
         container.id = 'voice-controls-v2';
         container.className = 'voice-controls-container';
         
+        // ✅ FIX: Evita intercettazione click sui tab sottostanti
+        container.style.pointerEvents = 'none';
+        
         // Aggiungi classe specifica per iPhone
         if (isIPhone) {
             container.classList.add('iphone-layout');
@@ -1061,6 +1069,8 @@ class AIVoiceManagerV2 {
         const micButton = document.createElement('button');
         micButton.id = 'mic-button-v2';
         micButton.className = 'voice-button mic-button';
+        // ✅ FIX: Riattiva pointer-events sui bottoni interattivi
+        micButton.style.pointerEvents = 'auto';
         
         let iconSize;
         if (isIPhone) {
