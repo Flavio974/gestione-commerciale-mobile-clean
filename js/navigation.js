@@ -87,7 +87,7 @@ const Navigation = {
    * Ottiene ordine dei tab
    */
   getTabOrder: function() {
-    const tabs = ['timeline', 'data', 'planner', 'clients', 'travels', 'worksheet', 'orders', 'ddtft', 'smart', 'ai'];
+    const tabs = ['timeline', 'data', 'demo', 'planner', 'clients', 'travels', 'worksheet', 'orders', 'ddtft', 'smart', 'ai'];
     
     // Aggiungi tab Comandi solo su desktop
     if (window.DeviceDetector && window.DeviceDetector.info.isDesktop) {
@@ -126,14 +126,31 @@ const Navigation = {
    * Verifica se tab è valido
    */
   isValidTab: function(tabName) {
-    return this.getTabOrder().includes(tabName);
+    // SEMPRE accetta demo tab per evitare interferenze
+    if (tabName === 'demo') {
+      console.log('✅ Demo tab SEMPRE valido');
+      return true;
+    }
+    
+    const validTabs = this.getTabOrder();
+    const isValid = validTabs.includes(tabName);
+    
+    if (!isValid) {
+      console.warn(`⚠️ Tab '${tabName}' non valido. Tab disponibili:`, validTabs);
+    }
+    
+    return isValid;
   },
   
   /**
    * Switch to tab
    */
   switchToTab: function(tabName, updateHistory = true) {
-    if (!this.isValidTab(tabName)) {
+    // 🔥 OVERRIDE SPECIALE PER DEMO TAB
+    if (tabName === 'demo') {
+      console.log('🔥 DEMO TAB: Bypass validazione - forzando switch');
+      // Continua senza validazione per il tab demo
+    } else if (!this.isValidTab(tabName)) {
       console.error('Tab non valido:', tabName);
       return;
     }

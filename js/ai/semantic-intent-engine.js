@@ -53,9 +53,9 @@ class SemanticIntentEngine {
                 context: ['oggi', 'corrente', 'attuale', 'adesso', 'ora', 'siamo', 'abbiamo', 'è']
             },
             data_temporale: {
-                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi', 'che data sarà domani', 'che data sarà dopo domani', 'che data avremo dopodomani', 'che data avremo dopo domani', 'tra un giorno', 'tra una settimana', 'tra un mese', 'tra due giorni', 'tra tre giorni', 'settimana prossima', 'mese prossimo', 'anno prossimo', 'settimana scorsa', 'mese scorso', 'anno scorso', 'fra poco', 'tra poco', 'a breve', 'stamattina', 'stasera', 'stanotte', 'domani che data avremo', 'che data avremo domani', 'ma domani che data avremo', 'dopodomani che data sarà', 'tra due giorni che data avremo'],
-                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data', 'tra un giorno', 'tra una settimana', 'tra un mese', 'fra giorni', 'fra settimane', 'fra mesi', 'data domani', 'data ieri', 'la prossima settimana', 'il prossimo mese', 'il prossimo anno', 'la scorsa settimana', 'il mese scorso', 'l\'anno scorso', 'stamani', 'data avremo domani', 'avremo domani', 'data di domani'],
-                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data', 'tra', 'fra', 'giorni', 'settimane', 'mesi', 'anni', 'ore', 'minuti', 'un', 'una', 'due', 'tre', 'quattro', 'cinque', 'prossima', 'prossimo', 'scorsa', 'scorso', 'poco', 'breve', 'mattina', 'sera', 'notte', 'ma']
+                keywords: ['che data sarà', 'che data avremo', 'che data era', 'che data avevamo', 'data sarà', 'data avremo', 'data di domani', 'data di ieri', 'tra giorni', 'tra settimane', 'tra mesi', 'che data sarà domani', 'che data sarà dopo domani', 'che data avremo dopodomani', 'che data avremo dopo domani', 'tra un giorno', 'tra una settimana', 'tra un mese', 'tra due giorni', 'tra tre giorni', 'settimana prossima', 'mese prossimo', 'anno prossimo', 'settimana scorsa', 'mese scorso', 'anno scorso', 'fra poco', 'tra poco', 'a breve', 'stamattina', 'stasera', 'stanotte', 'domani che data avremo', 'che data avremo domani', 'ma domani che data avremo', 'dopodomani che data sarà', 'tra due giorni che data avremo', 'giorni fa che data era', 'giorni fa che data c\'era', 'tre giorni fa', 'sette giorni fa', 'un giorno fa', 'due giorni fa', 'quattro giorni fa', 'cinque giorni fa'],
+                synonyms: ['domani che data', 'ieri che data', 'dopo domani che data', 'altro ieri che data', 'dimmi la data', 'tra un giorno', 'tra una settimana', 'tra un mese', 'fra giorni', 'fra settimane', 'fra mesi', 'data domani', 'data ieri', 'la prossima settimana', 'il prossimo mese', 'il prossimo anno', 'la scorsa settimana', 'il mese scorso', 'l\'anno scorso', 'stamani', 'data avremo domani', 'avremo domani', 'data di domani', 'che data era', 'la data di', 'giorni fa', 'fa che data'],
+                context: ['domani', 'ieri', 'dopo domani', 'altro ieri', 'ieri l\'altro', 'sarà', 'era', 'avremo', 'avevamo', 'la data di', 'dimmi la data', 'tra', 'fra', 'giorni', 'settimane', 'mesi', 'anni', 'ore', 'minuti', 'un', 'una', 'due', 'tre', 'quattro', 'cinque', 'prossima', 'prossimo', 'scorsa', 'scorso', 'poco', 'breve', 'mattina', 'sera', 'notte', 'ma', 'fa']
             }
         };
 
@@ -149,7 +149,9 @@ class SemanticIntentEngine {
                                   fullText.includes('era') ||
                                   fullText.includes('avevamo') ||
                                   fullText.includes('tra') ||
-                                  fullText.includes('fra');
+                                  fullText.includes('fra') ||
+                                  /\d+\s+giorni\s+fa/.test(fullText) ||
+                                  /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(fullText);
         
         if (hasTemporalMarkers) {
             // Metti data_temporale per primo se presente
@@ -251,17 +253,31 @@ class SemanticIntentEngine {
                                   fullText.includes('era') ||
                                   fullText.includes('avevamo') ||
                                   fullText.includes('tra') ||
-                                  fullText.includes('fra');
+                                  fullText.includes('fra') ||
+                                  /\d+\s+giorni\s+fa/.test(fullText) ||
+                                  /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(fullText);
         
         // Se ha marker temporali e c'è un match data_temporale, forza alta confidenza
         if (hasTemporalMarkers && temporalMatches.length > 0 && temporalMatches[0].domain === 'data_temporale') {
             return 1.0; // Massima confidenza per richieste temporali con marker
         }
         
+        // SPECIALE: Se contiene pattern "X giorni fa", forza data_temporale
+        const hasGiorniFaPattern = /\d+\s+giorni\s+fa/.test(fullText) ||
+                                  /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(fullText);
+        if (hasGiorniFaPattern && temporalMatches.length > 0) {
+            // Trova data_temporale nei match
+            const temporaleMatch = temporalMatches.find(m => m.domain === 'data_temporale');
+            if (temporaleMatch) {
+                return 1.0; // Massima confidenza per pattern "giorni fa"
+            }
+        }
+
         // Se NON ha marker temporali e contiene SOLO "che data è", forza data_corrente
         const isGenericDataQuestion = fullText.includes('che data è') && !hasTemporalMarkers &&
                                      !fullText.includes('sarà') && !fullText.includes('avremo') &&
-                                     !fullText.includes('era') && !fullText.includes('avevamo');
+                                     !fullText.includes('era') && !fullText.includes('avevamo') &&
+                                     !hasGiorniFaPattern;
         if (isGenericDataQuestion && temporalMatches.length > 0 && temporalMatches[0].domain === 'data_corrente') {
             return 1.0; // Massima confidenza per data corrente generica
         }

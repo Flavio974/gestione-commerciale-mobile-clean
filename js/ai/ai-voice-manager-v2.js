@@ -237,12 +237,20 @@ class AIVoiceManagerV2 {
                     </p>
                 `;
                 
-                // Inserisci all'inizio del contenuto AI
-                if (aiContent.firstChild) {
-                    aiContent.insertBefore(ipadControls, aiContent.firstChild);
-                } else {
-                    aiContent.appendChild(ipadControls);
-                }
+                // ✅ FIX CHIRURGICO: NON modificare il DOM delle tab!
+                // Invece di inserire dentro #ai-content, usa position fixed overlay
+                Object.assign(ipadControls.style, {
+                    position: 'fixed',
+                    top: '70px',
+                    right: '20px',
+                    zIndex: '10000',
+                    maxWidth: '300px',
+                    pointerEvents: 'auto'
+                });
+                
+                // Aggiungi a body per non interferire con il layout tab
+                document.body.appendChild(ipadControls);
+                console.log('🔧 [FIX] iPad controls moved to fixed overlay instead of tab content');
             }
             
             // Crea il bottone
@@ -1919,12 +1927,20 @@ class AIVoiceManagerV2 {
         // IMPORTANTE: Controlla PRIMA richieste temporali, poi quelle correnti
         
         // DEBUG: Log dettagliato per capire la classificazione
+        const hasGiorniFaNumeric = /\d+\s+giorni\s+fa/.test(lowerTranscript);
+        const hasGiorniFaText = /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(lowerTranscript);
+        const hasGiorniFaPattern = lowerTranscript.includes('giorni fa che data');
+        
         console.log('🔍 ROUTING DEBUG:', {
             transcript: transcript,
+            lowerTranscript: lowerTranscript,
             temporalIntent: temporalIntent,
             isDateTemporalRequest: isDateTemporalRequest,
             isDateRequest: isDateRequest,
-            hasGiorniFa: /\d+\s+giorni\s+fa/.test(lowerTranscript) || /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(lowerTranscript)
+            hasGiorniFaNumeric: hasGiorniFaNumeric,
+            hasGiorniFaText: hasGiorniFaText, 
+            hasGiorniFaPattern: hasGiorniFaPattern,
+            combinedGiorniFa: hasGiorniFaNumeric || hasGiorniFaText
         });
         
         if (isDateTemporalRequest) {

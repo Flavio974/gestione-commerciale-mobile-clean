@@ -36,15 +36,19 @@
 
 # Functions configuration already specified in [build] section
 
-# Redirect API calls to Netlify Functions
+# ✅ STATIC FILES PASSTHROUGH
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/config/*.js"
+  to = "/config/:splat"
   status = 200
 
-# PWA offline fallback
+[[redirects]]
+  from = "/js/*.js"  
+  to = "/js/:splat"
+  status = 200
+
+# ✅ SPA FALLBACK - SEMPRE ULTIMO
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = false

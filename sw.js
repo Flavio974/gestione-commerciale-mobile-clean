@@ -110,13 +110,25 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// TEMPORANEAMENTE DISABILITATO PER DEBUG
-// Intercetta le richieste di rete
-/*
+// ✅ SERVICE WORKER con guardia per script JS
 self.addEventListener('fetch', event => {
-  // DISABILITATO - nessuna intercettazione
+  // ✅ GUARDIA CRITICA: Non intercettare richieste di script JS
+  if (event.request.destination === 'script') {
+    console.log('[SW] Script request bypassed:', event.request.url);
+    return; // Lascia che il browser gestisca direttamente
+  }
+  
+  // ✅ GUARDIA: Non intercettare moduli temporal o config
+  if (event.request.url.includes('temporal') || 
+      event.request.url.includes('config/') ||
+      event.request.url.includes('middleware/')) {
+    console.log('[SW] Module request bypassed:', event.request.url);
+    return;
+  }
+  
+  // Per altre richieste, continua con logica normale SW se necessario
+  // (attualmente disabilitata per debug)
 });
-*/
 
 // Gestisci messaggi dal client
 self.addEventListener('message', event => {

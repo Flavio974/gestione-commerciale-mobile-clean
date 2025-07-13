@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Overlay Fix</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #00ff00; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #444; }
+        button { padding: 10px 20px; margin: 5px; background: #333; color: #00ff00; border: 1px solid #00ff00; cursor: pointer; }
+        .result { margin: 10px 0; padding: 10px; background: #222; }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+        .warning { color: #ffff44; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Overlay Audio Fix</h1>
+    
+    <div class="test-section">
+        <h3>1. Verifica Moduli Temporal PRIMA Attivazione Audio</h3>
+        <button onclick="testBeforeAudio()">🔍 Test Moduli Pre-Audio</button>
+        <div id="preResults" class="result">In attesa...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Simula Attivazione Audio (problematica)</h3>
+        <button onclick="simulateAudioActivation()">🎵 Simula Audio Activation</button>
+        <div id="audioResults" class="result">In attesa...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Verifica Moduli Temporal DOPO Attivazione Audio</h3>
+        <button onclick="testAfterAudio()">🔍 Test Moduli Post-Audio</button>
+        <div id="postResults" class="result">In attesa...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Verifica Layout Tab</h3>
+        <button onclick="checkTabLayout()">📐 Check Tab Layout</button>
+        <div id="layoutResults" class="result">In attesa...</div>
+    </div>
+
+    <script>
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const colors = { info: '#4444ff', success: '#44ff44', error: '#ff4444', warning: '#ffff44' };
+            container.innerHTML += `<div style="color: ${colors[type]}">[${new Date().toLocaleTimeString()}] ${message}</div>`;
+        }
+        
+        // Test moduli temporal
+        async function testTemporalModules(phase) {
+            const modules = [
+                'config/temporal-settings.js',
+                'js/middleware/vocabulary-manager.js',
+                'js/data/italian-date-system.js'
+            ];
+            
+            const results = [];
+            
+            for (const module of modules) {
+                try {
+                    const url = new URL(module, window.location.origin + '/').href;
+                    const response = await fetch(url, { cache: 'no-store' });
+                    const text = await response.text();
+                    
+                    const isHTML = text.includes('<!DOCTYPE') || text.includes('<html');
+                    const isJS = response.headers.get('content-type')?.includes('javascript');
+                    
+                    results.push({
+                        module,
+                        status: response.status,
+                        isHTML,
+                        isJS,
+                        preview: text.slice(0, 30)
+                    });
+                    
+                } catch (error) {
+                    results.push({
+                        module,
+                        error: error.message
+                    });
+                }
+            }
+            
+            return results;
+        }
+        
+        async function testBeforeAudio() {
+            log('preResults', '🔍 Testing moduli temporal PRIMA attivazione audio...', 'info');
+            const results = await testTemporalModules('pre');
+            
+            results.forEach(r => {
+                if (r.error) {
+                    log('preResults', `❌ ${r.module}: ERROR ${r.error}`, 'error');
+                } else if (r.isHTML) {
+                    log('preResults', `❌ ${r.module}: HTML ricevuto! ${r.preview}...`, 'error');
+                } else if (r.isJS) {
+                    log('preResults', `✅ ${r.module}: JS valido (${r.status})`, 'success');
+                } else {
+                    log('preResults', `⚠️ ${r.module}: Tipo inaspettato (${r.status})`, 'warning');
+                }
+            });
+        }
+        
+        function simulateAudioActivation() {
+            log('audioResults', '🎵 Simulando attivazione audio...', 'info');
+            
+            // Simula quello che fa l'AIVoiceManager
+            try {
+                // 1. Controlla se AIVoiceManagerV2 esiste
+                if (typeof window.AIVoiceManagerV2 !== 'undefined') {
+                    log('audioResults', '✅ AIVoiceManagerV2 trovato', 'success');
+                    
+                    // 2. Simula creazione overlay
+                    const existingOverlay = document.getElementById('ipad-audio-controls');
+                    if (existingOverlay) {
+                        log('audioResults', '⚠️ Overlay già esistente, rimuovo...', 'warning');
+                        existingOverlay.remove();
+                    }
+                    
+                    // 3. Crea overlay di test
+                    const testOverlay = document.createElement('div');
+                    testOverlay.id = 'test-audio-overlay';
+                    testOverlay.style.cssText = `
+                        position: fixed;
+                        top: 10px;
+                        right: 10px;
+                        background: rgba(0,122,255,0.9);
+                        color: white;
+                        padding: 15px;
+                        border-radius: 8px;
+                        z-index: 10000;
+                    `;
+                    testOverlay.innerHTML = '🎵 Test Audio Overlay';
+                    
+                    document.body.appendChild(testOverlay);
+                    log('audioResults', '✅ Test overlay creato (position: fixed)', 'success');
+                    
+                    // 4. Verifica layout tab
+                    setTimeout(() => {
+                        const aiContent = document.getElementById('ai-content');
+                        if (aiContent) {
+                            const children = aiContent.children.length;
+                            log('audioResults', `📐 AI Content children: ${children}`, 'info');
+                        }
+                    }, 100);
+                    
+                } else {
+                    log('audioResults', '❌ AIVoiceManagerV2 non trovato', 'error');
+                }
+                
+            } catch (error) {
+                log('audioResults', `❌ Errore simulazione: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAfterAudio() {
+            log('postResults', '🔍 Testing moduli temporal DOPO attivazione audio...', 'info');
+            const results = await testTemporalModules('post');
+            
+            results.forEach(r => {
+                if (r.error) {
+                    log('postResults', `❌ ${r.module}: ERROR ${r.error}`, 'error');
+                } else if (r.isHTML) {
+                    log('postResults', `❌ ${r.module}: HTML ricevuto! ${r.preview}...`, 'error');
+                } else if (r.isJS) {
+                    log('postResults', `✅ ${r.module}: JS valido (${r.status})`, 'success');
+                } else {
+                    log('postResults', `⚠️ ${r.module}: Tipo inaspettato (${r.status})`, 'warning');
+                }
+            });
+        }
+        
+        function checkTabLayout() {
+            log('layoutResults', '📐 Verificando layout tab...', 'info');
+            
+            // Controlla se le tab esistono
+            const tabs = document.querySelectorAll('.tab, [class*="tab"]');
+            log('layoutResults', `Trovate ${tabs.length} tab nel DOM`, 'info');
+            
+            // Controlla overlay audio
+            const overlays = document.querySelectorAll('[id*="audio"], [id*="voice"]');
+            log('layoutResults', `Trovati ${overlays.length} overlay audio`, 'info');
+            
+            overlays.forEach((overlay, i) => {
+                const style = window.getComputedStyle(overlay);
+                const position = style.position;
+                const parent = overlay.parentElement?.tagName || 'unknown';
+                
+                log('layoutResults', `Overlay ${i+1}: ${overlay.id}, position: ${position}, parent: ${parent}`, 
+                    position === 'fixed' ? 'success' : 'warning');
+            });
+            
+            // Verifica ai-content
+            const aiContent = document.getElementById('ai-content');
+            if (aiContent) {
+                const children = aiContent.children.length;
+                log('layoutResults', `#ai-content ha ${children} figli`, children === 0 ? 'success' : 'warning');
+            } else {
+                log('layoutResults', '#ai-content non trovato', 'warning');
+            }
+        }
+        
+        // Auto-run test iniziale
+        setTimeout(() => {
+            log('preResults', '🚀 Auto-running initial test...', 'info');
+            testBeforeAudio();
+        }, 1000);
+    </script>
+</body>
+</html>

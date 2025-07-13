@@ -1,0 +1,159 @@
+/**
+ * AI ASSISTANT
+ * Sistema base per assistente AI
+ */
+
+window.AIAssistant = (function() {
+    'use strict';
+
+    const assistant = {
+        isInitialized: false,
+        currentProvider: null,
+        providers: {},
+
+        /**
+         * Inizializzazione
+         */
+        init() {
+            try {
+                this.registerProviders();
+                this.isInitialized = true;
+                console.log('✅ AIAssistant inizializzato');
+                return true;
+            } catch (error) {
+                console.error('❌ Errore inizializzazione AIAssistant:', error);
+                return false;
+            }
+        },
+
+        /**
+         * Registra provider AI disponibili
+         */
+        registerProviders() {
+            // Gemini AI
+            if (window.GeminiAI) {
+                this.providers.gemini = window.GeminiAI;
+            }
+
+            // Altri provider possono essere aggiunti qui
+        },
+
+        /**
+         * Imposta provider corrente
+         */
+        setProvider(providerName) {
+            if (this.providers[providerName]) {
+                this.currentProvider = this.providers[providerName];
+                console.log(`✅ Provider AI impostato: ${providerName}`);
+                return true;
+            } else {
+                console.error(`❌ Provider AI non trovato: ${providerName}`);
+                return false;
+            }
+        },
+
+        /**
+         * Invia messaggio al provider corrente
+         */
+        async sendMessage(message, context = null) {
+            if (!this.currentProvider) {
+                throw new Error('Nessun provider AI configurato');
+            }
+
+            try {
+                if (this.currentProvider.generateResponse) {
+                    return await this.currentProvider.generateResponse(message, context);
+                } else if (this.currentProvider.chat) {
+                    return await this.currentProvider.chat(message);
+                } else {
+                    throw new Error('Provider AI non compatibile');
+                }
+            } catch (error) {
+                console.error('❌ Errore invio messaggio AI:', error);
+                throw error;
+            }
+        },
+
+        /**
+         * Analizza dati
+         */
+        async analyzeData(data, question) {
+            if (!this.currentProvider) {
+                throw new Error('Nessun provider AI configurato');
+            }
+
+            if (this.currentProvider.analyzeBusinessData) {
+                return await this.currentProvider.analyzeBusinessData(data, question);
+            } else {
+                // Fallback generico
+                const context = { data, type: 'analysis' };
+                return await this.sendMessage(question, context);
+            }
+        },
+
+        /**
+         * Ottieni suggerimenti
+         */
+        async getSuggestions(data, action) {
+            if (!this.currentProvider) {
+                throw new Error('Nessun provider AI configurato');
+            }
+
+            if (this.currentProvider.getSuggestions) {
+                return await this.currentProvider.getSuggestions(data, action);
+            } else {
+                const prompt = `Suggerisci azioni per: ${action}`;
+                const context = { data, type: 'suggestions' };
+                return await this.sendMessage(prompt, context);
+            }
+        },
+
+        /**
+         * Test provider corrente
+         */
+        async testProvider() {
+            if (!this.currentProvider) {
+                console.error('❌ Nessun provider da testare');
+                return false;
+            }
+
+            try {
+                if (this.currentProvider.testConnection) {
+                    return await this.currentProvider.testConnection();
+                } else {
+                    const response = await this.sendMessage('Test connessione');
+                    console.log('✅ Test generico riuscito:', response);
+                    return true;
+                }
+            } catch (error) {
+                console.error('❌ Test provider fallito:', error);
+                return false;
+            }
+        },
+
+        /**
+         * Lista provider disponibili
+         */
+        getAvailableProviders() {
+            return Object.keys(this.providers);
+        },
+
+        /**
+         * Stato corrente
+         */
+        getStatus() {
+            return {
+                initialized: this.isInitialized,
+                currentProvider: this.currentProvider ? 'configurato' : 'non configurato',
+                availableProviders: this.getAvailableProviders()
+            };
+        }
+    };
+
+    // Auto-inizializzazione
+    assistant.init();
+
+    return assistant;
+})();
+
+console.log('✅ AIAssistant caricato');

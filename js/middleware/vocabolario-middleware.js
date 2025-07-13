@@ -550,21 +550,8 @@ class VocabolarioMiddleware {
             // Analizza la richiesta per determinare il tipo di dati necessari
             const inputLower = userInput.toLowerCase();
             
-            // DISABILITATO: Lasciamo che l'AI gestisca tutte le richieste temporali con data corrente
-            // if (inputLower.includes('che data è') ||
-            //     inputLower.includes('data di oggi') ||
-            //     inputLower.includes('data corrente') ||
-            //     inputLower.includes('in che data siamo') ||
-            //     inputLower.includes('che giorno è') ||
-            //     inputLower.includes('che data sarà') ||
-            //     inputLower.includes('che data era') ||
-            //     inputLower.includes('che data avevamo')) {
-            //     console.log('📅 VOCABOLARIO: Richiesta temporale rilevata - NON gestisco, passo al sistema semantico');
-            //     return {
-            //         handled: false,
-            //         reason: 'Richiesta temporale - deve essere gestita dal sistema semantico'
-            //     };
-            // }
+            // DISABILITATO COMPLETAMENTE: Lasciamo che EnhancedAIAssistant gestisca le richieste temporali
+            // Le richieste temporali ora vengono gestite da shouldHandleBasicTemporalRequest() in EnhancedAIAssistant
             
             let needsOrders = false;
             let needsProducts = false;

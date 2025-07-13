@@ -76,6 +76,12 @@ voglio sapere che giorno è oggi e che ore sono
 che ore sono e che giorno è
 che ora è e che giorno è
 dimmi l'ora e che giorno è
+che data era [GIORNI] giorni fa
+che data c'era [GIORNI] giorni fa
+la data di [GIORNI] giorni fa
+[GIORNI] giorni fa che data era
+dimmi la data di [GIORNI] giorni fa
+che giorno era [GIORNI] giorni fa
 
 # CATEGORIA: Analisi e Report
 consegne previste [PERIODO]

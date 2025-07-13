@@ -506,7 +506,7 @@ const ComandiModule = {
    * Reset al vocabolario di default
    */
   resetToDefault: async function() {
-    if (!confirm('Vuoi ripristinare il vocabolario alle impostazioni di default? Tutte le modifiche personalizzate andranno perse.')) {
+    if (!confirm('🔄 Vuoi ricaricare il vocabolario dal file aggiornato?\n\n✅ Questo mostrerà tutte le categorie più recenti\n⚠️ Sostituirà solo la versione cache, non cancella niente')) {
       return;
     }
     

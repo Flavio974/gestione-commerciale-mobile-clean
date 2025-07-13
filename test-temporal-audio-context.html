@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Temporal Loading - Audio Context</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #00ff00; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px; background: #333; color: #00ff00; border: 1px solid #00ff00; cursor: pointer; }
+        button:hover { background: #00ff00; color: #000; }
+        .log { background: #222; border: 1px solid #444; padding: 20px; margin: 20px 0; height: 400px; overflow-y: auto; }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+        .warning { color: #ffff44; }
+        .info { color: #4444ff; }
+        pre { margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Caricamento Moduli Temporal - Contesto Audio</h1>
+        
+        <p><strong>Scopo:</strong> Riproduce esattamente il problema "Unexpected token &lt;" dopo attivazione audio</p>
+        
+        <div>
+            <button onclick="testBeforeAudio()">🔍 Test PRIMA attivazione audio</button>
+            <button onclick="activateAudio()">🎵 Attiva Audio Context</button>
+            <button onclick="testAfterAudio()">🔍 Test DOPO attivazione audio</button>
+            <button onclick="clearLog()">🧹 Pulisci Log</button>
+        </div>
+        
+        <div>
+            <h3>Test Moduli Specifici:</h3>
+            <button onclick="testSingleModule('config/temporal-settings.js')">temporal-settings.js</button>
+            <button onclick="testSingleModule('js/middleware/vocabulary-manager.js')">vocabulary-manager.js</button>
+            <button onclick="testSingleModule('js/data/italian-date-system.js')">italian-date-system.js</button>
+            <button onclick="testSingleModule('js/utils/temporal-parser.js')">temporal-parser.js</button>
+        </div>
+        
+        <div id="status" style="margin: 20px 0; padding: 10px; background: #333;">
+            Status: <span id="statusText">Pronto per test</span>
+        </div>
+        
+        <div class="log" id="logOutput">
+            <pre id="logContent">🚀 Test inizializzato. Clicca i pulsanti per iniziare...</pre>
+        </div>
+    </div>
+
+    <script>
+        let audioContext = null;
+        let logElement = document.getElementById('logContent');
+        let statusElement = document.getElementById('statusText');
+        
+        // ✅ Sistema di logging colorato
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#4444ff',
+                success: '#44ff44', 
+                error: '#ff4444',
+                warning: '#ffff44'
+            };
+            
+            const logEntry = document.createElement('div');
+            logEntry.style.color = colors[type];
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+            
+            console.log(`%c[${timestamp}] ${message}`, `color: ${colors[type]}`);
+        }
+        
+        function setStatus(text, type = 'info') {
+            statusElement.textContent = text;
+            statusElement.style.color = type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#4444ff';
+        }
+        
+        function clearLog() {
+            logElement.innerHTML = '<div style="color: #44ff44">Log pulito - pronto per nuovi test</div>';
+        }
+        
+        // ✅ Test PRIMA dell'attivazione audio
+        async function testBeforeAudio() {
+            log('🔍 FASE 1: Test caricamento moduli PRIMA attivazione audio', 'info');
+            setStatus('Testing pre-audio...', 'info');
+            
+            const modules = [
+                'config/temporal-settings.js',
+                'js/middleware/vocabulary-manager.js', 
+                'js/data/italian-date-system.js',
+                'js/utils/temporal-parser.js'
+            ];
+            
+            for (const module of modules) {
+                await testSingleModule(module, false);
+            }
+            
+            log('📊 FASE 1 COMPLETATA: Test pre-audio terminato', 'success');
+            setStatus('Pre-audio test completed', 'success');
+        }
+        
+        // ✅ Attivazione Audio Context (simula attivazione audio dell'app)
+        async function activateAudio() {
+            log('🎵 ATTIVAZIONE AUDIO CONTEXT...', 'warning');
+            setStatus('Activating audio...', 'warning');
+            
+            try {
+                // Simula esattamente cosa fa l'app quando attiva l'audio
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Crea un oscillatore per "unlock" audio su mobile
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                gainNode.gain.value = 0.001;
+                oscillator.frequency.value = 440;
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.1);
+                
+                log('✅ Audio Context attivato:', 'success');
+                log(`   - State: ${audioContext.state}`, 'info');
+                log(`   - Sample Rate: ${audioContext.sampleRate}`, 'info');
+                log(`   - Current Time: ${audioContext.currentTime}`, 'info');
+                
+                // Simula cambio di URL base (possibile causa del problema)
+                if (window.location.hash !== '#audio-active') {
+                    window.location.hash = '#audio-active';
+                    log('🔄 URL hash cambiato a #audio-active', 'warning');
+                }
+                
+                setStatus('Audio context active', 'success');
+                
+            } catch (error) {
+                log(`❌ Errore attivazione audio: ${error.message}`, 'error');
+                setStatus('Audio activation failed', 'error');
+            }
+        }
+        
+        // ✅ Test DOPO attivazione audio
+        async function testAfterAudio() {
+            if (!audioContext) {
+                log('⚠️ Audio context non attivo! Attiva prima l\'audio.', 'warning');
+                return;
+            }
+            
+            log('🔍 FASE 2: Test caricamento moduli DOPO attivazione audio', 'info');
+            setStatus('Testing post-audio...', 'info');
+            
+            const modules = [
+                'config/temporal-settings.js',
+                'js/middleware/vocabulary-manager.js',
+                'js/data/italian-date-system.js', 
+                'js/utils/temporal-parser.js'
+            ];
+            
+            for (const module of modules) {
+                await testSingleModule(module, true);
+            }
+            
+            log('📊 FASE 2 COMPLETATA: Test post-audio terminato', 'success');
+            setStatus('Post-audio test completed', 'success');
+        }
+        
+        // ✅ Test singolo modulo con analisi dettagliata
+        async function testSingleModule(modulePath, isPostAudio = null) {
+            const phase = isPostAudio === true ? '[POST-AUDIO]' : isPostAudio === false ? '[PRE-AUDIO]' : '[MANUAL]';
+            log(`🧪 ${phase} Testing: ${modulePath}`, 'info');
+            
+            try {
+                // Test 1: URL Resolution
+                const resolvedUrl = new URL(modulePath, window.location.origin + '/').href;
+                log(`   🔗 Resolved URL: ${resolvedUrl}`, 'info');
+                
+                // Test 2: Fetch request
+                const response = await fetch(resolvedUrl);
+                const contentType = response.headers.get('content-type') || 'unknown';
+                
+                log(`   📡 Response: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+                log(`   📄 Content-Type: ${contentType}`, 'info');
+                
+                // Test 3: Content analysis
+                const content = await response.text();
+                const first100 = content.slice(0, 100);
+                
+                log(`   📝 First 100 chars: ${first100.replace(/\n/g, '\\n')}`, 'info');
+                
+                // Test 4: Problem detection
+                if (first100.includes('<!DOCTYPE') || first100.includes('<html')) {
+                    log(`   ❌ PROBLEMA RILEVATO: Ricevuto HTML invece di JS!`, 'error');
+                    log(`   💡 Possibile causa: Netlify redirect o path errato`, 'warning');
+                    
+                    if (isPostAudio) {
+                        log(`   🚨 CONFERMATO: Il problema si manifesta POST-AUDIO`, 'error');
+                    }
+                } else if (contentType.includes('javascript') && 
+                          (first100.includes('console.log') || first100.includes('const ') || first100.includes('/**'))) {
+                    log(`   ✅ SUCCESS: File JS valido ricevuto`, 'success');
+                } else {
+                    log(`   ⚠️ ATTENZIONE: Contenuto inaspettato`, 'warning');
+                    log(`   📋 Content-Type: ${contentType}`, 'warning');
+                }
+                
+                // Test 5: Dynamic script loading simulation
+                await testDynamicScriptLoad(resolvedUrl, modulePath);
+                
+            } catch (error) {
+                log(`   💥 Errore durante test: ${error.message}`, 'error');
+            }
+        }
+        
+        // ✅ Simula caricamento dinamico script (come fa l'app)
+        async function testDynamicScriptLoad(url, originalPath) {
+            return new Promise((resolve) => {
+                log(`   🔄 Simulando dynamic script load...`, 'info');
+                
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = true;
+                
+                // Rimuovi dopo test per evitare conflitti
+                const cleanup = () => {
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                };
+                
+                script.onload = () => {
+                    log(`   ✅ Dynamic load SUCCESS per ${originalPath}`, 'success');
+                    cleanup();
+                    resolve();
+                };
+                
+                script.onerror = (error) => {
+                    log(`   ❌ Dynamic load FAILED per ${originalPath}`, 'error');
+                    log(`   📄 Error details: ${error.type || 'unknown'}`, 'error');
+                    cleanup();
+                    resolve();
+                };
+                
+                // Timeout di sicurezza
+                setTimeout(() => {
+                    log(`   ⏰ Dynamic load TIMEOUT per ${originalPath}`, 'warning');
+                    cleanup();
+                    resolve();
+                }, 5000);
+                
+                document.head.appendChild(script);
+            });
+        }
+        
+        // ✅ Inizializzazione
+        log('🚀 Test system ready. Usa i pulsanti per testare i moduli.', 'success');
+        log('💡 Procedura consigliata: PRE-AUDIO → ATTIVA AUDIO → POST-AUDIO', 'info');
+        
+        // Detecta automaticamente se siamo già in contesto audio
+        if (window.location.hash === '#audio-active') {
+            log('🔍 Rilevato hash #audio-active - potremmo essere già in contesto post-audio', 'warning');
+        }
+    </script>
+</body>
+</html>

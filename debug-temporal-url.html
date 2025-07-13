@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Debug Temporal URL</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #00ff00; }
+        button { padding: 10px 20px; margin: 10px; background: #333; color: #00ff00; border: 1px solid #00ff00; cursor: pointer; }
+        .result { background: #222; border: 1px solid #444; padding: 20px; margin: 20px 0; }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Temporal Settings URL</h1>
+    
+    <button onclick="runTest()">🧪 RUN TEST LAMPO</button>
+    <button onclick="testFromBlob()">🧪 Test da Blob Context</button>
+    <button onclick="testFromWorker()">🧪 Test da Worker Context</button>
+    
+    <div id="results" class="result">
+        <p>Clicca "RUN TEST LAMPO" per verificare l'URL effettivo che fallisce</p>
+    </div>
+
+    <script>
+        function log(msg, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            results.appendChild(div);
+            console.log(msg);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // ✅ TEST LAMPO esatto come richiesto
+        async function runTest() {
+            clearResults();
+            log('🧪 RUNNING TEST LAMPO...', 'info');
+            
+            try {
+                const u = new URL('./config/temporal-settings.js', window.location.origin + '/').href;
+                const r = await fetch(u, {cache:'no-store'});
+                
+                log(`URL: ${u}`, 'info');
+                log(`Status: ${r.status}`, r.status === 200 ? 'success' : 'error');
+                log(`Content-Type: ${r.headers.get('content-type')}`, 'info');
+                
+                const text = await r.text();
+                const first40 = text.slice(0, 40);
+                log(`First 40 bytes: ${first40}`, 'info');
+                
+                // Analisi risultato
+                if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                    log('❌ PROBLEMA CONFERMATO: Server restituisce HTML!', 'error');
+                    log('💡 Causa probabile: Service Worker intercetta o fallback Netlify', 'error');
+                } else if (r.headers.get('content-type')?.includes('javascript')) {
+                    log('✅ SUCCESS: File JS valido ricevuto', 'success');
+                } else {
+                    log('⚠️ ATTENZIONE: Content-Type inaspettato', 'error');
+                }
+                
+                // Check URL pattern problematici
+                if (u.includes('blob:') || u.includes('#')) {
+                    log('⚠️ URL contiene blob: o # - possibile contesto Worker', 'error');
+                }
+                
+            } catch(e) { 
+                log(`💥 Fetch error: ${e}`, 'error'); 
+            }
+        }
+        
+        // ✅ Test da Blob context (simula Worker)
+        function testFromBlob() {
+            clearResults();
+            log('🧪 Testing from Blob context...', 'info');
+            
+            const workerCode = `
+                console.log('[BLOB] Current context:', self.location.href);
+                
+                try {
+                    // Simula il problema
+                    const url = new URL('./config/temporal-settings.js', self.location.href).href;
+                    console.log('[BLOB] Resolved URL:', url);
+                    
+                    fetch(url).then(r => {
+                        console.log('[BLOB] Status:', r.status, 'Type:', r.headers.get('content-type'));
+                        return r.text();
+                    }).then(t => {
+                        console.log('[BLOB] First chars:', t.slice(0, 40));
+                        self.postMessage({
+                            success: true,
+                            url: url,
+                            isHTML: t.includes('<!DOCTYPE'),
+                            preview: t.slice(0, 40)
+                        });
+                    });
+                } catch (error) {
+                    self.postMessage({error: error.message});
+                }
+            `;
+            
+            const blob = new Blob([workerCode], {type: 'application/javascript'});
+            const worker = new Worker(URL.createObjectURL(blob));
+            
+            worker.onmessage = function(e) {
+                if (e.data.error) {
+                    log(`❌ Blob error: ${e.data.error}`, 'error');
+                } else {
+                    log(`URL from blob: ${e.data.url}`, 'info');
+                    log(`Is HTML: ${e.data.isHTML}`, e.data.isHTML ? 'error' : 'success');
+                    log(`Preview: ${e.data.preview}`, 'info');
+                }
+                worker.terminate();
+            };
+        }
+        
+        // ✅ Test URL diretti vari
+        function testFromWorker() {
+            clearResults();
+            log('🧪 Testing various URL patterns...', 'info');
+            
+            const urls = [
+                '/config/temporal-settings.js',
+                './config/temporal-settings.js', 
+                'config/temporal-settings.js',
+                `${window.location.origin}/config/temporal-settings.js`,
+                `https://dancing-kashata-353af9.netlify.app/config/temporal-settings.js`
+            ];
+            
+            urls.forEach(async (url, index) => {
+                try {
+                    const r = await fetch(url, {cache: 'no-store'});
+                    const isHTML = (await r.text()).includes('<!DOCTYPE');
+                    log(`${index + 1}. ${url} → ${r.status} ${isHTML ? '(HTML!)' : '(JS)'}`, 
+                        isHTML ? 'error' : 'success');
+                } catch (e) {
+                    log(`${index + 1}. ${url} → ERROR: ${e.message}`, 'error');
+                }
+            });
+        }
+        
+        // Auto-run test on load
+        setTimeout(runTest, 1000);
+    </script>
+</body>
+</html>

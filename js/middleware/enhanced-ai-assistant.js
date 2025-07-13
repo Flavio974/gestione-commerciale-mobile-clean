@@ -19,6 +19,10 @@ class EnhancedAIAssistant {
         // Attendi che sia completamente inizializzato
         this.initializationPromise = this.waitForInitialization();
         
+        // Inizializza sistema di correzione date
+        this.dateCorrector = null;
+        this.aiWrapper = null;
+        
         // Flags di stato
         this.middlewareEnabled = true;
         this.debugMode = true;
@@ -51,6 +55,17 @@ class EnhancedAIAssistant {
                         this.vocabolarioMiddleware = new VocabolarioMiddleware(this.middleware);
                     }
                     
+                    // Inizializza sistema di correzione date
+                    if (window.aiDateCorrector) {
+                        this.dateCorrector = window.aiDateCorrector;
+                        console.log('🔧 AIDateCorrector collegato');
+                    }
+                    
+                    if (window.aiWrapperForcedDate) {
+                        this.aiWrapper = window.aiWrapperForcedDate;
+                        console.log('🎯 AIWrapperForcedDate collegato');
+                    }
+                    
                     resolve();
                 } else {
                     setTimeout(checkReady, 100);
@@ -77,22 +92,78 @@ class EnhancedAIAssistant {
             
             console.log('🔄 ENHANCED: Processando messaggio:', message);
             console.log('🎤 ENHANCED: Input vocale:', isVoiceInput);
+            console.log('🚨 ENHANCED: VERSIONE AGGIORNATA CARICATA - FIX DATA ATTIVO!');
             
-            // 📅 AGGIUNGI DATA CORRENTE A TUTTI I MESSAGGI
-            const messageWithDate = `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            })}\n\n${message}`;
+            // 📅 AGGIUNGI DATA CORRENTE A TUTTI I MESSAGGI IN FORMATO ITALIANO
+            const dateManager = window.italianDateManager;
+            let currentDateString;
+            
+            if (dateManager) {
+                const now = dateManager.getCurrentDate();
+                currentDateString = dateManager.formatDate(now, 'DDDD, DD MMMM YYYY');
+                console.log('🇮🇹 Usando ItalianDateManager per data corrente');
+            } else {
+                currentDateString = new Date().toLocaleDateString('it-IT', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                console.warn('⚠️ ItalianDateManager non disponibile - Usando Date standard');
+            }
+            
+            const messageWithDate = `DATA CORRENTE: ${currentDateString}\n\n${message}`;
             console.log('📅 ENHANCED: Messaggio con data corrente:', messageWithDate);
             
-            // 📅 TEMPORALE DISABILITATO - Lasciamo che l'AI gestisca tutto con data corrente
-            // if (this.shouldHandleTemporalRequest(message)) {
-            //     console.log('📅 ENHANCED: Richiesta temporale rilevata - gestisco localmente');
-            //     await this.handleTemporalRequest(message, isVoiceInput);
-            //     return;
-            // }
+            // 📅 GESTIONE TEMPORALE LOCALE ASSOLUTA - INTERCEPTA TUTTO!
+            const isTemporalRequest = message.toLowerCase().includes('che giorno è') || 
+                                    message.toLowerCase().includes('che data è') ||
+                                    message.toLowerCase().includes('che ora è');
+            
+            if (isTemporalRequest) {
+                console.log('🚨 ENHANCED: INTERCETTAZIONE TEMPORALE ASSOLUTA!');
+                
+                // Usa ItalianDateManager per date corrette
+                const dateManager = window.italianDateManager;
+                const now = dateManager ? dateManager.getCurrentDate() : new Date();
+                
+                let day, month, year, dayName;
+                if (dateManager) {
+                    day = now.getDate().toString().padStart(2, '0');
+                    month = (now.getMonth() + 1).toString().padStart(2, '0');
+                    year = now.getFullYear();
+                    dayName = dateManager.getDayName(now.getDay());
+                    console.log('🇮🇹 Usando ItalianDateManager - Formato DD/MM/YYYY garantito');
+                } else {
+                    day = now.getDate().toString().padStart(2, '0');
+                    month = (now.getMonth() + 1).toString().padStart(2, '0');
+                    year = now.getFullYear();
+                    dayName = now.toLocaleDateString('it-IT', { weekday: 'long' });
+                    console.warn('⚠️ ItalianDateManager non disponibile - Usando Date standard');
+                }
+                
+                let response;
+                if (message.toLowerCase().includes('che giorno è')) {
+                    response = `Oggi è ${dayName}, ${day}/${month}/${year}.`;
+                } else if (message.toLowerCase().includes('che data è')) {
+                    response = `Oggi è ${day}/${month}/${year}.`;
+                } else if (message.toLowerCase().includes('che ora è')) {
+                    const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                    response = `Sono le ${time}.`;
+                }
+                
+                // Aggiungi direttamente alla chat
+                this.originalAssistant.messages.push({ role: 'user', content: message });
+                this.originalAssistant.messages.push({ role: 'assistant', content: response });
+                this.originalAssistant.updateChat();
+                
+                // Pulisci input
+                const input = document.getElementById('aiInput');
+                if (input) input.value = '';
+                
+                console.log('✅ TEMPORALE: Risposta diretta:', response);
+                return;
+            }
             
             // Aggiungi messaggio utente alla chat
             this.originalAssistant.messages.push({ role: 'user', content: messageWithDate });
@@ -102,8 +173,8 @@ class EnhancedAIAssistant {
             // Mostra thinking indicator
             this.originalAssistant.showThinking();
             
-            // VOCABOLARIO MIDDLEWARE INTEGRATION POINT
-            if (this.middlewareEnabled) {
+            // VOCABOLARIO MIDDLEWARE INTEGRATION POINT - DISABILITATO TEMPORANEAMENTE PER DEBUG
+            if (false && this.middlewareEnabled) {
                 console.log('📋 ENHANCED: Tentativo elaborazione con VocabolarioMiddleware...');
                 
                 const middlewareResult = await this.vocabolarioMiddleware.processWithVocabulario(messageWithDate);
@@ -150,8 +221,8 @@ class EnhancedAIAssistant {
                 }
             }
             
-            // Fallback all'AI originale se middleware non gestisce
-            console.log('🔄 ENHANCED: Fallback a FlavioAIAssistant originale...');
+            // Fallback all'AI originale con CORREZIONE FORZATA DATE
+            console.log('🔄 ENHANCED: Fallback a FlavioAIAssistant con correzione date...');
             
             // Ripristina l'input per l'assistant originale
             input.value = messageWithDate;
@@ -159,7 +230,51 @@ class EnhancedAIAssistant {
             // Rimuovi il messaggio già aggiunto per evitare duplicati
             this.originalAssistant.messages.pop();
             
-            // Chiama l'assistant originale
+            // WRAPPA la chiamata AI con correzione date forzata
+            if (this.aiWrapper && this.dateCorrector) {
+                console.log('🔧 Usando AI Wrapper con correzione date forzata');
+                
+                // Crea una funzione wrapper per l'AI originale
+                const originalAICall = async (prompt, options = {}) => {
+                    // Sostituisci il messaggio nell'input
+                    input.value = prompt;
+                    
+                    // Salva i messaggi prima della chiamata
+                    const messagesBefore = [...this.originalAssistant.messages];
+                    
+                    // Chiama l'assistant originale
+                    await this.originalAssistant.sendMessage(isVoiceInput);
+                    
+                    // Trova la nuova risposta
+                    const newMessages = this.originalAssistant.messages.slice(messagesBefore.length);
+                    const assistantResponse = newMessages.find(msg => msg.role === 'assistant');
+                    
+                    return assistantResponse ? assistantResponse.content : 'Errore nella risposta AI';
+                };
+                
+                try {
+                    // Chiama l'AI con il wrapper forzato
+                    const correctedResponse = await this.aiWrapper.wrapAICall(originalAICall, messageWithDate);
+                    
+                    // Aggiorna la risposta nell'interfaccia con quella corretta
+                    if (this.originalAssistant.messages.length > 0) {
+                        const lastMessage = this.originalAssistant.messages[this.originalAssistant.messages.length - 1];
+                        if (lastMessage.role === 'assistant') {
+                            lastMessage.content = correctedResponse;
+                            this.originalAssistant.updateChat();
+                        }
+                    }
+                    
+                    console.log('✅ Risposta AI corretta applicata');
+                    return;
+                    
+                } catch (error) {
+                    console.error('❌ Errore nel wrapper AI forzato:', error);
+                    // Fallback al metodo originale
+                }
+            }
+            
+            // Fallback normale se il wrapper non è disponibile
             return await this.originalAssistant.sendMessage(isVoiceInput);
             
         } catch (error) {
@@ -479,7 +594,36 @@ class EnhancedAIAssistant {
     }
 
     /**
-     * Verifica se la richiesta è temporale e deve essere gestita localmente
+     * Verifica se la richiesta è temporale di base e deve essere gestita localmente
+     */
+    shouldHandleBasicTemporalRequest(message) {
+        const lowerMessage = message.toLowerCase();
+        
+        // Richieste di data/ora CORRENTE (molto semplici)
+        const isCurrentDateTime = lowerMessage.includes('che giorno è oggi') ||
+                                 lowerMessage.includes('che giorno è') ||
+                                 lowerMessage.includes('che data è oggi') ||
+                                 lowerMessage.includes('che data è') ||
+                                 lowerMessage.includes('che data abbiamo') ||
+                                 lowerMessage.includes('data di oggi') ||
+                                 lowerMessage.includes('data corrente') ||
+                                 lowerMessage.includes('in che data siamo') ||
+                                 lowerMessage.includes('che ora è') ||
+                                 lowerMessage.includes('che ore sono') ||
+                                 lowerMessage.includes('ora corrente');
+        
+        // Pattern "giorni fa" semplici
+        const hasGiorniFa = /\d+\s+giorni\s+fa/.test(lowerMessage) || 
+                           /(un|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+giorni?\s+fa/.test(lowerMessage);
+        
+        const hasTemporalDate = (lowerMessage.includes('che data era') && hasGiorniFa) ||
+                               (lowerMessage.includes('giorni fa che data'));
+        
+        return isCurrentDateTime || hasTemporalDate;
+    }
+
+    /**
+     * Verifica se la richiesta è temporale e deve essere gestita localmente (VECCHIA VERSIONE)
      */
     shouldHandleTemporalRequest(message) {
         const lowerMessage = message.toLowerCase();
@@ -550,13 +694,68 @@ class EnhancedAIAssistant {
      */
     calculateTemporalResponse(message) {
         const lowerMessage = message.toLowerCase();
-        const now = new Date();
-        let targetDate = new Date(now);
-        let dayModifier = 'oggi';
         
-        console.log('📅 TEMPORAL CALC: Data corrente:', now.toISOString());
+        // Usa ItalianDateManager per date corrette
+        const dateManager = window.italianDateManager;
+        const now = dateManager ? dateManager.getCurrentDate() : new Date();
         
-        // Pattern "X giorni fa"
+        console.log('📅 TEMPORAL CALC: Data corrente (formato italiano):', 
+                   dateManager ? dateManager.formatDate(now, 'DD/MM/YYYY HH:mm') : now.toISOString());
+        
+        if (dateManager) {
+            console.log('🇮🇹 Usando ItalianDateManager per calcoli temporali');
+        } else {
+            console.warn('⚠️ ItalianDateManager non disponibile - Usando Date standard');
+        }
+        
+        // GESTIONE RICHIESTE DATA/ORA CORRENTE
+        if (lowerMessage.includes('che giorno è oggi') || lowerMessage.includes('che giorno è')) {
+            if (dateManager) {
+                const dayName = dateManager.getDayName(now.getDay());
+                const dateFormatted = dateManager.formatDate(now, 'DD/MM/YYYY');
+                console.log('📅 DEBUG: Data formattata (che giorno):', dateFormatted);
+                return `Oggi è ${dayName}, ${dateFormatted}.`;
+            } else {
+                const dayName = now.toLocaleDateString('it-IT', { weekday: 'long' });
+                const day = now.getDate().toString().padStart(2, '0');
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                const year = now.getFullYear();
+                const dateFormatted = `${day}/${month}/${year}`;
+                console.log('📅 DEBUG: Data formattata (che giorno):', dateFormatted);
+                return `Oggi è ${dayName}, ${dateFormatted}.`;
+            }
+        }
+        
+        if (lowerMessage.includes('che data è') || lowerMessage.includes('che data abbiamo') || 
+            lowerMessage.includes('data di oggi') || lowerMessage.includes('data corrente') ||
+            lowerMessage.includes('in che data siamo')) {
+            if (dateManager) {
+                const dateFormatted = dateManager.formatDate(now, 'DD/MM/YYYY');
+                console.log('📅 DEBUG: Data formattata (che data):', dateFormatted);
+                console.log('📅 DEBUG: Data corrente oggetto:', now);
+                return `Oggi è ${dateFormatted}.`;
+            } else {
+                const day = now.getDate().toString().padStart(2, '0');
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                const year = now.getFullYear();
+                const dateFormatted = `${day}/${month}/${year}`;
+                console.log('📅 DEBUG: Data formattata (che data):', dateFormatted);
+                console.log('📅 DEBUG: Data corrente raw:', now.toString());
+                return `Oggi è ${dateFormatted}.`;
+            }
+        }
+        
+        if (lowerMessage.includes('che ora è') || lowerMessage.includes('che ore sono') || 
+            lowerMessage.includes('ora corrente')) {
+            const timeString = now.toLocaleTimeString('it-IT', { 
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false 
+            });
+            return `Sono le ${timeString}.`;
+        }
+        
+        // GESTIONE PATTERN "X giorni fa"
         const pastMatch = lowerMessage.match(/(\d+|un|una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci)\s+(giorni?|giorno)\s+fa/i);
         
         if (pastMatch) {
@@ -570,30 +769,52 @@ class EnhancedAIAssistant {
             
             console.log('📅 TEMPORAL CALC: Pattern giorni fa trovato:', {amountStr, amount});
             
+            const targetDate = new Date(now);
             targetDate.setDate(now.getDate() - amount);
-            dayModifier = `${amount} ${amount === 1 ? 'giorno' : 'giorni'} fa`;
+            const dayModifier = `${amount} ${amount === 1 ? 'giorno' : 'giorni'} fa`;
             
             console.log('📅 TEMPORAL CALC: Data calcolata:', targetDate.toISOString());
-        }
-        
-        // Formatta la risposta
-        const options = {
-            weekday: 'long',
-            year: 'numeric', 
-            month: 'long',
-            day: 'numeric'
-        };
-        
-        const dateString = targetDate.toLocaleDateString('it-IT', options);
-        
-        if (lowerMessage.includes('che data era') || lowerMessage.includes('che data c\'era')) {
+            
+            // Formatta la risposta per "giorni fa"
+            let dateString;
+            if (dateManager) {
+                dateString = dateManager.formatDate(targetDate, 'DDDD, DD MMMM YYYY');
+                console.log('🇮🇹 Formato data con ItalianDateManager:', dateString);
+            } else {
+                const options = {
+                    weekday: 'long',
+                    year: 'numeric', 
+                    month: 'long',
+                    day: 'numeric'
+                };
+                dateString = targetDate.toLocaleDateString('it-IT', options);
+                console.log('⚠️ Formato data con Date standard:', dateString);
+            }
+            
+            if (lowerMessage.includes('che data era') || lowerMessage.includes('che data c\'era')) {
+                return `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} era ${dateString}.`;
+            } else if (lowerMessage.includes('che giorno era')) {
+                const dayName = dateManager ? dateManager.getDayName(targetDate.getDay()) : 
+                               targetDate.toLocaleDateString('it-IT', { weekday: 'long' });
+                return `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} era ${dayName}.`;
+            }
+            
             return `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} era ${dateString}.`;
-        } else if (lowerMessage.includes('che giorno era')) {
-            const dayName = targetDate.toLocaleDateString('it-IT', { weekday: 'long' });
-            return `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} era ${dayName}.`;
         }
         
-        return `${dayModifier.charAt(0).toUpperCase() + dayModifier.slice(1)} era ${dateString}.`;
+        // Fallback per richieste non riconosciute
+        if (dateManager) {
+            const dateString = dateManager.formatDate(now, 'DDDD, DD MMMM YYYY');
+            return `Oggi è ${dateString}.`;
+        } else {
+            const dateString = now.toLocaleDateString('it-IT', { 
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long',
+                day: 'numeric' 
+            });
+            return `Oggi è ${dateString}.`;
+        }
     }
 }
 

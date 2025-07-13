@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Suite - Sistema Date Italiano</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1, h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .test-suite {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        
+        .test-case {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 4px solid #3498db;
+            background: white;
+        }
+        
+        .test-case.pass {
+            border-left-color: #27ae60;
+            background: #f8fff8;
+        }
+        
+        .test-case.fail {
+            border-left-color: #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .test-result {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .test-result.pass { color: #27ae60; }
+        .test-result.fail { color: #e74c3c; }
+        
+        .test-details {
+            font-size: 0.9em;
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .run-tests {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        
+        .run-tests:hover {
+            background: #2980b9;
+        }
+        
+        .summary {
+            background: #34495e;
+            color: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .performance-test {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        
+        .error-log {
+            background: #fff5f5;
+            border: 1px solid #e74c3c;
+            padding: 15px;
+            border-radius: 6px;
+            color: #c0392b;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Suite - Sistema Date Italiano</h1>
+        <p>Suite completa di test per verificare la correttezza e le performance del sistema di gestione date italiano.</p>
+        
+        <div>
+            <button class="run-tests" onclick="runAllTests()">🚀 Esegui Tutti i Test</button>
+            <button class="run-tests" onclick="runValidationTests()">✅ Test Validazione</button>
+            <button class="run-tests" onclick="runConversionTests()">🔄 Test Conversione</button>
+            <button class="run-tests" onclick="runCalculationTests()">🧮 Test Calcoli</button>
+            <button class="run-tests" onclick="runHolidayTests()">🎉 Test Festività</button>
+            <button class="run-tests" onclick="runPerformanceTests()">⚡ Test Performance</button>
+            <button class="run-tests" onclick="clearResults()" style="background: #95a5a6;">🗑️ Pulisci</button>
+        </div>
+        
+        <div id="test-results"></div>
+        
+        <div id="summary" class="summary" style="display: none;">
+            <h3>📊 Riepilogo Test</h3>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <!-- Include degli script -->
+    <script src="js/utils/italian-date-system.js"></script>
+    
+    <script>
+        // ==========================================
+        // FRAMEWORK DI TEST
+        // ==========================================
+        
+        class TestFramework {
+            constructor() {
+                this.results = [];
+                this.currentSuite = null;
+                this.startTime = null;
+            }
+
+            startSuite(name) {
+                this.currentSuite = {
+                    name: name,
+                    tests: [],
+                    passed: 0,
+                    failed: 0,
+                    startTime: performance.now()
+                };
+            }
+
+            endSuite() {
+                if (this.currentSuite) {
+                    this.currentSuite.endTime = performance.now();
+                    this.currentSuite.duration = this.currentSuite.endTime - this.currentSuite.startTime;
+                    this.results.push(this.currentSuite);
+                    this.currentSuite = null;
+                }
+            }
+
+            test(description, testFunction) {
+                const startTime = performance.now();
+                let result;
+                
+                try {
+                    const testResult = testFunction();
+                    const endTime = performance.now();
+                    
+                    result = {
+                        description: description,
+                        passed: testResult === true || (testResult && testResult.success !== false),
+                        error: null,
+                        duration: endTime - startTime,
+                        details: typeof testResult === 'object' ? testResult.message : null
+                    };
+                } catch (error) {
+                    const endTime = performance.now();
+                    result = {
+                        description: description,
+                        passed: false,
+                        error: error.message,
+                        duration: endTime - startTime,
+                        details: error.stack
+                    };
+                }
+
+                if (this.currentSuite) {
+                    this.currentSuite.tests.push(result);
+                    if (result.passed) {
+                        this.currentSuite.passed++;
+                    } else {
+                        this.currentSuite.failed++;
+                    }
+                }
+
+                return result;
+            }
+
+            assert(condition, message = 'Assertion failed') {
+                if (!condition) {
+                    throw new Error(message);
+                }
+                return true;
+            }
+
+            assertEquals(actual, expected, message) {
+                if (actual !== expected) {
+                    throw new Error(`${message || 'Values not equal'}: expected "${expected}", got "${actual}"`);
+                }
+                return true;
+            }
+
+            assertNotNull(value, message = 'Value should not be null') {
+                if (value === null || value === undefined) {
+                    throw new Error(message);
+                }
+                return true;
+            }
+
+            assertThrows(fn, message = 'Function should throw') {
+                try {
+                    fn();
+                    throw new Error(message);
+                } catch (error) {
+                    if (error.message === message) {
+                        throw error;
+                    }
+                    return true;
+                }
+            }
+
+            renderResults() {
+                const container = document.getElementById('test-results');
+                container.innerHTML = '';
+
+                this.results.forEach(suite => {
+                    const suiteDiv = document.createElement('div');
+                    suiteDiv.className = 'test-suite';
+                    
+                    const total = suite.passed + suite.failed;
+                    const successRate = total > 0 ? (suite.passed / total * 100).toFixed(1) : 0;
+                    
+                    suiteDiv.innerHTML = `
+                        <h3>📋 ${suite.name}</h3>
+                        <p><strong>Risultati:</strong> ${suite.passed}/${total} test passati (${successRate}%) in ${suite.duration.toFixed(2)}ms</p>
+                    `;
+
+                    suite.tests.forEach(test => {
+                        const testDiv = document.createElement('div');
+                        testDiv.className = `test-case ${test.passed ? 'pass' : 'fail'}`;
+                        
+                        testDiv.innerHTML = `
+                            <div class="test-result ${test.passed ? 'pass' : 'fail'}">
+                                ${test.passed ? '✅' : '❌'} ${test.description}
+                            </div>
+                            <div class="test-details">
+                                Durata: ${test.duration.toFixed(2)}ms
+                                ${test.error ? `<br><strong>Errore:</strong> ${test.error}` : ''}
+                                ${test.details ? `<br><strong>Dettagli:</strong> ${test.details}` : ''}
+                            </div>
+                        `;
+
+                        suiteDiv.appendChild(testDiv);
+                    });
+
+                    container.appendChild(suiteDiv);
+                });
+
+                this.renderSummary();
+            }
+
+            renderSummary() {
+                const summaryDiv = document.getElementById('summary');
+                const contentDiv = document.getElementById('summary-content');
+                
+                if (this.results.length === 0) {
+                    summaryDiv.style.display = 'none';
+                    return;
+                }
+
+                const totalTests = this.results.reduce((sum, suite) => sum + suite.tests.length, 0);
+                const totalPassed = this.results.reduce((sum, suite) => sum + suite.passed, 0);
+                const totalFailed = this.results.reduce((sum, suite) => sum + suite.failed, 0);
+                const totalDuration = this.results.reduce((sum, suite) => sum + suite.duration, 0);
+                const successRate = totalTests > 0 ? (totalPassed / totalTests * 100).toFixed(1) : 0;
+
+                contentDiv.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div>
+                            <h4>📊 Statistiche Generali</h4>
+                            <p>Suite eseguite: ${this.results.length}</p>
+                            <p>Test totali: ${totalTests}</p>
+                            <p>Test passati: ${totalPassed}</p>
+                            <p>Test falliti: ${totalFailed}</p>
+                            <p>Tasso di successo: ${successRate}%</p>
+                        </div>
+                        <div>
+                            <h4>⏱️ Performance</h4>
+                            <p>Tempo totale: ${totalDuration.toFixed(2)}ms</p>
+                            <p>Tempo medio per test: ${totalTests > 0 ? (totalDuration / totalTests).toFixed(2) : 0}ms</p>
+                            <p>Suite più lenta: ${Math.max(...this.results.map(s => s.duration)).toFixed(2)}ms</p>
+                            <p>Suite più veloce: ${Math.min(...this.results.map(s => s.duration)).toFixed(2)}ms</p>
+                        </div>
+                        <div>
+                            <h4>🎯 Copertura</h4>
+                            ${this.results.map(suite => `
+                                <p>${suite.name}: ${((suite.passed / (suite.passed + suite.failed)) * 100).toFixed(1)}%</p>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                summaryDiv.style.display = 'block';
+            }
+
+            clear() {
+                this.results = [];
+                document.getElementById('test-results').innerHTML = '';
+                document.getElementById('summary').style.display = 'none';
+            }
+        }
+
+        const testFramework = new TestFramework();
+
+        // ==========================================
+        // TEST DI VALIDAZIONE
+        // ==========================================
+
+        function runValidationTests() {
+            testFramework.startSuite('Validazione Date Italiane');
+
+            // Test date valide
+            testFramework.test('Date valide comuni', () => {
+                const validDates = [
+                    '15/03/2025',
+                    '01/01/2000',
+                    '31/12/2023',
+                    '28/02/2023',
+                    '29/02/2024'
+                ];
+
+                return validDates.every(date => {
+                    const isValid = window.ItalianDateSystem.isValidItalianDate(date);
+                    if (!isValid) {
+                        throw new Error(`Date ${date} dovrebbe essere valida`);
+                    }
+                    return true;
+                });
+            });
+
+            // Test date non valide
+            testFramework.test('Date non valide', () => {
+                const invalidDates = [
+                    '32/01/2025',    // Giorno non esistente
+                    '15/13/2025',    // Mese non esistente
+                    '29/02/2023',    // 29 febbraio in anno non bisestile
+                    '31/04/2025',    // 31 aprile
+                    '00/01/2025',    // Giorno zero
+                    '15/00/2025',    // Mese zero
+                    '',              // Stringa vuota
+                    null,            // Null
+                    undefined,       // Undefined
+                    '15-03-2025',    // Formato scorretto
+                    'abc/def/ghi'    // Non numerico
+                ];
+
+                return invalidDates.every(date => {
+                    const isValid = window.ItalianDateSystem.isValidItalianDate(date);
+                    if (isValid) {
+                        throw new Error(`Date ${date} dovrebbe essere non valida`);
+                    }
+                    return true;
+                });
+            });
+
+            // Test anni bisestili
+            testFramework.test('Validazione anni bisestili', () => {
+                testFramework.assert(window.ItalianDateSystem.isAnnoBisestile(2024), '2024 dovrebbe essere bisestile');
+                testFramework.assert(window.ItalianDateSystem.isAnnoBisestile(2000), '2000 dovrebbe essere bisestile');
+                testFramework.assert(!window.ItalianDateSystem.isAnnoBisestile(1900), '1900 non dovrebbe essere bisestile');
+                testFramework.assert(!window.ItalianDateSystem.isAnnoBisestile(2023), '2023 non dovrebbe essere bisestile');
+                return true;
+            });
+
+            // Test validazione data di nascita
+            testFramework.test('Validazione data di nascita', () => {
+                const today = new Date();
+                const futureDate = window.ItalianDateSystem.formatDateItalian(
+                    window.ItalianDateSystem.addDays(today, 1)
+                );
+                const validBirth = '15/03/1985';
+                const tooOld = '01/01/1900';
+
+                const futureResult = window.ItalianDateSystem.validateDataNascita(futureDate);
+                testFramework.assert(!futureResult.valid, 'Data futura non dovrebbe essere valida per nascita');
+
+                const validResult = window.ItalianDateSystem.validateDataNascita(validBirth);
+                testFramework.assert(validResult.valid, 'Data valida dovrebbe essere accettata');
+
+                const oldResult = window.ItalianDateSystem.validateDataNascita(tooOld);
+                testFramework.assert(!oldResult.valid, 'Data troppo vecchia non dovrebbe essere valida');
+
+                return true;
+            });
+
+            // Test validazione data di scadenza
+            testFramework.test('Validazione data di scadenza', () => {
+                const today = new Date();
+                const pastDate = window.ItalianDateSystem.formatDateItalian(
+                    window.ItalianDateSystem.addDays(today, -1)
+                );
+                const futureDate = window.ItalianDateSystem.formatDateItalian(
+                    window.ItalianDateSystem.addDays(today, 30)
+                );
+
+                const pastResult = window.ItalianDateSystem.validateDataScadenza(pastDate);
+                testFramework.assert(!pastResult.valid, 'Data passata non dovrebbe essere valida per scadenza');
+
+                const futureResult = window.ItalianDateSystem.validateDataScadenza(futureDate);
+                testFramework.assert(futureResult.valid, 'Data futura dovrebbe essere valida per scadenza');
+
+                return true;
+            });
+
+            // Test validazione range di date
+            testFramework.test('Validazione range di date', () => {
+                const start = '01/03/2025';
+                const end = '15/03/2025';
+                const invalidEnd = '28/02/2025';
+
+                const validRange = window.ItalianDateSystem.validateDateRange(start, end);
+                testFramework.assert(validRange.valid, 'Range valido dovrebbe essere accettato');
+
+                const invalidRange = window.ItalianDateSystem.validateDateRange(start, invalidEnd);
+                testFramework.assert(!invalidRange.valid, 'Range con fine prima di inizio non dovrebbe essere valido');
+
+                return true;
+            });
+
+            testFramework.endSuite();
+            testFramework.renderResults();
+        }
+
+        // ==========================================
+        // TEST DI CONVERSIONE
+        // ==========================================
+
+        function runConversionTests() {
+            testFramework.startSuite('Conversione Formati Date');
+
+            // Test conversione italiano -> ISO
+            testFramework.test('Conversione Italiano a ISO', () => {
+                const testCases = [
+                    { italian: '15/03/2025', iso: '2025-03-15' },
+                    { italian: '01/01/2000', iso: '2000-01-01' },
+                    { italian: '29/02/2024', iso: '2024-02-29' },
+                    { italian: '31/12/2023', iso: '2023-12-31' }
+                ];
+
+                return testCases.every(testCase => {
+                    const result = window.ItalianDateSystem.italianToISO(testCase.italian);
+                    if (result !== testCase.iso) {
+                        throw new Error(`Conversione ${testCase.italian}: atteso ${testCase.iso}, ottenuto ${result}`);
+                    }
+                    return true;
+                });
+            });
+
+            // Test conversione ISO -> italiano
+            testFramework.test('Conversione ISO a Italiano', () => {
+                const testCases = [
+                    { iso: '2025-03-15', italian: '15/03/2025' },
+                    { iso: '2000-01-01', italian: '01/01/2000' },
+                    { iso: '2024-02-29', italian: '29/02/2024' },
+                    { iso: '2023-12-31', italian: '31/12/2023' }
+                ];
+
+                return testCases.every(testCase => {
+                    const result = window.ItalianDateSystem.ISOToItalian(testCase.iso);
+                    if (result !== testCase.italian) {
+                        throw new Error(`Conversione ${testCase.iso}: atteso ${testCase.italian}, ottenuto ${result}`);
+                    }
+                    return true;
+                });
+            });
+
+            // Test conversione roundtrip
+            testFramework.test('Conversione Roundtrip (Italiano -> ISO -> Italiano)', () => {
+                const testDates = [
+                    '15/03/2025',
+                    '01/01/2000',
+                    '29/02/2024',
+                    '31/12/2023',
+                    '28/02/2023'
+                ];
+
+                return testDates.every(original => {
+                    const iso = window.ItalianDateSystem.italianToISO(original);
+                    const backToItalian = window.ItalianDateSystem.ISOToItalian(iso);
+                    
+                    if (backToItalian !== original) {
+                        throw new Error(`Roundtrip fallito: ${original} -> ${iso} -> ${backToItalian}`);
+                    }
+                    return true;
+                });
+            });
+
+            // Test parsing date italiane
+            testFramework.test('Parsing Date Italiane', () => {
+                const testDates = [
+                    { italian: '15/03/2025', day: 15, month: 2, year: 2025 }, // month è 0-based
+                    { italian: '01/01/2000', day: 1, month: 0, year: 2000 },
+                    { italian: '29/02/2024', day: 29, month: 1, year: 2024 }
+                ];
+
+                return testDates.every(testCase => {
+                    const parsed = window.ItalianDateSystem.parseItalianDate(testCase.italian);
+                    
+                    testFramework.assertNotNull(parsed, `Parsing di ${testCase.italian} non dovrebbe essere null`);
+                    testFramework.assertEquals(parsed.getDate(), testCase.day, `Giorno errato per ${testCase.italian}`);
+                    testFramework.assertEquals(parsed.getMonth(), testCase.month, `Mese errato per ${testCase.italian}`);
+                    testFramework.assertEquals(parsed.getFullYear(), testCase.year, `Anno errato per ${testCase.italian}`);
+                    
+                    return true;
+                });
+            });
+
+            // Test gestione errori
+            testFramework.test('Gestione Errori Conversione', () => {
+                // Date invalide dovrebbero restituire null
+                const invalidDates = ['32/01/2025', '15/13/2025', '', null, undefined];
+                
+                return invalidDates.every(invalidDate => {
+                    const isoResult = window.ItalianDateSystem.italianToISO(invalidDate);
+                    const parseResult = window.ItalianDateSystem.parseItalianDate(invalidDate);
+                    
+                    if (isoResult !== null) {
+                        throw new Error(`italianToISO dovrebbe restituire null per ${invalidDate}`);
+                    }
+                    if (parseResult !== null) {
+                        throw new Error(`parseItalianDate dovrebbe restituire null per ${invalidDate}`);
+                    }
+                    return true;
+                });
+            });
+
+            testFramework.endSuite();
+            testFramework.renderResults();
+        }
+
+        // ==========================================
+        // TEST DI CALCOLI
+        // ==========================================
+
+        function runCalculationTests() {
+            testFramework.startSuite('Calcoli su Date');
+
+            // Test calcolo differenza giorni
+            testFramework.test('Calcolo Differenza Giorni', () => {
+                const testCases = [
+                    { date1: '01/03/2025', date2: '15/03/2025', expected: 14 },
+                    { date1: '31/12/2024', date2: '01/01/2025', expected: 1 },
+                    { date1: '01/01/2025', date2: '01/01/2025', expected: 0 },
+                    { date1: '15/03/2025', date2: '01/03/2025', expected: 14 } // Ordine inverso
+                ];
+
+                return testCases.every(testCase => {
+                    const result = window.ItalianDateSystem.daysBetweenDates(testCase.date1, testCase.date2);
+                    if (result !== testCase.expected) {
+                        throw new Error(`Differenza tra ${testCase.date1} e ${testCase.date2}: atteso ${testCase.expected}, ottenuto ${result}`);
+                    }
+                    return true;
+                });
+            });
+
+            // Test aggiunta giorni
+            testFramework.test('Aggiunta Giorni', () => {
+                const baseDate = '01/03/2025';
+                const baseDateObj = window.ItalianDateSystem.parseItalianDate(baseDate);
+
+                const plus7 = window.ItalianDateSystem.addDays(baseDateObj, 7);
+                const plus7Str = window.ItalianDateSystem.formatDateItalian(plus7);
+                testFramework.assertEquals(plus7Str, '08/03/2025', 'Aggiunta 7 giorni');
+
+                const minus3 = window.ItalianDateSystem.addDays(baseDateObj, -3);
+                const minus3Str = window.ItalianDateSystem.formatDateItalian(minus3);
+                testFramework.assertEquals(minus3Str, '26/02/2025', 'Sottrazione 3 giorni');
+
+                return true;
+            });
+
+            // Test calcolo età
+            testFramework.test('Calcolo Età', () => {
+                const today = new Date();
+                const currentYear = today.getFullYear();
+                
+                // Persona nata 25 anni fa
+                const birthYear = currentYear - 25;
+                const birthDate = `15/03/${birthYear}`;
+                
+                const age = window.ItalianDateSystem.calculateAge(birthDate);
+                
+                // L'età dovrebbe essere 24 o 25 a seconda se il compleanno è già passato quest'anno
+                testFramework.assert(age === 24 || age === 25, `Età calcolata: ${age}, dovrebbe essere 24 o 25`);
+
+                return true;
+            });
+
+            // Test identificazione weekend
+            testFramework.test('Identificazione Weekend', () => {
+                // Sabato 15 marzo 2025
+                const saturday = '15/03/2025';
+                testFramework.assert(window.ItalianDateSystem.isWeekend(saturday), 'Sabato dovrebbe essere weekend');
+
+                // Domenica 16 marzo 2025
+                const sunday = '16/03/2025';
+                testFramework.assert(window.ItalianDateSystem.isWeekend(sunday), 'Domenica dovrebbe essere weekend');
+
+                // Lunedì 17 marzo 2025
+                const monday = '17/03/2025';
+                testFramework.assert(!window.ItalianDateSystem.isWeekend(monday), 'Lunedì non dovrebbe essere weekend');
+
+                return true;
+            });
+
+            // Test primo e ultimo giorno del mese
+            testFramework.test('Primo e Ultimo Giorno del Mese', () => {
+                const testDate = '15/03/2025';
+                const date = window.ItalianDateSystem.parseItalianDate(testDate);
+
+                const firstDay = window.ItalianDateSystem.getFirstDayOfMonth(date);
+                const firstDayStr = window.ItalianDateSystem.formatDateItalian(firstDay);
+                testFramework.assertEquals(firstDayStr, '01/03/2025', 'Primo giorno del mese');
+
+                const lastDay = window.ItalianDateSystem.getLastDayOfMonth(date);
+                const lastDayStr = window.ItalianDateSystem.formatDateItalian(lastDay);
+                testFramework.assertEquals(lastDayStr, '31/03/2025', 'Ultimo giorno del mese');
+
+                return true;
+            });
+
+            // Test calcolo giorni lavorativi
+            testFramework.test('Calcolo Giorni Lavorativi', () => {
+                // Dal lunedì 10 marzo al venerdì 14 marzo 2025 (5 giorni lavorativi)
+                const start = '10/03/2025';
+                const end = '14/03/2025';
+                
+                const workDays = window.ItalianDateSystem.calcolaGiorniLavorativi(start, end);
+                testFramework.assertEquals(workDays, 5, 'Settimana lavorativa completa');
+
+                // Dal venerdì 14 marzo al lunedì 17 marzo 2025 (2 giorni lavorativi, esclude weekend)
+                const start2 = '14/03/2025';
+                const end2 = '17/03/2025';
+                
+                const workDays2 = window.ItalianDateSystem.calcolaGiorniLavorativi(start2, end2);
+                testFramework.assertEquals(workDays2, 2, 'Periodo con weekend incluso');
+
+                return true;
+            });
+
+            testFramework.endSuite();
+            testFramework.renderResults();
+        }
+
+        // ==========================================
+        // TEST FESTIVITÀ
+        // ==========================================
+
+        function runHolidayTests() {
+            testFramework.startSuite('Gestione Festività Italiane');
+
+            // Test festività fisse
+            testFramework.test('Festività Fisse', () => {
+                const fixedHolidays = [
+                    { date: '01/01/2025', name: 'Capodanno' },
+                    { date: '06/01/2025', name: 'Epifania' },
+                    { date: '25/04/2025', name: 'Festa della Liberazione' },
+                    { date: '01/05/2025', name: 'Festa del Lavoro' },
+                    { date: '02/06/2025', name: 'Festa della Repubblica' },
+                    { date: '15/08/2025', name: 'Ferragosto' },
+                    { date: '01/11/2025', name: 'Ognissanti' },
+                    { date: '08/12/2025', name: 'Immacolata Concezione' },
+                    { date: '25/12/2025', name: 'Natale' },
+                    { date: '26/12/2025', name: 'Santo Stefano' }
+                ];
+
+                return fixedHolidays.every(holiday => {
+                    const isHoliday = window.ItalianDateSystem.isFestivita(holiday.date);
+                    const holidayName = window.ItalianDateSystem.getNomeFestivita(holiday.date);
+                    
+                    if (!isHoliday) {
+                        throw new Error(`${holiday.date} dovrebbe essere festività`);
+                    }
+                    if (holidayName !== holiday.name) {
+                        throw new Error(`Nome festività errato per ${holiday.date}: atteso "${holiday.name}", ottenuto "${holidayName}"`);
+                    }
+                    return true;
+                });
+            });
+
+            // Test Pasqua
+            testFramework.test('Calcolo Pasqua', () => {
+                // Date di Pasqua note
+                const knownEasterDates = [
+                    { year: 2024, expected: new Date(2024, 2, 31) }, // 31 marzo 2024
+                    { year: 2025, expected: new Date(2025, 3, 20) }, // 20 aprile 2025
+                    { year: 2026, expected: new Date(2026, 3, 5) },  // 5 aprile 2026
+                ];
+
+                return knownEasterDates.every(test => {
+                    const calculated = window.ItalianDateSystem.getEasterDate(test.year);
+                    if (calculated.getTime() !== test.expected.getTime()) {
+                        throw new Error(`Pasqua ${test.year}: atteso ${test.expected.toDateString()}, ottenuto ${calculated.toDateString()}`);
+                    }
+                    return true;
+                });
+            });
+
+            // Test giorni non lavorativi
+            testFramework.test('Identificazione Giorni Non Lavorativi', () => {
+                // Weekend
+                testFramework.assert(!window.ItalianDateSystem.isGiornoLavorativo('15/03/2025'), 'Sabato non è lavorativo');
+                testFramework.assert(!window.ItalianDateSystem.isGiornoLavorativo('16/03/2025'), 'Domenica non è lavorativa');
+
+                // Festività
+                testFramework.assert(!window.ItalianDateSystem.isGiornoLavorativo('25/12/2025'), 'Natale non è lavorativo');
+                testFramework.assert(!window.ItalianDateSystem.isGiornoLavorativo('01/01/2025'), 'Capodanno non è lavorativo');
+
+                // Giorno lavorativo normale
+                testFramework.assert(window.ItalianDateSystem.isGiornoLavorativo('17/03/2025'), 'Lunedì normale è lavorativo');
+
+                return true;
+            });
+
+            // Test giorni lavorativi escludendo festività
+            testFramework.test('Calcolo Scadenze con Festività', () => {
+                // Se aggiungiamo 30 giorni lavorativi a una data, dovrebbe saltare weekend e festività
+                const startDate = '15/12/2024'; // Domenica prima di Natale
+                const dueDate = window.ItalianDateSystem.calcolaScadenza(startDate, 10);
+                
+                testFramework.assertNotNull(dueDate, 'Scadenza dovrebbe essere calcolata');
+                
+                // Verifichiamo che la data di scadenza sia un giorno lavorativo
+                const isWorkDay = window.ItalianDateSystem.isGiornoLavorativo(dueDate);
+                testFramework.assert(isWorkDay, 'Data di scadenza dovrebbe essere un giorno lavorativo');
+
+                return true;
+            });
+
+            // Test prossimo giorno lavorativo
+            testFramework.test('Prossimo Giorno Lavorativo', () => {
+                // Da venerdì, il prossimo giorno lavorativo dovrebbe essere lunedì
+                const friday = '14/03/2025';
+                const nextWorkDay = window.ItalianDateSystem.getProssimoGiornoLavorativo(friday);
+                const nextWorkDayStr = window.ItalianDateSystem.formatDateItalian(nextWorkDay);
+                
+                testFramework.assertEquals(nextWorkDayStr, '17/03/2025', 'Prossimo giorno lavorativo dopo venerdì');
+
+                // Da festività, dovrebbe saltare al prossimo giorno lavorativo
+                const christmas = '25/12/2025';
+                const nextWorkDayAfterChristmas = window.ItalianDateSystem.getProssimoGiornoLavorativo(christmas);
+                const nextWorkDayAfterChristmasStr = window.ItalianDateSystem.formatDateItalian(nextWorkDayAfterChristmas);
+                
+                // Il 26 dicembre è Santo Stefano, quindi dovrebbe andare al 29 dicembre
+                testFramework.assertEquals(nextWorkDayAfterChristmasStr, '29/12/2025', 'Prossimo giorno lavorativo dopo Natale');
+
+                return true;
+            });
+
+            testFramework.endSuite();
+            testFramework.renderResults();
+        }
+
+        // ==========================================
+        // TEST PERFORMANCE
+        // ==========================================
+
+        function runPerformanceTests() {
+            testFramework.startSuite('Test Performance');
+
+            // Test performance validazione
+            testFramework.test('Performance Validazione Date (1000 iterazioni)', () => {
+                const testDates = [
+                    '15/03/2025',
+                    '32/01/2025', // invalida
+                    '29/02/2024',
+                    '29/02/2023', // invalida
+                    '31/12/2023'
+                ];
+
+                const startTime = performance.now();
+                
+                for (let i = 0; i < 1000; i++) {
+                    const testDate = testDates[i % testDates.length];
+                    window.ItalianDateSystem.isValidItalianDate(testDate);
+                }
+
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+
+                // Dovrebbe completare in meno di 100ms
+                if (duration > 100) {
+                    throw new Error(`Performance troppo lenta: ${duration.toFixed(2)}ms per 1000 validazioni`);
+                }
+
+                return { success: true, message: `Completato in ${duration.toFixed(2)}ms (${(duration/1000).toFixed(2)}ms per validazione)` };
+            });
+
+            // Test performance conversioni
+            testFramework.test('Performance Conversioni (1000 iterazioni)', () => {
+                const testDates = [
+                    '15/03/2025',
+                    '01/01/2000',
+                    '29/02/2024',
+                    '31/12/2023',
+                    '28/02/2023'
+                ];
+
+                const startTime = performance.now();
+                
+                for (let i = 0; i < 1000; i++) {
+                    const testDate = testDates[i % testDates.length];
+                    const iso = window.ItalianDateSystem.italianToISO(testDate);
+                    window.ItalianDateSystem.ISOToItalian(iso);
+                }
+
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+
+                // Dovrebbe completare in meno di 50ms
+                if (duration > 50) {
+                    throw new Error(`Performance troppo lenta: ${duration.toFixed(2)}ms per 1000 conversioni`);
+                }
+
+                return { success: true, message: `Completato in ${duration.toFixed(2)}ms (${(duration/1000).toFixed(2)}ms per conversione)` };
+            });
+
+            // Test performance calcoli
+            testFramework.test('Performance Calcoli (1000 iterazioni)', () => {
+                const startDate = '01/01/2025';
+                
+                const startTime = performance.now();
+                
+                for (let i = 0; i < 1000; i++) {
+                    const endDate = window.ItalianDateSystem.formatDateItalian(
+                        window.ItalianDateSystem.addDays(
+                            window.ItalianDateSystem.parseItalianDate(startDate), 
+                            i % 365
+                        )
+                    );
+                    window.ItalianDateSystem.daysBetweenDates(startDate, endDate);
+                    window.ItalianDateSystem.isWeekend(endDate);
+                    window.ItalianDateSystem.isFestivita(endDate);
+                }
+
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+
+                // Dovrebbe completare in meno di 200ms
+                if (duration > 200) {
+                    throw new Error(`Performance troppo lenta: ${duration.toFixed(2)}ms per 1000 calcoli`);
+                }
+
+                return { success: true, message: `Completato in ${duration.toFixed(2)}ms (${(duration/1000).toFixed(2)}ms per calcolo)` };
+            });
+
+            // Test memory usage
+            testFramework.test('Test Memory Usage', () => {
+                if (!performance.memory) {
+                    return { success: true, message: 'Performance.memory non disponibile' };
+                }
+
+                const initialMemory = performance.memory.usedJSHeapSize;
+                
+                // Crea molte date e conversioni
+                const dates = [];
+                for (let i = 0; i < 10000; i++) {
+                    const day = (i % 28) + 1;
+                    const month = (i % 12) + 1;
+                    const year = 2020 + (i % 10);
+                    const dateStr = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                    
+                    if (window.ItalianDateSystem.isValidItalianDate(dateStr)) {
+                        dates.push(dateStr);
+                        window.ItalianDateSystem.italianToISO(dateStr);
+                    }
+                }
+
+                const finalMemory = performance.memory.usedJSHeapSize;
+                const memoryIncrease = finalMemory - initialMemory;
+                const memoryMB = memoryIncrease / (1024 * 1024);
+
+                // Non dovrebbe usare più di 50MB
+                if (memoryMB > 50) {
+                    throw new Error(`Utilizzo memoria troppo alto: ${memoryMB.toFixed(2)}MB`);
+                }
+
+                return { success: true, message: `Utilizzati ${memoryMB.toFixed(2)}MB per ${dates.length} date` };
+            });
+
+            testFramework.endSuite();
+            testFramework.renderResults();
+        }
+
+        // ==========================================
+        // FUNZIONI DI CONTROLLO
+        // ==========================================
+
+        function runAllTests() {
+            testFramework.clear();
+            runValidationTests();
+            runConversionTests();
+            runCalculationTests();
+            runHolidayTests();
+            runPerformanceTests();
+        }
+
+        function clearResults() {
+            testFramework.clear();
+        }
+
+        // Auto-run dei test base all'avvio
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 Test Suite Sistema Date Italiano caricata');
+            console.log('Clicca "Esegui Tutti i Test" per iniziare la suite completa');
+        });
+    </script>
+</body>
+</html>

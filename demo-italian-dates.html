@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Sistema Date Italiano - Gestione Commerciale</title>
+    <style>
+        /* CSS per il sistema date italiano */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .demo-section {
+            margin-bottom: 50px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .demo-section h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+
+        .demo-section h3 {
+            color: #34495e;
+            font-size: 1.3rem;
+            margin: 25px 0 15px 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        input.error {
+            border-color: #e74c3c;
+            background-color: #fff5f5;
+        }
+
+        input.success {
+            border-color: #27ae60;
+            background-color: #f8fff8;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .success-message {
+            color: #27ae60;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .info-message {
+            color: #3498db;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        button.success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        /* Calendario personalizzato */
+        .italian-calendar {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 350px;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .current-month {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .days-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 10px;
+        }
+
+        .day-label {
+            text-align: center;
+            font-weight: 600;
+            color: #7f8c8d;
+            padding: 8px 4px;
+            font-size: 0.9rem;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+
+        .day-cell {
+            position: relative;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .day-cell:hover:not(.disabled):not(.empty) {
+            background: #ecf0f1;
+            transform: scale(1.05);
+        }
+
+        .day-cell.today {
+            background: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+
+        .day-cell.weekend {
+            color: #e74c3c;
+        }
+
+        .day-cell.holiday {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .day-cell.disabled {
+            color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .day-cell.selected {
+            background: #2ecc71;
+            color: white;
+            font-weight: bold;
+        }
+
+        .day-cell.range-start, .day-cell.range-end {
+            background: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+
+        .day-cell.in-range {
+            background: #d5e8ff;
+            color: #2c3e50;
+        }
+
+        .day-cell.in-range-preview {
+            background: #f0f8ff;
+            color: #2c3e50;
+        }
+
+        .holiday-indicator {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 8px;
+            color: #e74c3c;
+        }
+
+        .calendar-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .range-info {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .range-dates {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .range-days {
+            display: block;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .reset-btn {
+            background: #95a5a6;
+            font-size: 14px;
+            padding: 8px 16px;
+        }
+
+        /* Date Range Picker */
+        .date-range-picker-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .date-range-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preset-btn {
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            background: #d5dbdb;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Layout responsive */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .card h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .result-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            min-height: 100px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success { background: #27ae60; }
+        .status-error { background: #e74c3c; }
+        .status-warning { background: #f39c12; }
+        .status-info { background: #3498db; }
+
+        /* Tooltip personalizzato */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 95%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #2c3e50;
+            z-index: 1000;
+        }
+
+        /* Animazioni */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .demo-section {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Media queries */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .demo-section {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .date-range-presets {
+                justify-content: center;
+            }
+
+            .italian-calendar {
+                max-width: 100%;
+            }
+        }
+
+        /* Accessibilità */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus per accessibilità */
+        button:focus, input:focus, select:focus {
+            outline: 2px solid #3498db;
+            outline-offset: 2px;
+        }
+
+        /* Indicatori di stato */
+        .validation-status {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇮🇹 Sistema Date Italiano</h1>
+            <p>Demo completa per la gestione professionale delle date in formato italiano</p>
+        </div>
+
+        <div class="content">
+            <!-- Sezione 1: Form di registrazione -->
+            <div class="demo-section">
+                <h2>📝 Form di Registrazione</h2>
+                <p>Esempio di form con validazione della data di nascita e calcolo automatico dell'età.</p>
+                
+                <form id="registrationForm">
+                    <div class="grid">
+                        <div class="card">
+                            <h4>Dati Personali</h4>
+                            <div class="form-group">
+                                <label for="name">Nome Completo</label>
+                                <input type="text" id="name" placeholder="Mario Rossi" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="birthDate">Data di Nascita 
+                                    <span class="tooltip" data-tooltip="Formato: gg/mm/aaaa (es. 15/03/1985)">ℹ️</span>
+                                </label>
+                                <input type="text" id="birthDate" placeholder="15/03/1985" maxlength="10">
+                                <div id="birthDateStatus" class="validation-status"></div>
+                                <div id="ageDisplay" class="info-message"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" placeholder="mario.rossi@email.it" required>
+                            </div>
+                            
+                            <button type="submit">Registra Utente</button>
+                        </div>
+                        
+                        <div class="card">
+                            <h4>Calendario Nascita</h4>
+                            <div id="birthCalendar"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sezione 2: Selettore Appuntamenti -->
+            <div class="demo-section">
+                <h2>📅 Selettore Appuntamenti</h2>
+                <p>Sistema di prenotazione che esclude automaticamente weekend e festività italiane.</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>Prenota Appuntamento</h4>
+                        <div class="form-group">
+                            <label for="appointmentDate">Data Appuntamento</label>
+                            <input type="text" id="appointmentDate" placeholder="Seleziona una data" readonly>
+                            <div id="appointmentStatus" class="validation-status"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="appointmentTime">Orario</label>
+                            <select id="appointmentTime">
+                                <option value="">Seleziona orario</option>
+                                <option value="09:00">09:00</option>
+                                <option value="10:00">10:00</option>
+                                <option value="11:00">11:00</option>
+                                <option value="14:00">14:00</option>
+                                <option value="15:00">15:00</option>
+                                <option value="16:00">16:00</option>
+                                <option value="17:00">17:00</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="appointmentNotes">Note</label>
+                            <textarea id="appointmentNotes" rows="3" placeholder="Eventuali note sull'appuntamento"></textarea>
+                        </div>
+                        
+                        <button type="button" onclick="bookAppointment()">Prenota Appuntamento</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Calendario Appuntamenti</h4>
+                        <div id="appointmentCalendar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sezione 3: Calcolatore Scadenze -->
+            <div class="demo-section">
+                <h2>🧮 Calcolatore Scadenze Fatture</h2>
+                <p>Calcola automaticamente le scadenze per fatture considerando solo i giorni lavorativi.</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>Parametri Fattura</h4>
+                        <div class="form-group">
+                            <label for="invoiceDate">Data Fattura</label>
+                            <input type="text" id="invoiceDate" placeholder="Data di oggi" value="">
+                            <div id="invoiceDateStatus" class="validation-status"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="paymentTerms">Termini di Pagamento</label>
+                            <select id="paymentTerms" onchange="calculateDueDate()">
+                                <option value="">Seleziona termini</option>
+                                <option value="30">30 giorni</option>
+                                <option value="60">60 giorni</option>
+                                <option value="90">90 giorni</option>
+                                <option value="custom">Personalizzato</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="customDaysGroup" style="display: none;">
+                            <label for="customDays">Giorni Personalizzati</label>
+                            <input type="number" id="customDays" min="1" max="365" onchange="calculateDueDate()">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="workDaysOnly" onchange="calculateDueDate()"> 
+                                Solo giorni lavorativi
+                            </label>
+                        </div>
+                        
+                        <button type="button" onclick="calculateDueDate()">Calcola Scadenza</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Risultati Calcolo</h4>
+                        <div id="dueDateResults" class="result-display">
+                            Compila i campi per vedere i risultati del calcolo...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sezione 4: Range Picker Ferie -->
+            <div class="demo-section">
+                <h2>🌴 Selettore Periodo Ferie</h2>
+                <p>Seleziona un periodo di ferie con calcolo automatico dei giorni lavorativi.</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>Richiesta Ferie</h4>
+                        <div class="form-group">
+                            <label for="vacationStart">Data Inizio Ferie</label>
+                            <input type="text" id="vacationStart" placeholder="gg/mm/aaaa">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vacationEnd">Data Fine Ferie</label>
+                            <input type="text" id="vacationEnd" placeholder="gg/mm/aaaa">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vacationType">Tipo Ferie</label>
+                            <select id="vacationType">
+                                <option value="annual">Ferie Annuali</option>
+                                <option value="sick">Malattia</option>
+                                <option value="personal">Permesso Personale</option>
+                                <option value="maternity">Maternità</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" onclick="submitVacationRequest()">Invia Richiesta</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Dettagli Periodo</h4>
+                        <div id="vacationDetails" class="result-display">
+                            Seleziona le date per vedere i dettagli...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sezione 5: Visualizzazione Eventi -->
+            <div class="demo-section">
+                <h2>📊 Dashboard Eventi</h2>
+                <p>Mostra eventi con formattazione intelligente delle date in vari formati.</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>Aggiungi Evento</h4>
+                        <div class="form-group">
+                            <label for="eventTitle">Titolo Evento</label>
+                            <input type="text" id="eventTitle" placeholder="Riunione team">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="eventDate">Data Evento</label>
+                            <input type="text" id="eventDate" placeholder="gg/mm/aaaa">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="eventCategory">Categoria</label>
+                            <select id="eventCategory">
+                                <option value="meeting">Riunione</option>
+                                <option value="deadline">Scadenza</option>
+                                <option value="holiday">Festività</option>
+                                <option value="personal">Personale</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" onclick="addEvent()">Aggiungi Evento</button>
+                        <button type="button" class="secondary" onclick="clearEvents()">Cancella Tutti</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Lista Eventi</h4>
+                        <div id="eventsList" class="result-display" style="max-height: 300px; overflow-y: auto;">
+                            Nessun evento in programma...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sezione 6: Convertitore Date -->
+            <div class="demo-section">
+                <h2>🔄 Convertitore e Test Date</h2>
+                <p>Strumenti per testare e convertire date tra diversi formati.</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>Convertitore Formati</h4>
+                        <div class="form-group">
+                            <label for="inputDate">Data da Convertire</label>
+                            <input type="text" id="inputDate" placeholder="15/03/2025" onchange="convertDate()">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Formato Input</label>
+                            <select id="inputFormat" onchange="convertDate()">
+                                <option value="italian">Italiano (gg/mm/aaaa)</option>
+                                <option value="iso">ISO (aaaa-mm-gg)</option>
+                                <option value="us">US (mm/gg/aaaa)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" onclick="convertDate()">Converti</button>
+                        <button type="button" class="secondary" onclick="testCurrentDate()">Usa Oggi</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Risultati Conversione</h4>
+                        <div id="conversionResults" class="result-display">
+                            Inserisci una data per vedere le conversioni...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid" style="margin-top: 20px;">
+                    <div class="card">
+                        <h4>Test Validazione</h4>
+                        <div class="form-group">
+                            <label for="testDate">Data da Testare</label>
+                            <input type="text" id="testDate" placeholder="Prova: 29/02/2024" onchange="validateTestDate()">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Test Predefiniti</label>
+                            <button type="button" class="secondary" onclick="testValidDates()">Date Valide</button>
+                            <button type="button" class="secondary" onclick="testInvalidDates()">Date Non Valide</button>
+                            <button type="button" class="secondary" onclick="testEdgeCases()">Casi Limite</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Risultati Test</h4>
+                        <div id="testResults" class="result-display">
+                            Seleziona un test o inserisci una data...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include degli script -->
+    <script src="js/utils/italian-date-system.js"></script>
+    <script src="js/utils/italian-calendar.js"></script>
+
+    <script>
+        // ==========================================
+        // INIZIALIZZAZIONE DELLA DEMO
+        // ==========================================
+
+        let birthCalendar, appointmentCalendar, vacationRangePicker;
+        let events = [];
+
+        // Inizializza la demo quando il DOM è pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemo();
+        });
+
+        function initializeDemo() {
+            // Imposta la data di oggi nel campo fattura
+            const today = new Date();
+            const todayItalian = window.ItalianDateSystem.formatDateItalian(today);
+            document.getElementById('invoiceDate').value = todayItalian;
+
+            // Inizializza i calendari
+            initializeCalendars();
+
+            // Aggiungi event listeners per la validazione in tempo reale
+            setupValidation();
+
+            // Carica eventi di esempio
+            loadSampleEvents();
+
+            console.log('Demo sistema date italiano inizializzata con successo!');
+        }
+
+        function initializeCalendars() {
+            // Calendario per data di nascita (passato consentito)
+            birthCalendar = new ItalianCalendar({
+                container: '#birthCalendar',
+                mode: 'single',
+                maxDate: new Date(), // Non permettere date future
+                onDateSelect: function(date, dateStr) {
+                    document.getElementById('birthDate').value = dateStr;
+                    validateBirthDate();
+                }
+            });
+
+            // Calendario per appuntamenti (solo futuro, esclusi weekend e festività)
+            appointmentCalendar = new ItalianCalendar({
+                container: '#appointmentCalendar',
+                mode: 'single',
+                minDate: new Date(),
+                disableWeekends: true,
+                disableHolidays: true,
+                onDateSelect: function(date, dateStr) {
+                    document.getElementById('appointmentDate').value = dateStr;
+                    validateAppointmentDate();
+                }
+            });
+
+            // Range picker per ferie
+            vacationRangePicker = new ItalianDateRangePicker({
+                startInput: '#vacationStart',
+                endInput: '#vacationEnd',
+                minDate: new Date(),
+                onChange: function(start, end, startStr, endStr) {
+                    updateVacationDetails(start, end);
+                }
+            });
+        }
+
+        function setupValidation() {
+            // Validazione data di nascita
+            document.getElementById('birthDate').addEventListener('input', function() {
+                const input = this;
+                
+                // Auto-format mentre digita
+                formatDateInput(input);
+                
+                // Valida se la data è completa
+                if (input.value.length === 10) {
+                    validateBirthDate();
+                }
+            });
+
+            // Validazione data fattura
+            document.getElementById('invoiceDate').addEventListener('input', function() {
+                formatDateInput(this);
+                if (this.value.length === 10) {
+                    validateInvoiceDate();
+                }
+            });
+
+            // Validazione data appuntamento
+            document.getElementById('appointmentDate').addEventListener('change', validateAppointmentDate);
+
+            // Validazione eventi
+            document.getElementById('eventDate').addEventListener('input', function() {
+                formatDateInput(this);
+            });
+        }
+
+        function formatDateInput(input) {
+            let value = input.value.replace(/[^\d]/g, ''); // Solo numeri
+            
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2);
+            }
+            if (value.length >= 5) {
+                value = value.substring(0, 5) + '/' + value.substring(5, 9);
+            }
+            
+            input.value = value;
+        }
+
+        // ==========================================
+        // VALIDAZIONI SPECIFICHE
+        // ==========================================
+
+        function validateBirthDate() {
+            const input = document.getElementById('birthDate');
+            const status = document.getElementById('birthDateStatus');
+            const ageDisplay = document.getElementById('ageDisplay');
+            
+            const validation = window.ItalianDateSystem.validateDataNascita(input.value);
+            
+            if (validation.valid) {
+                input.classList.remove('error');
+                input.classList.add('success');
+                
+                const age = window.ItalianDateSystem.calculateAge(input.value);
+                const birthDate = window.ItalianDateSystem.parseItalianDate(input.value);
+                const relativeDate = window.ItalianDateSystem.formatRelativeDate(birthDate);
+                
+                status.innerHTML = `<span class="status-indicator status-success"></span>Data valida`;
+                ageDisplay.textContent = `Età: ${age} anni (nato ${relativeDate})`;
+                
+                // Aggiorna il calendario
+                birthCalendar.setDate(birthDate);
+            } else {
+                input.classList.remove('success');
+                input.classList.add('error');
+                status.innerHTML = `<span class="status-indicator status-error"></span>${validation.error}`;
+                ageDisplay.textContent = '';
+            }
+        }
+
+        function validateInvoiceDate() {
+            const input = document.getElementById('invoiceDate');
+            const status = document.getElementById('invoiceDateStatus');
+            
+            if (window.ItalianDateSystem.isValidItalianDate(input.value)) {
+                input.classList.remove('error');
+                input.classList.add('success');
+                status.innerHTML = `<span class="status-indicator status-success"></span>Data valida`;
+                calculateDueDate();
+            } else {
+                input.classList.add('error');
+                status.innerHTML = `<span class="status-indicator status-error"></span>Formato data non valido`;
+            }
+        }
+
+        function validateAppointmentDate() {
+            const input = document.getElementById('appointmentDate');
+            const status = document.getElementById('appointmentStatus');
+            
+            if (!window.ItalianDateSystem.isValidItalianDate(input.value)) {
+                status.innerHTML = `<span class="status-indicator status-error"></span>Data non valida`;
+                return;
+            }
+
+            const date = window.ItalianDateSystem.parseItalianDate(input.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (date < today) {
+                status.innerHTML = `<span class="status-indicator status-error"></span>Non puoi prenotare nel passato`;
+                return;
+            }
+
+            if (window.ItalianDateSystem.isWeekend(date)) {
+                status.innerHTML = `<span class="status-indicator status-warning"></span>Weekend - ufficio chiuso`;
+                return;
+            }
+
+            if (window.ItalianDateSystem.isFestivita(date)) {
+                const holidayName = window.ItalianDateSystem.getNomeFestivita(date);
+                status.innerHTML = `<span class="status-indicator status-warning"></span>Festività: ${holidayName}`;
+                return;
+            }
+
+            const relativeDate = window.ItalianDateSystem.formatRelativeDate(date);
+            status.innerHTML = `<span class="status-indicator status-success"></span>Disponibile (${relativeDate})`;
+        }
+
+        // ==========================================
+        // FUNZIONI SPECIFICHE DELLE SEZIONI
+        // ==========================================
+
+        function calculateDueDate() {
+            const invoiceDateStr = document.getElementById('invoiceDate').value;
+            const paymentTerms = document.getElementById('paymentTerms').value;
+            const customDays = document.getElementById('customDays').value;
+            const workDaysOnly = document.getElementById('workDaysOnly').checked;
+            const results = document.getElementById('dueDateResults');
+
+            // Mostra/nascondi campo giorni personalizzati
+            const customDaysGroup = document.getElementById('customDaysGroup');
+            customDaysGroup.style.display = paymentTerms === 'custom' ? 'block' : 'none';
+
+            if (!window.ItalianDateSystem.isValidItalianDate(invoiceDateStr) || !paymentTerms) {
+                results.textContent = 'Compila tutti i campi per vedere i risultati...';
+                return;
+            }
+
+            const invoiceDate = window.ItalianDateSystem.parseItalianDate(invoiceDateStr);
+            let days = paymentTerms === 'custom' ? parseInt(customDays) || 0 : parseInt(paymentTerms);
+
+            if (days <= 0) {
+                results.textContent = 'Inserisci un numero valido di giorni.';
+                return;
+            }
+
+            let dueDate;
+            if (workDaysOnly) {
+                dueDate = window.ItalianDateSystem.calcolaScadenza(invoiceDate, days);
+            } else {
+                dueDate = window.ItalianDateSystem.addDays(invoiceDate, days);
+            }
+
+            const dueDateStr = window.ItalianDateSystem.formatDateItalian(dueDate);
+            const dueDateFormatted = window.ItalianDateSystem.formatDateForDocument(dueDate);
+            const daysUntilDue = window.ItalianDateSystem.daysBetweenDates(new Date(), dueDate);
+            const workDaysUntilDue = window.ItalianDateSystem.calcolaGiorniLavorativi(new Date(), dueDate);
+            const relativeDate = window.ItalianDateSystem.formatRelativeDate(dueDate);
+
+            results.innerHTML = `
+📄 DETTAGLI SCADENZA FATTURA
+
+Data Fattura: ${invoiceDateStr} (${window.ItalianDateSystem.formatDateForDocument(invoiceDate)})
+Termini di Pagamento: ${days} giorni${workDaysOnly ? ' lavorativi' : ''}
+
+📅 Data Scadenza: ${dueDateStr}
+📝 Formato Esteso: ${dueDateFormatted}
+⏰ Quando: ${relativeDate}
+
+📊 CALCOLI:
+• Giorni totali: ${daysUntilDue}
+• Giorni lavorativi: ${workDaysUntilDue}
+• Weekend: ${window.ItalianDateSystem.isWeekend(dueDate) ? 'SÌ' : 'NO'}
+• Festività: ${window.ItalianDateSystem.isFestivita(dueDate) ? window.ItalianDateSystem.getNomeFestivita(dueDate) : 'NO'}
+
+${dueDate < new Date() ? '⚠️ ATTENZIONE: Scadenza già passata!' : '✅ Scadenza futura'}
+            `;
+        }
+
+        function updateVacationDetails(startDate, endDate) {
+            const details = document.getElementById('vacationDetails');
+            
+            if (!startDate || !endDate) {
+                details.textContent = 'Seleziona le date per vedere i dettagli...';
+                return;
+            }
+
+            const totalDays = window.ItalianDateSystem.daysBetweenDates(startDate, endDate) + 1;
+            const workDays = window.ItalianDateSystem.calcolaGiorniLavorativi(startDate, endDate);
+            const weekendDays = totalDays - workDays;
+
+            const startStr = window.ItalianDateSystem.formatDateItalian(startDate);
+            const endStr = window.ItalianDateSystem.formatDateItalian(endDate);
+            const startFormatted = window.ItalianDateSystem.formatDateForDocument(startDate);
+            const endFormatted = window.ItalianDateSystem.formatDateForDocument(endDate);
+
+            // Conta le festività nel periodo
+            let holidays = [];
+            const current = new Date(startDate);
+            while (current <= endDate) {
+                if (window.ItalianDateSystem.isFestivita(current)) {
+                    holidays.push({
+                        date: new Date(current),
+                        name: window.ItalianDateSystem.getNomeFestivita(current)
+                    });
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
+            details.innerHTML = `
+🌴 DETTAGLI PERIODO FERIE
+
+📅 Periodo: ${startStr} - ${endStr}
+📝 Esteso: ${startFormatted} - ${endFormatted}
+
+📊 CONTEGGIO GIORNI:
+• Totale giorni: ${totalDays}
+• Giorni lavorativi: ${workDays}
+• Weekend: ${weekendDays}
+• Festività: ${holidays.length}
+
+${holidays.length > 0 ? `🎉 FESTIVITÀ INCLUSE:
+${holidays.map(h => `• ${window.ItalianDateSystem.formatDateItalian(h.date)} - ${h.name}`).join('\n')}` : ''}
+
+💼 Giorni di ferie necessari: ${workDays}
+            `;
+        }
+
+        function bookAppointment() {
+            const date = document.getElementById('appointmentDate').value;
+            const time = document.getElementById('appointmentTime').value;
+            const notes = document.getElementById('appointmentNotes').value;
+
+            if (!date || !time) {
+                alert('Seleziona data e orario per l\'appuntamento');
+                return;
+            }
+
+            if (!window.ItalianDateSystem.isValidItalianDate(date)) {
+                alert('Data non valida');
+                return;
+            }
+
+            const appointmentDate = window.ItalianDateSystem.parseItalianDate(date);
+            
+            if (window.ItalianDateSystem.isWeekend(appointmentDate) || 
+                window.ItalianDateSystem.isFestivita(appointmentDate)) {
+                alert('Non è possibile prenotare in questo giorno');
+                return;
+            }
+
+            // Simula la prenotazione
+            const appointment = {
+                date: date,
+                time: time,
+                notes: notes,
+                id: Date.now()
+            };
+
+            alert(`✅ Appuntamento prenotato con successo!
+
+📅 Data: ${window.ItalianDateSystem.formatDateForDocument(appointmentDate)}
+🕐 Orario: ${time}
+${notes ? `📝 Note: ${notes}` : ''}
+
+Ti aspettiamo!`);
+
+            // Reset form
+            document.getElementById('appointmentDate').value = '';
+            document.getElementById('appointmentTime').value = '';
+            document.getElementById('appointmentNotes').value = '';
+        }
+
+        function submitVacationRequest() {
+            const start = document.getElementById('vacationStart').value;
+            const end = document.getElementById('vacationEnd').value;
+            const type = document.getElementById('vacationType').value;
+
+            if (!start || !end) {
+                alert('Seleziona il periodo di ferie');
+                return;
+            }
+
+            const validation = window.ItalianDateSystem.validateDateRange(start, end);
+            if (!validation.valid) {
+                alert(validation.error);
+                return;
+            }
+
+            const startDate = window.ItalianDateSystem.parseItalianDate(start);
+            const endDate = window.ItalianDateSystem.parseItalianDate(end);
+            const workDays = window.ItalianDateSystem.calcolaGiorniLavorativi(startDate, endDate);
+
+            alert(`📝 Richiesta ferie inviata!
+
+🌴 Tipo: ${document.getElementById('vacationType').selectedOptions[0].text}
+📅 Periodo: ${start} - ${end}
+💼 Giorni lavorativi: ${workDays}
+
+La richiesta è stata inoltrata al responsabile HR.`);
+        }
+
+        // ==========================================
+        // GESTIONE EVENTI
+        // ==========================================
+
+        function addEvent() {
+            const title = document.getElementById('eventTitle').value;
+            const date = document.getElementById('eventDate').value;
+            const category = document.getElementById('eventCategory').value;
+
+            if (!title || !date) {
+                alert('Inserisci titolo e data dell\'evento');
+                return;
+            }
+
+            if (!window.ItalianDateSystem.isValidItalianDate(date)) {
+                alert('Data non valida');
+                return;
+            }
+
+            const event = {
+                id: Date.now(),
+                title: title,
+                date: date,
+                category: category,
+                created: new Date()
+            };
+
+            events.push(event);
+            events.sort((a, b) => {
+                const dateA = window.ItalianDateSystem.parseItalianDate(a.date);
+                const dateB = window.ItalianDateSystem.parseItalianDate(b.date);
+                return dateA - dateB;
+            });
+
+            updateEventsList();
+
+            // Reset form
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDate').value = '';
+        }
+
+        function updateEventsList() {
+            const list = document.getElementById('eventsList');
+            
+            if (events.length === 0) {
+                list.textContent = 'Nessun evento in programma...';
+                return;
+            }
+
+            const categoryIcons = {
+                meeting: '👥',
+                deadline: '⏰',
+                holiday: '🎉',
+                personal: '👤'
+            };
+
+            const today = new Date();
+            
+            list.innerHTML = events.map(event => {
+                const eventDate = window.ItalianDateSystem.parseItalianDate(event.date);
+                const relativeDate = window.ItalianDateSystem.formatRelativeDate(eventDate);
+                const formattedDate = window.ItalianDateSystem.formatDateForDocument(eventDate);
+                const isPast = eventDate < today;
+                const isToday = eventDate.toDateString() === today.toDateString();
+                
+                let statusClass = isPast ? 'status-error' : isToday ? 'status-warning' : 'status-success';
+                
+                return `
+<div style="margin-bottom: 15px; padding: 10px; border-left: 4px solid ${isPast ? '#e74c3c' : isToday ? '#f39c12' : '#27ae60'}; background: ${isPast ? '#fdf2f2' : isToday ? '#fef9e7' : '#f0fff4'};">
+    <div style="font-weight: bold; margin-bottom: 5px;">
+        ${categoryIcons[event.category]} ${event.title}
+    </div>
+    <div style="font-size: 0.9rem; color: #666;">
+        📅 ${event.date} (${formattedDate})
+        <br>⏰ ${relativeDate}
+        ${isPast ? '<br>🔴 Passato' : isToday ? '<br>🟡 Oggi' : '<br>🟢 Futuro'}
+    </div>
+</div>
+                `;
+            }).join('');
+        }
+
+        function clearEvents() {
+            if (events.length === 0) {
+                alert('Nessun evento da cancellare');
+                return;
+            }
+
+            if (confirm(`Vuoi cancellare tutti i ${events.length} eventi?`)) {
+                events = [];
+                updateEventsList();
+            }
+        }
+
+        function loadSampleEvents() {
+            const today = new Date();
+            const sampleEvents = [
+                {
+                    id: 1,
+                    title: 'Riunione team',
+                    date: window.ItalianDateSystem.formatDateItalian(window.ItalianDateSystem.addDays(today, 2)),
+                    category: 'meeting',
+                    created: new Date()
+                },
+                {
+                    id: 2,
+                    title: 'Scadenza progetto',
+                    date: window.ItalianDateSystem.formatDateItalian(window.ItalianDateSystem.addDays(today, 7)),
+                    category: 'deadline',
+                    created: new Date()
+                },
+                {
+                    id: 3,
+                    title: 'Appuntamento medico',
+                    date: window.ItalianDateSystem.formatDateItalian(window.ItalianDateSystem.addDays(today, -3)),
+                    category: 'personal',
+                    created: new Date()
+                }
+            ];
+
+            events = sampleEvents;
+            updateEventsList();
+        }
+
+        // ==========================================
+        // CONVERTITORE E TEST
+        // ==========================================
+
+        function convertDate() {
+            const input = document.getElementById('inputDate').value;
+            const format = document.getElementById('inputFormat').value;
+            const results = document.getElementById('conversionResults');
+
+            if (!input) {
+                results.textContent = 'Inserisci una data per vedere le conversioni...';
+                return;
+            }
+
+            let date = null;
+
+            try {
+                switch (format) {
+                    case 'italian':
+                        if (window.ItalianDateSystem.isValidItalianDate(input)) {
+                            date = window.ItalianDateSystem.parseItalianDate(input);
+                        }
+                        break;
+                    case 'iso':
+                        date = new Date(input);
+                        break;
+                    case 'us':
+                        // Converte mm/dd/yyyy in Date
+                        const [month, day, year] = input.split('/');
+                        if (month && day && year) {
+                            date = new Date(year, month - 1, day);
+                        }
+                        break;
+                }
+
+                if (!date || isNaN(date)) {
+                    results.innerHTML = `❌ Data non valida per il formato ${format}`;
+                    return;
+                }
+
+                const italianFormat = window.ItalianDateSystem.formatDateItalian(date);
+                const isoFormat = date.toISOString().split('T')[0];
+                const usFormat = new Intl.DateTimeFormat('en-US').format(date);
+                const extendedFormat = window.ItalianDateSystem.formatDateForDocument(date);
+                const relativeFormat = window.ItalianDateSystem.formatRelativeDate(date);
+                const dayOfWeek = window.ItalianDateSystem.GIORNI_ITALIANI[date.getDay()];
+
+                const age = window.ItalianDateSystem.calculateAge(date);
+                const isWeekend = window.ItalianDateSystem.isWeekend(date);
+                const isHoliday = window.ItalianDateSystem.isFestivita(date);
+                const holidayName = window.ItalianDateSystem.getNomeFestivita(date);
+
+                results.innerHTML = `
+✅ CONVERSIONI DATA RIUSCITE
+
+📅 FORMATI:
+• Italiano: ${italianFormat}
+• ISO 8601: ${isoFormat}
+• US: ${usFormat}
+• Esteso: ${extendedFormat}
+• Relativo: ${relativeFormat}
+• Giorno: ${dayOfWeek}
+
+📊 INFORMAZIONI:
+• Età se data di nascita: ${age >= 0 ? age + ' anni' : 'Futura'}
+• Weekend: ${isWeekend ? 'SÌ' : 'NO'}
+• Festività: ${isHoliday ? holidayName : 'NO'}
+• Anno bisestile: ${window.ItalianDateSystem.isAnnoBisestile(date.getFullYear()) ? 'SÌ' : 'NO'}
+
+🔢 TIMESTAMP:
+• Unix: ${Math.floor(date.getTime() / 1000)}
+• JavaScript: ${date.getTime()}
+                `;
+
+            } catch (error) {
+                results.innerHTML = `❌ Errore nella conversione: ${error.message}`;
+            }
+        }
+
+        function testCurrentDate() {
+            const today = new Date();
+            const todayItalian = window.ItalianDateSystem.formatDateItalian(today);
+            document.getElementById('inputDate').value = todayItalian;
+            document.getElementById('inputFormat').value = 'italian';
+            convertDate();
+        }
+
+        function validateTestDate() {
+            const input = document.getElementById('testDate').value;
+            const results = document.getElementById('testResults');
+
+            if (!input) {
+                results.textContent = 'Inserisci una data da testare...';
+                return;
+            }
+
+            const isValid = window.ItalianDateSystem.isValidItalianDate(input);
+            
+            if (isValid) {
+                const date = window.ItalianDateSystem.parseItalianDate(input);
+                const validations = [];
+
+                // Test vari tipi di validazione
+                const birthValidation = window.ItalianDateSystem.validateDataNascita(input);
+                const expiryValidation = window.ItalianDateSystem.validateDataScadenza(input);
+
+                results.innerHTML = `
+✅ DATA VALIDA: ${input}
+
+📊 VALIDAZIONI SPECIFICHE:
+• Data di nascita: ${birthValidation.valid ? '✅ Valida' : '❌ ' + birthValidation.error}
+• Data di scadenza: ${expiryValidation.valid ? '✅ Valida' : '❌ ' + expiryValidation.error}
+
+🔍 ANALISI:
+• Formato: Corretto (gg/mm/aaaa)
+• Data esistente: SÌ
+• Giorno: ${date.getDate()}
+• Mese: ${date.getMonth() + 1} (${window.ItalianDateSystem.MESI_ITALIANI[date.getMonth()]})
+• Anno: ${date.getFullYear()}
+• Giorno settimana: ${window.ItalianDateSystem.GIORNI_ITALIANI[date.getDay()]}
+                `;
+            } else {
+                results.innerHTML = `
+❌ DATA NON VALIDA: ${input}
+
+🔍 POSSIBILI CAUSE:
+• Formato scorretto (usa gg/mm/aaaa)
+• Giorno non esistente per il mese
+• Mese non valido (1-12)
+• Anno non valido
+• Data impossibile (es. 30 febbraio)
+
+✅ ESEMPI CORRETTI:
+• 15/03/2025
+• 29/02/2024 (anno bisestile)
+• 31/12/2023
+                `;
+            }
+        }
+
+        function testValidDates() {
+            const validDates = [
+                '15/03/2025',
+                '29/02/2024', // Anno bisestile
+                '31/12/2023',
+                '01/01/2000',
+                '28/02/2023', // Anno non bisestile
+            ];
+
+            runDateTests(validDates, 'Date Valide');
+        }
+
+        function testInvalidDates() {
+            const invalidDates = [
+                '32/01/2025', // Giorno non esistente
+                '15/13/2025', // Mese non esistente
+                '29/02/2023', // 29 febbraio in anno non bisestile
+                '31/04/2025', // 31 aprile
+                '00/01/2025', // Giorno zero
+                '15/00/2025', // Mese zero
+                '15-03-2025', // Formato scorretto
+                'abc/def/ghi', // Non numerico
+            ];
+
+            runDateTests(invalidDates, 'Date Non Valide');
+        }
+
+        function testEdgeCases() {
+            const edgeCases = [
+                '29/02/2000', // Anno bisestile secolo
+                '29/02/1900', // Anno non bisestile secolo
+                '31/01/2025', // Ultimo giorno mese con 31
+                '30/04/2025', // Ultimo giorno mese con 30
+                '28/02/2025', // Ultimo giorno febbraio non bisestile
+                '01/01/1970', // Epoch
+                '31/12/9999', // Data lontana
+            ];
+
+            runDateTests(edgeCases, 'Casi Limite');
+        }
+
+        function runDateTests(testDates, testName) {
+            const results = document.getElementById('testResults');
+            
+            let output = `🧪 TEST: ${testName}\n\n`;
+            
+            testDates.forEach((dateStr, index) => {
+                const isValid = window.ItalianDateSystem.isValidItalianDate(dateStr);
+                const icon = isValid ? '✅' : '❌';
+                const status = isValid ? 'VALIDA' : 'NON VALIDA';
+                
+                output += `${index + 1}. ${icon} ${dateStr} - ${status}\n`;
+                
+                if (isValid) {
+                    const date = window.ItalianDateSystem.parseItalianDate(dateStr);
+                    const relative = window.ItalianDateSystem.formatRelativeDate(date);
+                    output += `   📅 ${relative}\n`;
+                }
+                output += '\n';
+            });
+
+            const validCount = testDates.filter(d => window.ItalianDateSystem.isValidItalianDate(d)).length;
+            output += `📊 RISULTATI: ${validCount}/${testDates.length} date valide`;
+
+            results.textContent = output;
+        }
+
+        // ==========================================
+        // UTILITY E HELPERS
+        // ==========================================
+
+        // Gestione Enter nei form
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                e.preventDefault();
+                
+                // Trova il prossimo input o pulsante
+                const form = e.target.closest('form') || e.target.closest('.demo-section');
+                if (form) {
+                    const inputs = form.querySelectorAll('input, select, button');
+                    const currentIndex = Array.from(inputs).indexOf(e.target);
+                    if (currentIndex < inputs.length - 1) {
+                        inputs[currentIndex + 1].focus();
+                    }
+                }
+            }
+        });
+
+        // Gestione del form di registrazione
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const birthDate = document.getElementById('birthDate').value;
+            const email = document.getElementById('email').value;
+
+            if (!name || !birthDate || !email) {
+                alert('Compila tutti i campi obbligatori');
+                return;
+            }
+
+            const validation = window.ItalianDateSystem.validateDataNascita(birthDate);
+            if (!validation.valid) {
+                alert('Data di nascita non valida: ' + validation.error);
+                return;
+            }
+
+            const age = window.ItalianDateSystem.calculateAge(birthDate);
+            const birthDateFormatted = window.ItalianDateSystem.formatDateForDocument(window.ItalianDateSystem.parseItalianDate(birthDate));
+
+            alert(`✅ Registrazione completata con successo!
+
+👤 Nome: ${name}
+📧 Email: ${email}
+🎂 Data di nascita: ${birthDateFormatted}
+📊 Età: ${age} anni
+
+Benvenuto nella nostra piattaforma!`);
+        });
+
+        // Gestione termini personalizzati
+        document.getElementById('paymentTerms').addEventListener('change', function() {
+            const customDaysGroup = document.getElementById('customDaysGroup');
+            customDaysGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+            
+            if (this.value !== 'custom') {
+                calculateDueDate();
+            }
+        });
+
+        console.log('🇮🇹 Demo Sistema Date Italiano caricata completamente!');
+    </script>
+</body>
+</html>
