@@ -29,53 +29,9 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 22:45 - APPENDCHILD MONITOR');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:00 - APP COMPLETA RIATTIVATA');</script>
   
-  <!-- 🔍 MONKEY PATCH DEBUG per ensureDemoTab -->
-  <script>
-    // monkey-patch irrevocabile per tracciare chi chiama ensureDemoTab
-    Object.defineProperty(window, 'ensureDemoTab', {
-      configurable: false,
-      get() {
-        return () => {
-          console.warn('🛑 ensureDemoTab() BLOCCATO');
-          console.trace(); // stack completo per capire il chiamante
-        };
-      },
-      set(v) {
-        console.error('🛑 tentativo di ridefinire ensureDemoTab, ignorato', v);
-      }
-    });
-    
-    // Anche per le varianti
-    Object.defineProperty(window, 'ensureDemoTabVisibility', {
-      configurable: false,
-      get() {
-        return () => {
-          console.warn('🛑 ensureDemoTabVisibility() BLOCCATO');
-          console.trace();
-        };
-      },
-      set(v) {
-        console.error('🛑 tentativo di ridefinire ensureDemoTabVisibility, ignorato', v);
-      }
-    });
-    
-    console.info('🔍 MONKEY PATCH ATTIVO - tracceremo ogni chiamata a ensureDemoTab');
-    
-    // 🕵️ MONKEY PATCH appendChild per tracciare chi sposta la demo tab
-    const originalAppendChild = Node.prototype.appendChild;
-    Node.prototype.appendChild = function(child) {
-      if (child && child.id === 'tab-demo') {
-        console.warn('🚨 DEMO TAB SPOSTATA con appendChild!');
-        console.trace(); // stack trace per vedere chi la chiama
-        console.log('Parent che riceve la tab:', this);
-      }
-      return originalAppendChild.call(this, child);
-    };
-    
-    console.info('🕵️ APPENDCHILD MONITOR ATTIVO - tracceremo spostamenti demo tab');
-  </script>
+  <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
   <!-- Cache Busting - Force reload date system -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -1656,6 +1612,11 @@
       '/js/middleware/unified-ai-system.js'
     ))
     .then(() => safeLoadQueue(
+      '/js/ai/ai-voice-manager.js',
+      '/js/ai/ai-voice-manager-v2.js',
+      '/js/ai/ai-command-parser.js'
+    ))
+    .then(() => safeLoadQueue(
       '/js/config/ddtft-patterns.js',
       '/js/config/ddtft-mappings.js',
       '/js/utils/ddtft-parsing-utils.js',
@@ -1681,6 +1642,26 @@
       '/js/timeline/timeline-events.js',
       '/js/timeline/timeline-controls.js',
       '/js/timeline/timeline-core.js'
+    ))
+    .then(() => safeLoadQueue(
+      '/js/clienti-core.js',
+      '/js/clienti-form.js',
+      '/js/ordini.js',
+      '/js/prodotti.js',
+      '/js/percorsi.js',
+      '/js/percorsi-core.js'
+    ))
+    .then(() => safeLoadQueue(
+      '/js/worksheet-core.js',
+      '/js/worksheet-ui.js',
+      '/js/worksheet-view.js',
+      '/js/worksheet-import.js',
+      '/js/worksheet-itinerary.js',
+      '/js/worksheet-dragdrop.js'
+    ))
+    .then(() => safeLoadQueue(
+      '/js/smart-assistant.js',
+      '/js/keep-alive.js'
     ))
     .then(() => {
       console.log('✅ Bootstrap completo');
