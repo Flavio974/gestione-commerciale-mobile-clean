@@ -21,6 +21,7 @@
   for = "*.js"
   [headers.values]
     Content-Type = "application/javascript"
+    X-Debug-Source = "static-js-file"
 
 [[headers]]
   for = "*.css"
@@ -52,3 +53,4 @@
   from = "/*"
   to = "/index.html"
   status = 200
+  headers = {X-Debug-Source = "spa-fallback"}
