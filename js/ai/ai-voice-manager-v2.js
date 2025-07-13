@@ -200,6 +200,10 @@ class AIVoiceManagerV2 {
     
     // Aggiungi bottone di attivazione audio nel tab AI per iPad
     addAudioButtonToAITab() {
+        // ❌ DISABILITATO - Questa funzione inietta nel tab e rompe il layout
+        console.log('🎵 addAudioButtonToAITab() DISABILITATO per fix layout');
+        return; // EARLY RETURN per evitare iniezione nel tab
+        
         // Aspetta che il DOM del tab AI sia pronto
         const checkAITab = () => {
             const aiContent = document.getElementById('ai-content');
