@@ -8,10 +8,16 @@ const ComandiUI = {
    * Inizializza UI per desktop
    */
   init: function() {
-    // Solo su desktop
-    if (!window.DeviceDetector || !window.DeviceDetector.info.isDesktop) {
+    // Solo su desktop - Fix: permetti sempre su desktop reali
+    const isRealDesktop = window.innerWidth >= 1024 && 
+                         !(/Mobi|Android/i.test(navigator.userAgent)) &&
+                         !('ontouchstart' in window);
+    
+    if (!isRealDesktop && window.DeviceDetector && !window.DeviceDetector.info.isDesktop) {
       return;
     }
+    
+    console.log('💻 Desktop rilevato - Inizializzazione Comandi UI...');
     
     // Aggiungi tab alla navigazione
     this.addNavigationTab();

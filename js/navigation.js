@@ -89,8 +89,12 @@ const Navigation = {
   getTabOrder: function() {
     const tabs = ['timeline', 'data', 'demo', 'planner', 'clients', 'travels', 'worksheet', 'orders', 'ddtft', 'smart', 'ai'];
     
-    // Aggiungi tab Comandi solo su desktop
-    if (window.DeviceDetector && window.DeviceDetector.info.isDesktop) {
+    // Aggiungi tab Comandi solo su desktop - Fix: rileva desktop reali
+    const isRealDesktop = window.innerWidth >= 1024 && 
+                         !(/Mobi|Android/i.test(navigator.userAgent)) &&
+                         !('ontouchstart' in window);
+    
+    if (isRealDesktop || (window.DeviceDetector && window.DeviceDetector.info.isDesktop)) {
       tabs.push('comandi');
     }
     

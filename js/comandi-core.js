@@ -13,11 +13,17 @@ const ComandiModule = {
   init: async function() {
     console.log('🎯 Inizializzazione modulo Comandi');
     
-    // Solo su desktop
-    if (!window.DeviceDetector || !window.DeviceDetector.info.isDesktop) {
+    // Solo su desktop - Fix: permetti sempre su desktop reali
+    const isRealDesktop = window.innerWidth >= 1024 && 
+                         !(/Mobi|Android/i.test(navigator.userAgent)) &&
+                         !('ontouchstart' in window);
+    
+    if (!isRealDesktop && window.DeviceDetector && !window.DeviceDetector.info.isDesktop) {
       console.log('📱 Modulo Comandi disponibile solo su desktop');
       return;
     }
+    
+    console.log('💻 Desktop rilevato - Inizializzazione Comandi in corso...');
     
     // Carica vocabolario
     await this.loadVocabolario();
@@ -573,8 +579,12 @@ const ComandiModule = {
   onEnter: function() {
     console.log('📋 Entering Comandi tab');
     
-    // Solo su desktop
-    if (!window.DeviceDetector || !window.DeviceDetector.info.isDesktop) {
+    // Solo su desktop - Fix: permetti sempre su desktop reali
+    const isRealDesktop = window.innerWidth >= 1024 && 
+                         !(/Mobi|Android/i.test(navigator.userAgent)) &&
+                         !('ontouchstart' in window);
+    
+    if (!isRealDesktop && window.DeviceDetector && !window.DeviceDetector.info.isDesktop) {
       console.log('📱 Modulo Comandi disponibile solo su desktop');
       const container = document.getElementById('comandi-content');
       if (container) {
@@ -588,6 +598,8 @@ const ComandiModule = {
       }
       return;
     }
+    
+    console.log('💻 Desktop confermato - Caricamento interfaccia Comandi...');
     
     this.setupUI();
     this.loadVocabolario();
