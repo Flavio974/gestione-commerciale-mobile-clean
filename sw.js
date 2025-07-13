@@ -3,7 +3,7 @@
  * Gestisce cache e funzionalità offline
  */
 
-const CACHE_NAME = 'smart-commercial-assistant-v1.0.2-no-fetch'; // PWA - Fetch disabilitato
+const CACHE_NAME = 'smart-commercial-assistant-v1.0.3-js-fixed'; // PWA - JS fetch fix
 const CACHE_URLS = [
   '/',
   '/index.html',
@@ -110,24 +110,21 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// ✅ SERVICE WORKER con guardia per script JS
+// ✅ SERVICE WORKER FIXED - Lascia passare script JS senza intercettazione
 self.addEventListener('fetch', event => {
   // ✅ GUARDIA CRITICA: Non intercettare richieste di script JS
-  if (event.request.destination === 'script') {
-    console.log('[SW] Script request bypassed:', event.request.url);
-    return; // Lascia che il browser gestisca direttamente
-  }
-  
-  // ✅ GUARDIA: Non intercettare moduli temporal o config
-  if (event.request.url.includes('temporal') || 
+  if (event.request.destination === 'script' || 
+      event.request.url.includes('temporal') || 
       event.request.url.includes('config/') ||
-      event.request.url.includes('middleware/')) {
-    console.log('[SW] Module request bypassed:', event.request.url);
+      event.request.url.includes('middleware/') ||
+      event.request.url.endsWith('.js')) {
+    console.log('[SW] JS request bypassed:', event.request.url);
+    // ✅ FIX CRITICO: Non fare return vuoto, lascia che il browser gestisca
     return;
   }
   
-  // Per altre richieste, continua con logica normale SW se necessario
-  // (attualmente disabilitata per debug)
+  // Per altre richieste NON-JS, potresti implementare cache logic
+  // Ma per ora lasciamo passare tutto per evitare conflitti
 });
 
 // Gestisci messaggi dal client
