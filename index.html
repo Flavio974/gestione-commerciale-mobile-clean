@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 22:15 - MONKEY PATCH DEBUG');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 22:30 - LOOP INFINITO FIXED');</script>
   
   <!-- 🔍 MONKEY PATCH DEBUG per ensureDemoTab -->
   <script>
@@ -97,17 +97,9 @@
 
   <!-- 🔒 FIX FINALE 2025-07-13: BLOCCO TOTALE DEMO TAB MOVEMENT -->
   <script>
-    // MONKEY-PATCH AGGRESSIVO per bloccare ogni tentativo di spostamento
-    // BLOCCA TUTTI I FORCING DELLA DEMO TAB  
-    window.forceDemoTabVisible = () => console.log('🔒 forceDemoTabVisible() BLOCCATO');
-    window.loopRetryForceDemoTab = () => console.log('🔒 loopRetryForceDemoTab() BLOCCATO');
-    window.ensureDemoTab = () => console.log('🔒 ensureDemoTab() BLOCCATO');
-    
-    // BLOCCA ANCHE LE NUOVE VARIANTI
-    const blockForcing = () => console.log('🔒 DEMO TAB FORCING BLOCCATO');
-    window.forceDemoTabVisibility = blockForcing;
-    window.ensureDemoTabVisibility = blockForcing;
-    window.protectDemoTab = blockForcing;
+    // 🔍 RIMOSSO - Ora gestito dal monkey patch irrevocabile sopra
+    // Il monkey patch Object.defineProperty è più potente e non può essere sovrascritto
+    console.log('🔍 Monkey patch attivo - no ridefinizioni manuali necessarie');
     
     // Blocca timer che potrebbero essere cache-ati
     if (window.demoTabIntervalId) {

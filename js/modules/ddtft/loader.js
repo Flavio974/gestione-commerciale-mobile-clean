@@ -37,17 +37,7 @@ window.safeLoad = function safeLoad(url) {
 window.safeLoadQueue = (...urls) =>
   urls.reduce((p, u) => p.then(() => safeLoad(u)), Promise.resolve());
 
-/* Monkey-patch globale per intercettare aggiunta di <script src> */
-(function () {
-  const _create = document.createElement;
-  document.createElement = function patched(tagName, ...rest) {
-    const el = _create.call(this, tagName, ...rest);
-    if (tagName.toLowerCase() === 'script') {
-      Object.defineProperty(el, 'src', {
-        set(url) { safeLoad(url); },
-        get() { return ''; },
-      });
-    }
-    return el;
-  };
-})();
+/* 🔒 MONKEY PATCH DISATTIVATO - Causava loop infinito */
+// Il monkey patch creava loop: script.src = url → safeLoad → createElement('script') → script.src = url → loop
+// Questo interferiva con il DOM e potrebbe causare spostamento tab
+console.warn('🔒 Monkey patch createElement DISATTIVATO per evitare loop infinito');
