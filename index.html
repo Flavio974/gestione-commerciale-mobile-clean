@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:00 - APP COMPLETA RIATTIVATA');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:15 - NAVIGAZIONE RIPRISTINATA');</script>
   
   <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
@@ -76,53 +76,17 @@
       window.demoTabIntervalId = null;
     }
     
-    // Override immediato del sistema di navigazione per demo tab  
-    window.DEMO_TAB_OVERRIDE = true;
+    // 🔒 DEMO TAB PROTECTION RIMOSSA - Causava problemi di navigazione
+    // Il createElement override interferiva con tutta la creazione DOM dell'app
+    console.log('🔓 Demo tab protection disattivata per ripristinare navigazione');
     
-    // 🛡️ SISTEMA ANTI-INTERFERENZA AUDIO GLOBALE
-    window.DEMO_TAB_PROTECTION_ACTIVE = true;
-    
-    // Blocca interferenze immediate del sistema audio
-    const originalCreateElement = document.createElement;
-    document.createElement = function(tagName) {
-      const element = originalCreateElement.call(this, tagName);
-      
-      // Se il sistema audio tenta di creare overlay che interferiscono
-      if (element && typeof element.setAttribute === 'function') {
-        const originalSetAttribute = element.setAttribute;
-        element.setAttribute = function(name, value) {
-          if (name === 'id' && value && (
-            value.includes('ipad-audio') || 
-            value.includes('voice-controls') ||
-            value.includes('audio-overlay')
-          )) {
-            console.log('🛡️ AUDIO INTERFERENCE BLOCKED AT CREATION:', value);
-            // Forza ripristino del demo tab dopo qualsiasi creazione audio
-            setTimeout(() => {
-              if (window.App && window.App.ensureDemoTabVisibility) {
-                window.App.ensureDemoTabVisibility();
-              }
-            }, 100);
-          }
-          return originalSetAttribute.call(this, name, value);
-        };
-      }
-      
-      return element;
-    };
-    
-    // Funzione di emergenza disponibile immediatamente
+    // Funzione di emergenza disponibile immediatamente  
     window.emergencyOpenDemo = function() {
       console.log('🚨 APERTURA EMERGENZA TAB DEMO...');
       
-      // Nascondi tutti i contenuti
-      document.querySelectorAll('.tab-content, [class*="content"]').forEach(content => {
-        content.classList.remove('active');
-        content.style.display = 'none';
-      });
-      
-      // Rimuovi active da tutti i tab
-      document.querySelectorAll('.tab-link, [class*="tab"]').forEach(tab => {
+      // NON nascondere tutti i contenuti - solo attivare il demo tab
+      // Rimuovi active solo dai tab (non dai contenuti)
+      document.querySelectorAll('.tab-link').forEach(tab => {
         tab.classList.remove('active');
       });
       
@@ -286,8 +250,20 @@
           demoTab.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('🔥 EMERGENCY DEMO TAB CLICK!');
-            window.emergencyOpenDemo();
+            console.log('🔥 DEMO TAB CLICK - NAVIGAZIONE NORMALE');
+            
+            // Navigazione normale invece di emergency
+            if (window.App && window.App.showTab) {
+              window.App.showTab('demo-content');
+            } else {
+              // Fallback: navigazione manuale normale
+              document.querySelectorAll('.tab-link').forEach(tab => tab.classList.remove('active'));
+              document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+              
+              this.classList.add('active');
+              const demoContent = document.getElementById('demo-content');
+              if (demoContent) demoContent.classList.add('active');
+            }
           });
           demoTab._hasEmergencyClick = true;
         }
