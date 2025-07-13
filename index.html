@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:40 - FIX FINALE');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:45 - DDTFT AGGIUNTO');</script>
   
   <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
@@ -1647,6 +1647,18 @@
       '/js/modules/ordini-export-core.js'
     ))
     .then(() => safeLoadQueue(
+      '/js/ddtft-core.js', // MANCAVA - modulo principale DDT/FT
+      '/js/ddtft-view.js', // MANCAVA - interfaccia DDT/FT  
+      '/js/ddtft-create.js', // MANCAVA - creazione DDT/FT
+      '/js/ddtft-import.js', // MANCAVA - import documenti
+      '/js/ddtft-filters.js', // MANCAVA - filtri DDT/FT
+      '/js/ddtft-utils.js' // MANCAVA - utilities DDT/FT
+    ))
+    .then(() => safeLoadQueue(
+      '/js/modules/ddtft-import-export.js', // Export moduli
+      '/js/modules/ddtft-export-advanced.js'
+    ))
+    .then(() => safeLoadQueue(
       '/js/smart-assistant.js',
       '/js/keep-alive.js'
     ))
@@ -1716,13 +1728,25 @@
           window.Worksheet.init();
         }
         
+        if (window.DDTFT && typeof window.DDTFT.init === 'function') {
+          console.log('📄 Inizializzazione DDTFT...');
+          window.DDTFT.init();
+        }
+        
+        if (window.DDTFTCore && typeof window.DDTFTCore.init === 'function') {
+          console.log('📄 Inizializzazione DDTFTCore...');
+          window.DDTFTCore.init();
+        }
+        
         // Verifica cosa è disponibile
         console.log('🔍 Oggetti disponibili:', {
           App: typeof window.App,
           Timeline: typeof window.Timeline,
           Clienti: typeof window.Clienti,
           Percorsi: typeof window.Percorsi,
-          Worksheet: typeof window.Worksheet
+          Worksheet: typeof window.Worksheet,
+          DDTFT: typeof window.DDTFT,
+          DDTFTCore: typeof window.DDTFTCore
         });
         
         console.log('✅ CONTENUTI INIZIALIZZATI');
