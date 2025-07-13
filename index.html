@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:45 - DDTFT AGGIUNTO');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:50 - MODULI COMANDI AGGIUNTI');</script>
   
   <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
@@ -1659,6 +1659,10 @@
       '/js/modules/ddtft-export-advanced.js'
     ))
     .then(() => safeLoadQueue(
+      '/js/comandi-core.js',
+      '/js/comandi-ui.js'
+    ))
+    .then(() => safeLoadQueue(
       '/js/smart-assistant.js',
       '/js/keep-alive.js'
     ))
@@ -1690,6 +1694,12 @@
             if (targetContent) {
               targetContent.classList.add('active');
               console.log('🎯 Navigazione a:', targetId);
+              
+              // Inizializza modulo specifico quando entra nel tab
+              if (targetId === 'comandi-content' && window.ComandiModule && typeof window.ComandiModule.onEnter === 'function') {
+                console.log('⚙️ Inizializzazione tab Comandi...');
+                window.ComandiModule.onEnter();
+              }
             }
           });
         });
@@ -1738,6 +1748,11 @@
           window.DDTFTCore.init();
         }
         
+        if (window.ComandiModule && typeof window.ComandiModule.init === 'function') {
+          console.log('⚙️ Inizializzazione ComandiModule...');
+          window.ComandiModule.init();
+        }
+        
         // Verifica cosa è disponibile
         console.log('🔍 Oggetti disponibili:', {
           App: typeof window.App,
@@ -1746,7 +1761,8 @@
           Percorsi: typeof window.Percorsi,
           Worksheet: typeof window.Worksheet,
           DDTFT: typeof window.DDTFT,
-          DDTFTCore: typeof window.DDTFTCore
+          DDTFTCore: typeof window.DDTFTCore,
+          ComandiModule: typeof window.ComandiModule
         });
         
         console.log('✅ CONTENUTI INIZIALIZZATI');
@@ -1778,11 +1794,6 @@
   <!-- Configurazione Supabase spostata in config/supabase-config.js -->
   
 
-  <\!-- ============================================= -->
-  <\!-- TUTTI GLI SCRIPT MIGRATI AL SISTEMA SAFELOAD -->
-  <\!-- Precedentemente qui c'erano ~190 script tag  -->
-  <\!-- Ora gestiti centralmente via SafeLoad        -->
-  <\!-- ============================================= -->
 
 
 
