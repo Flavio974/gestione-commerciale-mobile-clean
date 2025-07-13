@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:55 - FIX DESKTOP DETECTION COMANDI');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-14 00:05 - AI ASSISTANT TAB AGGIUNTO');</script>
   
   <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
@@ -1593,6 +1593,12 @@
       '/js/ai/ai-command-parser.js'
     ))
     .then(() => safeLoadQueue(
+      '/js/ai/gemini-ai.js',
+      '/js/ai/ai-assistant.js',
+      '/js/ai/flavio-ai-assistant.js',
+      '/js/ai/supabase-ai-integration.js'
+    ))
+    .then(() => safeLoadQueue(
       '/js/config/ddtft-patterns.js',
       '/js/config/ddtft-mappings.js',
       '/js/utils/ddtft-parsing-utils.js',
@@ -1700,6 +1706,11 @@
                 console.log('⚙️ Inizializzazione tab Comandi...');
                 window.ComandiModule.onEnter();
               }
+              
+              if (targetId === 'ai-content' && window.FlavioAIAssistant) {
+                console.log('🤖 Inizializzazione tab AI Assistant...');
+                window.FlavioAIAssistant.renderInterface();
+              }
             }
           });
         });
@@ -1753,6 +1764,16 @@
           window.ComandiModule.init();
         }
         
+        if (window.AIAssistant && typeof window.AIAssistant.init === 'function') {
+          console.log('🤖 Inizializzazione AIAssistant...');
+          window.AIAssistant.init();
+        }
+        
+        if (window.FlavioAIAssistant && typeof window.FlavioAIAssistant.init === 'function') {
+          console.log('🎯 Inizializzazione FlavioAIAssistant...');
+          window.FlavioAIAssistant.init();
+        }
+        
         // Verifica cosa è disponibile
         console.log('🔍 Oggetti disponibili:', {
           App: typeof window.App,
@@ -1762,7 +1783,10 @@
           Worksheet: typeof window.Worksheet,
           DDTFT: typeof window.DDTFT,
           DDTFTCore: typeof window.DDTFTCore,
-          ComandiModule: typeof window.ComandiModule
+          ComandiModule: typeof window.ComandiModule,
+          AIAssistant: typeof window.AIAssistant,
+          FlavioAIAssistant: typeof window.FlavioAIAssistant,
+          GeminiAI: typeof window.GeminiAI
         });
         
         console.log('✅ CONTENUTI INIZIALIZZATI');
