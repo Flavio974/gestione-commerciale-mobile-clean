@@ -24,7 +24,8 @@ const Worksheet = {
    * Inizializzazione modulo
    */
   init: function() {
-    this.loadWorksheetFromStorage();
+    console.log('📊 Worksheet inizializzato');
+    // this.loadWorksheetFromStorage(); // RIMOSSO - funzione non esistente
   },
 
   /**
@@ -39,7 +40,8 @@ const Worksheet = {
    * Chiamato quando si lascia il tab
    */
   onLeave: function() {
-    this.saveWorksheetToStorage();
+    console.log('📊 Leaving worksheet tab');
+    // this.saveWorksheetToStorage(); // RIMOSSO - funzione non esistente
   },
 
   /**

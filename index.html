@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:35 - MODULI MANCANTI');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:40 - FIX FINALE');</script>
   
   <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
@@ -1643,7 +1643,7 @@
     ))
     .then(() => safeLoadQueue(
       '/js/modules/ordini-parser.js', // MANCAVA - richiesto da ordini.js
-      '/js/modules/ordini-ui.js',
+      // '/js/modules/ordini-ui.js', // RIMOSSO - duplicato che causa errore
       '/js/modules/ordini-export-core.js'
     ))
     .then(() => safeLoadQueue(
