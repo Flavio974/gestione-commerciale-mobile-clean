@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:30 - CONTENUTI EMERGENZA');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:35 - MODULI MANCANTI');</script>
   
   <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
@@ -1624,16 +1624,27 @@
       '/js/clienti-form.js',
       '/js/ordini.js',
       '/js/prodotti.js',
-      '/js/percorsi.js',
-      '/js/percorsi-core.js'
+      '/js/percorsi.js'
+      // '/js/percorsi-core.js' RIMOSSO - duplicato che causa errore
     ))
     .then(() => safeLoadQueue(
+      '/js/worksheet-data.js', // MANCAVA - contiene WorksheetData
       '/js/worksheet-core.js',
       '/js/worksheet-ui.js',
       '/js/worksheet-view.js',
       '/js/worksheet-import.js',
       '/js/worksheet-itinerary.js',
       '/js/worksheet-dragdrop.js'
+    ))
+    .then(() => safeLoadQueue(
+      '/js/clienti-table.js', // MANCAVA - contiene render functions
+      '/js/clienti-utils.js',
+      '/js/clienti-import-export.js'
+    ))
+    .then(() => safeLoadQueue(
+      '/js/modules/ordini-parser.js', // MANCAVA - richiesto da ordini.js
+      '/js/modules/ordini-ui.js',
+      '/js/modules/ordini-export-core.js'
     ))
     .then(() => safeLoadQueue(
       '/js/smart-assistant.js',
