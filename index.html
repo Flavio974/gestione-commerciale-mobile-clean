@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:25 - NAVIGAZIONE EMERGENZA');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 23:30 - CONTENUTI EMERGENZA');</script>
   
   <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
@@ -1673,6 +1673,49 @@
         
         console.log('✅ NAVIGAZIONE RIPRISTINATA - Tutte le tab dovrebbero funzionare');
       }, 1000);
+      
+      // 🚨 FIX EMERGENZA: Inizializza contenuti tab
+      setTimeout(() => {
+        console.log('🚨 INIZIALIZZAZIONE CONTENUTI TAB...');
+        
+        // Forza inizializzazione App se disponibile
+        if (window.App && typeof window.App.init === 'function') {
+          console.log('📱 Inizializzazione App...');
+          window.App.init();
+        }
+        
+        // Forza inizializzazione moduli principali
+        if (window.Timeline && typeof window.Timeline.init === 'function') {
+          console.log('⏰ Inizializzazione Timeline...');
+          window.Timeline.init();
+        }
+        
+        if (window.Clienti && typeof window.Clienti.init === 'function') {
+          console.log('👥 Inizializzazione Clienti...');
+          window.Clienti.init();
+        }
+        
+        if (window.Percorsi && typeof window.Percorsi.init === 'function') {
+          console.log('🛣️ Inizializzazione Percorsi...');
+          window.Percorsi.init();
+        }
+        
+        if (window.Worksheet && typeof window.Worksheet.init === 'function') {
+          console.log('📊 Inizializzazione Worksheet...');
+          window.Worksheet.init();
+        }
+        
+        // Verifica cosa è disponibile
+        console.log('🔍 Oggetti disponibili:', {
+          App: typeof window.App,
+          Timeline: typeof window.Timeline,
+          Clienti: typeof window.Clienti,
+          Percorsi: typeof window.Percorsi,
+          Worksheet: typeof window.Worksheet
+        });
+        
+        console.log('✅ CONTENUTI INIZIALIZZATI');
+      }, 2000);
       
       
       // 🧪 TEST FINALE: Verifica posizione tab demo statica
