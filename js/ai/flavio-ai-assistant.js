@@ -227,6 +227,19 @@ window.FlavioAIAssistant = (function() {
                         <div id="ai-status-details">
                             <p>🔄 Caricamento stato...</p>
                         </div>
+                        
+                        <div class="ai-config" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                            <h5>⚙️ Configurazione</h5>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <label for="ai-model-select" style="font-weight: bold;">Modello AI:</label>
+                                <select id="ai-model-select" style="padding: 5px 10px; border: 1px solid #ced4da; border-radius: 4px;">
+                                    <option value="claude-3-sonnet">Claude 3 Sonnet (Consigliato)</option>
+                                    <option value="claude-3-haiku">Claude 3 Haiku (Veloce)</option>
+                                    <option value="gpt-4">GPT-4 (OpenAI)</option>
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Veloce)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="ai-chat-container" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; height: 400px; display: flex; flex-direction: column;">
@@ -340,30 +353,110 @@ window.FlavioAIAssistant = (function() {
         /**
          * Processa messaggio dell'utente
          */
-        processMessage(message) {
+        async processMessage(message) {
             // Aggiungi alla cronologia
             this.chatHistory.push({ sender: 'user', message, timestamp: new Date() });
 
-            // Simula risposta (da sostituire con vera AI)
-            setTimeout(() => {
-                const response = this.generateResponse(message);
+            // Mostra indicatore di caricamento
+            this.addMessageToChat('🤔 Sto pensando...', 'assistant');
+            
+            try {
+                // Chiama l'AI reale
+                const response = await this.generateResponse(message);
+                
+                // Rimuovi l'indicatore di caricamento
+                const messages = document.getElementById('ai-messages');
+                if (messages && messages.lastElementChild) {
+                    messages.removeChild(messages.lastElementChild);
+                }
+                
+                // Aggiungi la risposta reale
                 this.addMessageToChat(response, 'assistant');
                 this.chatHistory.push({ sender: 'assistant', message: response, timestamp: new Date() });
-            }, 1000);
+                
+            } catch (error) {
+                console.error('❌ Errore processamento messaggio:', error);
+                
+                // Rimuovi l'indicatore di caricamento
+                const messages = document.getElementById('ai-messages');
+                if (messages && messages.lastElementChild) {
+                    messages.removeChild(messages.lastElementChild);
+                }
+                
+                // Mostra errore
+                this.addMessageToChat('Mi dispiace, si è verificato un errore. Riprova tra poco.', 'assistant');
+            }
         },
 
         /**
-         * Genera risposta (placeholder)
+         * Genera risposta usando API AI reali
          */
-        generateResponse(message) {
-            const responses = [
-                'Interessante domanda! Sto analizzando i tuoi dati per fornirti una risposta precisa.',
-                'Ho compreso la tua richiesta. Lasciami controllare le informazioni disponibili.',
-                'Basandomi sui dati del tuo business, posso aiutarti con questa analisi.',
-                'Ottima domanda! Sto elaborando una risposta personalizzata per te.'
-            ];
-            
-            return responses[Math.floor(Math.random() * responses.length)];
+        async generateResponse(message) {
+            try {
+                // Determina l'endpoint API corretto
+                const isNetlify = window.location.hostname.includes('netlify');
+                const apiUrl = isNetlify ? '/.netlify/functions/claude-ai' : '/api/claude-ai.php';
+                
+                console.log('🤖 Invio richiesta a:', apiUrl);
+                
+                // Ottieni modello selezionato
+                const modelSelect = document.getElementById('ai-model-select');
+                const selectedModel = modelSelect ? modelSelect.value : 'claude-3-sonnet';
+                
+                // Costruisci il payload per l'AI
+                const payload = {
+                    message: message,
+                    model: selectedModel,
+                    isVoiceInput: false,
+                    supabaseData: this.getBusinessContext(),
+                    history: this.chatHistory.slice(-5) // Ultimi 5 messaggi per contesto
+                };
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ Risposta AI ricevuta:', result);
+                
+                return result.response || 'Mi dispiace, non sono riuscito a elaborare una risposta.';
+                
+            } catch (error) {
+                console.error('❌ Errore API AI:', error);
+                return 'Mi dispiace, si è verificato un errore nel contattare il servizio AI. Riprova tra poco.';
+            }
+        },
+
+        /**
+         * Ottieni contesto business per l'AI
+         */
+        getBusinessContext() {
+            const context = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                source: 'ai-assistant-tab'
+            };
+
+            // Aggiungi dati Supabase se disponibili
+            if (window.supabaseClient) {
+                context.hasSupabaseConnection = true;
+            }
+
+            // Aggiungi informazioni tab attivo
+            const activeTab = document.querySelector('.tab-link.active');
+            if (activeTab) {
+                context.activeTab = activeTab.textContent;
+            }
+
+            return context;
         }
     };
 
