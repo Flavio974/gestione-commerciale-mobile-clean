@@ -181,7 +181,13 @@
         attempts++;
         applySimpleFix();
         
-        if (attempts > 10) {
+        if (attempts > 3) {
+            console.warn('⚠️ Export button non trovato, fallback tab switch');
+            // Fallback: forza switch a tab DDTFT
+            if (window.switchToTab) {
+                window.switchToTab('ddtft');
+                setTimeout(() => applySimpleFix(), 500);
+            }
             clearInterval(interval);
         }
     }, 200);

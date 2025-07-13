@@ -11,6 +11,12 @@
  * - Formattazione intelligente e localizzata
  */
 
+// ✅ TEMPORAL POLYFILL GUARD
+if (typeof Temporal === 'undefined') {
+    console.warn('[italian-date-system] Polyfill Temporal mancante – script uscita sicura');
+    throw new Error('Temporal polyfill required');
+}
+
 // ==========================================
 // COSTANTI E CONFIGURAZIONI
 // ==========================================

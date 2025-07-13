@@ -8,6 +8,7 @@ class TemporalIntegration {
         // Verifica che TemporalParser sia disponibile
         if (typeof TemporalParser === 'undefined') {
             console.error('❌ TemporalParser non trovato! Assicurati che sia caricato prima.');
+            this.disabled = true;
             return;
         }
         

@@ -887,8 +887,8 @@ const ComandiModule = {
 window.ComandiModule = ComandiModule;
 
 // Stili CSS per il modulo (aggiunti inline per semplicità)
-const style = document.createElement('style');
-style.textContent = `
+const comandiModalStyle = document.createElement('style');
+comandiModalStyle.textContent = `
   .comandi-container {
     padding: 20px;
     max-width: 1200px;
@@ -961,6 +961,6 @@ style.textContent = `
     to { transform: translateX(100%); }
   }
 `;
-document.head.appendChild(style);
+document.head.appendChild(comandiModalStyle);
 
 console.log('📋 Modulo Comandi caricato');

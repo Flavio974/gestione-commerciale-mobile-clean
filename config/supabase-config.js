@@ -89,23 +89,19 @@ if (SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL' && SUPABASE_CONFIG.anonKey !== '
     }
   }
   
-  // Carica Supabase se non è già presente
-  if (!window.supabase) {
-    console.log('📦 Caricamento libreria Supabase...');
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-    
-    script.onload = () => {
-      console.log('📚 Libreria Supabase caricata');
-      setTimeout(initializeSupabaseClient, 100);
-    };
-    
-    script.onerror = (error) => {
-      console.error('❌ Errore caricamento libreria Supabase:', error);
-    };
-    
-    document.head.appendChild(script);
-  } else {
+  // ✅ SAFE LOAD: Usa sistema anti-duplicati
+  if (!globalThis.supabase && window.safeLoad) {
+    console.log('📦 Caricamento Supabase con safeLoad...');
+    window.safeLoad('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js')
+      .then(() => {
+        console.log('📚 Libreria Supabase caricata via safeLoad');
+        setTimeout(initializeSupabaseClient, 100);
+      })
+      .catch(error => {
+        console.error('❌ Errore caricamento Supabase:', error);
+      });
+  } else if (window.supabase) {
+    console.log('📚 Libreria Supabase già caricata');
     // Supabase già presente, inizializza subito
     console.log('📚 Supabase già disponibile, inizializzazione...');
     setTimeout(initializeSupabaseClient, 100);

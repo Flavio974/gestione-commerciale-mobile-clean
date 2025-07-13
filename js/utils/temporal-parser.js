@@ -9,6 +9,13 @@
 
 class TemporalParser {
     constructor() {
+        // ✅ TEMPORAL POLYFILL GUARD
+        if (typeof Temporal === 'undefined') {
+            console.warn('[temporal-parser] Polyfill Temporal mancante – script uscita sicura');
+            this.disabled = true;
+            return;
+        }
+        
         // Usa ItalianDateManager per gestione corretta delle date
         if (typeof window !== 'undefined' && window.italianDateManager) {
             this.dateManager = window.italianDateManager;

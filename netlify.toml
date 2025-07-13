@@ -37,16 +37,86 @@
 
 # Functions configuration already specified in [build] section
 
-# ✅ STATIC FILES PASSTHROUGH
+# ✅ STATIC FILES PASSTHROUGH - Fix redirect priority
+
+# Fix per file JS nella root
 [[redirects]]
-  from = "/config/*.js"
-  to = "/config/:splat"
+  from = "/config-modules.js"
+  to = "/config-modules.js"
   status = 200
+  force = false
 
 [[redirects]]
-  from = "/js/*.js"  
+  from = "/temporal-*.js"
+  to = "/temporal-:splat.js"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/italian-*.js"
+  to = "/italian-:splat.js"
+  status = 200
+  force = false
+
+# Fix per cartelle specifiche
+[[redirects]]
+  from = "/js/temporal/*"
+  to = "/js/temporal/:splat"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/js/middleware/*"
+  to = "/js/middleware/:splat"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/js/config/*"
+  to = "/js/config/:splat"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/js/*"
   to = "/js/:splat"
   status = 200
+  force = false
+
+[[redirects]]
+  from = "/config/*"
+  to = "/config/:splat"
+  status = 200
+  force = false
+
+# 🎯 FIX SPECIFICO con FORCE per file temporal e italian
+[[redirects]]
+  from = "/temporal-:name.js"
+  to = "/config/temporal-:name.js"
+  status = 200
+  force = true
+  headers = {Content-Type = "application/javascript"}
+
+[[redirects]]
+  from = "/italian-:name.js"
+  to = "/js/utils/italian-:name.js"
+  status = 200
+  force = true
+  headers = {Content-Type = "application/javascript"}
+
+[[redirects]]
+  from = "/js/temporal/*"
+  to = "/js/temporal/:splat"
+  status = 200
+  force = true
+  headers = {Content-Type = "application/javascript"}
+
+# 🔄 ROOT-JS → /js/ (catch-all per altri file JS nella root)
+[[redirects]]
+  from = "/:file.js"
+  to = "/js/:file.js"
+  status = 200
+  force = false
 
 # ✅ SPA FALLBACK - SEMPRE ULTIMO
 [[redirects]]

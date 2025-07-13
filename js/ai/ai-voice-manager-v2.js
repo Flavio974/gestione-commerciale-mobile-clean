@@ -125,8 +125,8 @@ class AIVoiceManagerV2 {
         });
         
         // Aggiungi CSS per animazione
-        const style = document.createElement('style');
-        style.textContent = `
+        const voiceAnimationStyle = document.createElement('style');
+        voiceAnimationStyle.textContent = `
             @keyframes fadeOut {
                 from { opacity: 1; }
                 to { opacity: 0; }
@@ -140,7 +140,7 @@ class AIVoiceManagerV2 {
                 cursor: not-allowed;
             }
         `;
-        document.head.appendChild(style);
+        document.head.appendChild(voiceAnimationStyle);
     }
     
     // Attivazione audio specifica per iPad
@@ -545,9 +545,9 @@ class AIVoiceManagerV2 {
         
         // Aggiungi CSS per animazioni se non esiste
         if (!document.getElementById('ipad-voice-css')) {
-            const style = document.createElement('style');
-            style.id = 'ipad-voice-css';
-            style.textContent = `
+            const ipadVoiceStyle = document.createElement('style');
+            ipadVoiceStyle.id = 'ipad-voice-css';
+            ipadVoiceStyle.textContent = `
                 @keyframes slideInLeft {
                     from {
                         transform: translateX(-100%);
@@ -615,7 +615,7 @@ class AIVoiceManagerV2 {
                     font-size: 18px;
                 }
             `;
-            document.head.appendChild(style);
+            document.head.appendChild(ipadVoiceStyle);
         }
         
         // Setup eventi

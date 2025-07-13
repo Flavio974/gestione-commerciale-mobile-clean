@@ -92,8 +92,10 @@ const App = {
             demoTab.innerHTML = '🇮🇹 Demo Date';
             demoTab.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; background: linear-gradient(135deg, #00b894, #00a085) !important; color: white !important; font-weight: bold !important; border: 3px solid #ff6b6b !important; box-shadow: 0 4px 15px rgba(255,107,107,0.5) !important; padding: 10px 15px !important; margin: 5px !important; border-radius: 5px !important; cursor: pointer !important; pointer-events: auto !important; user-select: none !important; position: relative !important; z-index: 1000 !important;';
             
-            // Aggiungi il tab al container
-            navContainer.appendChild(demoTab);
+            // Aggiungi il tab al container SOLO se non è già presente
+            if (!navContainer.contains(demoTab)) {
+              navContainer.appendChild(demoTab);
+            }
             console.log('✅ DEMO TAB CREATO DINAMICAMENTE!');
             
             // Aggiungi gestore click per la navigazione - FORZA CLICK HANDLER
@@ -242,36 +244,55 @@ const App = {
         }
       };
 
-      // Esegui controllo immediato e ripetuto per garantire persistenza
-      ensureDemoTab();
-      setTimeout(ensureDemoTab, 1000);
-      setTimeout(ensureDemoTab, 3000);
-      setTimeout(ensureDemoTab, 5000);
-      
-      // Monitora cambiamenti DOM e riapplica se necessario
-      const observer = new MutationObserver(() => {
-        const demoTab = document.getElementById('tab-demo');
-        if (!demoTab || getComputedStyle(demoTab).display === 'none') {
-          console.log('🔄 DEMO TAB SCOMPARSO - Ripristino...');
-          ensureDemoTab();
-        }
-      });
-      
-      // Osserva cambiamenti nella navigazione
-      const navContainer = document.getElementById('main-navigation') || document.body;
-      observer.observe(navContainer, { 
-        childList: true, 
-        subtree: true, 
-        attributes: true, 
-        attributeFilter: ['style', 'class'] 
-      });
-      
-      // PROTEZIONE CONTRO REINIZIALIZZAZIONE AUDIO
-      // Intercetta eventi che potrebbero rimuovere il tab
-      window.addEventListener('audio:reinit', (e) => {
-        console.log('⚠️ Audio reinit detected - protecting demo tab...');
-        setTimeout(ensureDemoTab, 100);
-      });
+      /**
+       * FIX 2024-07-13 — stop moving demo date tab
+       * Mostra #tab-demo una sola volta e poi la blocca.
+       * Imposta window.ALLOW_DEMO_TAB_MOVE = true prima del load
+       * se vuoi ripristinare il comportamento precedente.
+       */
+      if (!window.ALLOW_DEMO_TAB_MOVE) {
+        // Esegui UNA SOLA VOLTA
+        requestAnimationFrame(() => {
+          // ensureDemoTab(); // 🔒 RIMOSSO - causava spostamento tab (vecchia funzione)
+          const tab = document.querySelector('#tab-demo');
+          if (tab) {
+            tab.classList.add('demo-date--fixed');
+            console.log('🔒 DEMO TAB BLOCCATO - NON SI SPOSTERÀ PIÙ');
+          }
+        });
+      } else {
+        // VECCHIO COMPORTAMENTO (solo se esplicitamente richiesto)
+        console.log('⚠️ DEMO TAB MOVEMENT ENABLED - vecchio comportamento attivo');
+        // ensureDemoTab(); // 🔒 RIMOSSO - causava spostamento tab
+        // setTimeout(ensureDemoTab, 1000); // 🔒 RIMOSSO - causava spostamento tab
+        // setTimeout(ensureDemoTab, 3000); // 🔒 RIMOSSO - causava spostamento tab
+        // setTimeout(ensureDemoTab, 5000); // 🔒 RIMOSSO - causava spostamento tab
+        
+        // Monitora cambiamenti DOM e riapplica se necessario
+        const observer = new MutationObserver(() => {
+          const demoTab = document.getElementById('tab-demo');
+          if (!demoTab || getComputedStyle(demoTab).display === 'none') {
+            console.log('🔄 DEMO TAB SCOMPARSO - Ripristino...');
+            // ensureDemoTab(); // 🔒 RIMOSSO - causava spostamento tab
+          }
+        });
+        
+        // Osserva cambiamenti nella navigazione
+        const navContainer = document.getElementById('main-navigation') || document.body;
+        observer.observe(navContainer, { 
+          childList: true, 
+          subtree: true, 
+          attributes: true, 
+          attributeFilter: ['style', 'class'] 
+        });
+        
+        // PROTEZIONE CONTRO REINIZIALIZZAZIONE AUDIO
+        // Intercetta eventi che potrebbero rimuovere il tab
+        window.addEventListener('audio:reinit', (e) => {
+          console.log('⚠️ Audio reinit detected - protecting demo tab...');
+          // setTimeout(ensureDemoTab, 100); // 🔒 RIMOSSO - causava spostamento tab
+        });
+      }
       
       // Proteggi contro rimozione del tab
       const protectDemoTab = () => {
@@ -649,18 +670,19 @@ const App = {
         }
       });
       
-      if (needsProtection) {
-        setTimeout(() => this.ensureDemoTabVisibility(), 100);
-      }
+      // FIX 2025-07-13: demo tab già fissata, niente protezione automatica
+      // if (needsProtection) {
+      //   setTimeout(() => this.ensureDemoTabVisibility(), 100);
+      // }
     });
     
-    // Avvia monitoring di tutto il documento
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeOldValue: true
-    });
+    // FIX 2025-07-13: demo tab già fissata, niente observer
+    // observer.observe(document.body, {
+    //   childList: true,
+    //   subtree: true,
+    //   attributes: true,
+    //   attributeOldValue: true
+    // });
     
     // 3. Override dei metodi di AIVoiceManagerV2 che potrebbero interferire
     if (window.AIVoiceManagerV2) {
@@ -675,7 +697,7 @@ const App = {
           
           // Dopo che il sistema audio crea i controlli, ripristina demo tab
           setTimeout(() => {
-            App.ensureDemoTabVisibility();
+            // App.ensureDemoTabVisibility(); // 🔒 RIMOSSO - causava spostamento tab
           }, 200);
           
           return result;
@@ -691,7 +713,7 @@ const App = {
           
           // Proteggi demo tab dopo modifiche audio
           setTimeout(() => {
-            App.ensureDemoTabVisibility();
+            // App.ensureDemoTabVisibility(); // 🔒 RIMOSSO - causava spostamento tab
           }, 200);
           
           return result;
@@ -699,14 +721,14 @@ const App = {
       }
     }
     
-    // 4. Event listener per reinizializzazione audio
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => this.ensureDemoTabVisibility(), 1000);
-    });
-    
-    window.addEventListener('load', () => {
-      setTimeout(() => this.ensureDemoTabVisibility(), 1500);
-    });
+    // FIX 2025-07-13: demo tab già fissata, niente timer di reinizializzazione
+    // document.addEventListener('DOMContentLoaded', () => {
+    //   setTimeout(() => this.ensureDemoTabVisibility(), 1000);
+    // });
+    // 
+    // window.addEventListener('load', () => {
+    //   setTimeout(() => this.ensureDemoTabVisibility(), 1500);
+    // });
     
     console.log('✅ Protezione anti-interferenza audio configurata');
   },
@@ -1141,10 +1163,10 @@ function fixDemoTab() {
   let demoTab = document.getElementById('tab-demo');
   if (!demoTab) {
     console.log('❌ Tab demo non trovato - ricreazione...');
-    // Usa la funzione ensureDemoTab se disponibile
-    if (typeof ensureDemoTab === 'function') {
-      ensureDemoTab();
-    }
+    // 🔒 RIMOSSO - causava spostamento tab durante attivazione audio
+    // if (typeof ensureDemoTab === 'function') {
+    //   ensureDemoTab();
+    // }
   } else {
     // 3. Ripristina click handler
     console.log('🔄 Ripristino click handler...');

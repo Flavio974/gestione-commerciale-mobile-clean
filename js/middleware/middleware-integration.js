@@ -129,16 +129,19 @@ class MiddlewareIntegration {
     async loadDependencies() {
         const dependencies = [
             'js/middleware/vocabulary-manager.js',
-            'js/middleware/temporal-parser.js',
+            // 'js/middleware/temporal-parser.js', // ❌ DISABILITATO - Causava duplicati
             'js/middleware/ai-middleware.js'
         ];
         
         for (const dep of dependencies) {
-            if (!this.isScriptLoaded(dep)) {
-                // ✅ FIX ASSOLUTO: Forza URL completo per evitare contesto blob/worker
+            if (window.safeLoad && !window.isScriptLoaded(dep)) {
+                console.log('🔧 [MIDDLEWARE] Loading dependency with safeLoad:', dep);
+                await window.safeLoad(dep);
+            } else if (!this.isScriptLoaded(dep)) {
+                // Fallback al metodo vecchio se safeLoad non disponibile
                 const absoluteUrl = dep.startsWith('http') ? dep : 
                                    `${window.location.origin}/${dep.replace(/^\.?\//, '')}`;
-                console.log('🔧 [MIDDLEWARE] Loading dependency with absolute URL:', absoluteUrl);
+                console.log('🔧 [MIDDLEWARE] Loading dependency (fallback):', absoluteUrl);
                 await this.loadScript(absoluteUrl);
             }
         }

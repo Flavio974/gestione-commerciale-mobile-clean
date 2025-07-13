@@ -3,7 +3,7 @@
  * Gestisce cache e funzionalità offline
  */
 
-const CACHE_NAME = 'smart-commercial-assistant-v1.0.3-js-fixed'; // PWA - JS fetch fix
+const CACHE_NAME = 'pwa-cache-v202507134500'; // FIX FINALE: Temporal + Demo Tab Static
 const CACHE_URLS = [
   '/',
   '/index.html',
@@ -28,13 +28,17 @@ const CACHE_URLS = [
   '/css/tables.css',
   '/css/smart-assistant.css',
   
+  // SafeLoad System
+  '/js/utils/safe-load.js',
+  
+  // External Dependencies
+  'https://cdn.jsdelivr.net/npm/@js-temporal/polyfill@0.4.4/dist/index.umd.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
+  
   // JS Files - Core
   '/js/app.js',
   '/js/navigation.js',
   '/js/api.js',
-  
-  // JS Files - Utilities
-  '/js/utils/device-detector.js',
   
   // JS Files - AI
   '/js/ai/ai-voice-manager.js',
@@ -85,7 +89,7 @@ self.addEventListener('install', event => {
       })
   );
   
-  // Forza l'attivazione immediata
+  // Forza l'attivazione immediata e bypass cache
   self.skipWaiting();
 });
 
@@ -106,22 +110,15 @@ self.addEventListener('activate', event => {
     })
   );
   
-  // Prendi controllo di tutte le pagine aperte
+  // Prendi controllo di tutte le pagine aperte e forza reload
   self.clients.claim();
 });
 
-// ✅ SERVICE WORKER FIXED - Lascia passare script JS senza intercettazione
+// 🧹 SERVICE WORKER DISATTIVATO - Non intercettare NIENTE durante il debug
 self.addEventListener('fetch', event => {
-  // ✅ GUARDIA CRITICA: Non intercettare richieste di script JS
-  if (event.request.destination === 'script' || 
-      event.request.url.includes('temporal') || 
-      event.request.url.includes('config/') ||
-      event.request.url.includes('middleware/') ||
-      event.request.url.endsWith('.js')) {
-    console.log('[SW] JS request bypassed:', event.request.url);
-    // ✅ FIX CRITICO: Non fare return vuoto, lascia che il browser gestisca
-    return;
-  }
+  // BYPASS COMPLETO: Lascia che il browser gestisca tutto
+  console.log('[SW] BYPASS COMPLETO - No intercettazione:', event.request.url);
+  return;
   
   // Per altre richieste NON-JS, potresti implementare cache logic
   // Ma per ora lasciamo passare tutto per evitare conflitti

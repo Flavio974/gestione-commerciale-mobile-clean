@@ -151,7 +151,10 @@ const Navigation = {
       console.log('🔥 DEMO TAB: Bypass validazione - forzando switch');
       // Continua senza validazione per il tab demo
     } else if (!this.isValidTab(tabName)) {
-      console.error('Tab non valido:', tabName);
+      // FIX 2025-07-13: Silenzia errori per tab demo
+      if (tabName !== 'demo') {
+        console.error('Tab non valido:', tabName);
+      }
       return;
     }
     

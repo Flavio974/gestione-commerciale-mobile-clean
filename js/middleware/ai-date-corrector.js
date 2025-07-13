@@ -8,6 +8,12 @@
 
 class AIDateCorrector {
     constructor() {
+        // ✅ TEMPORAL POLYFILL GUARD
+        if (typeof Temporal === 'undefined') {
+            console.warn('[ai-date-corrector] Polyfill Temporal mancante – script uscita sicura');
+            return;
+        }
+        
         // LA DATA VERA - 11 LUGLIO 2025
         this.realToday = new Date(2025, 6, 11); // 6 = luglio (JS conta da 0)
         this.realTodayString = "11 luglio 2025";

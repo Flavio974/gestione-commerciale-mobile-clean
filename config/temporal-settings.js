@@ -6,17 +6,19 @@ console.log('[LOAD] ✅ temporal-settings.js caricato correttamente');
 console.log('[DEBUG] temporal-settings execution context:', typeof self, typeof window);
 console.log('[DEBUG] document available?', typeof document);
 
+// ✅ TEMPORAL POLYFILL GUARD: Verifica disponibilità Temporal
+if (typeof Temporal === 'undefined') {
+    console.warn('[temporal-settings] Polyfill Temporal mancante – script uscita sicura');
+    throw new Error('[temporal-settings] Temporal non disponibile');
+}
+
 // ✅ WORKER-SAFE GUARD: Evita esecuzione in contesti senza DOM
 if (typeof window === 'undefined') {
     console.warn('[temporal-settings] Caricato in Worker/Isolated context: modulo disabilitato');
-    // Export stub vuoto per evitare errori di import
-    if (typeof exports !== 'undefined') {
-        exports.TEMPORAL_CONFIG = {};
-    }
-    // Non proseguire con l'inizializzazione
-} else {
-    console.log('[temporal-settings] Contesto DOM valido, inizializzazione completa');
+    throw new Error('[temporal-settings] Contesto Worker non supportato');
 }
+
+console.log('[temporal-settings] Contesto DOM valido e Temporal disponibile, inizializzazione completa');
 
 const TEMPORAL_CONFIG = {
     // Localizzazione

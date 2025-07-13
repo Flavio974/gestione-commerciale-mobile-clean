@@ -110,13 +110,13 @@ const DeviceDetector = {
     
     // Previeni zoom su iOS per input
     if (this.info.isIOS) {
-      const style = document.createElement('style');
-      style.textContent = `
+      const iosInputStyle = document.createElement('style');
+      iosInputStyle.textContent = `
         input, select, textarea {
           font-size: 16px !important;
         }
       `;
-      document.head.appendChild(style);
+      document.head.appendChild(iosInputStyle);
     }
   },
 

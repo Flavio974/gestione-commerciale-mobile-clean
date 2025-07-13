@@ -458,8 +458,8 @@ window.DDTFTAppendToExcel = (function() {
     }
     
     // Stili CSS
-    const style = document.createElement('style');
-    style.textContent = `
+    const comparisonResultsStyle = document.createElement('style');
+    comparisonResultsStyle.textContent = `
         .comparison-results .modal-body {
             padding: 0;
         }
@@ -614,7 +614,7 @@ window.DDTFTAppendToExcel = (function() {
             border: 1px solid #f5c6cb;
         }
     `;
-    document.head.appendChild(style);
+    document.head.appendChild(comparisonResultsStyle);
     
     return {
         appendToExistingFile,

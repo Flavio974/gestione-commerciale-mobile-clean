@@ -550,8 +550,8 @@ window.DDTFTExportAdvanced = (function() {
     }
     
     // CSS per i dialog
-    const style = document.createElement('style');
-    style.textContent = `
+    const exportDialogStyle = document.createElement('style');
+    exportDialogStyle.textContent = `
         .export-dialog .export-info {
             background: #f8f9fa;
             padding: 15px;
@@ -691,7 +691,7 @@ window.DDTFTExportAdvanced = (function() {
             min-width: 200px;
         }
     `;
-    document.head.appendChild(style);
+    document.head.appendChild(exportDialogStyle);
     
     // Esporta le funzioni pubbliche
     return {

@@ -98,8 +98,8 @@ window.simulateTemporalLoadInWorker = function() {
             console.log('[WORKER] typeof self:', typeof self);
             
             try {
-                importScripts('/config/temporal-settings.js');
-                console.log('[WORKER] ✅ Temporal module loaded successfully');
+                // importScripts('/config/temporal-settings.js'); // ❌ DISABILITATO - Causava duplicati
+                console.log('[WORKER] ℹ️ Temporal module loading disabled to prevent duplicates');
             } catch (error) {
                 console.error('[WORKER] ❌ Temporal module failed:', error);
                 self.postMessage({error: error.message});
