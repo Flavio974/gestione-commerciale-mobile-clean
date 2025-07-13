@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 22:30 - LOOP INFINITO FIXED');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-13 22:45 - APPENDCHILD MONITOR');</script>
   
   <!-- 🔍 MONKEY PATCH DEBUG per ensureDemoTab -->
   <script>
@@ -62,6 +62,19 @@
     });
     
     console.info('🔍 MONKEY PATCH ATTIVO - tracceremo ogni chiamata a ensureDemoTab');
+    
+    // 🕵️ MONKEY PATCH appendChild per tracciare chi sposta la demo tab
+    const originalAppendChild = Node.prototype.appendChild;
+    Node.prototype.appendChild = function(child) {
+      if (child && child.id === 'tab-demo') {
+        console.warn('🚨 DEMO TAB SPOSTATA con appendChild!');
+        console.trace(); // stack trace per vedere chi la chiama
+        console.log('Parent che riceve la tab:', this);
+      }
+      return originalAppendChild.call(this, child);
+    };
+    
+    console.info('🕵️ APPENDCHILD MONITOR ATTIVO - tracceremo spostamenti demo tab');
   </script>
   
   <!-- Cache Busting - Force reload date system -->
