@@ -45,26 +45,43 @@ exports.handler = async (event, context) => {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
     try {
+      console.log('📨 Request body:', event.body);
       const { message, supabaseData, model, history, isVoiceInput } = JSON.parse(event.body);
+      console.log('🔍 Parsed data:', { message, model, hasSupabaseData: !!supabaseData });
 
       if (!message) {
         return {
           statusCode: 400,
+          headers,
           body: JSON.stringify({ error: 'No message provided' })
         };
       }
 
+      // Controllo debug API keys
+      console.log('🔑 API Keys status:', {
+        hasAnthropicKey: !!ANTHROPIC_API_KEY,
+        hasOpenAIKey: !!OPENAI_API_KEY,
+        anthropicKeyLength: ANTHROPIC_API_KEY ? ANTHROPIC_API_KEY.length : 0,
+        openAIKeyLength: OPENAI_API_KEY ? OPENAI_API_KEY.length : 0
+      });
+
       // Determina il provider basato sul modello
       const isOpenAI = model && (model.includes('gpt') || model.includes('o1'));
       const isClaudeModel = model && model.includes('claude');
+      
+      console.log('🤖 Provider selection:', { model, isOpenAI, isClaudeModel });
 
       if (isOpenAI) {
         // Chiama OpenAI API
         if (!OPENAI_API_KEY) {
+          console.error('❌ OpenAI API key mancante');
           return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'OpenAI API key non configurata' })
+            body: JSON.stringify({ 
+              error: 'OpenAI API key non configurata nelle environment variables di Netlify',
+              code: 'MISSING_OPENAI_KEY'
+            })
           };
         }
 
@@ -118,10 +135,14 @@ exports.handler = async (event, context) => {
       } else {
         // Chiama Claude API
         if (!ANTHROPIC_API_KEY) {
+          console.error('❌ Anthropic API key mancante');
           return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'Anthropic API key non configurata' })
+            body: JSON.stringify({ 
+              error: 'Anthropic API key non configurata nelle environment variables di Netlify',
+              code: 'MISSING_ANTHROPIC_KEY'
+            })
           };
         }
 

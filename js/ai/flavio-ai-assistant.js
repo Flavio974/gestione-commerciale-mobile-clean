@@ -227,7 +227,7 @@ window.FlavioAIAssistant = (function() {
                                 <option value="gpt-4o-mini">GPT-4o Mini (Economico)</option>
                                 <option value="gpt-4o">GPT-4o (Potente)</option>
                             </select>
-                            <button onclick="this.testConnection()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test API</button>
+                            <button onclick="window.FlavioAIAssistant.testConnection()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test API</button>
                         </div>
                     </div>
 
@@ -314,7 +314,15 @@ window.FlavioAIAssistant = (function() {
                 if (messages && messages.lastElementChild) {
                     messages.removeChild(messages.lastElementChild);
                 }
-                this.addMessage('⚠️ Errore di connessione. API non raggiungibile.', 'assistant');
+                
+                let errorMessage = '⚠️ Errore di connessione. ';
+                if (error.message.includes('500')) {
+                    errorMessage += 'Le API keys potrebbero non essere configurate su Netlify. Controlla le environment variables.';
+                } else {
+                    errorMessage += 'API non raggiungibile.';
+                }
+                
+                this.addMessage(errorMessage, 'assistant');
             }
         },
 
