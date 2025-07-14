@@ -68,8 +68,9 @@ exports.handler = async (event, context) => {
       // Determina il provider basato sul modello
       const isOpenAI = model && (model.includes('gpt') || model.includes('o1'));
       const isClaudeModel = model && model.includes('claude');
+      const isO1Model = model && model.includes('o1');
       
-      console.log('🤖 Provider selection:', { model, isOpenAI, isClaudeModel });
+      console.log('🤖 Provider selection:', { model, isOpenAI, isClaudeModel, isO1Model });
 
       if (isOpenAI) {
         // Chiama OpenAI API
@@ -85,13 +86,29 @@ exports.handler = async (event, context) => {
           };
         }
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
+        // Configurazione diversa per modelli o1 (reasoning)
+        let requestBody;
+        if (isO1Model) {
+          console.log('🧠 Configurazione modello o1 (reasoning)');
+          requestBody = {
+            model: model,
+            messages: [
+              {
+                role: 'user',
+                content: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}\n\n${supabaseData ? JSON.stringify(supabaseData) : ''}\n\n${message}`
+              }
+            ],
+            max_completion_tokens: 1000
+            // I modelli o1 non supportano temperature o system messages
+          };
+        } else {
+          console.log('🤖 Configurazione modello GPT standard');
+          requestBody = {
             model: model || 'gpt-4o-mini',
             messages: [
               {
@@ -110,7 +127,16 @@ exports.handler = async (event, context) => {
             ],
             max_tokens: 1000,
             temperature: 0.7
-          })
+          };
+        }
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_API_KEY}`
+          },
+          body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
