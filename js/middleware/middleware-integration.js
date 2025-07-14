@@ -234,7 +234,7 @@ class MiddlewareIntegration {
         ];
         
         for (const dep of dependencies) {
-            if (window.safeLoad && !window.isScriptLoaded(dep)) {
+            if (window.safeLoad && !this.isScriptLoaded(dep)) {
                 console.log('🔧 [MIDDLEWARE] Loading dependency with safeLoad:', dep);
                 await window.safeLoad(dep);
             } else if (!this.isScriptLoaded(dep)) {
