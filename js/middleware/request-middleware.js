@@ -217,7 +217,7 @@ class RequestMiddleware {
             let date;
             
             // Usa ItalianDateManager se disponibile
-            if (window.ItalianDateManager && !window.ItalianDateManager.disabled) {
+            if (window.ItalianDateManager) {
                 const italianDateManager = new window.ItalianDateManager();
                 
                 // Se il valore è già in formato DD/MM/YYYY, usa il parser italiano
@@ -276,7 +276,7 @@ class RequestMiddleware {
                 month: date.getMonth() + 1,
                 year: date.getFullYear(),
                 displayDate: displayDate,
-                usingItalianDateManager: !!(window.ItalianDateManager && !window.ItalianDateManager.disabled)
+                usingItalianDateManager: !!window.ItalianDateManager
             });
             
         } catch (error) {

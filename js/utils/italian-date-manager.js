@@ -9,13 +9,6 @@
 
 class ItalianDateManager {
     constructor() {
-        // ✅ TEMPORAL POLYFILL GUARD
-        if (typeof Temporal === 'undefined') {
-            console.warn('[italian-date-manager] Polyfill Temporal mancante – script uscita sicura');
-            this.disabled = true;
-            return;
-        }
-        
         // CONFIGURAZIONE FORZATA ITALIANA
         this.locale = 'it-IT';
         this.timezone = 'Europe/Rome';
