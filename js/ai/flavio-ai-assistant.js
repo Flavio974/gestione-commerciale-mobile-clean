@@ -11,6 +11,7 @@ window.FlavioAIAssistant = (function() {
         baseAssistant: null,
         chatHistory: [],
         currentContext: null,
+        clearingHistory: false,
 
         /**
          * Inizializzazione
@@ -176,16 +177,38 @@ window.FlavioAIAssistant = (function() {
          * Pulisci cronologia chat
          */
         clearHistory() {
-            this.chatHistory = [];
-            
-            // Pulisci UI
-            const chatContainer = document.getElementById('aiChatMessages') || 
-                                document.querySelector('.ai-chat-messages');
-            if (chatContainer) {
-                chatContainer.innerHTML = '';
+            // Protezione contro chiamate multiple
+            if (this.clearingHistory) {
+                console.log('🛑 Clear history già in corso, ignoro chiamata duplicata');
+                return;
             }
+            
+            this.clearingHistory = true;
+            
+            try {
+                this.chatHistory = [];
+                
+                // Pulisci UI - usa il selettore corretto per l'interfaccia attuale
+                const chatContainer = document.getElementById('ai-messages');
+                if (chatContainer) {
+                    // Mantieni solo il messaggio di benvenuto dell'AI
+                    chatContainer.innerHTML = `
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                <div style="width: 30px; height: 30px; background: #28a745; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">AI</div>
+                                <div>Ciao! Sono pronto ad aiutarti. Chiedimi qualsiasi cosa sui tuoi dati commerciali!</div>
+                            </div>
+                        </div>
+                    `;
+                }
 
-            console.log('🧹 Cronologia chat pulita');
+                console.log('🧹 Cronologia chat pulita - UI ripristinata');
+            } finally {
+                // Reset flag dopo un breve delay
+                setTimeout(() => {
+                    this.clearingHistory = false;
+                }, 500);
+            }
         },
 
         /**
