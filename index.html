@@ -2250,18 +2250,15 @@
 
     // 🛑 FERMA RICONOSCIMENTO VOCALE GLOBALMENTE (chiamato dall'AI durante TTS)
     window.stopAllVoiceRecognitionGlobal = function() {
-      // Ferma tutti i sistemi vocali
+      console.log('🛑 Stop vocale durante TTS - modalità auto:', autoModeType);
+      
+      // Ferma tutti i sistemi vocali temporaneamente
       if (window.VoiceRecognition && typeof window.VoiceRecognition.stop === 'function') {
         window.VoiceRecognition.stop();
       }
       
-      if (window.AIVoiceManager) {
-        if (typeof window.AIVoiceManager.stopListening === 'function') {
-          window.AIVoiceManager.stopListening();
-        }
-        if (typeof window.AIVoiceManager.stopWakeWordDetection === 'function') {
-          window.AIVoiceManager.stopWakeWordDetection();
-        }
+      if (window.AIVoiceManager && typeof window.AIVoiceManager.stopListening === 'function') {
+        window.AIVoiceManager.stopListening();
       }
       
       if (window.AIVoiceManagerV2 && typeof window.AIVoiceManagerV2.stopListening === 'function') {
@@ -2272,11 +2269,14 @@
         window.VoiceAssistant.stopListening();
       }
       
-      // Aggiorna stato
-      isCurrentlyListening = false;
-      updateFloatingUI();
+      // Aggiorna stato UI solo per modalità singola
+      if (autoModeType === 'off') {
+        isCurrentlyListening = false;
+        updateFloatingUI();
+      }
       
-      console.log('🛑 Tutti i sistemi vocali fermati durante TTS per evitare loop');
+      // Le modalità automobile si riavvieranno automaticamente dopo la risposta
+      console.log('🛑 Sistemi vocali fermati temporaneamente durante TTS');
     };
 
     // Avvia riconoscimento vocale AI integrato
@@ -2364,39 +2364,93 @@
       updateFloatingUI();
     }
 
-    // 🎯 WAKE WORD MODE - "Hey Assistente" 
+    // 🎯 WAKE WORD MODE - "Hey Assistente" (Simulato con riconoscimento continuo)
     function startAutoModeWakeWord() {
-      console.log('🚗 Avvio modalità WAKE WORD: "Hey Assistente"...');
+      console.log('🚗 Avvio modalità WAKE WORD simulata: "Hey Assistente"...');
       
-      // Prima priorità: AIVoiceManager per wake word detection
-      if (window.AIVoiceManager) {
-        console.log('🎙️ Attivazione AIVoiceManager per wake word...');
+      // Modalità simulata: riconoscimento continuo che ascolta "Hey Assistente"
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.start === 'function') {
+        console.log('🎤 Simulazione wake word con VoiceRecognition continuo...');
         
-        // Inizializza per iPhone se necessario
-        if (typeof window.AIVoiceManager.initForIPhone === 'function') {
-          window.AIVoiceManager.initForIPhone();
+        // Configura riconoscimento continuo per wake word
+        if (window.VoiceRecognition.engine) {
+          window.VoiceRecognition.engine.continuous = true;
+          window.VoiceRecognition.engine.interimResults = true;
         }
         
-        // Attiva wake word detection
-        if (typeof window.AIVoiceManager.startWakeWordDetection === 'function') {
+        // Avvia listener per wake word
+        window.addEventListener('voicerecognition:final', handleWakeWordDetection);
+        window.addEventListener('voicerecognition:interim', handleWakeWordDetection);
+        
+        window.VoiceRecognition.start();
+        showFloatingStatus('🚗 "Hey Assistente" attivo (simulato)');
+        setupWakeWordRestart();
+        return;
+      }
+
+      // Fallback: AIVoiceManager per dispositivi compatibili
+      if (window.AIVoiceManager && typeof window.AIVoiceManager.initForIPhone === 'function') {
+        console.log('🎙️ Tentativo AIVoiceManager...');
+        const success = window.AIVoiceManager.initForIPhone();
+        if (success && typeof window.AIVoiceManager.startWakeWordDetection === 'function') {
           window.AIVoiceManager.startWakeWordDetection();
           showFloatingStatus('🚗 "Hey Assistente" attivo');
           return;
         }
       }
 
-      // Fallback: AIVoiceManagerV2 per iPad
-      if (window.AIVoiceManagerV2 && typeof window.AIVoiceManagerV2.initForIPad === 'function') {
-        console.log('📱 Attivazione AIVoiceManagerV2 per iPad...');
-        window.AIVoiceManagerV2.initForIPad();
-        showFloatingStatus('🚗 iPad wake word attivo');
-        return;
-      }
-
-      console.warn('⚠️ Wake word non supportato');
+      console.warn('⚠️ Wake word non supportato su questo dispositivo');
       showFloatingStatus('❌ Wake word non disponibile');
       autoModeType = 'off';
       autoModeActive = false;
+    }
+
+    // 🎯 GESTIONE WAKE WORD DETECTION
+    function handleWakeWordDetection(event) {
+      const transcript = event.detail.transcript?.toLowerCase() || '';
+      
+      // Cerca varianti di "hey assistente"
+      const wakeWords = ['hey assistente', 'ehi assistente', 'ey assistente', 'assistente'];
+      const foundWakeWord = wakeWords.find(word => transcript.includes(word));
+      
+      if (foundWakeWord) {
+        console.log('🚗 Wake word rilevato:', foundWakeWord);
+        
+        // Estrai il comando dopo la wake word
+        const commandStart = transcript.indexOf(foundWakeWord) + foundWakeWord.length;
+        const command = transcript.substring(commandStart).trim();
+        
+        if (command && command.length > 2) {
+          console.log('🎤 Comando estratto:', command);
+          showFloatingStatus('🎤 Comando rilevato...');
+          
+          // Invia il comando all'AI
+          if (window.FlavioAIAssistant && typeof window.FlavioAIAssistant.processVoiceInput === 'function') {
+            window.FlavioAIAssistant.processVoiceInput(command);
+          }
+        } else {
+          // Solo wake word senza comando
+          showFloatingStatus('🎤 Ti ascolto...');
+        }
+      }
+    }
+
+    // Setup restart automatico per wake word
+    function setupWakeWordRestart() {
+      if (autoModeType !== 'wakeword') return;
+      
+      window.wakeWordRestartListener = () => {
+        if (autoModeType === 'wakeword') {
+          console.log('🔄 Riavvio wake word detection...');
+          setTimeout(() => {
+            if (autoModeType === 'wakeword' && window.VoiceRecognition) {
+              window.VoiceRecognition.start();
+            }
+          }, 1000);
+        }
+      };
+      
+      window.addEventListener('voicerecognition:end', window.wakeWordRestartListener);
     }
 
     // 🔄 CONTINUOUS MODE - Ascolto continuo senza wake word
@@ -2467,6 +2521,16 @@
         window.removeEventListener('voicerecognition:end', window.autoModeRestartListener);
         window.autoModeRestartListener = null;
       }
+      
+      // Rimuovi listener wake word
+      if (window.wakeWordRestartListener) {
+        window.removeEventListener('voicerecognition:end', window.wakeWordRestartListener);
+        window.wakeWordRestartListener = null;
+      }
+      
+      // Rimuovi listener wake word detection
+      window.removeEventListener('voicerecognition:final', handleWakeWordDetection);
+      window.removeEventListener('voicerecognition:interim', handleWakeWordDetection);
       
       // Ferma tutti i sistemi vocali
       if (window.AIVoiceManager) {
