@@ -29,7 +29,7 @@
   <title>Smart Commercial Assistant - v2.1.4 SUPABASE FIX 🇮🇹</title>
   
   <!-- 🏷️ BUILD STAMP per verificare deploy -->
-  <script>console.info('🏷️ BUILD-STAMP: 2025-07-14 00:15 - AI REALI INTEGRATI (Claude+OpenAI)');</script>
+  <script>console.info('🏷️ BUILD-STAMP: 2025-07-14 00:25 - ENHANCED AI COMPLETO!');</script>
   
   <!-- ✅ DEBUG COMPLETATO - Sistema stabile -->
   
@@ -1596,7 +1596,8 @@
       '/js/ai/gemini-ai.js',
       '/js/ai/ai-assistant.js',
       '/js/ai/flavio-ai-assistant.js',
-      '/js/ai/supabase-ai-integration.js'
+      '/js/ai/supabase-ai-integration.js',
+      '/js/middleware/enhanced-ai-assistant.js'
     ))
     .then(() => safeLoadQueue(
       '/js/config/ddtft-patterns.js',
@@ -1707,9 +1708,15 @@
                 window.ComandiModule.onEnter();
               }
               
-              if (targetId === 'ai-content' && window.FlavioAIAssistant) {
-                console.log('🤖 Inizializzazione tab AI Assistant...');
-                window.FlavioAIAssistant.renderInterface();
+              if (targetId === 'ai-content' && window.EnhancedAIAssistant) {
+                console.log('🤖 Inizializzazione tab AI Assistant Enhanced...');
+                if (!window.enhancedAI) {
+                  window.enhancedAI = new window.EnhancedAIAssistant();
+                }
+                // Inizializza interfaccia se disponibile
+                if (window.enhancedAI.originalAssistant && window.enhancedAI.originalAssistant.initializeUI) {
+                  window.enhancedAI.originalAssistant.initializeUI();
+                }
               }
             }
           });
@@ -1774,6 +1781,16 @@
           window.FlavioAIAssistant.init();
         }
         
+        if (window.EnhancedAIAssistant) {
+          console.log('🚀 Inizializzazione EnhancedAIAssistant...');
+          try {
+            window.enhancedAI = new window.EnhancedAIAssistant();
+            console.log('✅ EnhancedAIAssistant inizializzato');
+          } catch (error) {
+            console.warn('⚠️ Errore inizializzazione EnhancedAIAssistant:', error);
+          }
+        }
+        
         // Verifica cosa è disponibile
         console.log('🔍 Oggetti disponibili:', {
           App: typeof window.App,
@@ -1786,7 +1803,9 @@
           ComandiModule: typeof window.ComandiModule,
           AIAssistant: typeof window.AIAssistant,
           FlavioAIAssistant: typeof window.FlavioAIAssistant,
-          GeminiAI: typeof window.GeminiAI
+          GeminiAI: typeof window.GeminiAI,
+          EnhancedAIAssistant: typeof window.EnhancedAIAssistant,
+          enhancedAI: typeof window.enhancedAI
         });
         
         console.log('✅ CONTENUTI INIZIALIZZATI');
