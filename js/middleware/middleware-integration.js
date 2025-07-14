@@ -106,14 +106,24 @@ class MiddlewareIntegration {
             await this.waitForSupabase();
             
             // Crea istanza del middleware con Supabase
+            if (!window.AIMiddleware) {
+                throw new Error('AIMiddleware non disponibile');
+            }
+            
             this.middleware = new AIMiddleware();
             
             // Passa il riferimento a Supabase se disponibile
-            if (window.supabaseAI) {
+            if (window.supabaseAI && window.RequestMiddleware) {
                 this.middleware.requestMiddleware = new RequestMiddleware(window.supabaseAI);
                 console.log('🔌 💾 Middleware collegato a Supabase');
             } else {
-                console.warn('🔌 ⚠️ Supabase non disponibile - solo vocabolario');
+                if (!window.RequestMiddleware) {
+                    console.warn('🔌 ⚠️ RequestMiddleware non disponibile');
+                }
+                if (!window.supabaseAI) {
+                    console.warn('🔌 ⚠️ Supabase non disponibile');
+                }
+                console.warn('🔌 ⚠️ Middleware funziona solo con vocabolario');
             }
             
             // Trova e decora la funzione AI esistente
@@ -132,6 +142,32 @@ class MiddlewareIntegration {
             console.error('❌ Errore inizializzazione middleware:', error);
             return false;
         }
+    }
+
+    /**
+     * Aspetta che VocabularyManager sia disponibile
+     */
+    async waitForVocabularyManager() {
+        return new Promise((resolve) => {
+            const checkVocabulary = () => {
+                if (window.VocabularyManager) {
+                    console.log('🔌 📚 VocabularyManager trovato per middleware');
+                    resolve();
+                } else {
+                    console.log('🔌 ⏳ Attendo VocabularyManager...');
+                    setTimeout(checkVocabulary, 500);
+                }
+            };
+            
+            // Verifica immediatamente
+            checkVocabulary();
+            
+            // Timeout dopo 5 secondi
+            setTimeout(() => {
+                console.warn('🔌 ⚠️ Timeout attesa VocabularyManager - procedo comunque');
+                resolve();
+            }, 5000);
+        });
     }
 
     /**
@@ -170,8 +206,11 @@ class MiddlewareIntegration {
      * Carica tutte le dipendenze necessarie
      */
     async loadDependencies() {
+        // Attendi che VocabularyManager sia disponibile
+        await this.waitForVocabularyManager();
+        
         const dependencies = [
-            'js/middleware/vocabulary-manager.js',
+            // 'js/middleware/vocabulary-manager.js', // Già caricato dal sistema principale
             // 'js/middleware/temporal-parser.js', // ❌ DISABILITATO - Causava duplicati
             'js/middleware/ai-middleware.js'
         ];

@@ -5,8 +5,22 @@
 
 class AIMiddleware {
     constructor() {
-        this.vocabularyManager = new VocabularyManager();
-        this.temporalParser = new TemporalParser();
+        // Inizializza con verifiche di sicurezza
+        if (window.VocabularyManager) {
+            this.vocabularyManager = new VocabularyManager();
+            console.log('🤖 VocabularyManager collegato al middleware');
+        } else {
+            console.warn('🤖 ⚠️ VocabularyManager non disponibile - creazione fallback');
+            this.vocabularyManager = this.createVocabularyFallback();
+        }
+        
+        if (window.TemporalParser) {
+            this.temporalParser = new TemporalParser();
+        } else {
+            console.warn('🤖 ⚠️ TemporalParser non disponibile - creazione fallback');
+            this.temporalParser = this.createTemporalFallback();
+        }
+        
         this.isEnabled = true;
         this.fallbackToAI = true;
         this.debug = true;
@@ -532,13 +546,38 @@ class AIMiddleware {
     }
 
     /**
+     * Crea fallback per VocabularyManager
+     */
+    createVocabularyFallback() {
+        return {
+            findMatch: async (input) => {
+                console.warn('🤖 ⚠️ VocabularyManager fallback - nessun match');
+                return null;
+            },
+            getStats: () => ({ totalCommands: 0, totalPatterns: 0 })
+        };
+    }
+
+    /**
+     * Crea fallback per TemporalParser
+     */
+    createTemporalFallback() {
+        return {
+            parseDate: (dateStr) => {
+                console.warn('🤖 ⚠️ TemporalParser fallback');
+                return new Date();
+            }
+        };
+    }
+
+    /**
      * Statistiche del middleware
      */
     getStats() {
         return {
             enabled: this.isEnabled,
             fallbackToAI: this.fallbackToAI,
-            vocabularyStats: this.vocabularyManager.getStats()
+            vocabularyStats: this.vocabularyManager ? this.vocabularyManager.getStats() : null
         };
     }
 }
