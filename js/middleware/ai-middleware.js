@@ -702,7 +702,7 @@ class AIMiddleware {
             
             // Usa RequestMiddleware se disponibile
             if (this.requestMiddleware) {
-                const result = await this.requestMiddleware.calcFatturato({});
+                const result = await this.requestMiddleware.calculateFatturato({});
                 if (result && result.success) {
                     return result.response;
                 }

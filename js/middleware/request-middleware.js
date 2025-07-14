@@ -251,6 +251,12 @@ class RequestMiddleware {
         try {
             console.log('🔍 MIDDLEWARE: Analizzando richiesta:', userInput);
             
+            // 0. Controlla se è una query complessa che richiede AI
+            if (this.isComplexQuery(userInput)) {
+                console.log('🧠 MIDDLEWARE: Query complessa rilevata -> AI');
+                return { handled: false, reason: 'Query complessa richiede AI' };
+            }
+            
             // 1. Classificazione tipo richiesta
             const requestType = this.classifyRequest(userInput);
             console.log('📊 MIDDLEWARE: Tipo richiesta:', requestType);
@@ -811,7 +817,7 @@ class RequestMiddleware {
     async executeDirectOperation(requestType, params, originalInput) {
         switch (requestType) {
             case 'fatturato':
-                return await this.calcFatturato(params);
+                return await this.calculateFatturato(params);
                 
             case 'ordini':
                 return await this.countOrdini(params);
@@ -2563,6 +2569,96 @@ class RequestMiddleware {
             console.error('❌ Errore dettagli settimana specifica:', error);
             return { success: false, error: error.message };
         }
+    }
+
+    /**
+     * Rileva se la query è complessa e richiede AI processing
+     * Queries complesse dovrebbero essere passate all'AI invece di usare semplici conteggi
+     */
+    isComplexQuery(input) {
+        const inputLower = input.toLowerCase();
+        
+        // Parole chiave che indicano complessità
+        const complexKeywords = [
+            'dimmi il valore',
+            'valore dei',
+            'quanto valgono',
+            'importo totale',
+            'somma di',
+            'calcola',
+            'analizza',
+            'confronta',
+            'differenza',
+            'percentuale',
+            'trend',
+            'andamento',
+            'migliore',
+            'peggiore',
+            'consiglia',
+            'suggerisci',
+            'perché',
+            'come mai',
+            'spiegami',
+            'dettagli di',
+            'breakdown',
+            'suddivisione',
+            'composizione'
+        ];
+        
+        // Controlla se contiene keywords complesse
+        if (complexKeywords.some(keyword => inputLower.includes(keyword))) {
+            console.log('🧠 COMPLEX QUERY DETECTED: Keywords complesse trovate');
+            return true;
+        }
+        
+        // Pattern per domande che richiedono calcoli
+        const complexPatterns = [
+            /quanto.*costa.*ordine/i,
+            /prezzo.*ordine/i,
+            /valore.*ordine/i,
+            /importo.*ordine/i,
+            /somma.*ordine/i,
+            /totale.*ordine/i,
+            /quanto.*speso/i,
+            /quanto.*pagato/i,
+            /costo.*complessivo/i,
+            /fatturato.*dettagliato/i,
+            /media.*ordini/i,
+            /ordini.*più.*costosi/i,
+            /ordini.*meno.*costosi/i,
+            /ordini.*sopra.*euro/i,
+            /ordini.*sotto.*euro/i,
+            /ordini.*tra.*e.*euro/i
+        ];
+        
+        // Controlla pattern complessi
+        if (complexPatterns.some(pattern => pattern.test(input))) {
+            console.log('🧠 COMPLEX QUERY DETECTED: Pattern complesso trovato');
+            return true;
+        }
+        
+        // Domande che richiedono logica AI
+        const aiRequiredPatterns = [
+            /quale.*cliente.*ha.*ordinato.*di.*più/i,
+            /chi.*ha.*speso.*di.*più/i,
+            /cliente.*con.*maggiore.*fatturato/i,
+            /ordine.*più.*grande/i,
+            /ordine.*più.*piccolo/i,
+            /prodotto.*più.*venduto/i,
+            /mese.*migliore/i,
+            /periodo.*migliore/i,
+            /quando.*venduto.*di.*più/i,
+            /trend.*vendite/i,
+            /crescita.*fatturato/i,
+            /diminuzione.*ordini/i
+        ];
+        
+        if (aiRequiredPatterns.some(pattern => pattern.test(input))) {
+            console.log('🧠 COMPLEX QUERY DETECTED: AI processing richiesto');
+            return true;
+        }
+        
+        return false;
     }
 
     /**
