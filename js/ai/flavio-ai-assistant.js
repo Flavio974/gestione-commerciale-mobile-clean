@@ -221,20 +221,36 @@ window.FlavioAIAssistant = (function() {
                 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'it-IT';
-                utterance.rate = 0.9;
+                
+                // 🎛️ USA IMPOSTAZIONI CONTROLLI AVANZATI
+                if (window.currentTTSSettings) {
+                    utterance.volume = window.currentTTSSettings.volume || 1.0;
+                    utterance.rate = window.currentTTSSettings.rate || 0.9;
+                    
+                    if (window.currentTTSSettings.voice) {
+                        utterance.voice = window.currentTTSSettings.voice;
+                        console.log('🗣️ Utilizzando voce dai controlli avanzati:', window.currentTTSSettings.voice.name);
+                    }
+                } else {
+                    // Fallback valori predefiniti
+                    utterance.rate = 0.9;
+                    utterance.volume = 1.0;
+                }
+                
                 utterance.pitch = 1.0;
-                utterance.volume = 1.0;
                 
-                // Seleziona voce italiana se disponibile
-                const voices = speechSynthesis.getVoices();
-                const italianVoice = voices.find(voice => 
-                    voice.lang.includes('it') && 
-                    (voice.name.includes('Alice') || voice.name.includes('Federica') || voice.name.includes('Luca'))
-                ) || voices.find(voice => voice.lang.includes('it'));
-                
-                if (italianVoice) {
-                    utterance.voice = italianVoice;
-                    console.log('🗣️ Utilizzando voce italiana:', italianVoice.name);
+                // Selezione voce italiana se non impostata dai controlli avanzati
+                if (!utterance.voice) {
+                    const voices = speechSynthesis.getVoices();
+                    const italianVoice = voices.find(voice => 
+                        voice.lang.includes('it') && 
+                        (voice.name.includes('Alice') || voice.name.includes('Federica') || voice.name.includes('Luca'))
+                    ) || voices.find(voice => voice.lang.includes('it'));
+                    
+                    if (italianVoice) {
+                        utterance.voice = italianVoice;
+                        console.log('🗣️ Utilizzando voce italiana predefinita:', italianVoice.name);
+                    }
                 }
                 
                 utterance.onstart = () => {
@@ -364,9 +380,13 @@ window.FlavioAIAssistant = (function() {
                         </div>
                         
                         <div style="padding: 15px; background: white; border-top: 1px solid #dee2e6;">
-                            <div style="display: flex; gap: 10px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                                 <input type="text" id="ai-input" placeholder="Scrivi qui la tua domanda..." style="flex: 1; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
                                 <button onclick="window.FlavioAIAssistant.sendMessage()" style="padding: 12px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Invia</button>
+                            </div>
+                            <div style="text-align: center;">
+                                <button onclick="window.FlavioAIAssistant.clearHistory()" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Cancella Cronologia</button>
+                            </div>
                             </div>
                         </div>
                     </div>

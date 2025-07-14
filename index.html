@@ -942,6 +942,97 @@
       border: 1px solid rgba(255,255,255,0.2);
       pointer-events: none;
     }
+
+    /* 🎛️ CONTROLLI AVANZATI VOCALI */
+    .main-voice-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .voice-advanced-controls {
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 15px;
+      padding: 15px;
+      margin-top: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(0, 122, 255, 0.3);
+      width: 280px;
+      max-width: 90vw;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .advanced-controls-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(0, 122, 255, 0.2);
+    }
+
+    .advanced-controls-header h4 {
+      margin: 0;
+      color: #007bff;
+      font-size: 14px;
+    }
+
+    .control-group {
+      margin-bottom: 15px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #495057;
+      font-size: 12px;
+    }
+
+    .control-group input[type="range"] {
+      width: 100%;
+      margin: 5px 0;
+      accent-color: #007bff;
+    }
+
+    .control-group select {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 12px;
+      background: white;
+    }
+
+    .mode-btn {
+      padding: 6px 12px;
+      border: 1px solid #007bff;
+      background: white;
+      color: #007bff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: #007bff;
+      color: white;
+    }
+
+    .mode-btn:hover {
+      background: #0056b3;
+      color: white;
+    }
+
+    #volume-display, #speed-display {
+      font-weight: bold;
+      color: #007bff;
+      margin-left: 10px;
+    }
     
     @keyframes pulse {
       0% {
@@ -1887,22 +1978,84 @@
   
   <!-- Configurazione Supabase spostata in config/supabase-config.js -->
   
-  <!-- 🤖 PULSANTI FLOTTANTI AI VOCALI TRASCINABILI - COMUNICAZIONE BIDIREZIONALE -->
+  <!-- 🤖 PULSANTI FLOTTANTI AI VOCALI TRASCINABILI CON CONTROLLI AVANZATI -->
   <div id="floating-voice-container" class="floating-voice-container" style="display: none;">
     
-    <!-- Pulsante AI Assistant vocale -->
-    <button id="floating-mic-btn" class="floating-mic-btn" title="Parla con AI Assistant">
-      🤖
-    </button>
-    
-    <!-- Pulsante modalità automobile AI -->
-    <button id="floating-auto-btn" class="floating-mic-btn" title="Modalità automobile AI - Hey Assistente">
-      🚗
-    </button>
+    <!-- Controlli principali -->
+    <div class="main-voice-controls">
+      <!-- Pulsante AI Assistant vocale -->
+      <button id="floating-mic-btn" class="floating-mic-btn" title="Parla con AI Assistant">
+        🤖
+      </button>
+      
+      <!-- Pulsante modalità automobile AI -->
+      <button id="floating-auto-btn" class="floating-mic-btn" title="Modalità automobile AI - Hey Assistente">
+        🚗
+      </button>
+      
+      <!-- Pulsante controlli avanzati -->
+      <button id="floating-settings-btn" class="floating-mic-btn" title="Controlli avanzati" onclick="toggleAdvancedControls()">
+        ⚙️
+      </button>
+    </div>
     
     <!-- Status AI vocale -->
     <div id="floating-voice-status" class="floating-voice-status" style="display: none;">
       🤖 AI Assistant pronto
+    </div>
+    
+    <!-- Pannello controlli avanzati -->
+    <div id="voice-advanced-controls" class="voice-advanced-controls" style="display: none;">
+      <div class="advanced-controls-header">
+        <h4>🎛️ Controlli Vocali Avanzati</h4>
+        <button onclick="toggleAdvancedControls()" style="background: none; border: none; font-size: 16px; cursor: pointer;">✕</button>
+      </div>
+      
+      <!-- Volume TTS -->
+      <div class="control-group">
+        <label>🔊 Volume Voce AI:</label>
+        <input type="range" id="tts-volume" min="0" max="1" step="0.1" value="1" onchange="updateTTSVolume(this.value)">
+        <span id="volume-display">100%</span>
+      </div>
+      
+      <!-- Velocità TTS -->
+      <div class="control-group">
+        <label>⚡ Velocità Voce AI:</label>
+        <input type="range" id="tts-speed" min="0.5" max="2" step="0.1" value="0.9" onchange="updateTTSSpeed(this.value)">
+        <span id="speed-display">0.9x</span>
+      </div>
+      
+      <!-- Selezione voce -->
+      <div class="control-group">
+        <label>🗣️ Voce AI:</label>
+        <select id="tts-voice" onchange="updateTTSVoice(this.value)">
+          <option value="">Voce predefinita</option>
+        </select>
+      </div>
+      
+      <!-- Modalità riconoscimento -->
+      <div class="control-group">
+        <label>🎤 Modalità Riconoscimento:</label>
+        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+          <button onclick="setRecognitionMode('single')" class="mode-btn" data-mode="single">Singolo</button>
+          <button onclick="setRecognitionMode('continuous')" class="mode-btn" data-mode="continuous">Continuo</button>
+          <button onclick="setRecognitionMode('wakeword')" class="mode-btn active" data-mode="wakeword">Wake Word</button>
+        </div>
+      </div>
+      
+      <!-- Test audio -->
+      <div class="control-group">
+        <button onclick="testTTSVoice()" style="width: 100%; padding: 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          🧪 Test Voce AI
+        </button>
+      </div>
+      
+      <!-- Reset impostazioni -->
+      <div class="control-group">
+        <button onclick="resetVoiceSettings()" style="width: 100%; padding: 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          🔄 Reset Impostazioni
+        </button>
+      </div>
     </div>
     
   </div>
@@ -2367,10 +2520,222 @@
       }
     }
 
+    // 🎛️ SISTEMA CONTROLLI AVANZATI VOCALI - GLOBALE
+    window.currentTTSSettings = {
+      volume: 1.0,
+      rate: 0.9,
+      voice: null
+    };
+
+    // Toggle pannello controlli avanzati
+    function toggleAdvancedControls() {
+      const panel = document.getElementById('voice-advanced-controls');
+      if (panel) {
+        if (panel.style.display === 'none' || !panel.style.display) {
+          panel.style.display = 'block';
+          initializeAdvancedControls();
+          showFloatingStatus('⚙️ Controlli avanzati aperti');
+        } else {
+          panel.style.display = 'none';
+          showFloatingStatus('⚙️ Controlli avanzati chiusi');
+        }
+      }
+    }
+
+    // Inizializza controlli avanzati
+    function initializeAdvancedControls() {
+      // Popola select delle voci
+      populateVoiceSelect();
+      
+      // Aggiorna display valori
+      updateVolumeDisplay();
+      updateSpeedDisplay();
+      
+      console.log('⚙️ Controlli avanzati inizializzati');
+    }
+
+    // Popola select con voci disponibili
+    function populateVoiceSelect() {
+      const select = document.getElementById('tts-voice');
+      if (!select) return;
+      
+      const voices = speechSynthesis.getVoices();
+      select.innerHTML = '<option value="">Voce predefinita</option>';
+      
+      // Filtra voci italiane prima
+      const italianVoices = voices.filter(voice => voice.lang.includes('it'));
+      italianVoices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `🇮🇹 ${voice.name} (${voice.lang})`;
+        select.appendChild(option);
+      });
+      
+      // Aggiungi altre voci
+      const otherVoices = voices.filter(voice => !voice.lang.includes('it'));
+      otherVoices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        select.appendChild(option);
+      });
+      
+      console.log(`🗣️ Caricate ${voices.length} voci (${italianVoices.length} italiane)`);
+    }
+
+    // Aggiorna volume TTS
+    function updateTTSVolume(value) {
+      window.currentTTSSettings.volume = parseFloat(value);
+      updateVolumeDisplay();
+      console.log('🔊 Volume TTS aggiornato:', window.currentTTSSettings.volume);
+    }
+
+    // Aggiorna velocità TTS
+    function updateTTSSpeed(value) {
+      window.currentTTSSettings.rate = parseFloat(value);
+      updateSpeedDisplay();
+      console.log('⚡ Velocità TTS aggiornata:', window.currentTTSSettings.rate);
+    }
+
+    // Aggiorna voce TTS
+    function updateTTSVoice(voiceName) {
+      const voices = speechSynthesis.getVoices();
+      window.currentTTSSettings.voice = voices.find(voice => voice.name === voiceName) || null;
+      console.log('🗣️ Voce TTS selezionata:', voiceName);
+    }
+
+    // Test voce TTS
+    function testTTSVoice() {
+      const testText = "Ciao! Sono la voce dell'AI Assistant. Volume e velocità configurati correttamente.";
+      
+      try {
+        speechSynthesis.cancel(); // Ferma eventuali speech in corso
+        
+        const utterance = new SpeechSynthesisUtterance(testText);
+        utterance.lang = 'it-IT';
+        utterance.volume = window.currentTTSSettings.volume;
+        utterance.rate = window.currentTTSSettings.rate;
+        
+        if (window.currentTTSSettings.voice) {
+          utterance.voice = window.currentTTSSettings.voice;
+        }
+        
+        utterance.onstart = () => showFloatingStatus('🧪 Test voce in corso...');
+        utterance.onend = () => showFloatingStatus('✅ Test voce completato');
+        utterance.onerror = () => showFloatingStatus('❌ Errore test voce');
+        
+        speechSynthesis.speak(utterance);
+        
+      } catch (error) {
+        console.error('❌ Errore test TTS:', error);
+        showFloatingStatus('❌ Errore test voce');
+      }
+    }
+
+    // Imposta modalità riconoscimento
+    function setRecognitionMode(mode) {
+      // Aggiorna UI pulsanti modalità
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      const activeBtn = document.querySelector(`[data-mode="${mode}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+      }
+      
+      // Applica modalità
+      switch(mode) {
+        case 'single':
+          if (autoModeType !== 'off') {
+            autoModeType = 'off';
+            autoModeActive = false;
+            stopAutoModeAI();
+          }
+          showFloatingStatus('🎤 Modalità: Singolo click');
+          break;
+          
+        case 'continuous':
+          autoModeType = 'continuous';
+          autoModeActive = true;
+          startAutoModeContinuous();
+          showFloatingStatus('🔄 Modalità: Ascolto continuo');
+          break;
+          
+        case 'wakeword':
+          autoModeType = 'wakeword';
+          autoModeActive = true;
+          startAutoModeWakeWord();
+          showFloatingStatus('🚗 Modalità: Wake Word');
+          break;
+      }
+      
+      updateFloatingUI();
+      console.log(`🎛️ Modalità riconoscimento: ${mode}`);
+    }
+
+    // Reset impostazioni vocali
+    function resetVoiceSettings() {
+      // Reset valori predefiniti
+      window.currentTTSSettings = {
+        volume: 1.0,
+        rate: 0.9,
+        voice: null
+      };
+      
+      // Reset UI
+      document.getElementById('tts-volume').value = 1.0;
+      document.getElementById('tts-speed').value = 0.9;
+      document.getElementById('tts-voice').value = '';
+      
+      // Reset modalità
+      setRecognitionMode('wakeword');
+      
+      // Aggiorna display
+      updateVolumeDisplay();
+      updateSpeedDisplay();
+      
+      showFloatingStatus('🔄 Impostazioni reset');
+      console.log('🔄 Impostazioni vocali resettate');
+    }
+
+    // Aggiorna display volume
+    function updateVolumeDisplay() {
+      const display = document.getElementById('volume-display');
+      if (display) {
+        display.textContent = Math.round(window.currentTTSSettings.volume * 100) + '%';
+      }
+    }
+
+    // Aggiorna display velocità
+    function updateSpeedDisplay() {
+      const display = document.getElementById('speed-display');
+      if (display) {
+        display.textContent = window.currentTTSSettings.rate + 'x';
+      }
+    }
+
+    // Inizializza voci quando disponibili
+    if (speechSynthesis.getVoices().length === 0) {
+      speechSynthesis.onvoiceschanged = () => {
+        const panel = document.getElementById('voice-advanced-controls');
+        if (panel && panel.style.display === 'block') {
+          populateVoiceSelect();
+        }
+      };
+    }
+
     // Export functions globally
     window.toggleVoiceRecognition = toggleVoiceRecognition;
     window.toggleAutoMode = toggleAutoMode;
     window.showFloatingStatus = showFloatingStatus;
+    window.toggleAdvancedControls = toggleAdvancedControls;
+    window.updateTTSVolume = updateTTSVolume;
+    window.updateTTSSpeed = updateTTSSpeed;
+    window.updateTTSVoice = updateTTSVoice;
+    window.testTTSVoice = testTTSVoice;
+    window.setRecognitionMode = setRecognitionMode;
+    window.resetVoiceSettings = resetVoiceSettings;
 
   </script>
 
