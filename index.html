@@ -1997,6 +1997,11 @@
       <button id="floating-settings-btn" class="floating-mic-btn" title="Controlli avanzati" onclick="toggleAdvancedControls()">
         ⚙️
       </button>
+      
+      <!-- Pulsante stop risposta vocale AI -->
+      <button id="floating-stop-btn" class="floating-mic-btn" title="Ferma risposta vocale AI" onclick="stopAIVoiceResponse()" style="display: none; background: #FF453A; animation: pulse 1s infinite;">
+        ⏹️
+      </button>
     </div>
     
     <!-- Status AI vocale -->
@@ -2636,6 +2641,43 @@
         setTimeout(() => {
           status.style.display = 'none';
         }, 3000);
+      }
+    }
+
+    // 🛑 FERMA RISPOSTA VOCALE AI IMMEDIATAMENTE
+    function stopAIVoiceResponse() {
+      console.log('🛑 Stop immediato risposta vocale AI');
+      
+      // Ferma immediatamente la sintesi vocale
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        console.log('🛑 Sintesi vocale cancellata');
+      }
+      
+      // Nascondi pulsante di stop
+      const stopBtn = document.getElementById('floating-stop-btn');
+      if (stopBtn) {
+        stopBtn.style.display = 'none';
+      }
+      
+      // Aggiorna status
+      showFloatingStatus('⏹️ Risposta vocale fermata');
+      
+      // Riattiva riconoscimento se in modalità automobile
+      if (autoModeType === 'wakeword') {
+        setTimeout(() => {
+          if (autoModeType === 'wakeword' && window.VoiceRecognition) {
+            window.VoiceRecognition.start();
+            showFloatingStatus('🚗 "Hey Assistente" attivo');
+          }
+        }, 500);
+      } else if (autoModeType === 'continuous') {
+        setTimeout(() => {
+          if (autoModeType === 'continuous' && window.VoiceRecognition) {
+            window.VoiceRecognition.start();
+            showFloatingStatus('🔄 Ascolto continuo attivo');
+          }
+        }, 500);
       }
     }
 

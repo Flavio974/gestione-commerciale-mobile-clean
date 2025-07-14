@@ -282,6 +282,12 @@ window.FlavioAIAssistant = (function() {
                     // 🛑 FERMA IL RICONOSCIMENTO VOCALE QUANDO L'AI INIZIA A PARLARE
                     this.stopAllVoiceRecognition();
                     
+                    // 🛑 MOSTRA PULSANTE DI STOP
+                    const stopBtn = document.getElementById('floating-stop-btn');
+                    if (stopBtn) {
+                        stopBtn.style.display = 'block';
+                    }
+                    
                     if (window.showFloatingStatus) {
                         window.showFloatingStatus('🔊 AI sta parlando...');
                     }
@@ -289,6 +295,13 @@ window.FlavioAIAssistant = (function() {
                 
                 utterance.onend = () => {
                     console.log('✅ Sintesi vocale completata');
+                    
+                    // 🛑 NASCONDI PULSANTE DI STOP
+                    const stopBtn = document.getElementById('floating-stop-btn');
+                    if (stopBtn) {
+                        stopBtn.style.display = 'none';
+                    }
+                    
                     if (window.showFloatingStatus) {
                         window.showFloatingStatus('🤖 AI pronto');
                     }
@@ -302,6 +315,12 @@ window.FlavioAIAssistant = (function() {
                 
                 utterance.onerror = (event) => {
                     console.error('❌ Errore sintesi vocale:', event.error);
+                    
+                    // 🛑 NASCONDI PULSANTE DI STOP ANCHE IN CASO DI ERRORE
+                    const stopBtn = document.getElementById('floating-stop-btn');
+                    if (stopBtn) {
+                        stopBtn.style.display = 'none';
+                    }
                     
                     // 🔄 AGGIORNA UI ANCHE IN CASO DI ERRORE
                     if (window.updateFloatingUI) {
