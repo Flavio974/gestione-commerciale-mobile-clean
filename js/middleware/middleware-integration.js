@@ -356,13 +356,16 @@ class MiddlewareIntegration {
                         
                         if (middlewareResult.continueWithAI) {
                             // Continua con AI originale
+                            console.log('🔌 🔄 FALLBACK AD AI ORIGINALE');
                             return originalSendMessage(message, isVoiceInput);
                         } else if (middlewareResult.success) {
                             // Gestisci risposta middleware
+                            console.log('🔌 ✅ RISPOSTA MIDDLEWARE:', middlewareResult.response);
                             this.handleFlavioAIResponse(aiInstance, message, middlewareResult);
                             return middlewareResult;
                         } else {
-                            // Fallback
+                            // Fallback con log
+                            console.log('🔌 ❌ MIDDLEWARE FALLITO - FALLBACK AD AI');
                             return originalSendMessage(message, isVoiceInput);
                         }
                     };

@@ -159,6 +159,18 @@ class AIMiddleware {
                     result = await this.handleCreateAppointment(params, userInput, originalContext);
                     break;
                     
+                case 'countOrders':
+                    result = await this.handleCountOrders(params, userInput, originalContext);
+                    break;
+                    
+                case 'listOrders':
+                    result = await this.handleListOrders(params, userInput, originalContext);
+                    break;
+                    
+                case 'countClients':
+                    result = await this.handleCountClients(params, userInput, originalContext);
+                    break;
+                    
                 default:
                     // Azione non implementata, fallback
                     if (this.debug) {
@@ -556,6 +568,144 @@ class AIMiddleware {
             },
             getStats: () => ({ totalCommands: 0, totalPatterns: 0 })
         };
+    }
+
+    /**
+     * Gestisce conteggio ordini
+     */
+    async handleCountOrders(params, userInput, originalContext) {
+        try {
+            if (this.debug) {
+                console.log('🤖 📊 CONTEGGIO ORDINI');
+            }
+            
+            // Usa RequestMiddleware se disponibile
+            if (this.requestMiddleware) {
+                const result = await this.requestMiddleware.countOrdini({ righeOrdine: false });
+                if (result && result.success) {
+                    return result.response;
+                }
+            }
+            
+            // Fallback: usa dati diretti
+            const allData = await this.getAllDataSafely();
+            const ordini = allData.historicalOrders?.sampleData || [];
+            
+            if (ordini.length === 0) {
+                return "Non ci sono ordini nel database.";
+            }
+            
+            // Conta ordini distinti
+            const ordiniDistinti = new Set(
+                ordini.map(o => o.numero_ordine).filter(n => n && n !== null)
+            );
+            
+            return `📊 Ci sono ${ordiniDistinti.size} ordini distinti nel database (${ordini.length} righe totali).`;
+            
+        } catch (error) {
+            console.error('❌ Errore conteggio ordini:', error);
+            return "❌ Errore nel conteggio degli ordini.";
+        }
+    }
+    
+    /**
+     * Gestisce lista ordini
+     */
+    async handleListOrders(params, userInput, originalContext) {
+        try {
+            if (this.debug) {
+                console.log('🤖 📋 LISTA ORDINI');
+            }
+            
+            const allData = await this.getAllDataSafely();
+            const ordini = allData.historicalOrders?.sampleData || [];
+            
+            if (ordini.length === 0) {
+                return "Non ci sono ordini nel database.";
+            }
+            
+            // Raggruppa per numero ordine
+            const ordiniRaggruppati = {};
+            ordini.forEach(ordine => {
+                if (!ordiniRaggruppati[ordine.numero_ordine]) {
+                    ordiniRaggruppati[ordine.numero_ordine] = {
+                        numero: ordine.numero_ordine,
+                        cliente: ordine.cliente,
+                        data: ordine.data,
+                        importo: 0,
+                        righe: 0
+                    };
+                }
+                ordiniRaggruppati[ordine.numero_ordine].importo += ordine.importo || 0;
+                ordiniRaggruppati[ordine.numero_ordine].righe++;
+            });
+            
+            // Crea lista ordinata
+            const listaOrdini = Object.values(ordiniRaggruppati)
+                .sort((a, b) => new Date(b.data) - new Date(a.data))
+                .slice(0, 10); // Primi 10 ordini
+            
+            let risposta = "📋 **Ultimi 10 ordini:**\\n\\n";
+            listaOrdini.forEach(ordine => {
+                risposta += `• **${ordine.numero}** - ${ordine.cliente}\\n`;
+                risposta += `  Data: ${ordine.data} | Importo: €${ordine.importo.toFixed(2)} | Righe: ${ordine.righe}\\n\\n`;
+            });
+            
+            return risposta;
+            
+        } catch (error) {
+            console.error('❌ Errore lista ordini:', error);
+            return "❌ Errore nella visualizzazione degli ordini.";
+        }
+    }
+    
+    /**
+     * Gestisce conteggio clienti
+     */
+    async handleCountClients(params, userInput, originalContext) {
+        try {
+            if (this.debug) {
+                console.log('🤖 👥 CONTEGGIO CLIENTI');
+            }
+            
+            const allData = await this.getAllDataSafely();
+            const clienti = allData.clients || [];
+            
+            if (clienti.length === 0) {
+                return "Non ci sono clienti nel database.";
+            }
+            
+            return `👥 Ci sono ${clienti.length} clienti nel database.`;
+            
+        } catch (error) {
+            console.error('❌ Errore conteggio clienti:', error);
+            return "❌ Errore nel conteggio dei clienti.";
+        }
+    }
+    
+    /**
+     * Ottiene dati in modo sicuro
+     */
+    async getAllDataSafely() {
+        try {
+            if (this.requestMiddleware && this.requestMiddleware.supabaseAI) {
+                return await this.requestMiddleware.supabaseAI.getAllData();
+            }
+            
+            // Fallback a dati locali
+            return {
+                historicalOrders: { sampleData: [] },
+                clients: [],
+                orders: []
+            };
+        } catch (error) {
+            console.error('❌ Errore accesso dati:', error);
+            return {
+                historicalOrders: { sampleData: [] },
+                clients: [],
+                orders: []
+            };
+        }
     }
 
     /**

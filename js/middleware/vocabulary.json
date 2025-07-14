@@ -263,6 +263,59 @@
         "durata": "60"
       },
       "description": "Crea appuntamento per data specifica"
+    },
+    {
+      "id": "count_orders",
+      "patterns": [
+        "quanti ordini ci sono",
+        "quanti ordini ho",
+        "numero ordini",
+        "numero di ordini",
+        "conteggio ordini",
+        "totale ordini",
+        "ordini totali",
+        "quanti ordini in totale",
+        "quanti ordini ho in totale",
+        "dimmi quanti ordini ci sono",
+        "fammi sapere quanti ordini ho"
+      ],
+      "action": "countOrders",
+      "params": {},
+      "description": "Conta il numero totale di ordini"
+    },
+    {
+      "id": "list_orders",
+      "patterns": [
+        "mostrami tutti gli ordini",
+        "elenco ordini",
+        "lista ordini",
+        "tutti gli ordini",
+        "ordini clienti",
+        "ordini dei clienti",
+        "visualizza ordini",
+        "fammi vedere gli ordini",
+        "dimmi gli ordini"
+      ],
+      "action": "listOrders",
+      "params": {},
+      "description": "Mostra l'elenco degli ordini"
+    },
+    {
+      "id": "count_clients",
+      "patterns": [
+        "quanti clienti ho",
+        "quanti clienti ci sono",
+        "numero clienti",
+        "numero di clienti",
+        "conteggio clienti",
+        "totale clienti",
+        "clienti totali",
+        "quanti clienti in totale",
+        "dimmi quanti clienti ho"
+      ],
+      "action": "countClients",
+      "params": {},
+      "description": "Conta il numero totale di clienti"
     }
   ],
   "settings": {
