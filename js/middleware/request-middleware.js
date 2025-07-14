@@ -224,6 +224,14 @@ class RequestMiddleware {
             valueOf: dateValue.valueOf()
         });
         
+        // LOG ESPLICITO dei valori
+        console.log('🔍 EXPLICIT VALUES:');
+        console.log('- Field:', bestField);
+        console.log('- Raw value:', dateValue);
+        console.log('- Type:', typeof dateValue);
+        console.log('- String():', String(dateValue));
+        console.log('- .toString():', dateValue.toString());
+        
         try {
             let date;
             
@@ -247,6 +255,7 @@ class RequestMiddleware {
                     }
                     // SEMPRE formatta in italiano DD/MM/YYYY
                     displayDate = italianDateManager.formatDate(date);
+                    console.log('🎯 ITALIAN DATE MANAGER OUTPUT:', displayDate);
                 }
             } else {
                 // Fallback senza ItalianDateManager
