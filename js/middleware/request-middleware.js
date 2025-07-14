@@ -229,11 +229,12 @@ class RequestMiddleware {
                         throw new Error('Parsing italiano fallito');
                     }
                 } else {
-                    // Per altri formati, usa il parser standard ma formatta alla italiana
+                    // Per altri formati (ISO, SQL date, etc.), parsalo prima poi formatta italiano
                     date = new Date(dateValue);
                     if (isNaN(date.getTime())) {
                         throw new Error('Data non valida');
                     }
+                    // SEMPRE formatta in italiano DD/MM/YYYY
                     displayDate = italianDateManager.formatDate(date);
                 }
             } else {
