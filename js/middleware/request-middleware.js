@@ -2813,4 +2813,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = RequestMiddleware;
 }
 
+// Export per uso globale nel browser
+window.RequestMiddleware = RequestMiddleware;
+
 console.log('✅ RequestMiddleware caricato');

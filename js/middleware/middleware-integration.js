@@ -316,11 +316,11 @@ class MiddlewareIntegration {
     interceptFlavioAIAssistant() {
         // Aspetta che FlavioAIAssistant sia disponibile
         const checkInterval = setInterval(() => {
-            if (window.flavioAI || window.FlavioAIAssistant) {
+            if (window.flavioAI) {
                 clearInterval(checkInterval);
                 
                 // Trova l'istanza
-                const aiInstance = window.flavioAI || document.querySelector('#ai-content')?.__aiInstance;
+                const aiInstance = window.flavioAI;
                 
                 if (aiInstance && aiInstance.sendMessage) {
                     // Salva metodo originale
