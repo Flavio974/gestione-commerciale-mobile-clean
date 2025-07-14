@@ -76,7 +76,7 @@ class AIMiddleware {
                 
                 const middlewareResult = await this.requestMiddleware.processRequest(userInput);
                 
-                if (middlewareResult && !middlewareResult.handled) {
+                if (middlewareResult && middlewareResult.handled) {
                     // Request middleware ha elaborato la richiesta
                     return {
                         success: true,
@@ -169,6 +169,14 @@ class AIMiddleware {
                     
                 case 'countClients':
                     result = await this.handleCountClients(params, userInput, originalContext);
+                    break;
+                    
+                case 'calculateRevenue':
+                    result = await this.handleCalculateRevenue(params, userInput, originalContext);
+                    break;
+                    
+                case 'calculateMonthlyRevenue':
+                    result = await this.handleCalculateMonthlyRevenue(params, userInput, originalContext);
                     break;
                     
                 default:
@@ -683,6 +691,93 @@ class AIMiddleware {
         }
     }
     
+    /**
+     * Gestisce calcolo fatturato totale
+     */
+    async handleCalculateRevenue(params, userInput, originalContext) {
+        try {
+            if (this.debug) {
+                console.log('🤖 💰 CALCOLO FATTURATO TOTALE');
+            }
+            
+            // Usa RequestMiddleware se disponibile
+            if (this.requestMiddleware) {
+                const result = await this.requestMiddleware.calcFatturato({});
+                if (result && result.success) {
+                    return result.response;
+                }
+            }
+            
+            // Fallback: calcolo diretto
+            const allData = await this.getAllDataSafely();
+            const ordini = allData.historicalOrders?.sampleData || [];
+            
+            if (ordini.length === 0) {
+                return "Non ci sono ordini per calcolare il fatturato.";
+            }
+            
+            const totale = ordini.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
+            
+            return `💰 Fatturato totale: €${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordini.length} righe ordini`;
+            
+        } catch (error) {
+            console.error('❌ Errore calcolo fatturato:', error);
+            return "❌ Errore nel calcolo del fatturato.";
+        }
+    }
+    
+    /**
+     * Gestisce calcolo fatturato mensile
+     */
+    async handleCalculateMonthlyRevenue(params, userInput, originalContext) {
+        try {
+            if (this.debug) {
+                console.log('🤖 📅 CALCOLO FATTURATO MENSILE:', params.mese);
+            }
+            
+            const allData = await this.getAllDataSafely();
+            const ordini = allData.historicalOrders?.sampleData || [];
+            
+            if (ordini.length === 0) {
+                return "Non ci sono ordini per calcolare il fatturato mensile.";
+            }
+            
+            // Filtra per mese se specificato
+            let ordiniFiltrati = ordini;
+            if (params.mese) {
+                const mese = params.mese.toLowerCase();
+                ordiniFiltrati = ordini.filter(ordine => {
+                    if (!ordine.data) return false;
+                    const dataOrdine = new Date(ordine.data);
+                    const nomeMesseOrdine = dataOrdine.toLocaleDateString('it-IT', { month: 'long' }).toLowerCase();
+                    return nomeMesseOrdine.includes(mese) || mese.includes(nomeMesseOrdine);
+                });
+            } else {
+                // Mese corrente
+                const meseCorrente = new Date().getMonth();
+                ordiniFiltrati = ordini.filter(ordine => {
+                    if (!ordine.data) return false;
+                    const dataOrdine = new Date(ordine.data);
+                    return dataOrdine.getMonth() === meseCorrente;
+                });
+            }
+            
+            if (ordiniFiltrati.length === 0) {
+                const meseStr = params.mese || 'questo mese';
+                return `Non ci sono ordini per ${meseStr}.`;
+            }
+            
+            const totale = ordiniFiltrati.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
+            const meseStr = params.mese || 'questo mese';
+            
+            return `💰 Fatturato ${meseStr}: €${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordiniFiltrati.length} righe ordini`;
+            
+        } catch (error) {
+            console.error('❌ Errore calcolo fatturato mensile:', error);
+            return "❌ Errore nel calcolo del fatturato mensile.";
+        }
+    }
+
     /**
      * Ottiene dati in modo sicuro
      */

@@ -811,7 +811,7 @@ class RequestMiddleware {
     async executeDirectOperation(requestType, params, originalInput) {
         switch (requestType) {
             case 'fatturato':
-                return await this.calculateFatturato(params);
+                return await this.calcFatturato(params);
                 
             case 'ordini':
                 return await this.countOrdini(params);

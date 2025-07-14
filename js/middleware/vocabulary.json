@@ -316,6 +316,42 @@
       "action": "countClients",
       "params": {},
       "description": "Conta il numero totale di clienti"
+    },
+    {
+      "id": "total_revenue",
+      "patterns": [
+        "fatturato totale",
+        "fatturato complessivo",
+        "ricavi totali",
+        "incassi totali",
+        "vendite totali",
+        "quanto ho fatturato",
+        "quanto ho venduto",
+        "fatturato generale",
+        "totale fatturato",
+        "somma fatturato"
+      ],
+      "action": "calculateRevenue",
+      "params": {},
+      "description": "Calcola il fatturato totale"
+    },
+    {
+      "id": "monthly_revenue",
+      "patterns": [
+        "fatturato del mese",
+        "fatturato mensile",
+        "fatturato di {mese}",
+        "fatturato del mese di {mese}",
+        "ricavi del mese",
+        "vendite del mese",
+        "quanto ho fatturato questo mese",
+        "fatturato mese corrente"
+      ],
+      "action": "calculateMonthlyRevenue",
+      "params": {
+        "mese": "{mese}"
+      },
+      "description": "Calcola il fatturato mensile"
     }
   ],
   "settings": {
