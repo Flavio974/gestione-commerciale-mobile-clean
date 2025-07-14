@@ -590,9 +590,11 @@ window.FlavioAIAssistant = (function() {
             const originalMessage = message;
             
             // Se il messaggio chiede l'ora, aggiungi contesto per l'AI
-            if (message.toLowerCase().includes('ora') || message.toLowerCase().includes('ore')) {
+            if (message.toLowerCase().includes('ora') || message.toLowerCase().includes('ore') || 
+                message.toLowerCase().includes('tempo') || message.toLowerCase().includes('adesso')) {
                 const now = new Date();
-                const timeContext = `[Ora corrente: ${now.toLocaleTimeString('it-IT')} del ${now.toLocaleDateString('it-IT')}] `;
+                // Forza il fuso orario italiano
+                const timeContext = `[IMPORTANTE: L'ora corrente esatta è ${now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })} del ${now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })} (fuso orario: Europe/Rome)] `;
                 message = timeContext + message;
                 console.log('⏰ Aggiunto contesto temporale:', timeContext);
             }
@@ -623,10 +625,17 @@ window.FlavioAIAssistant = (function() {
                                     weekday: 'long', 
                                     year: 'numeric', 
                                     month: 'long', 
-                                    day: 'numeric' 
+                                    day: 'numeric',
+                                    timeZone: 'Europe/Rome'
                                 }),
-                                time: new Date().toLocaleTimeString('it-IT'),
-                                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                                time: new Date().toLocaleTimeString('it-IT', { 
+                                    timeZone: 'Europe/Rome',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                }),
+                                timezone: 'Europe/Rome',
+                                utcOffset: '+02:00'
                             }
                         }
                     })
