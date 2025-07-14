@@ -75,6 +75,23 @@ class SmartAssistant {
       // Esporta per uso globale dal middleware
       window.supabaseAI = this.supabaseAI;
       console.log('🔌 💾 SupabaseAI istanza esportata per middleware');
+      
+      // Aggiungi funzione globale per refresh cache AI
+      window.refreshAICache = async function() {
+        if (window.supabaseAI) {
+          console.log('🔄 Manual AI cache refresh triggered...');
+          try {
+            const data = await window.supabaseAI.getAllData(true);
+            console.log('✅ AI cache refreshed, new data available');
+            return data;
+          } catch (error) {
+            console.warn('⚠️ Errore durante refresh cache AI:', error);
+            return null;
+          }
+        }
+        console.warn('⚠️ No AI integration available for cache refresh');
+        return null;
+      };
     }
 
     this.render();

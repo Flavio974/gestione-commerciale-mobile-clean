@@ -64,6 +64,17 @@ window.OrdiniSupabaseSync = {
       // Chiudi progress modal
       progressModal.remove();
       
+      // Refresh cache AI se disponibile
+      if (result.errors.length === 0 && window.supabaseAI) {
+        console.log('🔄 Refreshing AI cache after successful import...');
+        try {
+          await window.supabaseAI.getAllData(true); // Force refresh
+          console.log('✅ AI cache refreshed with new import data');
+        } catch (error) {
+          console.warn('⚠️ Errore refresh cache AI:', error);
+        }
+      }
+      
       // Mostra risultati
       this.showSyncResults(result);
       
@@ -364,6 +375,12 @@ window.OrdiniSupabaseSync = {
           <div><strong>Successo:</strong> ${((result.processedRecords / result.totalRecords) * 100).toFixed(1)}%</div>
         </div>
       </div>
+      
+      ${result.errors.length === 0 ? `
+        <div style="margin: 20px 0; padding: 10px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; color: #155724;">
+          🤖 <strong>Cache AI aggiornata:</strong> L'assistente AI ora vede immediatamente i nuovi dati sincronizzati.
+        </div>
+      ` : ''}
       
       ${result.errors.length > 0 ? `
         <div style="margin: 20px 0;">
