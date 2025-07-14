@@ -253,7 +253,6 @@ const App = {
           console.log('⚠️ Audio reinit detected - protecting demo tab...');
           // setTimeout(ensureDemoTab, 100); // 🔒 RIMOSSO - causava spostamento tab
         });
-      }
       
       // Proteggi contro rimozione del tab
       const protectDemoTab = () => {
