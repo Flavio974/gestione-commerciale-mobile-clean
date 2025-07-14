@@ -10,36 +10,36 @@ window.OrdiniExportUtils = {
   formatNumericColumns: function(ws) {
     const range = XLSX.utils.decode_range(ws['!ref']);
     for (let row = 1; row <= range.e.r; row++) {
-      // Colonna L (Pezzi) - indice 11
-      const qtyCell = XLSX.utils.encode_cell({r: row, c: 11});
+      // Colonna I (Quantità) - indice 8
+      const qtyCell = XLSX.utils.encode_cell({r: row, c: 8});
       if (ws[qtyCell]) {
         ws[qtyCell].t = 'n';
         ws[qtyCell].z = '0.00';
       }
       
-      // Colonna M (Prezzo Unitario) - indice 12
-      const priceCell = XLSX.utils.encode_cell({r: row, c: 12});
+      // Colonna J (Prezzo Unitario) - indice 9
+      const priceCell = XLSX.utils.encode_cell({r: row, c: 9});
       if (ws[priceCell]) {
         ws[priceCell].t = 'n';
         ws[priceCell].z = '0.00';
       }
       
-      // Colonna N (Sconto %) - indice 13
-      const discountCell = XLSX.utils.encode_cell({r: row, c: 13});
-      if (ws[discountCell]) {
-        ws[discountCell].t = 'n';
-        ws[discountCell].z = '0.00%';
-      }
-      
-      // Colonna O (S.M.) - indice 14
-      const smCell = XLSX.utils.encode_cell({r: row, c: 14});
+      // Colonna K (S.M.) - indice 10
+      const smCell = XLSX.utils.encode_cell({r: row, c: 10});
       if (ws[smCell]) {
         ws[smCell].t = 'n';
         ws[smCell].z = '0.00';
       }
       
-      // Colonna P (Importo) - indice 15
-      const totalCell = XLSX.utils.encode_cell({r: row, c: 15});
+      // Colonna L (Sconto %) - indice 11
+      const discountCell = XLSX.utils.encode_cell({r: row, c: 11});
+      if (ws[discountCell]) {
+        ws[discountCell].t = 'n';
+        ws[discountCell].z = '0.00%';
+      }
+      
+      // Colonna M (Importo) - indice 12
+      const totalCell = XLSX.utils.encode_cell({r: row, c: 12});
       if (ws[totalCell]) {
         ws[totalCell].t = 'n';
         ws[totalCell].z = '0.00';
@@ -104,12 +104,12 @@ window.OrdiniExportUtils = {
    * Verifica se una riga è valida
    */
   isValidRow: function(row) {
-    if (!row || row.length < 16) return false;
+    if (!row || row.length < 13) return false;
     
-    // Verifica campi essenziali
-    const orderNumber = row[0];
-    const productCode = row[9];  // Codice Prodotto ora è alla posizione 9
-    const quantity = this.parseNumber(row[11]); // Pezzi ora è alla posizione 11
+    // Verifica campi essenziali (struttura 13 colonne)
+    const orderNumber = row[0];  // N° Ordine
+    const productCode = row[6];  // Codice Prodotto
+    const quantity = this.parseNumber(row[8]); // Quantità
     
     return !!(orderNumber && productCode && quantity > 0);
   },
@@ -148,27 +148,24 @@ window.OrdiniExportUtils = {
       
       if (!ordersMap.has(orderNum)) {
         ordersMap.set(orderNum, {
-          orderNumber: orderNum,
-          orderDate: row[1],
-          documentType: row[2],
-          documentNumber: row[3],
-          documentDate: row[4],
-          clientCode: row[5],
-          clientDescription: row[6],
-          deliveryAddress: row[7],
-          vatNumber: row[8],
+          orderNumber: orderNum,     // N° Ordine
+          orderDate: row[1],         // Data Ordine
+          client: row[2],            // Cliente
+          deliveryAddress: row[3],   // Indirizzo Consegna
+          vatNumber: row[4],         // P.IVA
+          deliveryDate: row[5],      // Data Consegna
           products: []
         });
       }
       
       ordersMap.get(orderNum).products.push({
-        code: row[9],       // Codice Prodotto
-        description: row[10], // Descrizione Prodotto
-        quantity: row[11],   // Pezzi
-        unitPrice: row[12],  // Prezzo Unitario
-        discount: row[13],   // Sconto (%)
-        sm: row[14],        // S.M.
-        amount: row[15]     // Importo
+        code: row[6],        // Codice Prodotto
+        description: row[7], // Prodotto
+        quantity: row[8],    // Quantità
+        unitPrice: row[9],   // Prezzo Unitario
+        sm: row[10],         // S.M.
+        discount: row[11],   // Sconto %
+        amount: row[12]      // Importo
       });
     });
     
@@ -191,11 +188,11 @@ window.OrdiniExportUtils = {
     data.forEach(row => {
       if (!this.isValidRow(row)) return;
       
-      stats.uniqueOrders.add(row[0]);
-      stats.uniqueClients.add(row[6]);  // Descrizione Cliente ora è alla posizione 6
-      stats.uniqueProducts.add(row[9]); // Codice Prodotto ora è alla posizione 9
-      stats.totalQuantity += this.parseNumber(row[11]); // Pezzi ora è alla posizione 11
-      stats.totalAmount += this.parseNumber(row[15]);   // Importo ora è alla posizione 15
+      stats.uniqueOrders.add(row[0]);   // N° Ordine
+      stats.uniqueClients.add(row[2]);  // Cliente
+      stats.uniqueProducts.add(row[6]); // Codice Prodotto
+      stats.totalQuantity += this.parseNumber(row[8]);  // Quantità
+      stats.totalAmount += this.parseNumber(row[12]);   // Importo
     });
     
     return {

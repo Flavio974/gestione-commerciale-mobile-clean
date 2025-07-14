@@ -34,10 +34,10 @@ window.OrdiniExport = {
   },
   
   /**
-   * Gestione export nel file VENDUTO
+   * Gestione export nel file ORDINI
    */
-  handleExportVenduto: function() {
-    return OrdiniExportUI.handleExportVenduto();
+  handleExportOrdini: function() {
+    return OrdiniExportUI.handleExportOrdini();
   },
   
   /**
@@ -55,10 +55,10 @@ window.OrdiniExport = {
   },
   
   /**
-   * Export nel file VENDUTO permanente
+   * Export nel file ORDINI permanente (append)
    */
-  exportToVendutoFile: function(orders) {
-    return OrdiniExportVenduto.exportToVendutoFile(orders);
+  exportToOrdiniFile: function(orders) {
+    return OrdiniExportOrdini.exportToOrdiniFile(orders);
   },
   
   /**
@@ -86,7 +86,7 @@ window.OrdiniExport = {
    * Controlla se ci sono duplicati tra i dati esistenti e quelli nuovi
    */
   checkForDuplicates: function(existingData, newData) {
-    return OrdiniExportVenduto.checkForDuplicates(existingData, newData);
+    return OrdiniExportOrdini.checkForDuplicates(existingData, newData);
   },
   
   /**
@@ -113,57 +113,57 @@ window.OrdiniExport = {
   /**
    * Completa l'export del file VENDUTO
    */
-  finishVendutoExport: function(combinedData, newRowsCount) {
-    return OrdiniExportVenduto.finishVendutoExport(combinedData, newRowsCount);
+  finishOrdiniExport: function(combinedData, newRowsCount) {
+    return OrdiniExportOrdini.finishOrdiniExport(combinedData, newRowsCount);
   },
   
   /**
    * Visualizza il contenuto del file VENDUTO salvato
    */
-  viewVendutoContent: function() {
-    return OrdiniExportVenduto.viewVendutoContent();
+  viewOrdiniContent: function() {
+    return OrdiniExportOrdini.viewOrdiniContent();
   },
   
   /**
    * Analizza i dati del file VENDUTO
    */
-  analyzeVendutoData: function(data) {
-    return OrdiniExportVenduto.analyzeVendutoData(data);
+  analyzeOrdiniData: function(data) {
+    return OrdiniExportOrdini.analyzeOrdiniData(data);
   },
   
   /**
    * Mostra modal con il contenuto del file VENDUTO
    */
-  showVendutoContentModal: function(stats, totalRows) {
-    return OrdiniExportUI.showVendutoContentModal(stats, totalRows);
+  showOrdiniContentModal: function(stats, totalRows) {
+    return OrdiniExportUI.showOrdiniContentModal(stats, totalRows);
   },
   
   /**
    * Test diretto del calcolo per DL000301
    */
   testCalcoloDL000301: function() {
-    return OrdiniExportVenduto.testCalcoloDL000301();
+    return OrdiniExportOrdini.testCalcoloDL000301();
   },
   
   /**
    * Mostra i risultati dell'aggiornamento VENDUTO
    */
-  showVendutoResults: function(totalRows, newRows, grandTotal) {
-    return OrdiniExportUI.showVendutoResults(totalRows, newRows, grandTotal);
+  showOrdiniResults: function(totalRows, newRows, grandTotal) {
+    return OrdiniExportUI.showOrdiniResults(totalRows, newRows, grandTotal);
   },
   
   /**
    * Importa un file VENDUTO.xlsx esistente per sincronizzare il localStorage
    */
-  importVendutoFile: function(file) {
-    return OrdiniExportVenduto.importVendutoFile(file);
+  importOrdiniFile: function(file) {
+    return OrdiniExportOrdini.importOrdiniFile(file);
   },
   
   /**
    * Sincronizza il localStorage con i dati letti dal file VENDUTO esistente
    */
-  syncWithExistingVenduto: async function(file) {
-    return await OrdiniExportVenduto.syncWithExistingVenduto(file);
+  syncWithExistingOrdini: async function(file) {
+    return await OrdiniExportOrdini.syncWithExistingOrdini(file);
   },
   
   /**
@@ -183,8 +183,8 @@ window.OrdiniExport = {
   /**
    * Gestisce il reset completo del file VENDUTO
    */
-  handleResetVenduto: function() {
-    return OrdiniExportUI.handleResetVenduto();
+  handleResetOrdini: function() {
+    return OrdiniExportUI.handleResetOrdini();
   },
   
   /**
@@ -204,8 +204,8 @@ window.OrdiniExport = {
   /**
    * Funzione di debug per analizzare il contenuto del file VENDUTO nel localStorage
    */
-  debugVendutoCount: function() {
-    return OrdiniExportValidation.debugVendutoCount();
+  debugOrdiniCount: function() {
+    return OrdiniExportValidation.debugOrdiniCount();
   },
   
   /**
@@ -218,8 +218,8 @@ window.OrdiniExport = {
   /**
    * Funzione per pulire il localStorage rimuovendo tutti i duplicati
    */
-  cleanupVendutoData: function() {
-    return OrdiniExportValidation.cleanupVendutoData();
+  cleanupOrdiniData: function() {
+    return OrdiniExportValidation.cleanupOrdiniData();
   },
   
   // Aggiungi riferimento temporaneo per compatibilità

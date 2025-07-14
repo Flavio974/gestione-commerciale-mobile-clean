@@ -27,11 +27,14 @@ const OrdiniUI = {
           <button id="exportOrdersExcelBtn" class="action-button">
             📊 Esporta Ordini in Excel
           </button>
-          <button id="viewVendutoBtn" class="action-button">
-            👁️ Visualizza File VENDUTO
+          <button id="viewOrdiniBtn" class="action-button">
+            👁️ Visualizza File ORDINI
           </button>
-          <button id="syncVendutoBtn" class="action-button">
-            🔄 Sincronizza File VENDUTO
+          <button id="syncOrdiniBtn" class="action-button">
+            🔄 Sincronizza File ORDINI
+          </button>
+          <button id="importOrdiniToSupabaseBtn" class="action-button">
+            📤 Carica ORDINI in Supabase
           </button>
           <button id="debugOrdersBtn" class="action-button">
             🔍 Debug Ordini
@@ -622,26 +625,38 @@ const OrdiniUI = {
       exportBtn.addEventListener('click', () => window.Ordini.exportOrdersToExcel());
     }
     
-    // Visualizza File VENDUTO
-    const viewVendutoBtn = document.getElementById('viewVendutoBtn');
-    if (viewVendutoBtn) {
-      viewVendutoBtn.addEventListener('click', () => {
-        if (window.OrdiniExport && window.OrdiniExport.viewVendutoContent) {
-          window.OrdiniExport.viewVendutoContent();
+    // Visualizza File ORDINI
+    const viewOrdiniBtn = document.getElementById('viewOrdiniBtn');
+    if (viewOrdiniBtn) {
+      viewOrdiniBtn.addEventListener('click', () => {
+        if (window.OrdiniExport && window.OrdiniExport.viewOrdiniContent) {
+          window.OrdiniExport.viewOrdiniContent();
         } else {
-          console.error('OrdiniExport.viewVendutoContent non disponibile');
+          console.error('OrdiniExport.viewOrdiniContent non disponibile');
         }
       });
     }
     
-    // Sincronizza File VENDUTO
-    const syncVendutoBtn = document.getElementById('syncVendutoBtn');
-    if (syncVendutoBtn) {
-      syncVendutoBtn.addEventListener('click', () => {
+    // Sincronizza File ORDINI
+    const syncOrdiniBtn = document.getElementById('syncOrdiniBtn');
+    if (syncOrdiniBtn) {
+      syncOrdiniBtn.addEventListener('click', () => {
         if (window.OrdiniExport && window.OrdiniExport.showSyncDialog) {
           window.OrdiniExport.showSyncDialog();
         } else {
           console.error('OrdiniExport.showSyncDialog non disponibile');
+        }
+      });
+    }
+    
+    // Carica ORDINI in Supabase
+    const importToSupabaseBtn = document.getElementById('importOrdiniToSupabaseBtn');
+    if (importToSupabaseBtn) {
+      importToSupabaseBtn.addEventListener('click', () => {
+        if (window.OrdiniSupabaseSync && window.OrdiniSupabaseSync.importFromExcel) {
+          window.OrdiniSupabaseSync.importFromExcel();
+        } else {
+          console.error('OrdiniSupabaseSync non disponibile');
         }
       });
     }

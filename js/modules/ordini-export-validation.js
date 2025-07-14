@@ -5,18 +5,18 @@
 
 window.OrdiniExportValidation = {
   /**
-   * Funzione di debug per analizzare il contenuto del file VENDUTO nel localStorage
+   * Funzione di debug per analizzare il contenuto del file ORDINI nel localStorage
    */
   debugVendutoCount: function() {
-    console.log('\n🔍 DEBUG VENDUTO COUNT - ANALISI DETTAGLIATA');
+    console.log('\n🔍 DEBUG ORDINI COUNT - ANALISI DETTAGLIATA');
     console.log('==========================================');
     
     try {
       // 1. Leggi i dati dal localStorage
-      const savedData = localStorage.getItem('vendutoFileData');
+      const savedData = localStorage.getItem('ordiniFileData');
       
       if (!savedData) {
-        console.log('❌ Nessun dato VENDUTO trovato nel localStorage');
+        console.log('❌ Nessun dato ORDINI trovato nel localStorage');
         return;
       }
       
@@ -69,7 +69,7 @@ window.OrdiniExportValidation = {
           });
         }
         
-        // Crea chiave per duplicati
+        // Crea chiave per duplicati (struttura 13 colonne)
         const key = `${row[0]}_${row[6]}`; // NumeroOrdine_CodiceProdotto
         if (duplicateMap.has(key)) {
           duplicateMap.get(key).push(index);
@@ -135,7 +135,7 @@ window.OrdiniExportValidation = {
       let totalAmount = 0;
       let rowsWithAmount = 0;
       data.forEach(row => {
-        const amount = parseFloat(row[12]) || 0;
+        const amount = parseFloat(row[12]) || 0; // Colonna 12: Importo
         if (amount > 0) {
           totalAmount += amount;
           rowsWithAmount++;
@@ -201,11 +201,11 @@ window.OrdiniExportValidation = {
    * Funzione di validazione finale per verificare il conteggio corretto
    */
   validateFinalCount: function() {
-    console.log('\n🎯 VALIDAZIONE FINALE CONTEGGIO VENDUTO');
+    console.log('\n🎯 VALIDAZIONE FINALE CONTEGGIO ORDINI');
     console.log('======================================');
     
     try {
-      const data = JSON.parse(localStorage.getItem('vendutoFileData') || '[]');
+      const data = JSON.parse(localStorage.getItem('ordiniFileData') || '[]');
       const righeUniche = new Set();
       const duplicatiMap = new Map();
       let righeValide = 0;
@@ -289,11 +289,11 @@ window.OrdiniExportValidation = {
    * Funzione per pulire il localStorage rimuovendo tutti i duplicati
    */
   cleanupVendutoData: function() {
-    console.log('\n🧹 PULIZIA DATI VENDUTO');
+    console.log('\n🧹 PULIZIA DATI ORDINI');
     console.log('======================');
     
     try {
-      const data = JSON.parse(localStorage.getItem('vendutoFileData') || '[]');
+      const data = JSON.parse(localStorage.getItem('ordiniFileData') || '[]');
       console.log(`📥 Righe iniziali: ${data.length}`);
       
       const cleanData = [];
@@ -321,7 +321,7 @@ window.OrdiniExportValidation = {
       });
       
       // Salva dati puliti
-      localStorage.setItem('vendutoFileData', JSON.stringify(cleanData));
+      localStorage.setItem('ordiniFileData', JSON.stringify(cleanData));
       
       console.log(`\n✅ PULIZIA COMPLETATA:`);
       console.log(`  - Righe iniziali: ${data.length}`);

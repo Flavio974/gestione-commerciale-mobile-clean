@@ -5,62 +5,37 @@
  */
 
 // Carica i moduli dipendenti
-if (typeof OrdiniParser === 'undefined') {
-  console.warn('OrdiniParser non caricato, carico il modulo...');
-  const script = document.createElement('script');
-  script.src = 'js/modules/ordini-parser.js';
-  
-  // CRITICAL FIX: Rileva moduli ES6 e imposta type="module"
-  const isES6Module = script.src.includes('temporal') || 
-                     script.src.includes('middleware') ||
-                     script.src.includes('semantic') ||
-                     script.src.includes('parser');
-  
-  if (isES6Module) {
-    script.type = 'module';
-    console.log('📦 Caricamento modulo ES6 in ordini.js:', script.src);
+function loadOrdersModule(moduleName, fileName) {
+  if (typeof window[moduleName] === 'undefined') {
+    console.warn(`${moduleName} non caricato, carico il modulo...`);
+    const script = document.createElement('script');
+    script.src = `js/modules/${fileName}`;
+    
+    // CRITICAL FIX: Rileva moduli ES6 e imposta type="module"
+    const isES6Module = script.src.includes('temporal') || 
+                       script.src.includes('middleware') ||
+                       script.src.includes('semantic') ||
+                       script.src.includes('parser');
+    
+    if (isES6Module) {
+      script.type = 'module';
+      console.log('📦 Caricamento modulo ES6 in ordini.js:', script.src);
+    }
+    
+    document.head.appendChild(script);
   }
-  
-  document.head.appendChild(script);
 }
 
-if (typeof OrdiniExport === 'undefined') {
-  console.warn('OrdiniExport non caricato, carico il modulo...');
-  const script = document.createElement('script');
-  script.src = 'js/modules/ordini-export.js';
-  
-  // CRITICAL FIX: Rileva moduli ES6 e imposta type="module"
-  const isES6Module = script.src.includes('temporal') || 
-                     script.src.includes('middleware') ||
-                     script.src.includes('semantic') ||
-                     script.src.includes('parser');
-  
-  if (isES6Module) {
-    script.type = 'module';
-    console.log('📦 Caricamento modulo ES6 in ordini.js:', script.src);
-  }
-  
-  document.head.appendChild(script);
-}
-
-if (typeof OrdiniUI === 'undefined') {
-  console.warn('OrdiniUI non caricato, carico il modulo...');
-  const script = document.createElement('script');
-  script.src = 'js/modules/ordini-ui.js';
-  
-  // CRITICAL FIX: Rileva moduli ES6 e imposta type="module"
-  const isES6Module = script.src.includes('temporal') || 
-                     script.src.includes('middleware') ||
-                     script.src.includes('semantic') ||
-                     script.src.includes('parser');
-  
-  if (isES6Module) {
-    script.type = 'module';
-    console.log('📦 Caricamento modulo ES6 in ordini.js:', script.src);
-  }
-  
-  document.head.appendChild(script);
-}
+// Carica tutti i moduli necessari
+loadOrdersModule('OrdiniParser', 'ordini-parser.js');
+loadOrdersModule('OrdiniExportCore', 'ordini-export-core.js');
+loadOrdersModule('OrdiniExportUI', 'ordini-export-ui.js');
+loadOrdersModule('OrdiniExportVenduto', 'ordini-export-venduto.js');
+loadOrdersModule('OrdiniExportUtils', 'ordini-export-utils.js');
+loadOrdersModule('OrdiniExportValidation', 'ordini-export-validation.js');
+loadOrdersModule('OrdiniExport', 'ordini-export.js');
+loadOrdersModule('OrdiniSupabaseSync', 'ordini-supabase-sync.js');
+loadOrdersModule('OrdiniUI', 'ordini-ui.js');
 
 const Ordini = {
   state: {

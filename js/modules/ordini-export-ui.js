@@ -28,12 +28,12 @@ window.OrdiniExportUI = {
           📄 Esporta in nuovo file
         </button>
         
-        <button class="btn btn-success" onclick="OrdiniExportUI.handleExportVenduto()">
-          📊 Aggiorna file VENDUTO
+        <button class="btn btn-success" onclick="OrdiniExportUI.handleExportOrdini()">
+          📊 Aggiungi al file ORDINI
         </button>
       </div>
       
-      <p><small>Note: Il file VENDUTO è un file permanente che viene aggiornato ad ogni esportazione.</small></p>
+      <p><small>Note: Il file ORDINI è un file permanente dove vengono aggiunti i nuovi dati senza sovrascrivere quelli esistenti.</small></p>
       
       <button class="btn btn-secondary" onclick="OrdiniExportUI.closeExportDialog()">
         ❌ Annulla
@@ -56,11 +56,11 @@ window.OrdiniExportUI = {
   },
   
   /**
-   * Gestione export nel file VENDUTO
+   * Gestione export nel file ORDINI
    */
-  handleExportVenduto: function() {
+  handleExportOrdini: function() {
     this.closeExportDialog();
-    OrdiniExportVenduto.exportToVendutoFile(this._ordersToExport);
+    OrdiniExportVenduto.exportToOrdiniFile(this._ordersToExport);
   },
   
   /**
@@ -123,7 +123,7 @@ window.OrdiniExportUI = {
       
       <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px;">
         <p style="margin: 0; color: #856404;">
-          <strong>${duplicateCheck.totalDuplicates}</strong> righe su ${duplicateCheck.totalNew} sono già presenti nel file VENDUTO.
+          <strong>${duplicateCheck.totalDuplicates}</strong> righe su ${duplicateCheck.totalNew} sono già presenti nel file ORDINI.
         </p>
         <p style="margin: 10px 0 0 0; color: #856404;">
           Valore totale duplicati: <strong>€${duplicatesTotalAmount.toFixed(2)}</strong>
@@ -206,7 +206,7 @@ window.OrdiniExportUI = {
     ];
     
     // Continua con l'export
-    OrdiniExportVenduto.finishVendutoExport(combinedData, uniqueNewData.length);
+    OrdiniExportVenduto.finishOrdiniExport(combinedData, uniqueNewData.length);
     
     // Pulisci dati temporanei
     this._tempDuplicateData = null;
@@ -232,16 +232,16 @@ window.OrdiniExportUI = {
     ];
     
     // Continua con l'export
-    OrdiniExportVenduto.finishVendutoExport(combinedData, allNewData.length);
+    OrdiniExportVenduto.finishOrdiniExport(combinedData, allNewData.length);
     
     // Pulisci dati temporanei
     this._tempDuplicateData = null;
   },
   
   /**
-   * Mostra modal con il contenuto del file VENDUTO
+   * Mostra modal con il contenuto del file ORDINI
    */
-  showVendutoContentModal: function(stats, totalRows) {
+  showOrdiniContentModal: function(stats, totalRows) {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.cssText = 'display: block; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
@@ -253,8 +253,8 @@ window.OrdiniExportUI = {
     if (!stats) {
       modalContent.innerHTML = `
         <span class="close" onclick="this.closest('.modal').remove()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
-        <h3>📋 File VENDUTO</h3>
-        <p style="color: #666; margin-top: 20px;">Il file VENDUTO è vuoto. Nessun dato salvato.</p>
+        <h3>📋 File ORDINI</h3>
+        <p style="color: #666; margin-top: 20px;">Il file ORDINI è vuoto. Nessun dato salvato.</p>
         <button class="btn btn-secondary" onclick="this.closest('.modal').remove()" style="margin-top: 20px;">Chiudi</button>
       `;
     } else {
@@ -263,7 +263,7 @@ window.OrdiniExportUI = {
       
       modalContent.innerHTML = `
         <span class="close" onclick="this.closest('.modal').remove()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
-        <h3>📋 Contenuto File VENDUTO</h3>
+        <h3>📋 Contenuto File ORDINI</h3>
         
         <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
           <h4 style="margin-top: 0;">Riepilogo Generale</h4>
@@ -306,8 +306,8 @@ window.OrdiniExportUI = {
         </div>
         
         <div style="margin-top: 20px; display: flex; gap: 10px;">
-          <button class="btn btn-danger" onclick="if(confirm('Sei sicuro di voler cancellare tutto il contenuto del file VENDUTO?')) { localStorage.removeItem('vendutoFileData'); alert('File VENDUTO cancellato'); this.closest('.modal').remove(); }">
-            🗑️ Cancella File VENDUTO
+          <button class="btn btn-danger" onclick="if(confirm('Sei sicuro di voler cancellare tutto il contenuto del file ORDINI?')) { localStorage.removeItem('vendutoFileData'); alert('File ORDINI cancellato'); this.closest('.modal').remove(); }">
+            🗑️ Cancella File ORDINI
           </button>
           <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
             Chiudi
@@ -321,9 +321,9 @@ window.OrdiniExportUI = {
   },
   
   /**
-   * Mostra i risultati dell'aggiornamento VENDUTO
+   * Mostra i risultati dell'aggiornamento ORDINI
    */
-  showVendutoResults: function(totalRows, newRows, grandTotal) {
+  showOrdiniResults: function(totalRows, newRows, grandTotal) {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.cssText = 'display: block; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);';
@@ -333,7 +333,7 @@ window.OrdiniExportUI = {
     modalContent.style.cssText = 'background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 400px; border-radius: 8px; text-align: center;';
     
     modalContent.innerHTML = `
-      <h3 style="color: #28a745;">✅ File VENDUTO Aggiornato!</h3>
+      <h3 style="color: #28a745;">✅ File ORDINI Aggiornato!</h3>
       <div style="margin: 20px 0;">
         <p><strong>Righe totali nel file:</strong> ${totalRows}</p>
         <p><strong>Nuove righe aggiunte:</strong> ${newRows}</p>
@@ -347,7 +347,7 @@ window.OrdiniExportUI = {
   },
   
   /**
-   * Mostra dialog per sincronizzazione con file VENDUTO esistente
+   * Mostra dialog per sincronizzazione con file ORDINI esistente
    */
   showSyncDialog: function() {
     const modal = document.createElement('div');
@@ -361,12 +361,12 @@ window.OrdiniExportUI = {
     
     modalContent.innerHTML = `
       <span class="close" onclick="OrdiniExportUI.closeSyncDialog()" style="float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
-      <h3 style="margin-top: 0;">🔄 Sincronizzazione File VENDUTO</h3>
+      <h3 style="margin-top: 0;">🔄 Sincronizzazione File ORDINI</h3>
       
       <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
         <h4 style="margin-top: 0;">Operazioni disponibili:</h4>
         <ul style="margin: 10px 0;">
-          <li><strong>Importa file esistente:</strong> Carica un file VENDUTO.xlsx per sincronizzare il localStorage</li>
+          <li><strong>Importa file esistente:</strong> Carica un file ORDINI.xlsx per sincronizzare il localStorage</li>
           <li><strong>Visualizza contenuto:</strong> Mostra i dati attualmente salvati</li>
           <li><strong>Reset completo:</strong> Cancella tutti i dati salvati</li>
         </ul>
@@ -376,14 +376,14 @@ window.OrdiniExportUI = {
         <input type="file" id="syncFileInput" accept=".xlsx" style="display: none;">
         
         <button class="btn btn-primary" onclick="document.getElementById('syncFileInput').click()" style="margin: 5px;">
-          📁 Importa file VENDUTO.xlsx
+          📁 Importa file ORDINI.xlsx
         </button>
         
-        <button class="btn btn-info" onclick="OrdiniExportVenduto.viewVendutoContent(); OrdiniExportUI.closeSyncDialog()" style="margin: 5px;">
+        <button class="btn btn-info" onclick="OrdiniExportVenduto.viewOrdiniContent(); OrdiniExportUI.closeSyncDialog()" style="margin: 5px;">
           👁️ Visualizza contenuto salvato
         </button>
         
-        <button class="btn btn-warning" onclick="OrdiniExportUI.handleResetVenduto()" style="margin: 5px;">
+        <button class="btn btn-warning" onclick="OrdiniExportUI.handleResetOrdini()" style="margin: 5px;">
           🗑️ Reset completo
         </button>
       </div>
@@ -404,7 +404,7 @@ window.OrdiniExportUI = {
     const fileInput = document.getElementById('syncFileInput');
     fileInput.addEventListener('change', async function(e) {
       if (e.target.files && e.target.files[0]) {
-        await OrdiniExportVenduto.syncWithExistingVenduto(e.target.files[0]);
+        await OrdiniExportVenduto.syncWithExistingOrdini(e.target.files[0]);
         OrdiniExportUI.closeSyncDialog();
       }
     });
@@ -421,10 +421,10 @@ window.OrdiniExportUI = {
   },
   
   /**
-   * Gestisce il reset completo del file VENDUTO
+   * Gestisce il reset completo del file ORDINI
    */
-  handleResetVenduto: function() {
-    if (confirm('⚠️ ATTENZIONE\n\nQuesto cancellerà TUTTI i dati salvati del file VENDUTO.\n\nSei sicuro di voler procedere?')) {
+  handleResetOrdini: function() {
+    if (confirm('⚠️ ATTENZIONE\n\nQuesto cancellerà TUTTI i dati salvati del file ORDINI.\n\nSei sicuro di voler procedere?')) {
       localStorage.removeItem('vendutoFileData');
       
       // Mostra messaggio di conferma
@@ -433,7 +433,7 @@ window.OrdiniExportUI = {
         statusDiv.style.display = 'block';
         statusDiv.innerHTML = `
           <div style="padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; color: #155724;">
-            ✅ Reset completato! Tutti i dati del file VENDUTO sono stati cancellati.
+            ✅ Reset completato! Tutti i dati del file ORDINI sono stati cancellati.
           </div>
         `;
       }
@@ -494,7 +494,7 @@ window.OrdiniExportUI = {
         <p><strong>Periodo:</strong> ${stats.dateRange.min || 'N/A'} - ${stats.dateRange.max || 'N/A'}</p>
       </div>
       
-      <p style="color: #666;">Il localStorage è stato aggiornato con i dati del file VENDUTO.</p>
+      <p style="color: #666;">Il localStorage è stato aggiornato con i dati del file ORDINI.</p>
       
       <button class="btn btn-primary" onclick="this.closest('.modal').remove()">OK</button>
     `;

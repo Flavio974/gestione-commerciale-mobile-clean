@@ -1,24 +1,24 @@
 /**
- * Ordini Export VENDUTO Module
- * Gestione specifica del file VENDUTO
+ * Ordini Export ORDINI Module
+ * Gestione specifica del file ORDINI
  */
 
 window.OrdiniExportVenduto = {
   /**
-   * Export nel file VENDUTO permanente
+   * Export nel file ORDINI permanente (append, non sovrascrittura)
    */
-  exportToVendutoFile: function(orders) {
+  exportToOrdiniFile: function(orders) {
     try {
       const result = OrdiniExportCore.prepareOrderData(orders);
       const orderData = result.data;
       const totaleRealeExcel = result.totale;
       
-      // Recupera dati esistenti dal file VENDUTO se presente
+      // Recupera dati esistenti dal file ORDINI se presente
       let existingData = [];
-      const savedVenduto = localStorage.getItem('vendutoFileData');
-      if (savedVenduto) {
+      const savedOrdini = localStorage.getItem('ordiniFileData');
+      if (savedOrdini) {
         try {
-          existingData = JSON.parse(savedVenduto);
+          existingData = JSON.parse(savedOrdini);
           console.log(`📥 Dati caricati dal localStorage: ${existingData.length} righe`);
           
           // Rimuovi l'header se presente
@@ -33,8 +33,8 @@ window.OrdiniExportVenduto = {
           let duplicatiRimossi = 0;
           
           existingData.forEach(row => {
-            if (row && row.length >= 16) { // Verifica che la riga sia valida
-              const uniqueKey = `${row[0]}_${row[9]}`; // Numero Ordine + Codice Prodotto (colonna 9)
+            if (row && row.length >= 13) { // Verifica che la riga sia valida (13 colonne)
+              const uniqueKey = `${row[0]}_${row[6]}`; // Numero Ordine + Codice Prodotto (colonna 6)
               if (!seenKeys.has(uniqueKey)) {
                 seenKeys.add(uniqueKey);
                 uniqueData.push(row);
@@ -50,15 +50,15 @@ window.OrdiniExportVenduto = {
           // Filtra righe valide (non vuote, con tutti i campi necessari)
           existingData = uniqueData.filter(row => {
             // Verifica che la riga abbia almeno 16 colonne (struttura completa)
-            if (!row || row.length < 16) {
+            if (!row || row.length < 13) {
               console.log(`🗑️ Riga con colonne mancanti rimossa`);
               return false;
             }
             
             // Verifica che i campi essenziali non siano vuoti
             const numeroOrdine = row[0];
-            const codiceProdotto = row[9];  // Codice Prodotto ora è alla colonna 9
-            const quantita = parseFloat(row[11]) || 0; // Pezzi ora è alla colonna 11
+            const codiceProdotto = row[6];   // Codice Prodotto è alla colonna 6
+            const quantita = parseFloat(row[8]) || 0; // Quantità è alla colonna 8
             
             if (!numeroOrdine || !codiceProdotto || quantita === 0) {
               console.log(`🗑️ Riga invalida rimossa: Ordine=${numeroOrdine}, Prodotto=${codiceProdotto}, Q=${quantita}`);
@@ -91,7 +91,7 @@ window.OrdiniExportVenduto = {
           }
           
         } catch (e) {
-          console.error('Errore nel caricamento dati VENDUTO esistenti:', e);
+          console.error('Errore nel caricamento dati ORDINI esistenti:', e);
         }
       }
       
@@ -113,11 +113,11 @@ window.OrdiniExportVenduto = {
       ];
       
       // Usa la funzione comune per completare l'export
-      this.finishVendutoExport(combinedData, newDataWithoutHeader.length);
+      this.finishOrdiniExport(combinedData, newDataWithoutHeader.length);
       
     } catch (e) {
-      console.error('Errore durante l\'aggiornamento VENDUTO:', e);
-      alert('Errore durante l\'aggiornamento VENDUTO: ' + e.message);
+      console.error('Errore durante l\'aggiornamento ORDINI:', e);
+      alert('Errore durante l\'aggiornamento ORDINI: ' + e.message);
     }
   },
   
@@ -132,21 +132,21 @@ window.OrdiniExportVenduto = {
     // Chiave = NumeroOrdine + CodiceProdotto
     const existingKeys = new Set();
     existingData.forEach(row => {
-      const key = `${row[0]}_${row[9]}`; // NumeroOrdine_CodiceProdotto (colonna 9)
+      const key = `${row[0]}_${row[6]}`; // NumeroOrdine_CodiceProdotto (colonna 6)
       existingKeys.add(key);
     });
     
     // Controlla ogni nuova riga
     newData.forEach((row, index) => {
-      const key = `${row[0]}_${row[9]}`; // NumeroOrdine_CodiceProdotto (colonna 9)
+      const key = `${row[0]}_${row[6]}`; // NumeroOrdine_CodiceProdotto (colonna 6)
       if (existingKeys.has(key)) {
         duplicates.push({
           index: index,
           orderNumber: row[0],
-          productCode: row[9],  // Codice Prodotto ora è alla colonna 9
-          client: row[6],       // Descrizione Cliente ora è alla colonna 6
-          description: row[10], // Descrizione Prodotto ora è alla colonna 10
-          amount: row[15]      // Importo ora è alla colonna 15
+          productCode: row[6],  // Codice Prodotto è alla colonna 6  
+          client: row[2],       // Cliente è alla colonna 2
+          description: row[7],  // Prodotto è alla colonna 7
+          amount: row[12]       // Importo è alla colonna 12
         });
       } else {
         uniqueNewData.push(row);
@@ -163,12 +163,12 @@ window.OrdiniExportVenduto = {
   },
   
   /**
-   * Completa l'export del file VENDUTO
+   * Completa l'export del file ORDINI (append, non sovrascrittura)
    */
-  finishVendutoExport: function(combinedData, newRowsCount) {
+  finishOrdiniExport: function(combinedData, newRowsCount) {
     try {
       // === INIZIO DEBUG DETTAGLIATO ===
-      console.log('\n🔍 DEBUG DETTAGLIATO - finishVendutoExport');
+      console.log('\n🔍 DEBUG DETTAGLIATO - finishOrdiniExport');
       console.log('=====================================');
       
       // 1. Log dettagliato del contenuto di combinedData
@@ -185,8 +185,8 @@ window.OrdiniExportVenduto = {
       let duplicatiFinali = 0;
       
       dataToSave.forEach((row, index) => {
-        if (row && row.length >= 16 && row[0] && row[9]) {
-          const uniqueKey = `${row[0]}_${row[9]}`; // NumeroOrdine_CodiceProdotto (colonna 9)
+        if (row && row.length >= 13 && row[0] && row[6]) {
+          const uniqueKey = `${row[0]}_${row[6]}`; // NumeroOrdine_CodiceProdotto (colonna 6)
           if (!finalSeenKeys.has(uniqueKey)) {
             finalSeenKeys.add(uniqueKey);
             finalUniqueData.push(row);
@@ -298,18 +298,18 @@ window.OrdiniExportVenduto = {
       ];
       ws['!cols'] = colWidths;
       
-      XLSX.utils.book_append_sheet(wb, ws, 'VENDUTO');
+      XLSX.utils.book_append_sheet(wb, ws, 'ORDINI');
       
       // Salva il file
-      XLSX.writeFile(wb, 'VENDUTO.xlsx');
+      XLSX.writeFile(wb, 'ORDINI.xlsx');
       
       // Salva i dati combinati nel localStorage per il prossimo aggiornamento
       // IMPORTANTE: Salva solo i dati puliti (finalUniqueData)
-      localStorage.setItem('vendutoFileData', JSON.stringify(finalUniqueData));
+      localStorage.setItem('ordiniFileData', JSON.stringify(finalUniqueData));
       
       // 3. Controllo post-salvataggio
       console.log('\n✅ VERIFICA POST-SALVATAGGIO:');
-      const savedData = localStorage.getItem('vendutoFileData');
+      const savedData = localStorage.getItem('ordiniFileData');
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         console.log(`  - Righe salvate nel localStorage: ${parsedData.length}`);
@@ -326,32 +326,32 @@ window.OrdiniExportVenduto = {
       let grandTotal = 0;
       
       for (let i = 1; i < combinedData.length; i++) {
-        grandTotal += parseFloat(combinedData[i][12]) || 0; // Colonna importo
+        grandTotal += parseFloat(combinedData[i][12]) || 0; // Colonna 12: Importo
       }
       
-      console.log('\n📊 === AGGIORNAMENTO FILE VENDUTO COMPLETATO ===');
+      console.log('\n📊 === AGGIORNAMENTO FILE ORDINI COMPLETATO ===');
       console.log(`Righe totali: ${totalRows}`);
       console.log(`Nuove righe aggiunte: ${newRowsCount}`);
       console.log(`Totale complessivo: €${grandTotal.toFixed(2)}`);
       console.log('=====================================\n');
       
       // Mostra risultati
-      OrdiniExportUI.showVendutoResults(totalRows, newRowsCount, grandTotal);
+      OrdiniExportUI.showOrdiniResults(totalRows, newRowsCount, grandTotal);
       
     } catch (e) {
-      console.error('Errore durante l\'aggiornamento VENDUTO:', e);
-      alert('Errore durante l\'aggiornamento VENDUTO: ' + e.message);
+      console.error('Errore durante l\'aggiornamento ORDINI:', e);
+      alert('Errore durante l\'aggiornamento ORDINI: ' + e.message);
     }
   },
   
   /**
-   * Visualizza il contenuto del file VENDUTO salvato
+   * Visualizza il contenuto del file ORDINI salvato
    */
-  viewVendutoContent: function() {
-    console.log('📋 Visualizzazione contenuto file VENDUTO...');
+  viewOrdiniContent: function() {
+    console.log('📋 Visualizzazione contenuto file ORDINI...');
     
     // Recupera dati dal localStorage
-    const savedVenduto = localStorage.getItem('vendutoFileData');
+    const savedVenduto = localStorage.getItem('ordiniFileData');
     if (!savedVenduto) {
       OrdiniExportUI.showVendutoContentModal(null, 0);
       return;
@@ -359,22 +359,22 @@ window.OrdiniExportVenduto = {
     
     try {
       const data = JSON.parse(savedVenduto);
-      console.log(`File VENDUTO contiene ${data.length} righe`);
+      console.log(`File ORDINI contiene ${data.length} righe`);
       
       // Analizza i dati
-      const stats = this.analyzeVendutoData(data);
+      const stats = this.analyzeOrdiniData(data);
       OrdiniExportUI.showVendutoContentModal(stats, data.length);
       
     } catch (e) {
-      console.error('Errore nel caricamento dati VENDUTO:', e);
-      alert('Errore nel caricamento del file VENDUTO');
+      console.error('Errore nel caricamento dati ORDINI:', e);
+      alert('Errore nel caricamento del file ORDINI');
     }
   },
   
   /**
-   * Analizza i dati del file VENDUTO
+   * Analizza i dati del file ORDINI
    */
-  analyzeVendutoData: function(data) {
+  analyzeOrdiniData: function(data) {
     const stats = {
       ordersMap: new Map(),
       totalAmount: 0,
@@ -385,10 +385,19 @@ window.OrdiniExportVenduto = {
     };
     
     data.forEach(row => {
-      // row[0] = Numero Ordine
+      // Struttura file esistente (13 colonne):
+      // row[0] = N° Ordine
+      // row[1] = Data Ordine  
       // row[2] = Cliente
+      // row[3] = Indirizzo Consegna
+      // row[4] = P.IVA
+      // row[5] = Data Consegna
       // row[6] = Codice Prodotto
+      // row[7] = Prodotto
       // row[8] = Quantità
+      // row[9] = Prezzo Unitario
+      // row[10] = S.M.
+      // row[11] = Sconto %
       // row[12] = Importo
       
       const orderNum = row[0];
@@ -434,10 +443,10 @@ window.OrdiniExportVenduto = {
   },
   
   /**
-   * Importa un file VENDUTO.xlsx esistente per sincronizzare il localStorage
+   * Importa un file ORDINI.xlsx esistente per sincronizzare il localStorage
    */
-  importVendutoFile: function(file) {
-    console.log('📥 Importazione file VENDUTO esistente...');
+  importOrdiniFile: function(file) {
+    console.log('📥 Importazione file ORDINI esistente...');
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -454,7 +463,7 @@ window.OrdiniExportVenduto = {
           // Converti in array di array
           const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
           
-          console.log(`Lette ${jsonData.length} righe dal file VENDUTO`);
+          console.log(`Lette ${jsonData.length} righe dal file ORDINI`);
           
           // Rimuovi header se presente
           let dataRows = jsonData;
@@ -480,21 +489,21 @@ window.OrdiniExportVenduto = {
   },
   
   /**
-   * Sincronizza il localStorage con i dati letti dal file VENDUTO esistente
+   * Sincronizza il localStorage con i dati letti dal file ORDINI esistente
    */
-  syncWithExistingVenduto: async function(file) {
+  syncWithExistingOrdini: async function(file) {
     try {
       // Mostra indicatore di caricamento
       const loadingModal = OrdiniExportUI.showLoadingModal('Sincronizzazione in corso...');
       
       // Importa i dati dal file
-      const importedData = await this.importVendutoFile(file);
+      const importedData = await this.importOrdiniFile(file);
       
       // Analizza i dati importati
-      const stats = this.analyzeVendutoData(importedData);
+      const stats = this.analyzeOrdiniData(importedData);
       
       // Salva nel localStorage
-      localStorage.setItem('vendutoFileData', JSON.stringify(importedData));
+      localStorage.setItem('ordiniFileData', JSON.stringify(importedData));
       console.log(`✅ Sincronizzazione completata: ${importedData.length} righe salvate`);
       
       // Chiudi loading modal

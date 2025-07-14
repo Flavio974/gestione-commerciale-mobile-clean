@@ -33,25 +33,21 @@ window.OrdiniExportCore = {
       // Formatta le colonne numeriche
       OrdiniExportUtils.formatNumericColumns(ws);
       
-      // Imposta larghezza colonne
+      // Imposta larghezza colonne per le 13 colonne del file esistente
       const colWidths = [
-        {wch: 15}, // Numero Ordine
-        {wch: 12}, // Data Ordine
-        {wch: 12}, // Data Consegna (NUOVO CAMPO)
-        {wch: 12}, // Tipo Documento
-        {wch: 15}, // Numero documento
-        {wch: 12}, // Data Documento
-        {wch: 12}, // Codice Cliente
-        {wch: 35}, // Descrizione Cliente
-        {wch: 40}, // Indirizzo di Consegna
-        {wch: 15}, // P.Iva
-        {wch: 15}, // Codice Prodotto
-        {wch: 50}, // Descrizione Prodotto
-        {wch: 10}, // Pezzi
-        {wch: 15}, // Prezzo Unitario
-        {wch: 10}, // Sconto (%)
-        {wch: 12}, // S.M.
-        {wch: 15}  // Importo
+        {wch: 15}, // 1. N° Ordine
+        {wch: 12}, // 2. Data Ordine
+        {wch: 35}, // 3. Cliente
+        {wch: 40}, // 4. Indirizzo Consegna
+        {wch: 15}, // 5. P.IVA
+        {wch: 12}, // 6. Data Consegna
+        {wch: 15}, // 7. Codice Prodotto
+        {wch: 50}, // 8. Prodotto
+        {wch: 10}, // 9. Quantità
+        {wch: 15}, // 10. Prezzo Unitario
+        {wch: 10}, // 11. S.M.
+        {wch: 10}, // 12. Sconto %
+        {wch: 15}  // 13. Importo
       ];
       ws['!cols'] = colWidths;
       
@@ -109,25 +105,21 @@ window.OrdiniExportCore = {
     let ordiniSenzaProdotti = 0;
     let prodottiTotali = 0;
     
-    // Intestazione con le colonne nell'ordine richiesto
+    // Intestazione con le colonne del file esistente (13 colonne)
     data.push([
-      'Numero Ordine',        // 1. Numero Ordine
-      'Data Ordine',          // 2. Data Ordine
-      'Data Consegna',        // 3. Data Consegna (NUOVO CAMPO)
-      'Tipo Documento',       // 4. Tipo Documento
-      'Numero documento',     // 5. Numero documento (minuscola)
-      'Data Documento',       // 6. Data Documento
-      'Codice Cliente',       // 7. Codice Cliente
-      'Descrizione Cliente',  // 8. Descrizione Cliente (invece di solo "Cliente")
-      'Indirizzo di Consegna',// 9. Indirizzo di Consegna
-      'P.Iva',               // 10. P.Iva
-      'Codice Prodotto',      // 11. Codice Prodotto
-      'Descrizione Prodotto', // 12. Descrizione Prodotto (invece di solo "Prodotto")
-      'Pezzi',               // 13. Pezzi (invece di "Quantità")
-      'Prezzo Unitario',      // 14. Prezzo Unitario
-      'Sconto (%)',          // 15. Sconto (%)
-      'S.M.',                // 16. S.M.
-      'Importo'              // 17. Importo
+      'N° Ordine',           // 1. N° Ordine
+      'Data Ordine',         // 2. Data Ordine
+      'Cliente',             // 3. Cliente
+      'Indirizzo Consegna',  // 4. Indirizzo Consegna
+      'P.IVA',              // 5. P.IVA
+      'Data Consegna',       // 6. Data Consegna
+      'Codice Prodotto',     // 7. Codice Prodotto
+      'Prodotto',            // 8. Prodotto
+      'Quantità',            // 9. Quantità
+      'Prezzo Unitario',     // 10. Prezzo Unitario
+      'S.M.',               // 11. S.M.
+      'Sconto %',           // 12. Sconto %
+      'Importo'             // 13. Importo
     ]);
     
     // Processa ogni ordine
@@ -235,26 +227,22 @@ window.OrdiniExportCore = {
             cleanAddress = cleanAddress.replace(clientNamePattern, '').trim();
           }
           
-          // Aggiungi riga con i dati nell'ordine richiesto
+          // Aggiungi riga con i dati secondo la struttura del file esistente (13 colonne)
           // Ogni riga rappresenta un prodotto, ripetendo i dati dell'ordine
           data.push([
-            order.orderNumber || '',                      // 1. Numero Ordine
+            order.orderNumber || '',                      // 1. N° Ordine
             order.orderDate || '',                        // 2. Data Ordine
-            order.deliveryDate || '',                     // 3. Data Consegna (NUOVO CAMPO)
-            'ORDINE',                                     // 4. Tipo Documento (per gli ordini è sempre "ORDINE")
-            '',                                           // 5. Numero documento (vuoto per ordini)
-            order.orderDate || '',                        // 6. Data Documento (uguale a Data Ordine per ordini)
-            order.clientCode || '',                       // 7. Codice Cliente
-            order.clientName || '',                       // 8. Descrizione Cliente
-            cleanAddress,                                 // 9. Indirizzo di Consegna (pulito)
-            order.vatNumber || '',                        // 10. P.Iva
-            product.code || '',                           // 11. Codice Prodotto
-            product.description || '',                    // 12. Descrizione Prodotto
-            quantity,                                     // 13. Pezzi
-            unitPrice,                                    // 14. Prezzo Unitario
-            discount || 0,                                // 15. Sconto (%)
-            sm || 0,                                      // 16. S.M.
-            importo                                       // 17. Importo
+            order.clientName || '',                       // 3. Cliente
+            cleanAddress,                                 // 4. Indirizzo Consegna
+            order.vatNumber || '',                        // 5. P.IVA
+            order.deliveryDate || '',                     // 6. Data Consegna
+            product.code || '',                           // 7. Codice Prodotto
+            product.description || '',                    // 8. Prodotto
+            quantity,                                     // 9. Quantità
+            unitPrice,                                    // 10. Prezzo Unitario
+            sm || 0,                                      // 11. S.M.
+            discount || 0,                                // 12. Sconto %
+            importo                                       // 13. Importo
           ]);
         });
       } else {
@@ -268,25 +256,21 @@ window.OrdiniExportCore = {
           cleanAddress = cleanAddress.replace(clientNamePattern, '').trim();
         }
         
-        // Se non ci sono prodotti, crea comunque una riga con i dati dell'ordine
+        // Se non ci sono prodotti, crea comunque una riga con i dati dell'ordine (13 colonne)
         data.push([
-          order.orderNumber || '',                      // 1. Numero Ordine
+          order.orderNumber || '',                      // 1. N° Ordine
           order.orderDate || '',                        // 2. Data Ordine
-          order.deliveryDate || '',                     // 3. Data Consegna (NUOVO CAMPO)
-          'ORDINE',                                     // 4. Tipo Documento
-          '',                                           // 5. Numero documento
-          order.orderDate || '',                        // 6. Data Documento
-          order.clientCode || '',                       // 7. Codice Cliente
-          order.clientName || '',                       // 8. Descrizione Cliente
-          cleanAddress,                                 // 9. Indirizzo di Consegna (pulito)
-          order.vatNumber || '',                        // 10. P.Iva
-          '',  // 11. Codice Prodotto vuoto
-          '',  // 12. Descrizione Prodotto vuoto
-          '',  // 13. Pezzi vuoto
-          '',  // 14. Prezzo Unitario vuoto
-          '',  // 15. Sconto vuoto
-          '',  // 16. S.M. vuoto
-          ''   // 17. Importo vuoto
+          order.clientName || '',                       // 3. Cliente
+          cleanAddress,                                 // 4. Indirizzo Consegna
+          order.vatNumber || '',                        // 5. P.IVA
+          order.deliveryDate || '',                     // 6. Data Consegna
+          '',  // 7. Codice Prodotto vuoto
+          '',  // 8. Prodotto vuoto
+          '',  // 9. Quantità vuoto
+          '',  // 10. Prezzo Unitario vuoto
+          '',  // 11. S.M. vuoto
+          '',  // 12. Sconto % vuoto
+          ''   // 13. Importo vuoto
         ]);
       }
     });
