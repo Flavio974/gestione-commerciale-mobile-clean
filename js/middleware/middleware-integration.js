@@ -197,9 +197,10 @@ class MiddlewareIntegration {
                 if (window.supabaseAI || window.SupabaseAIIntegration) {
                     console.log('🔌 💾 Supabase trovato per middleware');
                     
-                    // Se esiste SupabaseAIIntegration, usa quello
-                    if (window.SupabaseAIIntegration) {
-                        window.supabaseAI = window.SupabaseAIIntegration;
+                    // Se esiste SupabaseAIIntegration ma non l'istanza, creala
+                    if (window.SupabaseAIIntegration && !window.supabaseAI) {
+                        console.log('🔌 💾 Creando istanza SupabaseAI per middleware');
+                        window.supabaseAI = new SupabaseAIIntegration();
                     }
                     
                     resolve();
@@ -381,6 +382,11 @@ class MiddlewareIntegration {
      * Gestisce risposta per FlavioAIAssistant
      */
     handleFlavioAIResponse(aiInstance, userMessage, middlewareResult) {
+        // Inizializza messages se non esiste
+        if (!aiInstance.messages) {
+            aiInstance.messages = [];
+        }
+        
         // Aggiungi messaggio utente alla chat
         aiInstance.messages.push({
             role: 'user',

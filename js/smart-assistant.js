@@ -72,6 +72,9 @@ class SmartAssistant {
     // Inizializza integrazione Supabase AI
     if (window.SupabaseAIIntegration) {
       this.supabaseAI = new SupabaseAIIntegration();
+      // Esporta per uso globale dal middleware
+      window.supabaseAI = this.supabaseAI;
+      console.log('🔌 💾 SupabaseAI istanza esportata per middleware');
     }
 
     this.render();
