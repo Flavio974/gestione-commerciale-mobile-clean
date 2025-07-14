@@ -216,24 +216,56 @@ class RequestMiddleware {
         try {
             let date;
             
-            // Se il valore è già in formato ISO o ha separatori, parsalo direttamente
-            if (dateValue.includes('T') || dateValue.includes('-') || dateValue.includes('/')) {
-                date = new Date(dateValue);
-            } else {
-                // Altrimenti, prova a parsarlo come stringa
-                date = new Date(dateValue);
-            }
-            
-            // Verifica che la data sia valida
-            if (isNaN(date.getTime())) {
-                // Se non è valida, prova parsing manuale per formato DD/MM/YYYY
-                const italianDateMatch = dateValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-                if (italianDateMatch) {
-                    const [, day, month, year] = italianDateMatch;
-                    date = new Date(year, month - 1, day); // month è 0-indexed
+            // Usa ItalianDateManager se disponibile
+            if (window.ItalianDateManager && !window.ItalianDateManager.disabled) {
+                const italianDateManager = new window.ItalianDateManager();
+                
+                // Se il valore è già in formato DD/MM/YYYY, usa il parser italiano
+                if (dateValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)) {
+                    date = italianDateManager.parseItalianDate(dateValue);
+                    if (date) {
+                        displayDate = italianDateManager.formatDate(date);
+                    } else {
+                        throw new Error('Parsing italiano fallito');
+                    }
                 } else {
-                    throw new Error('Data non valida');
+                    // Per altri formati, usa il parser standard ma formatta alla italiana
+                    date = new Date(dateValue);
+                    if (isNaN(date.getTime())) {
+                        throw new Error('Data non valida');
+                    }
+                    displayDate = italianDateManager.formatDate(date);
                 }
+            } else {
+                // Fallback senza ItalianDateManager
+                console.warn('⚠️ ItalianDateManager non disponibile, uso fallback');
+                
+                // Se il valore è già in formato ISO o ha separatori, parsalo direttamente
+                if (dateValue.includes('T') || dateValue.includes('-') || dateValue.includes('/')) {
+                    date = new Date(dateValue);
+                } else {
+                    // Altrimenti, prova a parsarlo come stringa
+                    date = new Date(dateValue);
+                }
+                
+                // Verifica che la data sia valida
+                if (isNaN(date.getTime())) {
+                    // Se non è valida, prova parsing manuale per formato DD/MM/YYYY
+                    const italianDateMatch = dateValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                    if (italianDateMatch) {
+                        const [, day, month, year] = italianDateMatch;
+                        date = new Date(year, month - 1, day); // month è 0-indexed
+                    } else {
+                        throw new Error('Data non valida');
+                    }
+                }
+                
+                // Forza il formato GG/MM/AAAA italiano
+                displayDate = date.toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit', 
+                    year: 'numeric'
+                });
             }
             
             // Debug della data parsata
@@ -243,19 +275,10 @@ class RequestMiddleware {
                 day: date.getDate(),
                 month: date.getMonth() + 1,
                 year: date.getFullYear(),
-                formatted: date.toLocaleDateString('it-IT', {
-                    day: '2-digit',
-                    month: '2-digit', 
-                    year: 'numeric'
-                })
+                displayDate: displayDate,
+                usingItalianDateManager: !!(window.ItalianDateManager && !window.ItalianDateManager.disabled)
             });
             
-            // Forza il formato GG/MM/AAAA italiano
-            displayDate = date.toLocaleDateString('it-IT', {
-                day: '2-digit',
-                month: '2-digit', 
-                year: 'numeric'
-            });
         } catch (error) {
             console.error('❌ Errore parsing data:', error);
             displayDate = dateValue.toString();
