@@ -282,10 +282,16 @@ window.FlavioAIAssistant = (function() {
                     // 🛑 FERMA IL RICONOSCIMENTO VOCALE QUANDO L'AI INIZIA A PARLARE
                     this.stopAllVoiceRecognition();
                     
-                    // 🛑 MOSTRA PULSANTE DI STOP
-                    const stopBtn = document.getElementById('floating-stop-btn');
-                    if (stopBtn) {
-                        stopBtn.style.display = 'block';
+                    // 🛑 MOSTRA PULSANTE DI STOP FLOTTANTE
+                    const floatingStopBtn = document.getElementById('floating-stop-btn');
+                    if (floatingStopBtn) {
+                        floatingStopBtn.style.display = 'block';
+                    }
+                    
+                    // 🛑 MOSTRA PULSANTE DI STOP NELL'INTERFACCIA AI
+                    const aiStopBtn = document.getElementById('ai-stop-tts-btn');
+                    if (aiStopBtn) {
+                        aiStopBtn.style.display = 'inline-block';
                     }
                     
                     if (window.showFloatingStatus) {
@@ -296,10 +302,16 @@ window.FlavioAIAssistant = (function() {
                 utterance.onend = () => {
                     console.log('✅ Sintesi vocale completata');
                     
-                    // 🛑 NASCONDI PULSANTE DI STOP
-                    const stopBtn = document.getElementById('floating-stop-btn');
-                    if (stopBtn) {
-                        stopBtn.style.display = 'none';
+                    // 🛑 NASCONDI PULSANTE DI STOP FLOTTANTE
+                    const floatingStopBtn = document.getElementById('floating-stop-btn');
+                    if (floatingStopBtn) {
+                        floatingStopBtn.style.display = 'none';
+                    }
+                    
+                    // 🛑 NASCONDI PULSANTE DI STOP NELL'INTERFACCIA AI
+                    const aiStopBtn = document.getElementById('ai-stop-tts-btn');
+                    if (aiStopBtn) {
+                        aiStopBtn.style.display = 'none';
                     }
                     
                     if (window.showFloatingStatus) {
@@ -316,10 +328,16 @@ window.FlavioAIAssistant = (function() {
                 utterance.onerror = (event) => {
                     console.error('❌ Errore sintesi vocale:', event.error);
                     
-                    // 🛑 NASCONDI PULSANTE DI STOP ANCHE IN CASO DI ERRORE
-                    const stopBtn = document.getElementById('floating-stop-btn');
-                    if (stopBtn) {
-                        stopBtn.style.display = 'none';
+                    // 🛑 NASCONDI PULSANTE DI STOP FLOTTANTE ANCHE IN CASO DI ERRORE
+                    const floatingStopBtn = document.getElementById('floating-stop-btn');
+                    if (floatingStopBtn) {
+                        floatingStopBtn.style.display = 'none';
+                    }
+                    
+                    // 🛑 NASCONDI PULSANTE DI STOP NELL'INTERFACCIA AI
+                    const aiStopBtn = document.getElementById('ai-stop-tts-btn');
+                    if (aiStopBtn) {
+                        aiStopBtn.style.display = 'none';
                     }
                     
                     // 🔄 AGGIORNA UI ANCHE IN CASO DI ERRORE
@@ -371,6 +389,35 @@ window.FlavioAIAssistant = (function() {
                 console.log('✅ Sistema vocale AI inizializzato');
             } catch (error) {
                 console.error('❌ Errore inizializzazione sistema vocale:', error);
+            }
+        },
+
+        /**
+         * Ferma la sintesi vocale in corso
+         */
+        stopSpeaking() {
+            console.log('⏹️ Stop sintesi vocale dall\'interfaccia AI');
+            
+            // Ferma immediatamente la sintesi vocale
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+            
+            // Nascondi il pulsante STOP nell'interfaccia AI
+            const stopBtn = document.getElementById('ai-stop-tts-btn');
+            if (stopBtn) {
+                stopBtn.style.display = 'none';
+            }
+            
+            // Nascondi anche il pulsante STOP flottante
+            const floatingStopBtn = document.getElementById('floating-stop-btn');
+            if (floatingStopBtn) {
+                floatingStopBtn.style.display = 'none';
+            }
+            
+            // Aggiorna status
+            if (window.showFloatingStatus) {
+                window.showFloatingStatus('⏹️ Lettura fermata');
             }
         },
 
@@ -490,8 +537,9 @@ window.FlavioAIAssistant = (function() {
                                 <input type="text" id="ai-input" placeholder="Scrivi qui la tua domanda..." style="flex: 1; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
                                 <button onclick="window.FlavioAIAssistant.sendMessage()" style="padding: 12px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Invia</button>
                             </div>
-                            <div style="text-align: center;">
+                            <div style="text-align: center; display: flex; gap: 10px; justify-content: center;">
                                 <button onclick="window.FlavioAIAssistant.clearHistory()" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Cancella Cronologia</button>
+                                <button id="ai-stop-tts-btn" onclick="window.FlavioAIAssistant.stopSpeaking()" style="padding: 8px 16px; background: #FF453A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; display: none;">⏹️ Stop Lettura</button>
                             </div>
                             </div>
                         </div>
