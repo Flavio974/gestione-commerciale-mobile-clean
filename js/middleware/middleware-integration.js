@@ -335,9 +335,18 @@ class MiddlewareIntegration {
                             console.log('🔌 🔍 Stack trace:', new Error().stack);
                         }
                         
-                        // Se il messaggio è vuoto o undefined, non processare con middleware
+                        // Se il messaggio non è passato come parametro, leggi dall'input field
                         if (!message || typeof message !== 'string') {
-                            console.log('🔌 ⚠️ Messaggio vuoto, passa all\'AI originale');
+                            const input = document.getElementById('ai-input');
+                            if (input) {
+                                message = input.value.trim();
+                                console.log('🔌 📝 Messaggio letto dall\'input field:', message);
+                            }
+                        }
+                        
+                        // Se ancora non c'è messaggio, passa all'AI originale
+                        if (!message || typeof message !== 'string') {
+                            console.log('🔌 ⚠️ Nessun messaggio disponibile, passa all\'AI originale');
                             return originalSendMessage(message, isVoiceInput);
                         }
                         
@@ -358,16 +367,6 @@ class MiddlewareIntegration {
                     };
                     
                     console.log('🔌 ✅ FlavioAIAssistant.sendMessage intercettato');
-                    
-                    // Aggiungi anche intercettazione per metodi statici
-                    if (window.FlavioAIAssistant && window.FlavioAIAssistant.sendMessage) {
-                        const originalStaticSendMessage = window.FlavioAIAssistant.sendMessage.bind(window.FlavioAIAssistant);
-                        window.FlavioAIAssistant.sendMessage = async (message, isVoiceInput = false) => {
-                            console.log('🔌 🎯 INTERCETTAZIONE STATICA FLAVIO AI:', message);
-                            return aiInstance.sendMessage(message, isVoiceInput);
-                        };
-                        console.log('🔌 ✅ FlavioAIAssistant.sendMessage STATICO intercettato');
-                    }
                 } else {
                     console.log('🔌 ⚠️ Istanza FlavioAIAssistant non trovata');
                 }
@@ -503,6 +502,13 @@ class MiddlewareIntegration {
                 if (arg.input) return arg.input;
                 if (arg.text) return arg.text;
             }
+        }
+        
+        // Se non trovato nei parametri, prova a leggere dall'input field
+        const input = document.getElementById('ai-input');
+        if (input && input.value.trim()) {
+            console.log('🔌 📝 Messaggio estratto dall\'input field:', input.value.trim());
+            return input.value.trim();
         }
         
         return null;
