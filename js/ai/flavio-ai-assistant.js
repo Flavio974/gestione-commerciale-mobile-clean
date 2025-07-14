@@ -269,6 +269,7 @@ window.FlavioAIAssistant = (function() {
                         <button onclick="window.FlavioAIAssistant.quickQuery('Fatturato totale?')" style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">💰 Fatturato</button>
                         <button onclick="window.FlavioAIAssistant.quickQuery('Ordini in sospeso?')" style="padding: 10px; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer;">📋 Ordini</button>
                         <button onclick="window.FlavioAIAssistant.quickQuery('Statistiche vendite?')" style="padding: 10px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer;">📊 Stats</button>
+                        <button onclick="window.FlavioAIAssistant.debugAPI()" style="padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">🔍 Debug</button>
                     </div>
                 </div>
             `;
@@ -285,7 +286,7 @@ window.FlavioAIAssistant = (function() {
         },
 
         /**
-         * Invia messaggio con API corretta
+         * Invia messaggio con API corretta e fallback
          */
         async sendMessage() {
             const input = document.getElementById('ai-input');
@@ -300,9 +301,14 @@ window.FlavioAIAssistant = (function() {
                 const modelSelect = document.getElementById('ai-model');
                 const model = modelSelect ? modelSelect.value : 'claude-3-5-sonnet-20241022';
                 
+                console.log('🚀 Tentativo chiamata API:', { message, model });
+                
                 const response = await fetch('/.netlify/functions/claude-ai', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         message: message,
                         model: model,
@@ -311,9 +317,23 @@ window.FlavioAIAssistant = (function() {
                     })
                 });
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                console.log('📡 Response status:', response.status);
+                
+                if (!response.ok) {
+                    // Prova a leggere il corpo della risposta per debug
+                    let errorText = '';
+                    try {
+                        const errorData = await response.json();
+                        errorText = errorData.error || `HTTP ${response.status}`;
+                        console.log('❌ Error details:', errorData);
+                    } catch (e) {
+                        errorText = `HTTP ${response.status}`;
+                    }
+                    throw new Error(errorText);
+                }
                 
                 const result = await response.json();
+                console.log('✅ Response received:', result);
                 
                 // Rimuovi messaggio di caricamento
                 const messages = document.getElementById('ai-messages');
@@ -324,21 +344,45 @@ window.FlavioAIAssistant = (function() {
                 this.addMessage(result.response || 'Nessuna risposta ricevuta.', 'assistant');
                 
             } catch (error) {
-                console.error('❌ Errore AI:', error);
+                console.error('❌ Errore AI completo:', error);
                 const messages = document.getElementById('ai-messages');
                 if (messages && messages.lastElementChild) {
                     messages.removeChild(messages.lastElementChild);
                 }
                 
-                let errorMessage = '⚠️ Errore di connessione. ';
-                if (error.message.includes('500')) {
-                    errorMessage += 'Le API keys potrebbero non essere configurate su Netlify. Controlla le environment variables.';
+                // Usa fallback locale per test
+                if (error.message.includes('500') || error.message.includes('API key')) {
+                    this.addMessage('⚠️ API non configurata. Uso risposta di test:', 'assistant');
+                    this.addMessage(this.getFallbackResponse(message), 'assistant');
                 } else {
-                    errorMessage += 'API non raggiungibile.';
+                    this.addMessage('⚠️ Errore di rete. Verifica la connessione internet.', 'assistant');
                 }
-                
-                this.addMessage(errorMessage, 'assistant');
             }
+        },
+
+        /**
+         * Risposta fallback per test senza API
+         */
+        getFallbackResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('ciao') || lowerMessage.includes('test')) {
+                return '👋 Ciao! Il sistema AI è funzionante ma le API keys potrebbero non essere configurate correttamente su Netlify. Per ora uso risposte di test.';
+            }
+            
+            if (lowerMessage.includes('clienti')) {
+                return '👥 Per i clienti: puoi visualizzare, aggiungere e modificare i tuoi clienti nella sezione dedicata. Che informazione ti serve?';
+            }
+            
+            if (lowerMessage.includes('ordini')) {
+                return '📋 Per gli ordini: puoi creare nuovi ordini, visualizzare quelli esistenti e gestire lo stato. Vuoi sapere qualcosa di specifico?';
+            }
+            
+            if (lowerMessage.includes('fatturato') || lowerMessage.includes('vendite')) {
+                return '💰 Per il fatturato: posso aiutarti ad analizzare le vendite e calcolare i totali. Dimmi quale periodo ti interessa.';
+            }
+            
+            return `🤖 Ho ricevuto: "${message}". Le API esterne non sono disponibili, ma il sistema locale funziona. Configura le API keys su Netlify per risposte complete.`;
         },
 
         /**
@@ -377,9 +421,43 @@ window.FlavioAIAssistant = (function() {
         /**
          * Test connessione API
          */
-        testConnection() {
-            this.addMessage('Test connessione API...', 'assistant');
-            this.quickQuery('Ciao, funzioni?');
+        async testConnection() {
+            this.addMessage('🧪 Test connessione API in corso...', 'assistant');
+            
+            try {
+                // Prima testa se l'endpoint esiste
+                const healthResponse = await fetch('/.netlify/functions/claude-ai', {
+                    method: 'GET'
+                });
+                
+                console.log('🏥 Health check:', healthResponse.status);
+                
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.json();
+                    this.addMessage(`✅ Endpoint attivo: ${healthData.message}`, 'assistant');
+                    
+                    // Ora testa con una richiesta reale
+                    this.quickQuery('Test API - Ciao, funzioni?');
+                } else {
+                    this.addMessage('❌ Endpoint Netlify Functions non raggiungibile', 'assistant');
+                }
+                
+            } catch (error) {
+                console.error('❌ Test connection error:', error);
+                this.addMessage('❌ Errore nel test di connessione. Netlify Functions potrebbe non essere attivo.', 'assistant');
+            }
+        },
+
+        /**
+         * Debug API per sviluppatori
+         */
+        debugAPI() {
+            console.log('🔍 DEBUG API STATUS:');
+            console.log('- Endpoint:', '/.netlify/functions/claude-ai');
+            console.log('- Environment:', window.location.hostname);
+            console.log('- User Agent:', navigator.userAgent);
+            
+            this.addMessage('🔍 Debug info stampato nella console. Controlla DevTools.', 'assistant');
         }
 
     };
