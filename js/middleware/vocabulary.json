@@ -352,6 +352,25 @@
         "mese": "{mese}"
       },
       "description": "Calcola il fatturato mensile"
+    },
+    {
+      "id": "order_value_by_client",
+      "patterns": [
+        "dimmi il valore dell'ordine del cliente {cliente}",
+        "valore dell'ordine del cliente {cliente}",
+        "importo dell'ordine del cliente {cliente}",
+        "quanto vale l'ordine del cliente {cliente}",
+        "valore ordine {cliente}",
+        "dimmi il valore dell'ordine di {cliente}",
+        "valore dell'ordine di {cliente}",
+        "importo dell'ordine di {cliente}",
+        "quanto vale l'ordine di {cliente}"
+      ],
+      "action": "calculateRevenue",
+      "params": {
+        "cliente": "{cliente}"
+      },
+      "description": "Calcola il valore dell'ordine per un cliente specifico"
     }
   ],
   "settings": {
