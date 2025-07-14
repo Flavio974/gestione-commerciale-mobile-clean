@@ -344,6 +344,15 @@ class RequestMiddleware {
             return 'prodotti_ordine';
         }
         
+        // CONTROLLO PRIORITARIO: Richieste sui clienti degli ordini
+        if ((inputLower.includes('clienti') && inputLower.includes('attribuiti')) ||
+            (inputLower.includes('quali clienti') && inputLower.includes('ordini')) ||
+            (inputLower.includes('chi') && inputLower.includes('ordini')) ||
+            (inputLower.includes('clienti') && inputLower.includes('quegli ordini'))) {
+            console.log('🎯 MATCH DIRETTO: Clienti degli ordini');
+            return 'clienti_ordini';
+        }
+        
         // CONTROLLO PRIORITARIO: Richieste di conteggio ordini 
         if (inputLower.includes('quanti') && inputLower.includes('ordini') && inputLower.includes('database')) {
             console.log('🎯 MATCH DIRETTO: Conteggio ordini database');
@@ -824,6 +833,9 @@ class RequestMiddleware {
                 
             case 'prodotti_ordine':
                 return await this.getProdottiOrdine(params);
+                
+            case 'clienti_ordini':
+                return await this.getClientiOrdini(params);
                 
             case 'data':
                 return await this.getUltimaData(params);
@@ -2878,6 +2890,88 @@ class RequestMiddleware {
             
             return false;
         });
+    }
+
+    /**
+     * FUNZIONE: Elenco clienti degli ordini
+     */
+    async getClientiOrdini(params) {
+        try {
+            console.log('👥 MIDDLEWARE: Ricerca clienti con ordini');
+            
+            // Carica i dati degli ordini
+            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            if (ordini.length === 0) {
+                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
+                const supabaseData = await this.supabaseAI.getAllData();
+                ordini = supabaseData.historicalOrders?.sampleData || [];
+            }
+            
+            if (ordini.length === 0) {
+                return {
+                    success: true,
+                    response: `❌ Non ci sono ordini nel database`,
+                    data: { clienti: [] }
+                };
+            }
+            
+            // Raggruppa per cliente
+            const clientiMap = new Map();
+            
+            ordini.forEach(ordine => {
+                if (ordine.cliente) {
+                    if (!clientiMap.has(ordine.cliente)) {
+                        clientiMap.set(ordine.cliente, {
+                            nome: ordine.cliente,
+                            ordini: new Set(),
+                            righe: 0,
+                            importo: 0
+                        });
+                    }
+                    
+                    const clienteData = clientiMap.get(ordine.cliente);
+                    if (ordine.numero_ordine) {
+                        clienteData.ordini.add(ordine.numero_ordine);
+                    }
+                    clienteData.righe++;
+                    clienteData.importo += parseFloat(ordine.importo) || 0;
+                }
+            });
+            
+            // Converti in array e ordina per importo
+            const clientiList = Array.from(clientiMap.values())
+                .map(c => ({
+                    nome: c.nome,
+                    ordini: c.ordini.size,
+                    righe: c.righe,
+                    importo: c.importo
+                }))
+                .sort((a, b) => b.importo - a.importo);
+            
+            // Crea risposta
+            let response = `👥 **Clienti con ordini:**\n\n`;
+            
+            clientiList.forEach((cliente, index) => {
+                response += `${index + 1}. **${cliente.nome}**\n`;
+                response += `   • Ordini: ${cliente.ordini} (${cliente.righe} righe)\n`;
+                response += `   • Importo: €${cliente.importo.toLocaleString('it-IT', {minimumFractionDigits: 2})}\n\n`;
+            });
+            
+            response += `✅ Totale: ${clientiList.length} clienti`;
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    clienti: clientiList,
+                    totale: clientiList.length
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore ricerca clienti ordini:', error);
+            return { success: false, error: error.message };
+        }
     }
 
     /**
