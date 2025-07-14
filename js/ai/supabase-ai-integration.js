@@ -31,10 +31,10 @@ class SupabaseAIIntegration {
             console.log('  - window.supabaseClient:', !!window.supabaseClient);
             
             // Fallback: usa window.supabaseClient se disponibile
-            if (!this.supabase && window.supabaseClient) {
+            if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
                 console.log('🔄 Using window.supabaseClient as fallback');
                 this.supabase = window.supabaseClient;
-                return typeof this.supabase.from === 'function';
+                return true;
             }
         }
         return available;
@@ -56,8 +56,16 @@ class SupabaseAIIntegration {
         this.cache.lastUpdate = 0; // Force next getAllData to refresh
         this.offlineMode = false;   // Reset offline mode
         
-        // Force re-check di Supabase availability
-        if (!this.supabase && window.supabaseClient) {
+        // Pulisci anche cache localStorage
+        try {
+            localStorage.removeItem('ai_supabase_cache');
+            console.log('🗑️ Local cache cleared');
+        } catch (error) {
+            console.warn('⚠️ Errore pulizia cache locale:', error);
+        }
+        
+        // Force re-check di Supabase availability con window.supabaseClient
+        if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
             console.log('🔄 Re-linking to window.supabaseClient during cache invalidation');
             this.supabase = window.supabaseClient;
         }
