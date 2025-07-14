@@ -358,6 +358,16 @@ class MiddlewareIntegration {
                     };
                     
                     console.log('🔌 ✅ FlavioAIAssistant.sendMessage intercettato');
+                    
+                    // Aggiungi anche intercettazione per metodi statici
+                    if (window.FlavioAIAssistant && window.FlavioAIAssistant.sendMessage) {
+                        const originalStaticSendMessage = window.FlavioAIAssistant.sendMessage.bind(window.FlavioAIAssistant);
+                        window.FlavioAIAssistant.sendMessage = async (message, isVoiceInput = false) => {
+                            console.log('🔌 🎯 INTERCETTAZIONE STATICA FLAVIO AI:', message);
+                            return aiInstance.sendMessage(message, isVoiceInput);
+                        };
+                        console.log('🔌 ✅ FlavioAIAssistant.sendMessage STATICO intercettato');
+                    }
                 } else {
                     console.log('🔌 ⚠️ Istanza FlavioAIAssistant non trovata');
                 }
