@@ -838,7 +838,7 @@
       animation: pulse 1.5s infinite;
     }
 
-    /* 🎤 PULSANTI FLOTTANTI VOCALI - MODALITÀ AUTOMOBILE */
+    /* 🎤 PULSANTI FLOTTANTI VOCALI TRASCINABILI - MODALITÀ AUTOMOBILE */
     .floating-voice-container {
       position: fixed;
       bottom: 30px;
@@ -847,6 +847,56 @@
       flex-direction: column;
       gap: 15px;
       z-index: 1000;
+      cursor: move;
+      user-select: none;
+      touch-action: none;
+      transition: all 0.3s ease;
+      padding: 10px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .floating-voice-container.dragging {
+      opacity: 0.9;
+      transform: scale(1.05);
+      transition: none !important;
+      box-shadow: 0 8px 35px rgba(0, 122, 255, 0.4);
+      border-color: rgba(0, 122, 255, 0.6) !important;
+      cursor: grabbing !important;
+    }
+
+    .floating-voice-container::before {
+      content: "⋮⋮";
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(0, 122, 255, 0.5);
+      font-size: 16px;
+      opacity: 0.7;
+    }
+
+    .floating-voice-container::after {
+      content: "Trascinami per spostare";
+      position: absolute;
+      top: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .floating-voice-container:hover::after {
+      opacity: 1;
     }
 
     .floating-mic-btn {
@@ -864,6 +914,7 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       transition: all 0.3s ease;
       backdrop-filter: blur(10px);
+      pointer-events: auto;
     }
 
     .floating-mic-btn:hover {
@@ -889,6 +940,7 @@
       text-align: center;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255,0.2);
+      pointer-events: none;
     }
     
     @keyframes pulse {
@@ -1861,12 +1913,14 @@
     let autoModeActive = false;
     let isCurrentlyListening = false;
 
-    // Mostra i controlli vocali dopo il caricamento
+    // Mostra i controlli vocali dopo il caricamento e inizializza drag & drop
     setTimeout(() => {
       const container = document.getElementById('floating-voice-container');
       if (container) {
         container.style.display = 'flex';
-        console.log('🎤 Pulsanti vocali flottanti attivati');
+        setupFloatingVoiceDragAndDrop(container);
+        loadSavedFloatingPosition(container);
+        console.log('🎤 Pulsanti vocali flottanti trascinabili attivati');
       }
     }, 3000);
 
@@ -1890,6 +1944,147 @@
         });
       }
     });
+
+    // 🎯 SISTEMA DRAG & DROP PER PULSANTI FLOTTANTI VOCALI
+    function setupFloatingVoiceDragAndDrop(container) {
+      let isDragging = false;
+      let startX, startY, initialX, initialY;
+      let dragTimeout = null;
+
+      console.log('🎯 Setup drag & drop per controlli vocali flottanti...');
+
+      // Mouse events per desktop
+      container.addEventListener('mousedown', (e) => {
+        // Solo drag se si clicca sul container ma non sui pulsanti
+        if (e.target.closest('.floating-mic-btn')) return;
+        
+        isDragging = true;
+        container.classList.add('dragging');
+        
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        const rect = container.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+        
+        container.style.transition = 'none';
+        
+        e.preventDefault();
+        console.log('🖱️ Inizio drag mouse');
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        e.preventDefault();
+        
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        
+        const newX = initialX + deltaX;
+        const newY = initialY + deltaY;
+        
+        updateFloatingPosition(container, newX, newY);
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          container.classList.remove('dragging');
+          container.style.transition = 'all 0.3s ease';
+          saveFloatingPosition(container);
+          console.log('🖱️ Fine drag mouse');
+        }
+      });
+
+      // Touch events per tablet/mobile
+      container.addEventListener('touchstart', (e) => {
+        // Solo drag se si clicca sul container ma non sui pulsanti
+        if (e.target.closest('.floating-mic-btn')) return;
+        
+        isDragging = true;
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        
+        const rect = container.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+        
+        container.style.transition = 'none';
+        container.style.opacity = '0.8';
+        container.classList.add('dragging');
+        
+        e.preventDefault();
+        console.log('👆 Inizio drag touch');
+      }, { passive: false });
+
+      container.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        e.preventDefault();
+        
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+        
+        const newX = initialX + deltaX;
+        const newY = initialY + deltaY;
+        
+        updateFloatingPosition(container, newX, newY);
+      }, { passive: false });
+
+      container.addEventListener('touchend', () => {
+        if (isDragging) {
+          isDragging = false;
+          container.classList.remove('dragging');
+          container.style.transition = 'all 0.3s ease';
+          container.style.opacity = '1';
+          saveFloatingPosition(container);
+          console.log('👆 Fine drag touch');
+        }
+      });
+    }
+
+    // Aggiorna posizione con vincoli di schermo
+    function updateFloatingPosition(container, left, top) {
+      const maxX = window.innerWidth - container.offsetWidth;
+      const maxY = window.innerHeight - container.offsetHeight;
+      
+      const constrainedX = Math.max(0, Math.min(maxX, left));
+      const constrainedY = Math.max(0, Math.min(maxY, top));
+      
+      container.style.left = constrainedX + 'px';
+      container.style.top = constrainedY + 'px';
+      container.style.right = 'auto';
+      container.style.bottom = 'auto';
+    }
+
+    // Salva posizione in localStorage
+    function saveFloatingPosition(container) {
+      const rect = container.getBoundingClientRect();
+      const position = {
+        left: rect.left,
+        top: rect.top
+      };
+      localStorage.setItem('floatingVoicePosition', JSON.stringify(position));
+      console.log('💾 Posizione pulsanti vocali salvata:', position);
+    }
+
+    // Carica posizione salvata
+    function loadSavedFloatingPosition(container) {
+      try {
+        const saved = localStorage.getItem('floatingVoicePosition');
+        if (saved) {
+          const position = JSON.parse(saved);
+          updateFloatingPosition(container, position.left, position.top);
+          console.log('📍 Posizione pulsanti vocali ripristinata:', position);
+        }
+      } catch (error) {
+        console.log('⚠️ Errore caricamento posizione:', error);
+      }
+    }
 
     // Toggle riconoscimento vocale
     function toggleVoiceRecognition() {
