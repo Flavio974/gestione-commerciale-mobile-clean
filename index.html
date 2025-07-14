@@ -1673,6 +1673,11 @@
                 console.log('🤖 Inizializzazione tab AI Assistant...');
                 window.FlavioAIAssistant.renderInterface();
               }
+              
+              if (targetId === 'smart-content' && window.SmartAssistant) {
+                console.log('🎤 Inizializzazione tab Smart Assistant...');
+                window.SmartAssistant.render();
+              }
             }
           });
         });
@@ -1736,6 +1741,12 @@
           window.FlavioAIAssistant.init();
         }
         
+        // 🎤 Inizializzazione SmartAssistant vocale
+        if (window.SmartAssistant && typeof window.SmartAssistant.init === 'function') {
+          console.log('🎤 Inizializzazione SmartAssistant...');
+          window.SmartAssistant.init();
+        }
+        
         
         // Verifica cosa è disponibile
         console.log('🔍 Oggetti disponibili:', {
@@ -1749,7 +1760,10 @@
           ComandiModule: typeof window.ComandiModule,
           AIAssistant: typeof window.AIAssistant,
           FlavioAIAssistant: typeof window.FlavioAIAssistant,
-          GeminiAI: typeof window.GeminiAI
+          GeminiAI: typeof window.GeminiAI,
+          SmartAssistant: typeof window.SmartAssistant,
+          VoiceAssistant: typeof window.VoiceAssistant,
+          VoiceRecognition: typeof window.VoiceRecognition
         });
         
         console.log('✅ CONTENUTI INIZIALIZZATI');
