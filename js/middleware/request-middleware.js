@@ -249,7 +249,21 @@ class RequestMiddleware {
                     }
                 } else {
                     // Per altri formati (ISO, SQL date, etc.), parsalo prima poi formatta italiano
-                    date = new Date(dateValue);
+                    // CRITICAL FIX: Se è formato ISO dal database, potrebbe essere MM/DD invertito
+                    if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        // Formato ISO: YYYY-MM-DD
+                        // Ma potrebbe essere stato inserito come YYYY-DD-MM (americano)
+                        console.log('🔧 PARSING ISO DATE:', dateValue);
+                        const [year, month, day] = dateValue.split('-');
+                        
+                        // Crea data forzando interpretazione italiana: giorno e mese invertiti
+                        // Se DB ha "2025-02-01" ma significa "2 gennaio", lo interpretiamo come italiano
+                        date = new Date(parseInt(year), parseInt(day) - 1, parseInt(month));
+                        console.log('🔧 FORCED ITALIAN INTERPRETATION:', date);
+                    } else {
+                        date = new Date(dateValue);
+                    }
+                    
                     if (isNaN(date.getTime())) {
                         throw new Error('Data non valida');
                     }
