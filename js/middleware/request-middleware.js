@@ -201,6 +201,7 @@ class RequestMiddleware {
         console.log('📅 DEBUG findLatestOrder:', {
             bestField: bestField,
             dateValue: dateValue,
+            dateValueType: typeof dateValue,
             originalOrder: latest,
             allDateFields: {
                 data: latest.data,
@@ -211,6 +212,16 @@ class RequestMiddleware {
                 timestamp: latest.timestamp,
                 date: latest.date
             }
+        });
+        
+        // CRITICAL DEBUG: Vediamo ESATTAMENTE cosa arriva dal database
+        console.log('🚨 CRITICAL DEBUG: Valore raw dal database:', {
+            field: bestField,
+            rawValue: dateValue,
+            isString: typeof dateValue === 'string',
+            stringValue: String(dateValue),
+            directToString: dateValue.toString(),
+            valueOf: dateValue.valueOf()
         });
         
         try {
