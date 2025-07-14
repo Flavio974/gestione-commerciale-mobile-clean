@@ -102,8 +102,19 @@ class MiddlewareIntegration {
             // Carica tutte le dipendenze
             await this.loadDependencies();
             
-            // Crea istanza del middleware
+            // Aspetta che SupabaseAI sia disponibile
+            await this.waitForSupabase();
+            
+            // Crea istanza del middleware con Supabase
             this.middleware = new AIMiddleware();
+            
+            // Passa il riferimento a Supabase se disponibile
+            if (window.supabaseAI) {
+                this.middleware.requestMiddleware = new RequestMiddleware(window.supabaseAI);
+                console.log('🔌 💾 Middleware collegato a Supabase');
+            } else {
+                console.warn('🔌 ⚠️ Supabase non disponibile - solo vocabolario');
+            }
             
             // Trova e decora la funzione AI esistente
             this.decorateAIFunction();
@@ -121,6 +132,38 @@ class MiddlewareIntegration {
             console.error('❌ Errore inizializzazione middleware:', error);
             return false;
         }
+    }
+
+    /**
+     * Aspetta che Supabase sia disponibile
+     */
+    async waitForSupabase() {
+        return new Promise((resolve) => {
+            const checkSupabase = () => {
+                if (window.supabaseAI || window.SupabaseAIIntegration) {
+                    console.log('🔌 💾 Supabase trovato per middleware');
+                    
+                    // Se esiste SupabaseAIIntegration, usa quello
+                    if (window.SupabaseAIIntegration) {
+                        window.supabaseAI = window.SupabaseAIIntegration;
+                    }
+                    
+                    resolve();
+                } else {
+                    console.log('🔌 ⏳ Attendo Supabase...');
+                    setTimeout(checkSupabase, 500);
+                }
+            };
+            
+            // Verifica immediatamente
+            checkSupabase();
+            
+            // Timeout dopo 10 secondi
+            setTimeout(() => {
+                console.warn('🔌 ⚠️ Timeout attesa Supabase - procedo senza DB');
+                resolve();
+            }, 10000);
+        });
     }
 
     /**

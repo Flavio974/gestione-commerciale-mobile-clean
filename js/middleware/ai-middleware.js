@@ -20,6 +20,8 @@ class AIMiddleware {
      * 2. Solo se non trova match, passa all'AI
      */
     async processRequest(userInput, originalContext = null) {
+        const startTime = Date.now();
+        
         if (!this.isEnabled) {
             return this.passToAI(userInput, originalContext);
         }
@@ -52,7 +54,27 @@ class AIMiddleware {
                 }
             }
 
-            // STEP 2: Nessun match trovato, usa AI come fallback
+            // STEP 2: Prova con RequestMiddleware se disponibile
+            if (this.requestMiddleware) {
+                if (this.debug) {
+                    console.log('🤖 💾 TENTATIVO REQUEST MIDDLEWARE (Supabase)');
+                }
+                
+                const middlewareResult = await this.requestMiddleware.processRequest(userInput);
+                
+                if (middlewareResult && !middlewareResult.handled) {
+                    // Request middleware ha elaborato la richiesta
+                    return {
+                        success: true,
+                        source: 'request_middleware',
+                        response: middlewareResult.response || middlewareResult,
+                        data: middlewareResult.data,
+                        processingTime: Date.now() - startTime
+                    };
+                }
+            }
+
+            // STEP 3: Nessun match trovato, usa AI come fallback
             if (this.fallbackToAI) {
                 if (this.debug) {
                     console.log('🤖 🔄 FALLBACK AD AI: Nessun match nel vocabolario');
