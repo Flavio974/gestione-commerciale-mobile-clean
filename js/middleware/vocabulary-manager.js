@@ -274,28 +274,45 @@ class VocabularyManager {
     extractParameters(input, pattern) {
         const params = {};
         
-        // Cerca pattern con placeholder {nome}
+        // Cerca tutti i placeholder nel pattern
         const placeholderRegex = /\{([^}]+)\}/g;
+        const placeholders = [];
         let match;
         
+        // Raccoglie tutti i placeholder
         while ((match = placeholderRegex.exec(pattern)) !== null) {
-            const paramName = match[1];
-            
-            // Crea pattern regex sostituendo il placeholder
-            let regexPattern = pattern.replace(/\{[^}]+\}/g, '(.+?)');
-            regexPattern = regexPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape regex chars
-            regexPattern = regexPattern.replace(/\\\(\\\.\\\+\\\?\\\)/g, '(.+?)'); // Restore capture groups
-            
-            const regex = new RegExp(regexPattern, 'i');
-            const result = regex.exec(input);
-            
-            if (result && result[1]) {
-                let value = result[1].trim();
-                
-                // Converti numeri scritti in parole in cifre
-                value = this.convertWordsToNumbers(value);
-                
-                params[paramName] = value;
+            placeholders.push(match[1]);
+        }
+        
+        if (placeholders.length === 0) {
+            return params;
+        }
+        
+        // Crea pattern regex sostituendo ogni placeholder con un gruppo di cattura
+        let regexPattern = pattern;
+        
+        // Escape caratteri speciali regex prima di sostituire i placeholder
+        regexPattern = regexPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        // Sostituisci i placeholder escaped con gruppi di cattura
+        for (let i = 0; i < placeholders.length; i++) {
+            regexPattern = regexPattern.replace(`\\{${placeholders[i]}\\}`, '(.+?)');
+        }
+        
+        const regex = new RegExp(regexPattern, 'i');
+        const result = regex.exec(input);
+        
+        if (result) {
+            // Assegna i valori catturati ai parametri
+            for (let i = 0; i < placeholders.length; i++) {
+                if (result[i + 1]) {
+                    let value = result[i + 1].trim();
+                    
+                    // Converti numeri scritti in parole in cifre
+                    value = this.convertWordsToNumbers(value);
+                    
+                    params[placeholders[i]] = value;
+                }
             }
         }
         

@@ -722,6 +722,12 @@ class AIMiddleware {
             
         } catch (error) {
             console.error('❌ Errore calcolo fatturato:', error);
+            console.error('❌ Stack trace:', error.stack);
+            console.error('❌ Dettagli:', {
+                requestMiddleware: !!this.requestMiddleware,
+                supabaseAI: !!this.requestMiddleware?.supabaseAI,
+                message: error.message
+            });
             return "❌ Errore nel calcolo del fatturato.";
         }
     }
