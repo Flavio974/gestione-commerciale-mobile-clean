@@ -925,7 +925,7 @@ class RequestMiddleware {
                 
                 return {
                     success: true,
-                    response: `💰 Fatturato totale: €${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordiniDistinti} ordini (${ordini.length} righe)`,
+                    response: `Fatturato totale: ${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro su ${ordiniDistinti} ordini`,
                     data: { fatturato: totale, ordini: ordiniDistinti, righe: ordini.length }
                 };
             }
@@ -939,7 +939,7 @@ class RequestMiddleware {
             if (ordiniCliente.length === 0) {
                 return {
                     success: true,
-                    response: `❌ Nessun ordine trovato per "${params.cliente}"`,
+                    response: `Nessun ordine trovato per ${params.cliente}`,
                     data: { fatturato: 0, ordini: 0 }
                 };
             }
@@ -957,7 +957,7 @@ class RequestMiddleware {
             
             return {
                 success: true,
-                response: `💰 Cliente ${nomeCliente}: €${fatturato.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali)`,
+                response: `Cliente ${nomeCliente}: ${fatturato.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro su ${ordiniDistinti} ordini`,
                 data: { 
                     cliente: nomeCliente,
                     fatturato: fatturato, 
@@ -996,7 +996,7 @@ class RequestMiddleware {
                 if (params.righeOrdine) {
                     return {
                         success: true,
-                        response: `📊 Righe totali negli ordini: ${ordini.length}`,
+                        response: `Ci sono ${ordini.length} righe negli ordini`,
                         data: { righe: ordini.length }
                     };
                 }
@@ -1008,7 +1008,7 @@ class RequestMiddleware {
                 
                 return {
                     success: true,
-                    response: `📊 Totale ordini distinti: ${ordiniDistinti} (${ordini.length} righe totali)`,
+                    response: `Ci sono ${ordiniDistinti} ordini nel database`,
                     data: { 
                         ordini: ordiniDistinti, 
                         righe: ordini.length 
@@ -2958,15 +2958,14 @@ class RequestMiddleware {
                 .sort((a, b) => b.importo - a.importo);
             
             // Crea risposta
-            let response = `👥 **Clienti con ordini:**\n\n`;
+            let response = `I clienti con ordini sono:\n\n`;
             
             clientiList.forEach((cliente, index) => {
-                response += `${index + 1}. **${cliente.nome}**\n`;
-                response += `   • Ordini: ${cliente.ordini} (${cliente.righe} righe)\n`;
-                response += `   • Importo: €${cliente.importo.toLocaleString('it-IT', {minimumFractionDigits: 2})}\n\n`;
+                response += `${index + 1}. ${cliente.nome}\n`;
+                response += `   Ordini: ${cliente.ordini}, Importo: ${cliente.importo.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro\n\n`;
             });
             
-            response += `✅ Totale: ${clientiList.length} clienti`;
+            response = response.trim();
             
             return {
                 success: true,

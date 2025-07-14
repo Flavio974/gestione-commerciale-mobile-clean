@@ -608,11 +608,11 @@ class AIMiddleware {
                 ordini.map(o => o.numero_ordine).filter(n => n && n !== null)
             );
             
-            return `📊 Ci sono ${ordiniDistinti.size} ordini distinti nel database (${ordini.length} righe totali).`;
+            return `Ci sono ${ordiniDistinti.size} ordini nel database.`;
             
         } catch (error) {
             console.error('❌ Errore conteggio ordini:', error);
-            return "❌ Errore nel conteggio degli ordini.";
+            return "Errore nel conteggio degli ordini.";
         }
     }
     
@@ -683,11 +683,11 @@ class AIMiddleware {
                 return "Non ci sono clienti nel database.";
             }
             
-            return `👥 Ci sono ${clienti.length} clienti nel database.`;
+            return `Ci sono ${clienti.length} clienti nel database.`;
             
         } catch (error) {
             console.error('❌ Errore conteggio clienti:', error);
-            return "❌ Errore nel conteggio dei clienti.";
+            return "Errore nel conteggio dei clienti.";
         }
     }
     
@@ -718,7 +718,7 @@ class AIMiddleware {
             
             const totale = ordini.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
             
-            return `💰 Fatturato totale: €${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordini.length} righe ordini`;
+            return `Fatturato totale: ${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro`;
             
         } catch (error) {
             console.error('❌ Errore calcolo fatturato:', error);
@@ -728,7 +728,7 @@ class AIMiddleware {
                 supabaseAI: !!this.requestMiddleware?.supabaseAI,
                 message: error.message
             });
-            return "❌ Errore nel calcolo del fatturato.";
+            return "Errore nel calcolo del fatturato.";
         }
     }
     
@@ -776,11 +776,11 @@ class AIMiddleware {
             const totale = ordiniFiltrati.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
             const meseStr = params.mese || 'questo mese';
             
-            return `💰 Fatturato ${meseStr}: €${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordiniFiltrati.length} righe ordini`;
+            return `Fatturato ${meseStr}: ${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro`;
             
         } catch (error) {
             console.error('❌ Errore calcolo fatturato mensile:', error);
-            return "❌ Errore nel calcolo del fatturato mensile.";
+            return "Errore nel calcolo del fatturato mensile.";
         }
     }
 
