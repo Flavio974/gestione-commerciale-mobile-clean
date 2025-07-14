@@ -586,7 +586,18 @@ window.FlavioAIAssistant = (function() {
 
             console.log(`🗣️ Messaggio ${isVoiceInput ? 'VOCALE' : 'TESTUALE'}: ${message}`);
             
-            this.addMessage(message, 'user');
+            // Salva il messaggio originale per l'UI
+            const originalMessage = message;
+            
+            // Se il messaggio chiede l'ora, aggiungi contesto per l'AI
+            if (message.toLowerCase().includes('ora') || message.toLowerCase().includes('ore')) {
+                const now = new Date();
+                const timeContext = `[Ora corrente: ${now.toLocaleTimeString('it-IT')} del ${now.toLocaleDateString('it-IT')}] `;
+                message = timeContext + message;
+                console.log('⏰ Aggiunto contesto temporale:', timeContext);
+            }
+            
+            this.addMessage(originalMessage, 'user');
             this.addMessage(isVoiceInput ? '🎤 Sto elaborando il tuo messaggio vocale...' : '🤔 Sto elaborando...', 'assistant', true);
 
             try {
@@ -605,7 +616,19 @@ window.FlavioAIAssistant = (function() {
                         message: message,
                         model: model,
                         isVoiceInput: isVoiceInput,
-                        supabaseData: { timestamp: new Date().toISOString() }
+                        supabaseData: { 
+                            timestamp: new Date().toISOString(),
+                            currentDateTime: {
+                                date: new Date().toLocaleDateString('it-IT', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                }),
+                                time: new Date().toLocaleTimeString('it-IT'),
+                                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                            }
+                        }
                     })
                 });
 
