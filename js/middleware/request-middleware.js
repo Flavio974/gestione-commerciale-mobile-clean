@@ -214,11 +214,35 @@ class RequestMiddleware {
         });
         
         try {
-            const date = new Date(dateValue);
+            let date;
+            
+            // Se il valore è già in formato ISO o ha separatori, parsalo direttamente
+            if (dateValue.includes('T') || dateValue.includes('-') || dateValue.includes('/')) {
+                date = new Date(dateValue);
+            } else {
+                // Altrimenti, prova a parsarlo come stringa
+                date = new Date(dateValue);
+            }
+            
+            // Verifica che la data sia valida
+            if (isNaN(date.getTime())) {
+                // Se non è valida, prova parsing manuale per formato DD/MM/YYYY
+                const italianDateMatch = dateValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                if (italianDateMatch) {
+                    const [, day, month, year] = italianDateMatch;
+                    date = new Date(year, month - 1, day); // month è 0-indexed
+                } else {
+                    throw new Error('Data non valida');
+                }
+            }
+            
             // Debug della data parsata
             console.log('📅 DEBUG Date parsing:', {
                 originalValue: dateValue,
                 parsedDate: date.toString(),
+                day: date.getDate(),
+                month: date.getMonth() + 1,
+                year: date.getFullYear(),
                 formatted: date.toLocaleDateString('it-IT', {
                     day: '2-digit',
                     month: '2-digit', 
@@ -232,7 +256,8 @@ class RequestMiddleware {
                 month: '2-digit', 
                 year: 'numeric'
             });
-        } catch {
+        } catch (error) {
+            console.error('❌ Errore parsing data:', error);
             displayDate = dateValue.toString();
         }
         
@@ -1264,7 +1289,7 @@ class RequestMiddleware {
             if (!params.cliente) {
                 return {
                     success: true,
-                    response: `📅 Richiedi la data specificando un cliente`,
+                    response: `Richiedi la data specificando un cliente`,
                     data: { error: 'Cliente non specificato' }
                 };
             }
@@ -1277,7 +1302,7 @@ class RequestMiddleware {
             if (ordiniCliente.length === 0) {
                 return {
                     success: true,
-                    response: `❌ Nessun ordine trovato per "${params.cliente}"`,
+                    response: `Nessun ordine trovato per ${params.cliente}`,
                     data: { data: null }
                 };
             }
@@ -1295,7 +1320,7 @@ class RequestMiddleware {
             
             return {
                 success: true,
-                response: `📅 Cliente ${nomeCliente}${contextNote}: ultimo ordine ${ultimoOrdine.numero_ordine} del ${ultimoOrdine.displayDate}`,
+                response: `Cliente ${nomeCliente}${contextNote}: ultimo ordine ${ultimoOrdine.numero_ordine} del ${ultimoOrdine.displayDate}`,
                 data: { 
                     cliente: nomeCliente,
                     ultimaData: ultimoOrdine.displayDate,
