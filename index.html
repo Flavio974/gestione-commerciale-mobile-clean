@@ -1626,6 +1626,12 @@
           safeLoadQueue(
             '/js/smart-assistant.js',
             '/js/keep-alive.js'
+          ),
+          // 🎙️ SISTEMA VOCALE (background loading)
+          safeLoadQueue(
+            '/js/voice/voice-assistant.js',
+            '/js/ai/voice-recognition.js',
+            '/js/ai/ai-voice-manager.js'
           )
         ]).then(() => {
           console.log('🎉 Caricamento background completato!');
