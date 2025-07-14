@@ -348,7 +348,10 @@ class RequestMiddleware {
         if ((inputLower.includes('clienti') && inputLower.includes('attribuiti')) ||
             (inputLower.includes('quali clienti') && inputLower.includes('ordini')) ||
             (inputLower.includes('chi') && inputLower.includes('ordini')) ||
-            (inputLower.includes('clienti') && inputLower.includes('quegli ordini'))) {
+            (inputLower.includes('clienti') && inputLower.includes('quegli ordini')) ||
+            (inputLower.includes('di che clienti') && inputLower.includes('ordini')) ||
+            (inputLower.includes('che clienti') && inputLower.includes('sono')) ||
+            (inputLower.includes('clienti') && inputLower.includes('questi') && inputLower.includes('ordini'))) {
             console.log('🎯 MATCH DIRETTO: Clienti degli ordini');
             return 'clienti_ordini';
         }
@@ -914,10 +917,16 @@ class RequestMiddleware {
             if (!params.cliente) {
                 // Fatturato totale
                 const totale = ordini.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
+                
+                // Conta ordini distinti
+                const ordiniDistinti = new Set(
+                    ordini.map(o => o.numero_ordine).filter(n => n && n !== null)
+                ).size;
+                
                 return {
                     success: true,
-                    response: `💰 Fatturato totale: €${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordini.length} ordini`,
-                    data: { fatturato: totale, ordini: ordini.length }
+                    response: `💰 Fatturato totale: €${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${ordiniDistinti} ordini (${ordini.length} righe)`,
+                    data: { fatturato: totale, ordini: ordiniDistinti, righe: ordini.length }
                 };
             }
             
