@@ -314,9 +314,9 @@ class MiddlewareIntegration {
      * Intercetta specificamente FlavioAIAssistant
      */
     interceptFlavioAIAssistant() {
-        // Aspetta che FlavioAIAssistant sia disponibile
+        // Aspetta che FlavioAIAssistant sia disponibile e completamente inizializzato
         const checkInterval = setInterval(() => {
-            if (window.flavioAI) {
+            if (window.flavioAI && window.flavioAI.isInitialized) {
                 clearInterval(checkInterval);
                 
                 // Trova l'istanza
@@ -332,6 +332,13 @@ class MiddlewareIntegration {
                             console.log('🔌 🎯 INTERCETTAZIONE FLAVIO AI:', message);
                             console.log('🔌 🔍 Parametri ricevuti:', arguments.length, 'args:', [...arguments]);
                             console.log('🔌 🔍 Tipo messaggio:', typeof message, 'valore:', message);
+                            console.log('🔌 🔍 Stack trace:', new Error().stack);
+                        }
+                        
+                        // Se il messaggio è vuoto o undefined, non processare con middleware
+                        if (!message || typeof message !== 'string') {
+                            console.log('🔌 ⚠️ Messaggio vuoto, passa all\'AI originale');
+                            return originalSendMessage(message, isVoiceInput);
                         }
                         
                         // Processa con middleware
