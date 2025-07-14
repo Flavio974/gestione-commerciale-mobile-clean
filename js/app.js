@@ -564,25 +564,7 @@ const App = {
       setTimeout(() => splash.remove(), 300);
     }
     
-    // DEBUG: Verifica scheda demo
-    setTimeout(() => {
-      const demoTab = document.getElementById('tab-demo');
-      console.log('🔍 DEBUG DEMO TAB:', {
-        exists: !!demoTab,
-        visible: demoTab ? getComputedStyle(demoTab).display : 'N/A',
-        opacity: demoTab ? getComputedStyle(demoTab).opacity : 'N/A',
-        position: demoTab ? demoTab.getBoundingClientRect() : 'N/A',
-        classes: demoTab ? demoTab.className : 'N/A',
-        style: demoTab ? demoTab.style.cssText : 'N/A'
-      });
-      
-      if (demoTab) {
-        demoTab.style.display = 'block';
-        demoTab.style.visibility = 'visible';
-        demoTab.style.opacity = '1';
-        console.log('🔧 Forced demo tab visibility');
-      }
-    }, 1000);
+    // ❌ RIMOSSO: Timer problematico che causava spostamenti tab e rallentamenti
     
     // Mostra tab corrente
     const activeTab = document.querySelector(`[data-target="${this.state.currentTab}-content"]`);
