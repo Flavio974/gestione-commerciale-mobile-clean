@@ -330,6 +330,8 @@ class MiddlewareIntegration {
                     aiInstance.sendMessage = async (message, isVoiceInput = false) => {
                         if (this.debug) {
                             console.log('🔌 🎯 INTERCETTAZIONE FLAVIO AI:', message);
+                            console.log('🔌 🔍 Parametri ricevuti:', arguments.length, 'args:', [...arguments]);
+                            console.log('🔌 🔍 Tipo messaggio:', typeof message, 'valore:', message);
                         }
                         
                         // Processa con middleware
