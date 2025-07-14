@@ -989,12 +989,15 @@ class RequestMiddleware {
         try {
             console.log('💰 MIDDLEWARE: Calcolo fatturato per:', params.cliente);
             
-            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
-            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // FORZA sempre refresh per avere dati aggiornati
+            console.log('📊 MIDDLEWARE: Forzando refresh dati per conteggio aggiornato...');
+            const supabaseData = await this.supabaseAI.getAllData(true); // Force refresh
+            let ordini = supabaseData.historicalOrders?.sampleData || [];
+            
             if (ordini.length === 0) {
-                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
-                const supabaseData = await this.supabaseAI.getAllData();
-                ordini = supabaseData.historicalOrders?.sampleData || [];
+                console.log('⚠️ MIDDLEWARE: Nessun dato storico trovato anche dopo refresh');
+            } else {
+                console.log(`✅ MIDDLEWARE: Caricati ${ordini.length} record storici aggiornati`);
             }
             
             if (!params.cliente) {
@@ -1066,12 +1069,15 @@ class RequestMiddleware {
                 console.log('🔄 MIDDLEWARE: Usando contesto cliente precedente:', params.cliente);
             }
             
-            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
-            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // FORZA sempre refresh per avere dati aggiornati
+            console.log('📊 MIDDLEWARE: Forzando refresh dati per conteggio aggiornato...');
+            const supabaseData = await this.supabaseAI.getAllData(true); // Force refresh
+            let ordini = supabaseData.historicalOrders?.sampleData || [];
+            
             if (ordini.length === 0) {
-                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
-                const supabaseData = await this.supabaseAI.getAllData();
-                ordini = supabaseData.historicalOrders?.sampleData || [];
+                console.log('⚠️ MIDDLEWARE: Nessun dato storico trovato anche dopo refresh');
+            } else {
+                console.log(`✅ MIDDLEWARE: Caricati ${ordini.length} record storici aggiornati`);
             }
             
             if (!params.cliente) {
@@ -1173,12 +1179,15 @@ class RequestMiddleware {
                 };
             }
             
-            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
-            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // FORZA sempre refresh per avere dati aggiornati
+            console.log('📊 MIDDLEWARE: Forzando refresh dati per conteggio aggiornato...');
+            const supabaseData = await this.supabaseAI.getAllData(true); // Force refresh
+            let ordini = supabaseData.historicalOrders?.sampleData || [];
+            
             if (ordini.length === 0) {
-                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
-                const supabaseData = await this.supabaseAI.getAllData();
-                ordini = supabaseData.historicalOrders?.sampleData || [];
+                console.log('⚠️ MIDDLEWARE: Nessun dato storico trovato anche dopo refresh');
+            } else {
+                console.log(`✅ MIDDLEWARE: Caricati ${ordini.length} record storici aggiornati`);
             }
             
             // Debug: stampa struttura del primo ordine
@@ -1336,12 +1345,15 @@ class RequestMiddleware {
                 }
             }
             
-            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
-            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // FORZA sempre refresh per avere dati aggiornati
+            console.log('📊 MIDDLEWARE: Forzando refresh dati per conteggio aggiornato...');
+            const supabaseData = await this.supabaseAI.getAllData(true); // Force refresh
+            let ordini = supabaseData.historicalOrders?.sampleData || [];
+            
             if (ordini.length === 0) {
-                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
-                const supabaseData = await this.supabaseAI.getAllData();
-                ordini = supabaseData.historicalOrders?.sampleData || [];
+                console.log('⚠️ MIDDLEWARE: Nessun dato storico trovato anche dopo refresh');
+            } else {
+                console.log(`✅ MIDDLEWARE: Caricati ${ordini.length} record storici aggiornati`);
             }
             
             if (!params.cliente) {
@@ -1401,12 +1413,15 @@ class RequestMiddleware {
         try {
             console.log('📅 MIDDLEWARE: Recupero date di tutti gli ordini per:', params.cliente);
             
-            // Verifica se i dati sono già caricati, altrimenti carica solo se necessario
-            let ordini = this.supabaseAI.historicalOrders?.sampleData || [];
+            // FORZA sempre refresh per avere dati aggiornati
+            console.log('📊 MIDDLEWARE: Forzando refresh dati per conteggio aggiornato...');
+            const supabaseData = await this.supabaseAI.getAllData(true); // Force refresh
+            let ordini = supabaseData.historicalOrders?.sampleData || [];
+            
             if (ordini.length === 0) {
-                console.log('📊 MIDDLEWARE: Dati non ancora caricati, caricamento necessario...');
-                const supabaseData = await this.supabaseAI.getAllData();
-                ordini = supabaseData.historicalOrders?.sampleData || [];
+                console.log('⚠️ MIDDLEWARE: Nessun dato storico trovato anche dopo refresh');
+            } else {
+                console.log(`✅ MIDDLEWARE: Caricati ${ordini.length} record storici aggiornati`);
             }
             
             if (!params.cliente) {

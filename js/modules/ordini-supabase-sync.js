@@ -66,10 +66,11 @@ window.OrdiniSupabaseSync = {
       
       // Refresh cache AI se disponibile
       if (result.errors.length === 0 && window.supabaseAI) {
-        console.log('🔄 Refreshing AI cache after successful import...');
+        console.log('🔄 Invalidating and refreshing AI cache after successful import...');
         try {
+          window.supabaseAI.invalidateCache(); // Invalida cache prima del refresh
           await window.supabaseAI.getAllData(true); // Force refresh
-          console.log('✅ AI cache refreshed with new import data');
+          console.log('✅ AI cache completely refreshed with new import data');
         } catch (error) {
           console.warn('⚠️ Errore refresh cache AI:', error);
         }

@@ -81,6 +81,7 @@ class SmartAssistant {
         if (window.supabaseAI) {
           console.log('🔄 Manual AI cache refresh triggered...');
           try {
+            window.supabaseAI.invalidateCache(); // Invalida prima del refresh
             const data = await window.supabaseAI.getAllData(true);
             console.log('✅ AI cache refreshed, new data available');
             return data;

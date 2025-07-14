@@ -35,6 +35,15 @@ class SupabaseAIIntegration {
     }
 
     /**
+     * Invalida forzatamente la cache per il prossimo refresh
+     */
+    invalidateCache() {
+        console.log('🔄 Invalidating AI cache...');
+        this.cache.lastUpdate = 0; // Force next getAllData to refresh
+        this.offlineMode = false;   // Reset offline mode
+    }
+
+    /**
      * Ottieni tutti i dati rilevanti per l'AI
      */
     async getAllData(forceRefresh = false) {
