@@ -2378,9 +2378,9 @@
           window.VoiceRecognition.engine.interimResults = true;
         }
         
-        // Avvia listener per wake word
+        // Avvia listener per wake word - SOLO risultati finali per evitare duplicati
         window.addEventListener('voicerecognition:final', handleWakeWordDetection);
-        window.addEventListener('voicerecognition:interim', handleWakeWordDetection);
+        // Rimosso interim per evitare richieste multiple durante il parlato
         
         window.VoiceRecognition.start();
         showFloatingStatus('🚗 "Hey Assistente" attivo (simulato)');
@@ -2406,8 +2406,17 @@
     }
 
     // 🎯 GESTIONE WAKE WORD DETECTION
+    let lastWakeWordTime = 0;
+    let lastProcessedCommand = '';
+    
     function handleWakeWordDetection(event) {
       const transcript = event.detail.transcript?.toLowerCase() || '';
+      const currentTime = Date.now();
+      
+      // Debouncing: evita richieste duplicate entro 3 secondi
+      if (currentTime - lastWakeWordTime < 3000) {
+        return;
+      }
       
       // Cerca varianti di "hey assistente"
       const wakeWords = ['hey assistente', 'ehi assistente', 'ey assistente', 'assistente'];
@@ -2421,8 +2430,18 @@
         const command = transcript.substring(commandStart).trim();
         
         if (command && command.length > 2) {
+          // Evita comandi duplicati
+          if (command === lastProcessedCommand) {
+            console.log('🔄 Comando duplicato ignorato:', command);
+            return;
+          }
+          
           console.log('🎤 Comando estratto:', command);
           showFloatingStatus('🎤 Comando rilevato...');
+          
+          // Aggiorna tracking
+          lastWakeWordTime = currentTime;
+          lastProcessedCommand = command;
           
           // Invia il comando all'AI
           if (window.FlavioAIAssistant && typeof window.FlavioAIAssistant.processVoiceInput === 'function') {
@@ -2431,6 +2450,7 @@
         } else {
           // Solo wake word senza comando
           showFloatingStatus('🎤 Ti ascolto...');
+          lastWakeWordTime = currentTime;
         }
       }
     }
@@ -2531,6 +2551,10 @@
       // Rimuovi listener wake word detection
       window.removeEventListener('voicerecognition:final', handleWakeWordDetection);
       window.removeEventListener('voicerecognition:interim', handleWakeWordDetection);
+      
+      // Reset variabili di debouncing
+      lastWakeWordTime = 0;
+      lastProcessedCommand = '';
       
       // Ferma tutti i sistemi vocali
       if (window.AIVoiceManager) {
