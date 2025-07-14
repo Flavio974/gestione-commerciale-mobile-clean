@@ -809,6 +809,6 @@ window.FlavioAIAssistant = (function() {
 })();
 
 // Export per uso globale nel browser
-window.flavioAI = flavioAI;
+window.flavioAI = window.FlavioAIAssistant;
 
 console.log('✅ FlavioAIAssistant caricato');
