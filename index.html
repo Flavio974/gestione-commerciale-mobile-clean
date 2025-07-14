@@ -837,6 +837,59 @@
       background: #28a745;
       animation: pulse 1.5s infinite;
     }
+
+    /* 🎤 PULSANTI FLOTTANTI VOCALI - MODALITÀ AUTOMOBILE */
+    .floating-voice-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .floating-mic-btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .floating-mic-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .floating-mic-btn.listening {
+      animation: pulse 1.5s infinite;
+      background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+    }
+
+    .floating-mic-btn.auto-mode {
+      background: linear-gradient(135deg, #00b894, #00a085);
+    }
+
+    .floating-voice-status {
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
     
     @keyframes pulse {
       0% {
@@ -1782,9 +1835,167 @@
   
   <!-- Configurazione Supabase spostata in config/supabase-config.js -->
   
+  <!-- 🎤 PULSANTI FLOTTANTI VOCALI - MODALITÀ AUTOMOBILE -->
+  <div id="floating-voice-container" class="floating-voice-container" style="display: none;">
+    
+    <!-- Pulsante microfono principale -->
+    <button id="floating-mic-btn" class="floating-mic-btn" title="Attiva microfono">
+      🎤
+    </button>
+    
+    <!-- Pulsante modalità automobile -->
+    <button id="floating-auto-btn" class="floating-mic-btn" title="Modalità automobile (Hey Assistente)">
+      🚗
+    </button>
+    
+    <!-- Status vocale -->
+    <div id="floating-voice-status" class="floating-voice-status" style="display: none;">
+      Pronto
+    </div>
+    
+  </div>
 
+  <script>
+    // 🎤 SISTEMA PULSANTI FLOTTANTI VOCALI
+    let voiceControlsActive = false;
+    let autoModeActive = false;
+    let isCurrentlyListening = false;
 
+    // Mostra i controlli vocali dopo il caricamento
+    setTimeout(() => {
+      const container = document.getElementById('floating-voice-container');
+      if (container) {
+        container.style.display = 'flex';
+        console.log('🎤 Pulsanti vocali flottanti attivati');
+      }
+    }, 3000);
 
+    // Gestione click pulsante microfono
+    document.addEventListener('DOMContentLoaded', () => {
+      const micBtn = document.getElementById('floating-mic-btn');
+      const autoBtn = document.getElementById('floating-auto-btn');
+      const status = document.getElementById('floating-voice-status');
+
+      if (micBtn) {
+        micBtn.addEventListener('click', () => {
+          console.log('🎤 Click pulsante microfono flottante');
+          toggleVoiceRecognition();
+        });
+      }
+
+      if (autoBtn) {
+        autoBtn.addEventListener('click', () => {
+          console.log('🚗 Click modalità automobile');
+          toggleAutoMode();
+        });
+      }
+    });
+
+    // Toggle riconoscimento vocale
+    function toggleVoiceRecognition() {
+      if (isCurrentlyListening) {
+        stopVoiceRecognition();
+      } else {
+        startVoiceRecognition();
+      }
+    }
+
+    // Avvia riconoscimento
+    function startVoiceRecognition() {
+      console.log('🎤 Avvio riconoscimento vocale...');
+      
+      if (window.VoiceAssistant && typeof window.VoiceAssistant.startListening === 'function') {
+        window.VoiceAssistant.startListening();
+        isCurrentlyListening = true;
+        updateFloatingUI();
+      } else {
+        console.warn('⚠️ VoiceAssistant non disponibile');
+        showFloatingStatus('VoiceAssistant non pronto');
+      }
+    }
+
+    // Stop riconoscimento  
+    function stopVoiceRecognition() {
+      console.log('🛑 Stop riconoscimento vocale');
+      
+      if (window.VoiceAssistant && typeof window.VoiceAssistant.stopListening === 'function') {
+        window.VoiceAssistant.stopListening();
+      }
+      
+      isCurrentlyListening = false;
+      updateFloatingUI();
+    }
+
+    // Toggle modalità automobile
+    function toggleAutoMode() {
+      autoModeActive = !autoModeActive;
+      console.log(`🚗 Modalità automobile: ${autoModeActive ? 'ON' : 'OFF'}`);
+      
+      if (autoModeActive && window.AIVoiceManager) {
+        // Attiva wake word "Hey Assistente"
+        if (typeof window.AIVoiceManager.startWakeWordDetection === 'function') {
+          window.AIVoiceManager.startWakeWordDetection();
+          showFloatingStatus('Auto mode: "Hey Assistente"');
+        }
+      } else if (window.AIVoiceManager) {
+        // Disattiva wake word
+        if (typeof window.AIVoiceManager.stopWakeWordDetection === 'function') {
+          window.AIVoiceManager.stopWakeWordDetection();
+          showFloatingStatus('Auto mode OFF');
+        }
+      }
+      
+      updateFloatingUI();
+    }
+
+    // Aggiorna UI pulsanti
+    function updateFloatingUI() {
+      const micBtn = document.getElementById('floating-mic-btn');
+      const autoBtn = document.getElementById('floating-auto-btn');
+      
+      if (micBtn) {
+        if (isCurrentlyListening) {
+          micBtn.classList.add('listening');
+          micBtn.textContent = '🛑';
+          showFloatingStatus('In ascolto...');
+        } else {
+          micBtn.classList.remove('listening');
+          micBtn.textContent = '🎤';
+          showFloatingStatus('Pronto');
+        }
+      }
+      
+      if (autoBtn) {
+        if (autoModeActive) {
+          autoBtn.classList.add('auto-mode');
+          autoBtn.textContent = '🚗';
+        } else {
+          autoBtn.classList.remove('auto-mode');
+          autoBtn.textContent = '🚗';
+        }
+      }
+    }
+
+    // Mostra status
+    function showFloatingStatus(message) {
+      const status = document.getElementById('floating-voice-status');
+      if (status) {
+        status.textContent = message;
+        status.style.display = 'block';
+        
+        // Nascondi dopo 3 secondi
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Export functions globally
+    window.toggleVoiceRecognition = toggleVoiceRecognition;
+    window.toggleAutoMode = toggleAutoMode;
+    window.showFloatingStatus = showFloatingStatus;
+
+  </script>
 
 </body>
 </html>
