@@ -2248,6 +2248,37 @@
       }
     }
 
+    // 🛑 FERMA RICONOSCIMENTO VOCALE GLOBALMENTE (chiamato dall'AI durante TTS)
+    window.stopAllVoiceRecognitionGlobal = function() {
+      // Ferma tutti i sistemi vocali
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.stop === 'function') {
+        window.VoiceRecognition.stop();
+      }
+      
+      if (window.AIVoiceManager) {
+        if (typeof window.AIVoiceManager.stopListening === 'function') {
+          window.AIVoiceManager.stopListening();
+        }
+        if (typeof window.AIVoiceManager.stopWakeWordDetection === 'function') {
+          window.AIVoiceManager.stopWakeWordDetection();
+        }
+      }
+      
+      if (window.AIVoiceManagerV2 && typeof window.AIVoiceManagerV2.stopListening === 'function') {
+        window.AIVoiceManagerV2.stopListening();
+      }
+      
+      if (window.VoiceAssistant && typeof window.VoiceAssistant.stopListening === 'function') {
+        window.VoiceAssistant.stopListening();
+      }
+      
+      // Aggiorna stato
+      isCurrentlyListening = false;
+      updateFloatingUI();
+      
+      console.log('🛑 Tutti i sistemi vocali fermati durante TTS per evitare loop');
+    };
+
     // Avvia riconoscimento vocale AI integrato
     function startAIVoiceRecognition() {
       console.log('🤖 Avvio riconoscimento vocale AI integrato...');

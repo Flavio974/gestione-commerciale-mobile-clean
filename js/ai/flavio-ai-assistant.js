@@ -278,6 +278,10 @@ window.FlavioAIAssistant = (function() {
                 
                 utterance.onstart = () => {
                     console.log('🔊 Sintesi vocale avviata');
+                    
+                    // 🛑 FERMA IL RICONOSCIMENTO VOCALE QUANDO L'AI INIZIA A PARLARE
+                    this.stopAllVoiceRecognition();
+                    
                     if (window.showFloatingStatus) {
                         window.showFloatingStatus('🔊 AI sta parlando...');
                     }
@@ -288,10 +292,22 @@ window.FlavioAIAssistant = (function() {
                     if (window.showFloatingStatus) {
                         window.showFloatingStatus('🤖 AI pronto');
                     }
+                    
+                    // 🔄 AGGIORNA UI PER MOSTRARE CHE IL MICROFONO È FERMO
+                    if (window.updateFloatingUI) {
+                        window.isCurrentlyListening = false;
+                        window.updateFloatingUI();
+                    }
                 };
                 
                 utterance.onerror = (event) => {
                     console.error('❌ Errore sintesi vocale:', event.error);
+                    
+                    // 🔄 AGGIORNA UI ANCHE IN CASO DI ERRORE
+                    if (window.updateFloatingUI) {
+                        window.isCurrentlyListening = false;
+                        window.updateFloatingUI();
+                    }
                 };
                 
                 speechSynthesis.speak(utterance);
@@ -336,6 +352,54 @@ window.FlavioAIAssistant = (function() {
                 console.log('✅ Sistema vocale AI inizializzato');
             } catch (error) {
                 console.error('❌ Errore inizializzazione sistema vocale:', error);
+            }
+        },
+
+        /**
+         * Ferma tutti i sistemi di riconoscimento vocale per evitare loop TTS
+         */
+        stopAllVoiceRecognition() {
+            console.log('🛑 Fermando tutti i sistemi di riconoscimento vocale per evitare loop TTS...');
+            
+            // Usa la funzione globale se disponibile
+            if (window.stopAllVoiceRecognitionGlobal) {
+                window.stopAllVoiceRecognitionGlobal();
+                return;
+            }
+            
+            // Fallback: ferma manualmente tutti i sistemi
+            // Ferma VoiceRecognition (prioritario)
+            if (window.VoiceRecognition && typeof window.VoiceRecognition.stop === 'function') {
+                window.VoiceRecognition.stop();
+                console.log('🛑 VoiceRecognition fermato');
+            }
+            
+            // Ferma AIVoiceManager
+            if (window.AIVoiceManager) {
+                if (typeof window.AIVoiceManager.stopListening === 'function') {
+                    window.AIVoiceManager.stopListening();
+                }
+                if (typeof window.AIVoiceManager.stopWakeWordDetection === 'function') {
+                    window.AIVoiceManager.stopWakeWordDetection();
+                }
+                console.log('🛑 AIVoiceManager fermato');
+            }
+            
+            // Ferma AIVoiceManagerV2
+            if (window.AIVoiceManagerV2 && typeof window.AIVoiceManagerV2.stopListening === 'function') {
+                window.AIVoiceManagerV2.stopListening();
+                console.log('🛑 AIVoiceManagerV2 fermato');
+            }
+            
+            // Ferma VoiceAssistant
+            if (window.VoiceAssistant && typeof window.VoiceAssistant.stopListening === 'function') {
+                window.VoiceAssistant.stopListening();
+                console.log('🛑 VoiceAssistant fermato');
+            }
+            
+            // Aggiorna flag globali
+            if (window.isCurrentlyListening !== undefined) {
+                window.isCurrentlyListening = false;
             }
         },
 
