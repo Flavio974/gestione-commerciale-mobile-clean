@@ -1552,55 +1552,85 @@
           '/js/api.js'
         ))
     ]))
+    .then(() => {
+      // 🚀 CARICAMENTO RAPIDO: Solo moduli critici per interfaccia base
+      console.log('⚡ Caricamento moduli critici...');
+      return safeLoadQueue(
+        '/js/timeline/timeline-config.js',
+        '/js/timeline/timeline-core.js',
+        '/js/clienti-core.js',
+        '/js/worksheet-core.js'
+      );
+    })
+    .then(() => {
+      console.log('✅ UI base pronta - inizializzazione app...');
+      // L'app ora può inizializzarsi e mostrare l'interfaccia
+      return Promise.resolve();
+    })
     .then(() => safeLoadQueue(
-      // Timeline modules
-      '/js/timeline/timeline-config.js',
-      '/js/timeline/timeline-utils.js',
-      '/js/timeline/timeline-rendering.js',
-      '/js/timeline/timeline-events.js',
-      '/js/timeline/timeline-controls.js',
-      '/js/timeline/timeline-core.js',
-      // Core business modules
-      '/js/clienti-core.js',
-      '/js/clienti-form.js',
-      '/js/ordini.js',
-      '/js/prodotti.js',
-      '/js/percorsi.js',
-      // Worksheet modules
-      '/js/worksheet-data.js',
-      '/js/worksheet-core.js',
-      '/js/worksheet-ui.js',
-      '/js/worksheet-view.js',
-      '/js/worksheet-import.js',
-      '/js/worksheet-itinerary.js',
-      '/js/worksheet-dragdrop.js',
-      // Client utils
-      '/js/clienti-table.js',
-      '/js/clienti-utils.js',
-      '/js/clienti-import-export.js',
-      // Order modules
-      '/js/modules/ordini-parser.js',
-      '/js/modules/ordini-export-core.js'
-    ))
-    .then(() => safeLoadQueue(
-      // DDTFT final modules
-      '/js/ddtft-core.js',
-      '/js/ddtft-view.js',
-      '/js/ddtft-create.js',
-      '/js/ddtft-import.js',
-      '/js/ddtft-filters.js',
-      '/js/ddtft-utils.js',
-      '/js/modules/ddtft-import-export.js',
-      '/js/modules/ddtft-export-advanced.js',
-      // Final features
+      // Moduli essenziali per funzionalità di base
       '/js/comandi-core.js',
-      '/js/comandi-ui.js',
-      '/js/smart-assistant.js',
-      '/js/keep-alive.js'
+      '/js/comandi-ui.js'
     ))
     .then(() => {
-      console.log('✅ Bootstrap completo');
+      console.log('✅ Bootstrap completo - UI pronta!');
       if (window.runSanity) window.runSanity();
+      
+      // 🚀 BACKGROUND LOADING: Carica moduli non critici in background
+      setTimeout(() => {
+        console.log('🔄 Avvio caricamento background...');
+        Promise.all([
+          // Timeline completo
+          safeLoadQueue(
+            '/js/timeline/timeline-utils.js',
+            '/js/timeline/timeline-rendering.js', 
+            '/js/timeline/timeline-events.js',
+            '/js/timeline/timeline-controls.js'
+          ),
+          // Business modules
+          safeLoadQueue(
+            '/js/clienti-form.js',
+            '/js/ordini.js',
+            '/js/prodotti.js',
+            '/js/percorsi.js'
+          ),
+          // Worksheet completo  
+          safeLoadQueue(
+            '/js/worksheet-data.js',
+            '/js/worksheet-ui.js',
+            '/js/worksheet-view.js',
+            '/js/worksheet-import.js',
+            '/js/worksheet-itinerary.js',
+            '/js/worksheet-dragdrop.js'
+          ),
+          // Utils e export
+          safeLoadQueue(
+            '/js/clienti-table.js',
+            '/js/clienti-utils.js', 
+            '/js/clienti-import-export.js',
+            '/js/modules/ordini-parser.js',
+            '/js/modules/ordini-export-core.js'
+          ),
+          // DDTFT modules
+          safeLoadQueue(
+            '/js/ddtft-core.js',
+            '/js/ddtft-view.js',
+            '/js/ddtft-create.js',
+            '/js/ddtft-import.js',
+            '/js/ddtft-filters.js',
+            '/js/ddtft-utils.js',
+            '/js/modules/ddtft-import-export.js',
+            '/js/modules/ddtft-export-advanced.js'
+          ),
+          // Features extra
+          safeLoadQueue(
+            '/js/smart-assistant.js',
+            '/js/keep-alive.js'
+          )
+        ]).then(() => {
+          console.log('🎉 Caricamento background completato!');
+        });
+      }, 100); // Inizia subito dopo bootstrap
       
       // 🚨 FIX EMERGENZA: Ripristina navigazione immediatamente
       setTimeout(() => {
