@@ -720,8 +720,8 @@ class MiddlewareIntegration {
     }
 }
 
-// Inizializzazione automatica
-document.addEventListener('DOMContentLoaded', async () => {
+// Funzione di inizializzazione middleware
+async function initializeMiddleware() {
     console.log('🔌 Inizializzazione automatica middleware...');
     
     // Controllo se il middleware è disabilitato
@@ -753,7 +753,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('❌ Errore inizializzazione middleware:', error);
         }
     }, 2000);
-});
+}
+
+// Inizializzazione automatica - gestisce sia DOM già caricato che futuro
+if (document.readyState === 'loading') {
+    // DOM non ancora caricato
+    document.addEventListener('DOMContentLoaded', initializeMiddleware);
+} else {
+    // DOM già caricato, inizializza subito
+    initializeMiddleware();
+}
 
 // Esporta per uso globale
 window.MiddlewareIntegration = MiddlewareIntegration;
