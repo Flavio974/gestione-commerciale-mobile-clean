@@ -1887,22 +1887,22 @@
   
   <!-- Configurazione Supabase spostata in config/supabase-config.js -->
   
-  <!-- 🎤 PULSANTI FLOTTANTI VOCALI - MODALITÀ AUTOMOBILE -->
+  <!-- 🤖 PULSANTI FLOTTANTI AI VOCALI TRASCINABILI - COMUNICAZIONE BIDIREZIONALE -->
   <div id="floating-voice-container" class="floating-voice-container" style="display: none;">
     
-    <!-- Pulsante microfono principale -->
-    <button id="floating-mic-btn" class="floating-mic-btn" title="Attiva microfono">
-      🎤
+    <!-- Pulsante AI Assistant vocale -->
+    <button id="floating-mic-btn" class="floating-mic-btn" title="Parla con AI Assistant">
+      🤖
     </button>
     
-    <!-- Pulsante modalità automobile -->
-    <button id="floating-auto-btn" class="floating-mic-btn" title="Modalità automobile (Hey Assistente)">
+    <!-- Pulsante modalità automobile AI -->
+    <button id="floating-auto-btn" class="floating-mic-btn" title="Modalità automobile AI - Hey Assistente">
       🚗
     </button>
     
-    <!-- Status vocale -->
+    <!-- Status AI vocale -->
     <div id="floating-voice-status" class="floating-voice-status" style="display: none;">
-      Pronto
+      🤖 AI Assistant pronto
     </div>
     
   </div>
@@ -2086,32 +2086,66 @@
       }
     }
 
-    // Toggle riconoscimento vocale
+    // 🤖 SISTEMA AI VOCALE INTEGRATO - Comunicazione bidirezionale con AI Assistant
     function toggleVoiceRecognition() {
       if (isCurrentlyListening) {
-        stopVoiceRecognition();
+        stopAIVoiceRecognition();
       } else {
-        startVoiceRecognition();
+        startAIVoiceRecognition();
       }
     }
 
-    // Avvia riconoscimento
-    function startVoiceRecognition() {
-      console.log('🎤 Avvio riconoscimento vocale...');
+    // Avvia riconoscimento vocale AI integrato
+    function startAIVoiceRecognition() {
+      console.log('🤖 Avvio riconoscimento vocale AI integrato...');
       
+      // Prima priorità: Sistema VoiceRecognition integrato con AI
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.start === 'function') {
+        console.log('🎤 Utilizzo VoiceRecognition integrato con AI');
+        window.VoiceRecognition.start();
+        isCurrentlyListening = true;
+        updateFloatingUI();
+        showFloatingStatus('🤖 In ascolto per AI...');
+        return;
+      }
+
+      // Fallback: AIVoiceManager
+      if (window.AIVoiceManager && typeof window.AIVoiceManager.startListening === 'function') {
+        console.log('🎙️ Utilizzo AIVoiceManager');
+        window.AIVoiceManager.startListening();
+        isCurrentlyListening = true;
+        updateFloatingUI();
+        showFloatingStatus('🎙️ AIVoiceManager attivo...');
+        return;
+      }
+
+      // Fallback: VoiceAssistant base
       if (window.VoiceAssistant && typeof window.VoiceAssistant.startListening === 'function') {
+        console.log('🎤 Utilizzo VoiceAssistant base');
         window.VoiceAssistant.startListening();
         isCurrentlyListening = true;
         updateFloatingUI();
-      } else {
-        console.warn('⚠️ VoiceAssistant non disponibile');
-        showFloatingStatus('VoiceAssistant non pronto');
+        showFloatingStatus('🎤 VoiceAssistant attivo...');
+        return;
       }
+
+      // Nessun sistema disponibile
+      console.warn('⚠️ Nessun sistema vocale AI disponibile');
+      showFloatingStatus('❌ Sistema vocale non pronto');
     }
 
-    // Stop riconoscimento  
-    function stopVoiceRecognition() {
-      console.log('🛑 Stop riconoscimento vocale');
+    // Stop riconoscimento vocale AI
+    function stopAIVoiceRecognition() {
+      console.log('🛑 Stop riconoscimento vocale AI');
+      
+      // Ferma tutti i sistemi vocali
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.stop === 'function') {
+        window.VoiceRecognition.stop();
+      }
+      
+      if (window.AIVoiceManager && typeof window.AIVoiceManager.stopListening === 'function') {
+        window.AIVoiceManager.stopListening();
+      }
       
       if (window.VoiceAssistant && typeof window.VoiceAssistant.stopListening === 'function') {
         window.VoiceAssistant.stopListening();
@@ -2119,31 +2153,95 @@
       
       isCurrentlyListening = false;
       updateFloatingUI();
+      showFloatingStatus('🛑 Riconoscimento fermato');
     }
 
-    // Toggle modalità automobile
+    // 🚗 MODALITÀ AUTOMOBILE AI - Wake word "Hey Assistente" per conversazione AI
     function toggleAutoMode() {
       autoModeActive = !autoModeActive;
-      console.log(`🚗 Modalità automobile: ${autoModeActive ? 'ON' : 'OFF'}`);
+      console.log(`🚗 Modalità automobile AI: ${autoModeActive ? 'ON' : 'OFF'}`);
       
-      if (autoModeActive && window.AIVoiceManager) {
-        // Attiva wake word "Hey Assistente"
-        if (typeof window.AIVoiceManager.startWakeWordDetection === 'function') {
-          window.AIVoiceManager.startWakeWordDetection();
-          showFloatingStatus('Auto mode: "Hey Assistente"');
-        }
-      } else if (window.AIVoiceManager) {
-        // Disattiva wake word
-        if (typeof window.AIVoiceManager.stopWakeWordDetection === 'function') {
-          window.AIVoiceManager.stopWakeWordDetection();
-          showFloatingStatus('Auto mode OFF');
-        }
+      if (autoModeActive) {
+        // Attiva modalità automobile con wake word AI
+        startAutoModeAI();
+      } else {
+        // Disattiva modalità automobile
+        stopAutoModeAI();
       }
       
       updateFloatingUI();
     }
 
-    // Aggiorna UI pulsanti
+    // Avvia modalità automobile AI integrata
+    function startAutoModeAI() {
+      console.log('🚗 Avvio modalità automobile AI integrata...');
+      
+      // Prima priorità: AIVoiceManager per wake word detection
+      if (window.AIVoiceManager) {
+        console.log('🎙️ Attivazione AIVoiceManager per wake word...');
+        
+        // Inizializza per iPhone se necessario
+        if (typeof window.AIVoiceManager.initForIPhone === 'function') {
+          window.AIVoiceManager.initForIPhone();
+        }
+        
+        // Attiva wake word detection
+        if (typeof window.AIVoiceManager.startWakeWordDetection === 'function') {
+          window.AIVoiceManager.startWakeWordDetection();
+          showFloatingStatus('🚗 Auto: "Hey Assistente" attivo');
+          return;
+        }
+        
+        // Fallback: attiva listening continuo
+        if (typeof window.AIVoiceManager.startListening === 'function') {
+          window.AIVoiceManager.startListening();
+          showFloatingStatus('🚗 Auto: Ascolto continuo attivo');
+          return;
+        }
+      }
+
+      // Fallback: AIVoiceManagerV2 per iPad
+      if (window.AIVoiceManagerV2 && typeof window.AIVoiceManagerV2.initForIPad === 'function') {
+        console.log('📱 Attivazione AIVoiceManagerV2 per iPad...');
+        window.AIVoiceManagerV2.initForIPad();
+        showFloatingStatus('🚗 Auto: iPad mode attivo');
+        return;
+      }
+
+      // Fallback: VoiceRecognition continuo
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.start === 'function') {
+        console.log('🎤 Attivazione VoiceRecognition continuo...');
+        window.VoiceRecognition.start();
+        showFloatingStatus('🚗 Auto: Riconoscimento continuo');
+        return;
+      }
+
+      console.warn('⚠️ Nessun sistema wake word disponibile');
+      showFloatingStatus('❌ Wake word non supportato');
+      autoModeActive = false; // Reset se non funziona
+    }
+
+    // Ferma modalità automobile AI
+    function stopAutoModeAI() {
+      console.log('🛑 Stop modalità automobile AI');
+      
+      // Ferma tutti i sistemi di wake word
+      if (window.AIVoiceManager && typeof window.AIVoiceManager.stopWakeWordDetection === 'function') {
+        window.AIVoiceManager.stopWakeWordDetection();
+      }
+      
+      if (window.AIVoiceManagerV2 && typeof window.AIVoiceManagerV2.stopListening === 'function') {
+        window.AIVoiceManagerV2.stopListening();
+      }
+      
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.stop === 'function') {
+        window.VoiceRecognition.stop();
+      }
+      
+      showFloatingStatus('🛑 Auto mode OFF');
+    }
+
+    // Aggiorna UI pulsanti AI vocali
     function updateFloatingUI() {
       const micBtn = document.getElementById('floating-mic-btn');
       const autoBtn = document.getElementById('floating-auto-btn');
@@ -2152,11 +2250,13 @@
         if (isCurrentlyListening) {
           micBtn.classList.add('listening');
           micBtn.textContent = '🛑';
-          showFloatingStatus('In ascolto...');
+          micBtn.title = 'Stop riconoscimento AI vocale';
+          showFloatingStatus('🤖 AI in ascolto...');
         } else {
           micBtn.classList.remove('listening');
-          micBtn.textContent = '🎤';
-          showFloatingStatus('Pronto');
+          micBtn.textContent = '🤖';
+          micBtn.title = 'Parla con AI Assistant';
+          showFloatingStatus('🤖 Pronto per AI');
         }
       }
       
@@ -2164,9 +2264,15 @@
         if (autoModeActive) {
           autoBtn.classList.add('auto-mode');
           autoBtn.textContent = '🚗';
+          autoBtn.title = 'Modalità auto attiva - "Hey Assistente"';
+          showFloatingStatus('🚗 "Hey Assistente" attivo');
         } else {
           autoBtn.classList.remove('auto-mode');
           autoBtn.textContent = '🚗';
+          autoBtn.title = 'Attiva modalità automobile AI';
+          if (!isCurrentlyListening) {
+            showFloatingStatus('🤖 AI Assistant pronto');
+          }
         }
       }
     }

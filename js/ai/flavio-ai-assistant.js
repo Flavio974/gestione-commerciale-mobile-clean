@@ -23,8 +23,11 @@ window.FlavioAIAssistant = (function() {
                     this.setupDefaultProvider();
                 }
 
+                // Inizializza sistema vocale
+                this.initVoiceSystem();
+                
                 this.isInitialized = true;
-                console.log('✅ FlavioAIAssistant inizializzato');
+                console.log('✅ FlavioAIAssistant inizializzato con sistema vocale');
                 return true;
 
             } catch (error) {
@@ -186,11 +189,115 @@ window.FlavioAIAssistant = (function() {
         },
 
         /**
-         * Processa input vocale
+         * Processa input vocale e fornisce risposta parlata
          */
         processVoiceInput(transcript) {
             console.log('🗣️ Input vocale ricevuto:', transcript);
-            return this.sendMessage(transcript);
+            
+            // Invia messaggio con flag vocale
+            this.sendMessage(transcript, true);
+        },
+
+        /**
+         * Sintesi vocale della risposta
+         */
+        speakResponse(text) {
+            if (!text || typeof text !== 'string') return;
+            
+            try {
+                // Ferma qualsiasi speech in corso
+                speechSynthesis.cancel();
+                
+                // Pulisci il testo da markdown e HTML
+                const cleanText = text
+                    .replace(/[#*`_~]/g, '') // Rimuovi markdown
+                    .replace(/<[^>]*>/g, '') // Rimuovi HTML
+                    .replace(/\s+/g, ' ') // Normalizza spazi
+                    .trim();
+                
+                if (!cleanText) return;
+                
+                console.log('🔊 Pronunciando risposta AI:', cleanText.substring(0, 50) + '...');
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'it-IT';
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                // Seleziona voce italiana se disponibile
+                const voices = speechSynthesis.getVoices();
+                const italianVoice = voices.find(voice => 
+                    voice.lang.includes('it') && 
+                    (voice.name.includes('Alice') || voice.name.includes('Federica') || voice.name.includes('Luca'))
+                ) || voices.find(voice => voice.lang.includes('it'));
+                
+                if (italianVoice) {
+                    utterance.voice = italianVoice;
+                    console.log('🗣️ Utilizzando voce italiana:', italianVoice.name);
+                }
+                
+                utterance.onstart = () => {
+                    console.log('🔊 Sintesi vocale avviata');
+                    if (window.showFloatingStatus) {
+                        window.showFloatingStatus('🔊 AI sta parlando...');
+                    }
+                };
+                
+                utterance.onend = () => {
+                    console.log('✅ Sintesi vocale completata');
+                    if (window.showFloatingStatus) {
+                        window.showFloatingStatus('🤖 AI pronto');
+                    }
+                };
+                
+                utterance.onerror = (event) => {
+                    console.error('❌ Errore sintesi vocale:', event.error);
+                };
+                
+                speechSynthesis.speak(utterance);
+                
+                // Fallback per iOS - doppio tentativo
+                if (/iPad|iPhone/.test(navigator.userAgent)) {
+                    setTimeout(() => {
+                        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+                            console.log('🔄 Retry speech synthesis per iOS');
+                            speechSynthesis.speak(utterance);
+                        }
+                    }, 500);
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore speech synthesis:', error);
+            }
+        },
+
+        /**
+         * Inizializza sistema vocale e carica voci
+         */
+        initVoiceSystem() {
+            try {
+                // Carica voci disponibili
+                const loadVoices = () => {
+                    const voices = speechSynthesis.getVoices();
+                    console.log('🗣️ Voci disponibili:', voices.length);
+                    
+                    const italianVoices = voices.filter(voice => voice.lang.includes('it'));
+                    console.log('🇮🇹 Voci italiane:', italianVoices.map(v => v.name));
+                };
+                
+                // Carica immediatamente se disponibili
+                if (speechSynthesis.getVoices().length > 0) {
+                    loadVoices();
+                } else {
+                    // Aspetta che vengano caricate
+                    speechSynthesis.onvoiceschanged = loadVoices;
+                }
+                
+                console.log('✅ Sistema vocale AI inizializzato');
+            } catch (error) {
+                console.error('❌ Errore inizializzazione sistema vocale:', error);
+            }
         },
 
         /**
@@ -286,22 +393,33 @@ window.FlavioAIAssistant = (function() {
         },
 
         /**
-         * Invia messaggio con API corretta e fallback
+         * Invia messaggio con API corretta, supporto vocale e fallback
          */
-        async sendMessage() {
-            const input = document.getElementById('ai-input');
-            const message = input.value.trim();
+        async sendMessage(customMessage = null, isVoiceInput = false) {
+            let message;
+            
+            if (customMessage) {
+                // Messaggio diretto (es. da input vocale)
+                message = customMessage.trim();
+            } else {
+                // Messaggio da interfaccia
+                const input = document.getElementById('ai-input');
+                message = input.value.trim();
+                if (input) input.value = '';
+            }
+            
             if (!message) return;
 
-            input.value = '';
+            console.log(`🗣️ Messaggio ${isVoiceInput ? 'VOCALE' : 'TESTUALE'}: ${message}`);
+            
             this.addMessage(message, 'user');
-            this.addMessage('🤔 Sto elaborando...', 'assistant', true);
+            this.addMessage(isVoiceInput ? '🎤 Sto elaborando il tuo messaggio vocale...' : '🤔 Sto elaborando...', 'assistant', true);
 
             try {
                 const modelSelect = document.getElementById('ai-model');
                 const model = modelSelect ? modelSelect.value : 'claude-3-5-sonnet-20241022';
                 
-                console.log('🚀 Tentativo chiamata API:', { message, model });
+                console.log('🚀 Tentativo chiamata API:', { message, model, isVoiceInput });
                 
                 const response = await fetch('/.netlify/functions/claude-ai', {
                     method: 'POST',
@@ -312,7 +430,7 @@ window.FlavioAIAssistant = (function() {
                     body: JSON.stringify({
                         message: message,
                         model: model,
-                        isVoiceInput: false,
+                        isVoiceInput: isVoiceInput,
                         supabaseData: { timestamp: new Date().toISOString() }
                     })
                 });
@@ -341,7 +459,14 @@ window.FlavioAIAssistant = (function() {
                     messages.removeChild(messages.lastElementChild);
                 }
                 
-                this.addMessage(result.response || 'Nessuna risposta ricevuta.', 'assistant');
+                const aiResponse = result.response || 'Nessuna risposta ricevuta.';
+                this.addMessage(aiResponse, 'assistant');
+                
+                // 🔊 SINTESI VOCALE PER INPUT VOCALI
+                if (isVoiceInput) {
+                    console.log('🔊 Attivazione sintesi vocale per risposta AI');
+                    this.speakResponse(aiResponse);
+                }
                 
             } catch (error) {
                 console.error('❌ Errore AI completo:', error);
@@ -350,12 +475,21 @@ window.FlavioAIAssistant = (function() {
                     messages.removeChild(messages.lastElementChild);
                 }
                 
+                let fallbackResponse;
                 // Usa fallback locale per test
                 if (error.message.includes('500') || error.message.includes('API key')) {
                     this.addMessage('⚠️ API non configurata. Uso risposta di test:', 'assistant');
-                    this.addMessage(this.getFallbackResponse(message), 'assistant');
+                    fallbackResponse = this.getFallbackResponse(message);
+                    this.addMessage(fallbackResponse, 'assistant');
                 } else {
-                    this.addMessage('⚠️ Errore di rete. Verifica la connessione internet.', 'assistant');
+                    fallbackResponse = '⚠️ Errore di rete. Verifica la connessione internet.';
+                    this.addMessage(fallbackResponse, 'assistant');
+                }
+                
+                // 🔊 SINTESI VOCALE ANCHE PER ERRORI SE INPUT VOCALE
+                if (isVoiceInput && fallbackResponse) {
+                    console.log('🔊 Attivazione sintesi vocale per fallback');
+                    this.speakResponse(fallbackResponse);
                 }
             }
         },
