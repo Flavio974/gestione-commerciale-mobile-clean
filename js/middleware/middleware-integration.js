@@ -341,6 +341,7 @@ class MiddlewareIntegration {
                             const input = document.getElementById('ai-input');
                             if (input) {
                                 message = input.value.trim();
+                                isVoiceInput = false; // Chiaramente input da tastiera
                                 console.log('🔌 📝 Messaggio letto dall\'input field:', message);
                             }
                         }
@@ -361,7 +362,7 @@ class MiddlewareIntegration {
                         } else if (middlewareResult.success) {
                             // Gestisci risposta middleware
                             console.log('🔌 ✅ RISPOSTA MIDDLEWARE:', middlewareResult.response);
-                            this.handleFlavioAIResponse(aiInstance, message, middlewareResult);
+                            this.handleFlavioAIResponse(aiInstance, message, middlewareResult, isVoiceInput);
                             return middlewareResult;
                         } else {
                             // Fallback con log
@@ -384,7 +385,7 @@ class MiddlewareIntegration {
     /**
      * Gestisce risposta per FlavioAIAssistant
      */
-    handleFlavioAIResponse(aiInstance, userMessage, middlewareResult) {
+    handleFlavioAIResponse(aiInstance, userMessage, middlewareResult, isVoiceInput = false) {
         // Inizializza messages se non esiste
         if (!aiInstance.messages) {
             aiInstance.messages = [];
@@ -408,14 +409,30 @@ class MiddlewareIntegration {
         // Salva cronologia
         localStorage.setItem('ai_chat_history', JSON.stringify(aiInstance.messages));
         
-        // Aggiorna UI
-        if (aiInstance.renderMessages) {
-            aiInstance.renderMessages();
+        // Aggiorna UI usando il metodo corretto di FlavioAIAssistant
+        if (aiInstance.addMessage) {
+            aiInstance.addMessage(userMessage, 'user');
+            aiInstance.addMessage(middlewareResult.response, 'assistant');
+            console.log('🔌 ✅ UI aggiornata con messaggio middleware');
+        } else {
+            console.warn('🔌 ⚠️ aiInstance.addMessage non disponibile');
         }
         
-        // Gestisci TTS
-        if (aiInstance.speakResponse) {
+        // Pulisci input field se è input testuale
+        if (!isVoiceInput) {
+            const input = document.getElementById('ai-input');
+            if (input) {
+                input.value = '';
+                console.log('🔌 🧹 Input field pulito');
+            }
+        }
+        
+        // Gestisci TTS solo per input vocale
+        if (isVoiceInput && aiInstance.speakResponse) {
+            console.log('🔌 🔊 TTS attivato per input vocale');
             aiInstance.speakResponse(middlewareResult.response);
+        } else {
+            console.log('🔌 🔇 TTS disattivato per input testuale');
         }
     }
 
