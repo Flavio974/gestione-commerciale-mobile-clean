@@ -223,9 +223,24 @@ window.FlavioAIAssistant = (function() {
                         <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                             <label><strong>Modello:</strong></label>
                             <select id="ai-model" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                                <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Veloce)</option>
-                                <option value="gpt-4o-mini">GPT-4o Mini (Economico)</option>
-                                <option value="gpt-4o">GPT-4o (Potente)</option>
+                                <optgroup label="🤖 Claude (Anthropic)">
+                                    <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Veloce)</option>
+                                    <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (Economico)</option>
+                                    <option value="claude-3-opus-20240229">Claude 3 Opus (Potente)</option>
+                                    <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                                    <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                                </optgroup>
+                                <optgroup label="🧠 GPT (OpenAI)">
+                                    <option value="gpt-4o">GPT-4o (Più recente)</option>
+                                    <option value="gpt-4o-mini">GPT-4o Mini (Economico)</option>
+                                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                    <option value="gpt-4">GPT-4 (Classico)</option>
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                </optgroup>
+                                <optgroup label="🚀 OpenAI o1 (Reasoning)">
+                                    <option value="o1-preview">o1-preview (Beta)</option>
+                                    <option value="o1-mini">o1-mini (Veloce)</option>
+                                </optgroup>
                             </select>
                             <button onclick="window.FlavioAIAssistant.testConnection()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test API</button>
                         </div>
