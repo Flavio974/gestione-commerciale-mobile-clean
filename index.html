@@ -931,6 +931,22 @@
       background: linear-gradient(135deg, #00b894, #00a085);
     }
 
+    .stop-btn-pulse {
+      animation: stopPulse 1s infinite !important;
+    }
+
+    @keyframes stopPulse {
+      0% {
+        box-shadow: 0 8px 32px rgba(255, 69, 58, 0.4), 0 0 0 0 rgba(255, 69, 58, 0.7);
+      }
+      70% {
+        box-shadow: 0 8px 32px rgba(255, 69, 58, 0.4), 0 0 0 10px rgba(255, 69, 58, 0);
+      }
+      100% {
+        box-shadow: 0 8px 32px rgba(255, 69, 58, 0.4), 0 0 0 0 rgba(255, 69, 58, 0);
+      }
+    }
+
     .floating-voice-status {
       background: rgba(0,0,0,0.8);
       color: white;
@@ -1988,9 +2004,13 @@
         🤖
       </button>
       
-      <!-- Pulsante modalità automobile AI -->
-      <button id="floating-auto-btn" class="floating-mic-btn" title="Modalità automobile AI - Hey Assistente">
-        🚗
+      <!-- Pulsanti modalità automobile AI separati -->
+      <button id="floating-auto-on-btn" class="floating-mic-btn" title="Attiva modalità automobile AI" onclick="startAutoModeAI()" style="background: #34C759;">
+        🚗 ON
+      </button>
+      
+      <button id="floating-auto-off-btn" class="floating-mic-btn" title="Disattiva modalità automobile AI" onclick="stopAutoModeAI()" style="background: #FF453A; display: none;">
+        🚗 OFF
       </button>
       
       <!-- Pulsante controlli avanzati -->
@@ -1999,7 +2019,7 @@
       </button>
       
       <!-- Pulsante stop risposta vocale AI -->
-      <button id="floating-stop-btn" class="floating-mic-btn" title="Ferma risposta vocale AI" onclick="stopAIVoiceResponse()" style="display: none; background: #FF453A; animation: pulse 1s infinite;">
+      <button id="floating-stop-btn" class="floating-mic-btn stop-btn-pulse" title="Ferma risposta vocale AI" onclick="stopAIVoiceResponse()" style="display: none; background: #FF453A;">
         ⏹️
       </button>
     </div>
@@ -2082,10 +2102,12 @@
       }
     }, 3000);
 
-    // Gestione click pulsante microfono
+    // Gestione click pulsanti vocali
     document.addEventListener('DOMContentLoaded', () => {
       const micBtn = document.getElementById('floating-mic-btn');
-      const autoBtn = document.getElementById('floating-auto-btn');
+      const autoOnBtn = document.getElementById('floating-auto-on-btn');
+      const autoOffBtn = document.getElementById('floating-auto-off-btn');
+      const stopBtn = document.getElementById('floating-stop-btn');
       const status = document.getElementById('floating-voice-status');
 
       if (micBtn) {
@@ -2095,10 +2117,24 @@
         });
       }
 
-      if (autoBtn) {
-        autoBtn.addEventListener('click', () => {
-          console.log('🚗 Click modalità automobile');
-          toggleAutoMode();
+      if (autoOnBtn) {
+        autoOnBtn.addEventListener('click', () => {
+          console.log('🚗 Click AUTO ON');
+          startAutoModeAI();
+        });
+      }
+
+      if (autoOffBtn) {
+        autoOffBtn.addEventListener('click', () => {
+          console.log('🚗 Click AUTO OFF');
+          stopAutoModeAI();
+        });
+      }
+
+      if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+          console.log('⏹️ Click STOP risposta vocale');
+          stopAIVoiceResponse();
         });
       }
     });
@@ -2348,6 +2384,16 @@
     // 🚗 MODALITÀ AUTOMOBILE AI - Wake word "Hey Assistente" + Ascolto continuo
     let autoModeType = 'off'; // 'off', 'wakeword', 'continuous'
     
+    // Funzione per avviare modalità automobile
+    function startAutoModeAI() {
+      autoModeType = 'continuous'; // Modalità continua diretta
+      autoModeActive = true;
+      console.log('🚗 Modalità automobile: ATTIVATA (continua)');
+      startAutoModeContinuous();
+      updateAutoModeUI();
+    }
+    
+    // Funzione originale per compatibilità
     function toggleAutoMode() {
       // Cicla tra: OFF → Wake Word → Continuo → OFF
       if (autoModeType === 'off') {
@@ -2367,6 +2413,22 @@
       }
       
       updateFloatingUI();
+    }
+
+    // 🎨 AGGIORNA UI PULSANTI AUTOMOBILE
+    function updateAutoModeUI() {
+      const autoOnBtn = document.getElementById('floating-auto-on-btn');
+      const autoOffBtn = document.getElementById('floating-auto-off-btn');
+      
+      if (autoModeType === 'off') {
+        if (autoOnBtn) autoOnBtn.style.display = 'block';
+        if (autoOffBtn) autoOffBtn.style.display = 'none';
+        showFloatingStatus('🚗 Modalità automobile: OFF');
+      } else {
+        if (autoOnBtn) autoOnBtn.style.display = 'none';
+        if (autoOffBtn) autoOffBtn.style.display = 'block';
+        showFloatingStatus('🚗 Modalità automobile: ON');
+      }
     }
 
     // 🎯 WAKE WORD MODE - "Hey Assistente" (Simulato con riconoscimento continuo)
@@ -2579,13 +2641,16 @@
         window.VoiceRecognition.stop();
       }
       
+      // Reset stato e aggiorna UI
+      autoModeType = 'off';
+      autoModeActive = false;
+      updateAutoModeUI();
       showFloatingStatus('🛑 Modalità auto OFF');
     }
 
-    // Aggiorna UI pulsanti AI vocali con tre modalità
+    // Aggiorna UI pulsanti AI vocali
     function updateFloatingUI() {
       const micBtn = document.getElementById('floating-mic-btn');
-      const autoBtn = document.getElementById('floating-auto-btn');
       
       if (micBtn) {
         if (isCurrentlyListening) {
@@ -2597,37 +2662,15 @@
           micBtn.classList.remove('listening');
           micBtn.textContent = '🤖';
           micBtn.title = 'Parla con AI Assistant';
+          
           if (autoModeType === 'off') {
             showFloatingStatus('🤖 Pronto per AI');
           }
         }
       }
       
-      if (autoBtn) {
-        // Aggiorna UI basata sulla modalità attuale
-        if (autoModeType === 'wakeword') {
-          autoBtn.classList.add('auto-mode');
-          autoBtn.textContent = '🚗';
-          autoBtn.title = 'Modalità Wake Word attiva - Clicca per Continuo';
-          if (!isCurrentlyListening) {
-            showFloatingStatus('🚗 "Hey Assistente" attivo');
-          }
-        } else if (autoModeType === 'continuous') {
-          autoBtn.classList.add('auto-mode');
-          autoBtn.textContent = '🔄';
-          autoBtn.title = 'Modalità Continua attiva - Clicca per OFF';
-          if (!isCurrentlyListening) {
-            showFloatingStatus('🔄 Ascolto continuo attivo');
-          }
-        } else {
-          autoBtn.classList.remove('auto-mode');
-          autoBtn.textContent = '🚗';
-          autoBtn.title = 'Clicca per Wake Word "Hey Assistente"';
-          if (!isCurrentlyListening) {
-            showFloatingStatus('🤖 AI Assistant pronto');
-          }
-        }
-      }
+      // Aggiorna anche l'UI dei pulsanti automobile
+      updateAutoModeUI();
     }
 
     // Mostra status
