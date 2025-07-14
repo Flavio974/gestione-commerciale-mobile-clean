@@ -1741,6 +1741,15 @@
       safeLoadQueue('/js/ai/flavio-ai-assistant.js'),
       safeLoadQueue('/js/ai/supabase-ai-integration.js')
     ])
+    .then(() => {
+      // 🔄 CARICAMENTO MIDDLEWARE AI - Sistema di routing intelligente  
+      console.log('🔄 Caricamento middleware AI...');
+      return safeLoadQueue(
+        '/js/middleware/request-middleware.js',
+        '/js/middleware/ai-middleware.js', 
+        '/js/middleware/middleware-integration.js'
+      );
+    })
     .then(() => Promise.all([
       // DDTFT modules (parallelo)
       safeLoadQueue(
@@ -1952,6 +1961,9 @@
           console.log('🎯 Inizializzazione FlavioAIAssistant...');
           window.FlavioAIAssistant.init();
         }
+        
+        // 🔄 Il Middleware AI si auto-inizializza tramite DOMContentLoaded
+        console.log('🔄 Middleware AI: Auto-inizializzazione in corso...');
         
         // 🎤 Inizializzazione SmartAssistant vocale
         if (window.SmartAssistant && typeof window.SmartAssistant.init === 'function') {
