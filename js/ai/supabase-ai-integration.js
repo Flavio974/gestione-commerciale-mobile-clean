@@ -23,7 +23,21 @@ class SupabaseAIIntegration {
      * Verifica se Supabase è disponibile
      */
     isSupabaseAvailable() {
-        return this.supabase && typeof this.supabase.from === 'function';
+        const available = this.supabase && typeof this.supabase.from === 'function';
+        if (!available) {
+            console.log('🔍 DEBUG Supabase availability:');
+            console.log('  - this.supabase:', !!this.supabase);
+            console.log('  - this.supabase.from:', typeof this.supabase?.from);
+            console.log('  - window.supabaseClient:', !!window.supabaseClient);
+            
+            // Fallback: usa window.supabaseClient se disponibile
+            if (!this.supabase && window.supabaseClient) {
+                console.log('🔄 Using window.supabaseClient as fallback');
+                this.supabase = window.supabaseClient;
+                return typeof this.supabase.from === 'function';
+            }
+        }
+        return available;
     }
 
     /**
@@ -41,6 +55,12 @@ class SupabaseAIIntegration {
         console.log('🔄 Invalidating AI cache...');
         this.cache.lastUpdate = 0; // Force next getAllData to refresh
         this.offlineMode = false;   // Reset offline mode
+        
+        // Force re-check di Supabase availability
+        if (!this.supabase && window.supabaseClient) {
+            console.log('🔄 Re-linking to window.supabaseClient during cache invalidation');
+            this.supabase = window.supabaseClient;
+        }
     }
 
     /**

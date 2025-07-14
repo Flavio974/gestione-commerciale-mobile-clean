@@ -1076,8 +1076,10 @@ class RequestMiddleware {
             
             if (ordini.length === 0) {
                 console.log('⚠️ MIDDLEWARE: Nessun dato storico trovato anche dopo refresh');
+                console.log('🔍 DEBUG supabaseData:', supabaseData);
             } else {
                 console.log(`✅ MIDDLEWARE: Caricati ${ordini.length} record storici aggiornati`);
+                console.log('🔍 DEBUG sample ordini:', ordini.slice(0, 2));
             }
             
             if (!params.cliente) {
@@ -1091,9 +1093,14 @@ class RequestMiddleware {
                 }
                 
                 // Conta ordini distinti usando numero_ordine
-                const ordiniDistinti = new Set(
-                    ordini.map(o => o.numero_ordine).filter(n => n && n !== null)
-                ).size;
+                const numeriOrdine = ordini.map(o => o.numero_ordine).filter(n => n && n !== null);
+                const ordiniDistinti = new Set(numeriOrdine).size;
+                
+                console.log('🔍 DEBUG conteggio ordini:');
+                console.log('  - Total records:', ordini.length);
+                console.log('  - Numeri ordine trovati:', numeriOrdine.length);
+                console.log('  - Ordini distinti:', ordiniDistinti);
+                console.log('  - Sample numeri ordine:', numeriOrdine.slice(0, 5));
                 
                 return {
                     success: true,
