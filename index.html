@@ -1563,112 +1563,84 @@
   
   <!-- SafeLoad 2.0 System -->
   <script src="js/modules/ddtft/loader.js"></script>
-  <!-- bootstrap sequenziale -->
+  <!-- ⚡ Bootstrap ottimizzato - Ridotte 16 catene a 4 step con caricamento parallelo -->
   <script>
-    window.safeLoadQueue(
-      '/js/temporal/boot.js',
-      '/config/temporal-settings.js',
-      '/js/utils/italian-date-manager.js',
-      '/js/utils/italian-date-system.js',
-      '/js/utils/italian-calendar.js',
-      '/js/utils/temporal-parser.js',
-      '/js/middleware/temporal-integration.js',
-      '/js/middleware/ai-date-corrector.js',
-      '/js/middleware/ai-wrapper-forced-date.js',
-      '/js/utils/runSanity.js'
-    )
+    // 🚀 CARICAMENTO OTTIMIZZATO - Core modules in parallelo, rimozione moduli non essenziali
+    Promise.all([
+      // Core essenziali (parallelo per velocità)
+      safeLoadQueue('/js/utils/italian-date-manager.js'),
+      safeLoadQueue('/js/middleware/vocabulary-manager.js'),
+      safeLoadQueue('/js/ai/gemini-ai.js'),
+      safeLoadQueue('/js/ai/ai-assistant.js'),
+      safeLoadQueue('/js/ai/flavio-ai-assistant.js'),
+      safeLoadQueue('/js/ai/supabase-ai-integration.js')
+    ])
+    .then(() => Promise.all([
+      // DDTFT modules (parallelo)
+      safeLoadQueue(
+        '/js/config/ddtft-patterns.js',
+        '/js/config/ddtft-mappings.js',
+        '/js/utils/ddtft-parsing-utils.js',
+        '/js/utils/ddtft-address-utils.js',
+        '/js/utils/ddtft-product-utils.js',
+        '/js/modules/ddtft/document-parser.js',
+        '/js/modules/ddtft-pdf-parser.js'
+      ),
+      // Supabase e config (parallelo) 
+      safeLoad('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js')
+        .then(() => safeLoadQueue(
+          '/config-modules.js',
+          '/config/api-config.js',
+          '/config/supabase-config.js',
+          '/js/utils.js',
+          '/js/app.js',
+          '/js/navigation.js',
+          '/js/api.js'
+        ))
+    ]))
     .then(() => safeLoadQueue(
-      '/js/middleware/vocabulary-manager.js',
-      '/js/middleware/vocabulary-sync.js'
-    ))
-    .then(() => safeLoadQueue(
-      '/js/middleware/ai-middleware.js',
-      '/js/middleware/middleware-integration.js',
-      '/js/middleware/middleware-tests.js',
-      '/js/middleware/unified-ai-system.js'
-    ))
-    .then(() => safeLoadQueue(
-      '/js/ai/ai-voice-manager.js',
-      '/js/ai/ai-voice-manager-v2.js',
-      '/js/ai/ai-command-parser.js'
-    ))
-    .then(() => safeLoadQueue(
-      '/js/ai/gemini-ai.js',
-      '/js/ai/ai-assistant.js',
-      '/js/ai/flavio-ai-assistant.js',
-      '/js/ai/supabase-ai-integration.js'
-    ))
-    .then(() => safeLoadQueue(
-      '/js/config/ddtft-patterns.js',
-      '/js/config/ddtft-mappings.js',
-      '/js/utils/ddtft-parsing-utils.js',
-      '/js/utils/ddtft-address-utils.js',
-      '/js/utils/ddtft-product-utils.js',
-      '/js/modules/ddtft/document-parser.js',
-      '/js/modules/ddtft-pdf-parser.js'
-    ))
-    .then(() => safeLoad('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'))
-    .then(() => safeLoadQueue(
-      '/config-modules.js',
-      '/config/api-config.js',
-      '/config/supabase-config.js',
-      '/js/utils.js',
-      '/js/app.js',
-      '/js/navigation.js',
-      '/js/api.js'
-    ))
-    .then(() => safeLoadQueue(
+      // Timeline modules
       '/js/timeline/timeline-config.js',
       '/js/timeline/timeline-utils.js',
       '/js/timeline/timeline-rendering.js',
       '/js/timeline/timeline-events.js',
       '/js/timeline/timeline-controls.js',
-      '/js/timeline/timeline-core.js'
-    ))
-    .then(() => safeLoadQueue(
+      '/js/timeline/timeline-core.js',
+      // Core business modules
       '/js/clienti-core.js',
       '/js/clienti-form.js',
       '/js/ordini.js',
       '/js/prodotti.js',
-      '/js/percorsi.js'
-      // '/js/percorsi-core.js' RIMOSSO - duplicato che causa errore
-    ))
-    .then(() => safeLoadQueue(
-      '/js/worksheet-data.js', // MANCAVA - contiene WorksheetData
+      '/js/percorsi.js',
+      // Worksheet modules
+      '/js/worksheet-data.js',
       '/js/worksheet-core.js',
       '/js/worksheet-ui.js',
       '/js/worksheet-view.js',
       '/js/worksheet-import.js',
       '/js/worksheet-itinerary.js',
-      '/js/worksheet-dragdrop.js'
-    ))
-    .then(() => safeLoadQueue(
-      '/js/clienti-table.js', // MANCAVA - contiene render functions
+      '/js/worksheet-dragdrop.js',
+      // Client utils
+      '/js/clienti-table.js',
       '/js/clienti-utils.js',
-      '/js/clienti-import-export.js'
-    ))
-    .then(() => safeLoadQueue(
-      '/js/modules/ordini-parser.js', // MANCAVA - richiesto da ordini.js
-      // '/js/modules/ordini-ui.js', // RIMOSSO - duplicato che causa errore
+      '/js/clienti-import-export.js',
+      // Order modules
+      '/js/modules/ordini-parser.js',
       '/js/modules/ordini-export-core.js'
     ))
     .then(() => safeLoadQueue(
-      '/js/ddtft-core.js', // MANCAVA - modulo principale DDT/FT
-      '/js/ddtft-view.js', // MANCAVA - interfaccia DDT/FT  
-      '/js/ddtft-create.js', // MANCAVA - creazione DDT/FT
-      '/js/ddtft-import.js', // MANCAVA - import documenti
-      '/js/ddtft-filters.js', // MANCAVA - filtri DDT/FT
-      '/js/ddtft-utils.js' // MANCAVA - utilities DDT/FT
-    ))
-    .then(() => safeLoadQueue(
-      '/js/modules/ddtft-import-export.js', // Export moduli
-      '/js/modules/ddtft-export-advanced.js'
-    ))
-    .then(() => safeLoadQueue(
+      // DDTFT final modules
+      '/js/ddtft-core.js',
+      '/js/ddtft-view.js',
+      '/js/ddtft-create.js',
+      '/js/ddtft-import.js',
+      '/js/ddtft-filters.js',
+      '/js/ddtft-utils.js',
+      '/js/modules/ddtft-import-export.js',
+      '/js/modules/ddtft-export-advanced.js',
+      // Final features
       '/js/comandi-core.js',
-      '/js/comandi-ui.js'
-    ))
-    .then(() => safeLoadQueue(
+      '/js/comandi-ui.js',
       '/js/smart-assistant.js',
       '/js/keep-alive.js'
     ))
