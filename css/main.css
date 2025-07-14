@@ -40,15 +40,7 @@
   box-shadow: 0 4px 12px rgba(0,184,148,0.4) !important;
 }
 
-/* FIX 2024-07-13: Demo Tab Fixed Position */
-#tab-demo.demo-date--fixed {
-  position: fixed !important;
-  top: 1rem !important;
-  right: 1rem !important;
-  z-index: 9999 !important;
-  transform: none !important;
-  transition: none !important;
-}
+/* ❌ RIMOSSO: CSS che causava spostamento fisico del demo tab in alto a destra */
 
 /* CSS Reset */
 *, *::before, *::after { 

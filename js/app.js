@@ -244,47 +244,8 @@ const App = {
         }
       };
 
-      /**
-       * FIX 2024-07-13 — stop moving demo date tab
-       * Mostra #tab-demo una sola volta e poi la blocca.
-       * Imposta window.ALLOW_DEMO_TAB_MOVE = true prima del load
-       * se vuoi ripristinare il comportamento precedente.
-       */
-      if (!window.ALLOW_DEMO_TAB_MOVE) {
-        // Esegui UNA SOLA VOLTA
-        requestAnimationFrame(() => {
-          // ensureDemoTab(); // 🔒 RIMOSSO - causava spostamento tab (vecchia funzione)
-          const tab = document.querySelector('#tab-demo');
-          if (tab) {
-            tab.classList.add('demo-date--fixed');
-            console.log('🔒 DEMO TAB BLOCCATO - NON SI SPOSTERÀ PIÙ');
-          }
-        });
-      } else {
-        // VECCHIO COMPORTAMENTO (solo se esplicitamente richiesto)
-        console.log('⚠️ DEMO TAB MOVEMENT ENABLED - vecchio comportamento attivo');
-        // ensureDemoTab(); // 🔒 RIMOSSO - causava spostamento tab
-        // setTimeout(ensureDemoTab, 1000); // 🔒 RIMOSSO - causava spostamento tab
-        // setTimeout(ensureDemoTab, 3000); // 🔒 RIMOSSO - causava spostamento tab
-        // setTimeout(ensureDemoTab, 5000); // 🔒 RIMOSSO - causava spostamento tab
-        
-        // Monitora cambiamenti DOM e riapplica se necessario
-        const observer = new MutationObserver(() => {
-          const demoTab = document.getElementById('tab-demo');
-          if (!demoTab || getComputedStyle(demoTab).display === 'none') {
-            console.log('🔄 DEMO TAB SCOMPARSO - Ripristino...');
-            // ensureDemoTab(); // 🔒 RIMOSSO - causava spostamento tab
-          }
-        });
-        
-        // Osserva cambiamenti nella navigazione
-        const navContainer = document.getElementById('main-navigation') || document.body;
-        observer.observe(navContainer, { 
-          childList: true, 
-          subtree: true, 
-          attributes: true, 
-          attributeFilter: ['style', 'class'] 
-        });
+      // ❌ RIMOSSO: Tutto il sistema di controllo demo tab che causava spostamenti
+        // ❌ RIMOSSO: MutationObserver che monitorava demo tab
         
         // PROTEZIONE CONTRO REINIZIALIZZAZIONE AUDIO
         // Intercetta eventi che potrebbero rimuovere il tab
