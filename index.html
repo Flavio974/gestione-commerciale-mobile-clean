@@ -2156,25 +2156,33 @@
       showFloatingStatus('🛑 Riconoscimento fermato');
     }
 
-    // 🚗 MODALITÀ AUTOMOBILE AI - Wake word "Hey Assistente" per conversazione AI
+    // 🚗 MODALITÀ AUTOMOBILE AI - Wake word "Hey Assistente" + Ascolto continuo
+    let autoModeType = 'off'; // 'off', 'wakeword', 'continuous'
+    
     function toggleAutoMode() {
-      autoModeActive = !autoModeActive;
-      console.log(`🚗 Modalità automobile AI: ${autoModeActive ? 'ON' : 'OFF'}`);
-      
-      if (autoModeActive) {
-        // Attiva modalità automobile con wake word AI
-        startAutoModeAI();
+      // Cicla tra: OFF → Wake Word → Continuo → OFF
+      if (autoModeType === 'off') {
+        autoModeType = 'wakeword';
+        autoModeActive = true;
+        console.log('🚗 Modalità automobile: WAKE WORD attivata');
+        startAutoModeWakeWord();
+      } else if (autoModeType === 'wakeword') {
+        autoModeType = 'continuous';
+        console.log('🚗 Modalità automobile: ASCOLTO CONTINUO attivato');
+        startAutoModeContinuous();
       } else {
-        // Disattiva modalità automobile
+        autoModeType = 'off';
+        autoModeActive = false;
+        console.log('🚗 Modalità automobile: OFF');
         stopAutoModeAI();
       }
       
       updateFloatingUI();
     }
 
-    // Avvia modalità automobile AI integrata
-    function startAutoModeAI() {
-      console.log('🚗 Avvio modalità automobile AI integrata...');
+    // 🎯 WAKE WORD MODE - "Hey Assistente" 
+    function startAutoModeWakeWord() {
+      console.log('🚗 Avvio modalità WAKE WORD: "Hey Assistente"...');
       
       // Prima priorità: AIVoiceManager per wake word detection
       if (window.AIVoiceManager) {
@@ -2188,14 +2196,7 @@
         // Attiva wake word detection
         if (typeof window.AIVoiceManager.startWakeWordDetection === 'function') {
           window.AIVoiceManager.startWakeWordDetection();
-          showFloatingStatus('🚗 Auto: "Hey Assistente" attivo');
-          return;
-        }
-        
-        // Fallback: attiva listening continuo
-        if (typeof window.AIVoiceManager.startListening === 'function') {
-          window.AIVoiceManager.startListening();
-          showFloatingStatus('🚗 Auto: Ascolto continuo attivo');
+          showFloatingStatus('🚗 "Hey Assistente" attivo');
           return;
         }
       }
@@ -2204,30 +2205,93 @@
       if (window.AIVoiceManagerV2 && typeof window.AIVoiceManagerV2.initForIPad === 'function') {
         console.log('📱 Attivazione AIVoiceManagerV2 per iPad...');
         window.AIVoiceManagerV2.initForIPad();
-        showFloatingStatus('🚗 Auto: iPad mode attivo');
+        showFloatingStatus('🚗 iPad wake word attivo');
         return;
       }
 
-      // Fallback: VoiceRecognition continuo
+      console.warn('⚠️ Wake word non supportato');
+      showFloatingStatus('❌ Wake word non disponibile');
+      autoModeType = 'off';
+      autoModeActive = false;
+    }
+
+    // 🔄 CONTINUOUS MODE - Ascolto continuo senza wake word
+    function startAutoModeContinuous() {
+      console.log('🚗 Avvio modalità ASCOLTO CONTINUO...');
+      
+      // Prima priorità: VoiceRecognition per ascolto continuo
       if (window.VoiceRecognition && typeof window.VoiceRecognition.start === 'function') {
         console.log('🎤 Attivazione VoiceRecognition continuo...');
+        
+        // Configura per ascolto continuo
+        if (window.VoiceRecognition.engine) {
+          window.VoiceRecognition.engine.continuous = true;
+          window.VoiceRecognition.engine.interimResults = true;
+        }
+        
         window.VoiceRecognition.start();
-        showFloatingStatus('🚗 Auto: Riconoscimento continuo');
+        showFloatingStatus('🔄 Ascolto continuo attivo');
+        
+        // Auto-riavvia se si ferma
+        setupContinuousRestart();
         return;
       }
 
-      console.warn('⚠️ Nessun sistema wake word disponibile');
-      showFloatingStatus('❌ Wake word non supportato');
-      autoModeActive = false; // Reset se non funziona
+      // Fallback: AIVoiceManager in modalità continua
+      if (window.AIVoiceManager && typeof window.AIVoiceManager.startListening === 'function') {
+        console.log('🎙️ AIVoiceManager modalità continua...');
+        window.AIVoiceManager.startListening();
+        showFloatingStatus('🔄 AI ascolto continuo');
+        return;
+      }
+
+      console.warn('⚠️ Ascolto continuo non supportato');
+      showFloatingStatus('❌ Continuo non disponibile');
+      autoModeType = 'off';
+      autoModeActive = false;
+    }
+
+    // Auto-riavvia per modalità continua
+    function setupContinuousRestart() {
+      if (autoModeType !== 'continuous') return;
+      
+      // Listener per riavvio automatico
+      const restartListener = () => {
+        if (autoModeType === 'continuous') {
+          console.log('🔄 Riavvio ascolto continuo...');
+          setTimeout(() => {
+            if (autoModeType === 'continuous' && window.VoiceRecognition) {
+              window.VoiceRecognition.start();
+            }
+          }, 1000);
+        }
+      };
+      
+      // Aggiungi listener per restart automatico
+      window.addEventListener('voicerecognition:end', restartListener);
+      
+      // Cleanup quando si disattiva
+      window.autoModeRestartListener = restartListener;
     }
 
     // Ferma modalità automobile AI
     function stopAutoModeAI() {
       console.log('🛑 Stop modalità automobile AI');
       
-      // Ferma tutti i sistemi di wake word
-      if (window.AIVoiceManager && typeof window.AIVoiceManager.stopWakeWordDetection === 'function') {
-        window.AIVoiceManager.stopWakeWordDetection();
+      // Rimuovi listener di restart continuo
+      if (window.autoModeRestartListener) {
+        window.removeEventListener('voicerecognition:end', window.autoModeRestartListener);
+        window.autoModeRestartListener = null;
+      }
+      
+      // Ferma tutti i sistemi vocali
+      if (window.AIVoiceManager) {
+        if (typeof window.AIVoiceManager.stopWakeWordDetection === 'function') {
+          window.AIVoiceManager.stopWakeWordDetection();
+        }
+        if (typeof window.AIVoiceManager.stopListening === 'function') {
+          window.AIVoiceManager.stopListening();
+        }
       }
       
       if (window.AIVoiceManagerV2 && typeof window.AIVoiceManagerV2.stopListening === 'function') {
@@ -2238,10 +2302,10 @@
         window.VoiceRecognition.stop();
       }
       
-      showFloatingStatus('🛑 Auto mode OFF');
+      showFloatingStatus('🛑 Modalità auto OFF');
     }
 
-    // Aggiorna UI pulsanti AI vocali
+    // Aggiorna UI pulsanti AI vocali con tre modalità
     function updateFloatingUI() {
       const micBtn = document.getElementById('floating-mic-btn');
       const autoBtn = document.getElementById('floating-auto-btn');
@@ -2256,20 +2320,32 @@
           micBtn.classList.remove('listening');
           micBtn.textContent = '🤖';
           micBtn.title = 'Parla con AI Assistant';
-          showFloatingStatus('🤖 Pronto per AI');
+          if (autoModeType === 'off') {
+            showFloatingStatus('🤖 Pronto per AI');
+          }
         }
       }
       
       if (autoBtn) {
-        if (autoModeActive) {
+        // Aggiorna UI basata sulla modalità attuale
+        if (autoModeType === 'wakeword') {
           autoBtn.classList.add('auto-mode');
           autoBtn.textContent = '🚗';
-          autoBtn.title = 'Modalità auto attiva - "Hey Assistente"';
-          showFloatingStatus('🚗 "Hey Assistente" attivo');
+          autoBtn.title = 'Modalità Wake Word attiva - Clicca per Continuo';
+          if (!isCurrentlyListening) {
+            showFloatingStatus('🚗 "Hey Assistente" attivo');
+          }
+        } else if (autoModeType === 'continuous') {
+          autoBtn.classList.add('auto-mode');
+          autoBtn.textContent = '🔄';
+          autoBtn.title = 'Modalità Continua attiva - Clicca per OFF';
+          if (!isCurrentlyListening) {
+            showFloatingStatus('🔄 Ascolto continuo attivo');
+          }
         } else {
           autoBtn.classList.remove('auto-mode');
           autoBtn.textContent = '🚗';
-          autoBtn.title = 'Attiva modalità automobile AI';
+          autoBtn.title = 'Clicca per Wake Word "Hey Assistente"';
           if (!isCurrentlyListening) {
             showFloatingStatus('🤖 AI Assistant pronto');
           }
