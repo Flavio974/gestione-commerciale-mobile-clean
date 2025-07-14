@@ -99,19 +99,26 @@ class MiddlewareIntegration {
      */
     async initialize() {
         try {
+            console.log('🔌 Step 1: Caricamento dipendenze...');
             // Carica tutte le dipendenze
             await this.loadDependencies();
+            console.log('🔌 Step 1: ✅ Dipendenze caricate');
             
+            console.log('🔌 Step 2: Attesa Supabase...');
             // Aspetta che SupabaseAI sia disponibile
             await this.waitForSupabase();
+            console.log('🔌 Step 2: ✅ Supabase pronto');
             
+            console.log('🔌 Step 3: Creazione AIMiddleware...');
             // Crea istanza del middleware con Supabase
             if (!window.AIMiddleware) {
                 throw new Error('AIMiddleware non disponibile');
             }
             
             this.middleware = new AIMiddleware();
+            console.log('🔌 Step 3: ✅ AIMiddleware creato');
             
+            console.log('🔌 Step 4: Collegamento Supabase...');
             // Passa il riferimento a Supabase se disponibile
             if (window.supabaseAI && window.RequestMiddleware) {
                 this.middleware.requestMiddleware = new RequestMiddleware(window.supabaseAI);
@@ -125,10 +132,14 @@ class MiddlewareIntegration {
                 }
                 console.warn('🔌 ⚠️ Middleware funziona solo con vocabolario');
             }
+            console.log('🔌 Step 4: ✅ Collegamento completato');
             
+            console.log('🔌 Step 5: Decorazione funzioni AI...');
             // Trova e decora la funzione AI esistente
             this.decorateAIFunction();
+            console.log('🔌 Step 5: ✅ Funzioni AI decorate');
             
+            console.log('🔌 Step 6: Attivazione middleware...');
             // Attiva il middleware
             this.isActive = true;
             
@@ -140,6 +151,13 @@ class MiddlewareIntegration {
             return true;
         } catch (error) {
             console.error('❌ Errore inizializzazione middleware:', error);
+            console.error('❌ Stack trace:', error.stack);
+            console.error('❌ Dettagli errore:', {
+                message: error.message,
+                name: error.name,
+                line: error.lineNumber,
+                column: error.columnNumber
+            });
             return false;
         }
     }
@@ -162,11 +180,11 @@ class MiddlewareIntegration {
             // Verifica immediatamente
             checkVocabulary();
             
-            // Timeout dopo 5 secondi
+            // Timeout dopo 10 secondi
             setTimeout(() => {
                 console.warn('🔌 ⚠️ Timeout attesa VocabularyManager - procedo comunque');
                 resolve();
-            }, 5000);
+            }, 10000);
         });
     }
 
@@ -769,7 +787,7 @@ async function initializeMiddleware() {
         return;
     }
     
-    // Attendi che l'applicazione sia caricata
+    // Attendi che l'applicazione sia caricata (aumento il delay)
     setTimeout(async () => {
         try {
             window.middlewareIntegration = new MiddlewareIntegration();
@@ -791,7 +809,7 @@ async function initializeMiddleware() {
         } catch (error) {
             console.error('❌ Errore inizializzazione middleware:', error);
         }
-    }, 2000);
+    }, 5000); // Aumentato da 2 a 5 secondi
 }
 
 // Inizializzazione automatica - gestisce sia DOM già caricato che futuro
