@@ -26,8 +26,8 @@ class ClientAliasResolver {
         try {
             console.log('🔄 Caricamento alias clienti...');
             
-            // Prima prova da Supabase
-            if (window.supabase) {
+            // Prima prova da Supabase (usa supabaseClient)
+            if (window.supabaseClient) {
                 await this.loadFromSupabase();
             } else {
                 console.log('📦 Supabase non disponibile, uso localStorage');
@@ -47,7 +47,7 @@ class ClientAliasResolver {
      * Carica alias da Supabase
      */
     async loadFromSupabase() {
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('clients')
             .select('id, nome');
             
@@ -176,11 +176,47 @@ class ClientAliasResolver {
                 this.aliases = new Map(data.aliases);
                 this.lastSync = data.timestamp;
                 console.log('📦 Alias caricati da localStorage');
+            } else {
+                // Inizializza alias predefiniti se non esistono
+                this.initializeDefaultAliases();
             }
         } catch (error) {
             console.error('❌ Errore caricamento da localStorage:', error);
             this.aliases.clear();
+            this.initializeDefaultAliases();
         }
+    }
+    
+    /**
+     * Inizializza alias predefiniti hardcoded
+     */
+    initializeDefaultAliases() {
+        console.log('🔧 Inizializzazione alias predefiniti...');
+        
+        // Alias predefiniti per problemi vocali comuni
+        const defaultAliases = [
+            { key: 'sm', client: 'ESSEMME SRL', type: 'alias_vocale' },
+            { key: 's.m.', client: 'ESSEMME SRL', type: 'alias_vocale' },
+            { key: 's m', client: 'ESSEMME SRL', type: 'alias_vocale' },
+            { key: 'esse emme', client: 'ESSEMME SRL', type: 'alias_vocale' },
+            { key: 'essemme', client: 'ESSEMME SRL', type: 'alias_vocale' },
+            { key: 'esseemme', client: 'ESSEMME SRL', type: 'alias_vocale' },
+            { key: 'donac', client: 'DONAC SRL', type: 'alias_vocale' },
+            { key: 'd.o.n.a.c.', client: 'DONAC SRL', type: 'alias_vocale' },
+            { key: 'agrimontana', client: 'AGRIMONTANA SPA', type: 'alias_vocale' },
+            { key: 'agri montana', client: 'AGRIMONTANA SPA', type: 'alias_vocale' }
+        ];
+        
+        defaultAliases.forEach(alias => {
+            this.aliases.set(alias.key, {
+                id: `default_${alias.key}`,
+                nome_principale: alias.client,
+                tipo: alias.type
+            });
+        });
+        
+        console.log(`✅ Alias predefiniti inizializzati: ${this.aliases.size} elementi`);
+        this.saveToLocalStorage();
     }
     
     /**
@@ -351,9 +387,9 @@ class ClientAliasResolver {
      */
     async addAlias(clientId, newAlias) {
         try {
-            if (window.supabase) {
+            if (window.supabaseClient) {
                 // Aggiungi tramite Supabase
-                const { data, error } = await window.supabase.rpc('add_client_alias', {
+                const { data, error } = await window.supabaseClient.rpc('add_client_alias', {
                     client_id: clientId,
                     new_alias: newAlias
                 });
@@ -381,8 +417,8 @@ class ClientAliasResolver {
      */
     async removeAlias(clientId, oldAlias) {
         try {
-            if (window.supabase) {
-                const { data, error } = await window.supabase.rpc('remove_client_alias', {
+            if (window.supabaseClient) {
+                const { data, error } = await window.supabaseClient.rpc('remove_client_alias', {
                     client_id: clientId,
                     old_alias: oldAlias
                 });
