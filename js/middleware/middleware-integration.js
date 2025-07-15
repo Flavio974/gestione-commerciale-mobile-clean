@@ -883,13 +883,32 @@ class MiddlewareIntegration {
      */
     isDataRelatedQuery(message) {
         const dataKeywords = [
+            // Database e tabelle
             'ordini', 'clienti', 'prodotti', 'database', 'tabella', 'record',
             'quanti', 'elenco', 'lista', 'cerca', 'trova', 'mostra',
             'vendite', 'fatture', 'documenti', 'storico', 'archivio',
             'magazzino', 'inventario', 'scorte', 'disponibilità',
             'percorsi', 'tragitti', 'distanze', 'chilometri',
             'statistiche', 'report', 'analisi', 'dati', 'informazioni',
-            'supabase', 'sql', 'query', 'connessione'
+            'supabase', 'sql', 'query', 'connessione',
+            
+            // Operazioni specifiche sui clienti
+            'cliente', 'ordine', 'importo', 'prezzo', 'totale', 'costo',
+            'fattura', 'documento', 'spedizione', 'consegna', 'pagamento',
+            'saldo', 'debito', 'credito', 'scadenza', 'bonifico',
+            
+            // Nomi clienti comuni (esempi dal tuo database)
+            'mandria', 'conad', 'essemme', 'supermercato', 'market',
+            'alimentari', 'generi', 'discount', 'ipermercato',
+            
+            // Verbi di ricerca dati
+            'dimmi', 'dimmi come', 'come è', 'quando è', 'dove è',
+            'chi ha', 'cosa ha', 'quale è', 'quanto è', 'quanto costa',
+            'esiste', 'esistono', 'contiene', 'include', 'comprende',
+            
+            // Informazioni aziendali
+            'indirizzo', 'telefono', 'email', 'contatto', 'partita iva',
+            'codice fiscale', 'iban', 'banca', 'sede', 'filiale'
         ];
         
         const messageLower = message.toLowerCase();
