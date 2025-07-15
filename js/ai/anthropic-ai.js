@@ -9,7 +9,7 @@ window.AnthropicAI = (function() {
     const anthropic = {
         isInitialized: false,
         apiKey: null,
-        modelName: 'claude-opus-4-20250514', // Modello predefinito Claude 4
+        modelName: 'claude-3-5-sonnet-20241022', // Modello predefinito sincronizzato con UI
         baseUrl: 'https://api.anthropic.com/v1/messages',
         maxTokens: 4000,
         temperature: 0.7,

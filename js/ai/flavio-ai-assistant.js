@@ -803,16 +803,25 @@ window.FlavioAIAssistant = (function() {
                 const modelSelect = document.getElementById('ai-model');
                 const providerSelect = document.getElementById('ai-provider-select');
                 
+                console.log('🔄 DEBUG Sincronizzazione - Elements:', {
+                    modelSelect: !!modelSelect,
+                    modelValue: modelSelect?.value,
+                    providerSelect: !!providerSelect,
+                    providerValue: providerSelect?.value
+                });
+                
                 if (modelSelect && modelSelect.value && providerSelect && providerSelect.value) {
                     const selectedModel = modelSelect.value;
                     console.log('🔄 Sincronizzazione iniziale modello:', selectedModel);
                     
                     if (providerSelect.value === 'openai' && window.OpenAI) {
-                        window.OpenAI.setModel(selectedModel);
-                        console.log('✅ Modello OpenAI sincronizzato all\'avvio:', selectedModel);
+                        console.log('🔄 Sincronizzando OpenAI...');
+                        const result = window.OpenAI.setModel(selectedModel);
+                        console.log('✅ Modello OpenAI sincronizzato all\'avvio:', selectedModel, 'Result:', result);
                     } else if (providerSelect.value === 'anthropic' && window.AnthropicAI) {
-                        window.AnthropicAI.setModel(selectedModel);
-                        console.log('✅ Modello Anthropic sincronizzato all\'avvio:', selectedModel);
+                        console.log('🔄 Sincronizzando Anthropic...');
+                        const result = window.AnthropicAI.setModel(selectedModel);
+                        console.log('✅ Modello Anthropic sincronizzato all\'avvio:', selectedModel, 'Result:', result);
                     }
                     
                     // Aggiorna le statistiche con un piccolo delay aggiuntivo per assicurarsi che setModel sia completato
@@ -822,6 +831,8 @@ window.FlavioAIAssistant = (function() {
                             console.log('📊 Statistiche provider aggiornate all\'avvio');
                         }
                     }, 100);
+                } else {
+                    console.warn('⚠️ Sincronizzazione fallita - elementi mancanti o valori vuoti');
                 }
             }, 2500); // Aumentato delay per assicurarsi che tutto sia completamente caricato
 
