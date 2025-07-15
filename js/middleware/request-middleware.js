@@ -1049,7 +1049,7 @@ class RequestMiddleware {
                     fatturato: fatturato, 
                     ordini: ordiniDistinti,
                     righe: ordiniCliente.length,
-                    dettaglio: ordiniCliente.slice(0, 5) // Prime 5 per dettaglio
+                    dettaglio: ordiniCliente // Tutti gli ordini per dettaglio completo
                 }
             };
             
@@ -1161,7 +1161,7 @@ class RequestMiddleware {
                     numeriOrdine: numeriOrdine,
                     ultimoOrdine: ultimoOrdine.displayDate,
                     ultimoOrdineNumero: ultimoOrdine.numero_ordine,
-                    dettaglio: ordiniCliente.slice(0, 3),
+                    dettaglio: ordiniCliente, // Tutti gli ordini per dettaglio completo
                     fromContext: params.fromContext || false
                 }
             };
@@ -1300,24 +1300,17 @@ class RequestMiddleware {
             // Prepara risposta dettagliata
             let response = `🛒 Cliente ${nomeCliente}: ${numOrdiniDistinti} ordini con ${tuttiprodotti.length} prodotti totali\n\n`;
             
-            // Mostra dettaglio degli ordini (massimo 3 per evitare payload troppo grandi)
+            // Mostra dettaglio di TUTTI gli ordini (nessuna limitazione)
             const ordiniArray = Object.values(ordiniProdotti);
-            const ordiniDaMostrare = ordiniArray.slice(0, 3);
             
-            ordiniDaMostrare.forEach(ordine => {
+            ordiniArray.forEach(ordine => {
                 response += `📋 Ordine ${ordine.numero} (${ordine.data}):\n`;
-                ordine.prodotti.slice(0, 5).forEach(prodotto => {
+                // Mostra TUTTI i prodotti (nessuna limitazione a 5)
+                ordine.prodotti.forEach(prodotto => {
                     response += `  • ${prodotto.descrizione} (${prodotto.codice}) - Q.tà: ${prodotto.quantita}\n`;
                 });
-                if (ordine.prodotti.length > 5) {
-                    response += `  ... e altri ${ordine.prodotti.length - 5} prodotti\n`;
-                }
                 response += '\n';
             });
-            
-            if (ordiniArray.length > 3) {
-                response += `... e altri ${ordiniArray.length - 3} ordini\n`;
-            }
             
             return {
                 success: true,
@@ -1513,7 +1506,7 @@ class RequestMiddleware {
             response += '\n\n📋 Date ordini:\n';
             
             // Mostra al massimo 10 ordini
-            const ordiniToShow = ordiniOrdinati.slice(0, 10);
+            const ordiniToShow = ordiniOrdinati; // Mostra tutti gli ordini
             ordiniToShow.forEach((ordine, index) => {
                 response += `${index + 1}. ${ordine.numero} - ${ordine.displayDate}\n`;
             });
@@ -1653,15 +1646,15 @@ class RequestMiddleware {
                 };
             }
             
-            const nomiClienti = clientiZona.slice(0, 5).map(c => c.nome || c.cliente || 'Nome sconosciuto');
+            const nomiClienti = clientiZona.map(c => c.nome || c.cliente || 'Nome sconosciuto');
             
             return {
                 success: true,
-                response: `👥 Zona ${params.zona}: ${clientiZona.length} clienti. Primi 5: ${nomiClienti.join(', ')}${clientiZona.length > 5 ? '...' : ''}`,
+                response: `👥 Zona ${params.zona}: ${clientiZona.length} clienti:\n\n${nomiClienti.map((nome, i) => `${i + 1}. ${nome}`).join('\n')}`,
                 data: { 
                     zona: params.zona,
                     clienti: clientiZona.length,
-                    lista: clientiZona.slice(0, 10) // Prime 10 per dettaglio
+                    lista: clientiZona // Lista completa
                 }
             };
             
