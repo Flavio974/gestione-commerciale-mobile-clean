@@ -364,6 +364,53 @@ class AIMiddleware {
     }
 
     /**
+     * 🔍 ESTRAE IL NOME DEL CLIENTE DA UNA QUERY
+     */
+    extractClientNameFromQuery(query) {
+        const queryLower = query.toLowerCase();
+        
+        // Pattern per rilevare clienti specifici
+        const clientPatterns = [
+            /cliente\s+([^?,.]+)/i,
+            /del\s+cliente\s+([^?,.]+)/i,
+            /di\s+([^?,.]+)/i,
+            /per\s+([^?,.]+)/i,
+            /ha\s+([^?,.]+)/i,
+            /ordini?\s+([^?,.]+)/i
+        ];
+        
+        for (const pattern of clientPatterns) {
+            const match = query.match(pattern);
+            if (match && match[1]) {
+                const clientName = match[1].trim();
+                
+                // Filtra parole comuni che non sono nomi di clienti
+                const commonWords = ['ordini', 'ordine', 'oggi', 'ieri', 'domani', 'fatto', 'ha', 'hanno', 'nel', 'del', 'database', 'sistema'];
+                if (!commonWords.includes(clientName.toLowerCase())) {
+                    console.log(`🔍 Cliente estratto: "${clientName}" da "${query}"`);
+                    return clientName;
+                }
+            }
+        }
+        
+        // Cerca nomi specifici conosciuti (dalla configurazione)
+        const knownClients = [
+            'mandria', 'la mandria', 'conad', 'essemme', 'supermercato', 'market',
+            'alimentari', 'generi', 'discount', 'ipermercato', 'coop', 'despar',
+            'carrefour', 'lidl', 'eurospin', 'penny', 'tigre', 'tigotà'
+        ];
+        
+        for (const client of knownClients) {
+            if (queryLower.includes(client)) {
+                console.log(`🔍 Cliente noto trovato: "${client}" da "${query}"`);
+                return client;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
      * GESTIONE PROMEMORIA - Integrazione con SmartAssistant
      */
     async handleScheduleReminder(params, userInput, originalContext) {
@@ -587,6 +634,51 @@ class AIMiddleware {
                 console.log('🤖 📊 CONTEGGIO ORDINI');
             }
             
+            // 🔍 RILEVA SE LA QUERY MENZIONA UN CLIENTE SPECIFICO
+            const clientNameMatch = this.extractClientNameFromQuery(userInput);
+            
+            if (clientNameMatch) {
+                console.log('🔍 Cliente rilevato nella query:', clientNameMatch);
+                
+                // Usa RequestMiddleware per conteggio cliente specifico
+                if (this.requestMiddleware) {
+                    const result = await this.requestMiddleware.countOrdini({ 
+                        cliente: clientNameMatch,
+                        righeOrdine: false 
+                    });
+                    if (result && result.success) {
+                        return result.response;
+                    }
+                }
+                
+                // Fallback: cerca direttamente nei dati
+                const allData = await this.getAllDataSafely();
+                const ordini = allData.historicalOrders?.sampleData || [];
+                
+                if (ordini.length === 0) {
+                    return "Non ci sono ordini nel database.";
+                }
+                
+                // Filtra ordini per cliente
+                const clienteNorm = clientNameMatch.toLowerCase();
+                const ordiniCliente = ordini.filter(ordine => 
+                    ordine.cliente && ordine.cliente.toLowerCase().includes(clienteNorm)
+                );
+                
+                if (ordiniCliente.length === 0) {
+                    return `❌ Nessun ordine trovato per il cliente "${clientNameMatch}".`;
+                }
+                
+                // Conta ordini distinti per il cliente
+                const ordiniDistinti = new Set(
+                    ordiniCliente.map(o => o.numero_ordine).filter(n => n && n !== null)
+                ).size;
+                
+                const nomeCliente = ordiniCliente[0].cliente;
+                return `📊 Cliente ${nomeCliente}: ${ordiniDistinti} ordini distinti (${ordiniCliente.length} righe totali)`;
+            }
+            
+            // Se non è specificato un cliente, conta tutti gli ordini
             // Usa RequestMiddleware se disponibile
             if (this.requestMiddleware) {
                 const result = await this.requestMiddleware.countOrdini({ righeOrdine: false });
