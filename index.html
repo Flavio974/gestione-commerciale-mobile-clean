@@ -1428,7 +1428,7 @@
             
             <div id="model-selection" style="margin: 15px 0; display: none;">
               <label>Seleziona Modello:</label>
-              <select id="ai-model-select" style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+              <select id="ai-model-select" onchange="autoChangeModel()" style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
                 <option value="">Seleziona un modello...</option>
               </select>
               <button onclick="changeAIModel()" class="btn btn-secondary" style="margin-left: 10px;">Cambia Modello</button>
@@ -1795,6 +1795,20 @@
       window.updateProviderStats();
     };
 
+    // ✅ FUNZIONE AUTOMATICA: Cambia modello appena selezionato
+    window.autoChangeModel = function() {
+      console.log('🔄 Auto-cambio modello attivato');
+      changeAIModel();
+      
+      // Aggiorna subito le statistiche
+      setTimeout(() => {
+        if (window.updateProviderStats) {
+          window.updateProviderStats();
+          console.log('📊 Statistiche aggiornate dopo cambio automatico modello');
+        }
+      }, 100);
+    };
+
     window.changeAIModel = function() {
       const modelSelect = document.getElementById('ai-model-select');
       const providerSelect = document.getElementById('ai-provider-select');
@@ -1920,10 +1934,18 @@
     };
     
     window.updateProviderStats = function() {
+      console.log('🔄 REFRESH STATS CHIAMATO');
       const statsDiv = document.getElementById('provider-stats');
+      
+      if (!statsDiv) {
+        console.error('❌ Elemento provider-stats non trovato');
+        return;
+      }
       
       if (window.FlavioAIAssistant) {
         const stats = window.FlavioAIAssistant.getProviderStats();
+        console.log('📊 Stats ottenute:', stats);
+        
         if (stats) {
           // Calcola token utilizzati dalla session storage
           const totalTokens = parseInt(sessionStorage.getItem('total_tokens_used') || '0');
@@ -1944,6 +1966,7 @@
               </div>
             </div>
           `;
+          console.log('✅ Stats aggiornate con successo');
         } else {
           statsDiv.innerHTML = '<span style="color: gray;">Nessun provider attivo</span>';
         }
