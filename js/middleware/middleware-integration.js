@@ -352,7 +352,54 @@ class MiddlewareIntegration {
                             return originalSendMessage(message, isVoiceInput);
                         }
                         
-                        // Processa con middleware
+                        // ✅ RISPETTA LA SELEZIONE DEL PROVIDER UTENTE
+                        // Se l'utente ha selezionato un provider specifico, bypassiamo il middleware
+                        const providerSelect = document.getElementById('ai-provider-select');
+                        if (providerSelect && providerSelect.value && aiInstance.baseAssistant?.currentProvider) {
+                            console.log('🔌 🎯 PROVIDER SELEZIONATO:', providerSelect.value, '- BYPASS MIDDLEWARE');
+                            
+                            // ✅ AGGIUNGI CONTESTO PROVIDER PER IDENTIFICAZIONE
+                            let contextualMessage = message;
+                            let providerContext = '';
+                            
+                            if (message.toLowerCase().includes('modello') || message.toLowerCase().includes('ai') || 
+                                message.toLowerCase().includes('sistema') || message.toLowerCase().includes('utilizzando') ||
+                                message.toLowerCase().includes('quale')) {
+                                
+                                if (providerSelect.value === 'openai') {
+                                    const model = 'o1-preview'; // Modello OpenAI predefinito
+                                    providerContext = `[CONTESTO: Sei specificamente il modello ${model} di OpenAI. Quando chiesto del modello, rispondi esattamente: "Sono ${model} di OpenAI".] `;
+                                } else if (providerSelect.value === 'anthropic') {
+                                    const model = 'claude-3-5-sonnet-20241022'; // Modello Anthropic predefinito
+                                    providerContext = `[CONTESTO: Sei specificamente il modello ${model} di Anthropic. Quando chiesto del modello, rispondi esattamente: "Sono ${model} di Anthropic".] `;
+                                }
+                                
+                                if (providerContext) {
+                                    contextualMessage = providerContext + message;
+                                    console.log('🔌 🤖 Contesto provider aggiunto al messaggio');
+                                }
+                            }
+                            
+                            // Invia messaggio con contesto alla funzione originale
+                            const result = await originalSendMessage(contextualMessage, isVoiceInput);
+                            
+                            // ✅ NASCONDE IL CONTESTO DALLA RISPOSTA MOSTRATA ALL'UTENTE
+                            if (providerContext && result && typeof result === 'string') {
+                                // Rimuovi il contesto dall'output mostrato all'utente
+                                const cleanMessage = message; // Il messaggio originale senza contesto
+                                
+                                // Aggiorna l'UI con il messaggio pulito
+                                if (aiInstance.updateChatUI) {
+                                    aiInstance.updateChatUI(cleanMessage, result);
+                                }
+                                
+                                console.log('🔌 🧹 Contesto nascosto dalla chat utente');
+                            }
+                            
+                            return result;
+                        }
+                        
+                        // Processa con middleware solo se nessun provider è selezionato
                         const middlewareResult = await this.middleware.processRequest(message);
                         
                         if (middlewareResult.continueWithAI) {

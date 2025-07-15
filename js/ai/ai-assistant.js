@@ -33,11 +33,19 @@ window.AIAssistant = (function() {
             // OpenAI GPT
             if (window.OpenAI) {
                 this.providers.openai = window.OpenAI;
+                // Inizializza automaticamente se non già fatto
+                if (!window.OpenAI.isInitialized) {
+                    window.OpenAI.init();
+                }
             }
 
             // Anthropic AI (Claude 4)
             if (window.AnthropicAI) {
                 this.providers.anthropic = window.AnthropicAI;
+                // Inizializza automaticamente se non già fatto
+                if (!window.AnthropicAI.isInitialized) {
+                    window.AnthropicAI.init();
+                }
             }
 
             // Altri provider possono essere aggiunti qui

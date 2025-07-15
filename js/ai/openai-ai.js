@@ -9,13 +9,37 @@ window.OpenAI = (function() {
     const openai = {
         isInitialized: false,
         apiKey: null,
-        modelName: 'gpt-4o', // Modello predefinito
+        modelName: 'o1-preview', // Modello predefinito con ragionamento
         baseUrl: 'https://api.openai.com/v1/chat/completions',
         maxTokens: 4000,
         temperature: 0.7,
         
-        // Modelli disponibili
+        // Modelli disponibili (aggiornati con modelli di ragionamento OpenAI)
         availableModels: {
+            // 🧠 REASONING MODELS (Latest Generation - 2025)
+            'o1-pro': {
+                name: 'GPT-o1 Pro 🧠',
+                description: 'Il modello di ragionamento più potente di OpenAI',
+                maxTokens: 128000,
+                contextWindow: 128000,
+                reasoning: true
+            },
+            'o1-preview': {
+                name: 'GPT-o1 Preview 🔥',
+                description: 'Modello di ragionamento avanzato per problemi complessi',
+                maxTokens: 128000,
+                contextWindow: 128000,
+                reasoning: true
+            },
+            'o1-mini': {
+                name: 'GPT-o1 Mini ⚡',
+                description: 'Ragionamento veloce ed economico per coding e math',
+                maxTokens: 128000,
+                contextWindow: 128000,
+                reasoning: true
+            },
+            
+            // GPT-4o Generation (Latest Standard Models)
             'gpt-4o': {
                 name: 'GPT-4o',
                 description: 'Modello multimodale più avanzato, veloce ed economico',
@@ -28,6 +52,8 @@ window.OpenAI = (function() {
                 maxTokens: 128000,
                 contextWindow: 128000
             },
+            
+            // GPT-4 Generation
             'gpt-4-turbo': {
                 name: 'GPT-4 Turbo',
                 description: 'Modello GPT-4 ottimizzato per velocità e efficienza',
@@ -40,6 +66,8 @@ window.OpenAI = (function() {
                 maxTokens: 8192,
                 contextWindow: 8192
             },
+            
+            // Legacy Models
             'gpt-3.5-turbo': {
                 name: 'GPT-3.5 Turbo',
                 description: 'Modello veloce ed economico per la maggior parte dei compiti',
@@ -51,7 +79,7 @@ window.OpenAI = (function() {
         /**
          * Inizializzazione
          */
-        init(apiKey, modelName = 'gpt-4o') {
+        init(apiKey, modelName = 'o1-preview') {
             try {
                 if (!apiKey) {
                     // Cerca API key dalle variabili d'ambiente o configurazione
@@ -60,6 +88,11 @@ window.OpenAI = (function() {
                         console.warn('⚠️ API Key OpenAI non configurata');
                         return false;
                     }
+                } else if (apiKey === 'backend') {
+                    // Usa backend per le API calls
+                    this.apiKey = 'backend';
+                    this.useBackend = true;
+                    console.log('✅ OpenAI configurato per usare backend');
                 } else {
                     this.apiKey = apiKey;
                 }
@@ -164,6 +197,10 @@ window.OpenAI = (function() {
         buildMessages(message, context) {
             const messages = [];
 
+            // Controlla se è un modello di ragionamento
+            const isReasoningModel = this.modelName.startsWith('o1-') || 
+                                   this.availableModels[this.modelName]?.reasoning;
+
             // Messaggio di sistema
             let systemPrompt = `Sei un assistente AI specializzato in gestione commerciale e aziendale. 
 Rispondi sempre in italiano, sii preciso e professionale.`;
@@ -176,21 +213,37 @@ Rispondi sempre in italiano, sii preciso e professionale.`;
                 systemPrompt += `\n\nStai analizzando dati aziendali. Fornisci insights utili e actionable.`;
             }
 
-            messages.push({
-                role: 'system',
-                content: systemPrompt
-            });
+            // I modelli di ragionamento non supportano system messages
+            // Incorpora le istruzioni nel messaggio utente
+            if (isReasoningModel) {
+                // Per i modelli di ragionamento, incorpora il system prompt nel messaggio utente
+                let userMessage = systemPrompt + '\n\n' + message;
+                if (context?.businessData) {
+                    userMessage += `\n\nDati aziendali:\n${JSON.stringify(context.businessData, null, 2)}`;
+                }
+                
+                messages.push({
+                    role: 'user',
+                    content: userMessage
+                });
+            } else {
+                // Per i modelli standard, usa system message separato
+                messages.push({
+                    role: 'system',
+                    content: systemPrompt
+                });
 
-            // Messaggio utente
-            let userMessage = message;
-            if (context?.businessData) {
-                userMessage += `\n\nDati aziendali:\n${JSON.stringify(context.businessData, null, 2)}`;
+                // Messaggio utente
+                let userMessage = message;
+                if (context?.businessData) {
+                    userMessage += `\n\nDati aziendali:\n${JSON.stringify(context.businessData, null, 2)}`;
+                }
+
+                messages.push({
+                    role: 'user',
+                    content: userMessage
+                });
             }
-
-            messages.push({
-                role: 'user',
-                content: userMessage
-            });
 
             return messages;
         },
@@ -202,10 +255,50 @@ Rispondi sempre in italiano, sii preciso e professionale.`;
             const payload = {
                 model: this.modelName,
                 messages: messages,
-                max_tokens: this.maxTokens,
-                temperature: this.temperature
+                max_tokens: this.maxTokens
             };
 
+            // I modelli di ragionamento (o1) non supportano temperature
+            const isReasoningModel = this.modelName.startsWith('o1-') || 
+                                   this.availableModels[this.modelName]?.reasoning;
+            
+            if (!isReasoningModel) {
+                payload.temperature = this.temperature;
+            }
+
+            // Se usa backend, invia alla funzione serverless
+            if (this.useBackend || this.apiKey === 'backend') {
+                const backendPayload = {
+                    provider: 'openai',
+                    messages: messages,
+                    model: this.modelName,
+                    max_tokens: this.maxTokens,
+                    stream: false
+                };
+
+                // Aggiungi temperature solo se non è un modello di ragionamento
+                if (!isReasoningModel) {
+                    backendPayload.temperature = this.temperature;
+                }
+
+                const response = await fetch('/.netlify/functions/claude-ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(backendPayload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`Backend API error: ${response.status} - ${errorData.error || 'Unknown error'}`);
+                }
+
+                const data = await response.json();
+                return data.content || data.message || 'Errore risposta backend';
+            }
+
+            // Altrimenti usa API diretta
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
                 headers: {

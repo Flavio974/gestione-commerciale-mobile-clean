@@ -42,14 +42,8 @@ window.FlavioAIAssistant = (function() {
          */
         setupDefaultProvider() {
             if (this.baseAssistant) {
-                // Prova prima Anthropic se disponibile
-                if (this.baseAssistant.setProvider('anthropic')) {
-                    console.log('✅ Anthropic AI configurato come provider');
-                } else if (this.baseAssistant.setProvider('openai')) {
-                    console.log('✅ OpenAI GPT configurato come provider');
-                } else {
-                    console.warn('⚠️ Nessun provider AI disponibile');
-                }
+                // Non imposta un provider predefinito - lascia che l'utente scelga
+                console.log('✅ Provider AI disponibili - utente può scegliere dall\'interfaccia');
             }
         },
 
@@ -70,10 +64,20 @@ window.FlavioAIAssistant = (function() {
 
                 // Invia al provider AI
                 let response;
-                if (this.baseAssistant) {
+                if (this.baseAssistant && this.baseAssistant.currentProvider) {
+                    // Usa il provider corrente per evitare problemi di sincronizzazione
+                    console.log('🤖 Usando provider corrente:', this.baseAssistant.currentProvider);
                     response = await this.baseAssistant.sendMessage(message, context);
                 } else {
-                    response = this.getFallbackResponse(message);
+                    // Verifica se c'è un provider selezionato nell'interfaccia
+                    const providerSelect = document.getElementById('ai-provider-select');
+                    if (providerSelect && providerSelect.value) {
+                        console.log('🔧 Attivando provider dall\'interfaccia:', providerSelect.value);
+                        this.changeProvider(providerSelect.value);
+                        response = await this.baseAssistant.sendMessage(message, context);
+                    } else {
+                        response = this.getFallbackResponse(message);
+                    }
                 }
 
                 // Aggiungi risposta alla cronologia
@@ -159,10 +163,20 @@ window.FlavioAIAssistant = (function() {
 
             if (!chatContainer) return;
 
-            // Aggiungi messaggio utente
+            // ✅ RIMUOVI CONTESTO [CONTESTO:] DAL MESSAGGIO UTENTE MOSTRATO
+            let cleanUserMessage = userMessage;
+            if (userMessage.includes('[CONTESTO:')) {
+                const contextEnd = userMessage.indexOf('] ');
+                if (contextEnd !== -1) {
+                    cleanUserMessage = userMessage.substring(contextEnd + 2);
+                    console.log('🧹 Contesto rimosso dal messaggio utente nella chat:', cleanUserMessage);
+                }
+            }
+
+            // Aggiungi messaggio utente (pulito)
             const userDiv = document.createElement('div');
             userDiv.className = 'chat-message user-message';
-            userDiv.innerHTML = `<strong>Tu:</strong> ${userMessage}`;
+            userDiv.innerHTML = `<strong>Tu:</strong> ${cleanUserMessage}`;
             chatContainer.appendChild(userDiv);
 
             // Aggiungi risposta AI
@@ -472,6 +486,183 @@ window.FlavioAIAssistant = (function() {
         },
 
         /**
+         * Cambia provider AI
+         */
+        changeProvider(providerId) {
+            try {
+                if (!this.baseAssistant) {
+                    console.error('❌ BaseAssistant non disponibile');
+                    return false;
+                }
+
+                const success = this.baseAssistant.setProvider(providerId);
+                if (success) {
+                    console.log(`✅ Provider cambiato a: ${providerId}`);
+                    return true;
+                } else {
+                    console.error(`❌ Errore cambio provider: ${providerId}`);
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Errore cambio provider:', error);
+                return false;
+            }
+        },
+
+        /**
+         * Cambia modello nel provider corrente
+         */
+        changeModel(modelId) {
+            try {
+                if (!this.baseAssistant) {
+                    console.error('❌ BaseAssistant non disponibile');
+                    return false;
+                }
+
+                const currentProvider = this.baseAssistant.currentProvider;
+                if (!currentProvider) {
+                    console.error('❌ Nessun provider attivo');
+                    return false;
+                }
+
+                // Cambia modello nel provider corrente
+                if (currentProvider.setModel) {
+                    const success = currentProvider.setModel(modelId);
+                    if (success) {
+                        console.log(`✅ Modello cambiato a: ${modelId}`);
+                        return true;
+                    } else {
+                        console.error(`❌ Errore cambio modello: ${modelId}`);
+                        return false;
+                    }
+                } else {
+                    console.error('❌ Provider non supporta cambio modello');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Errore cambio modello:', error);
+                return false;
+            }
+        },
+
+        /**
+         * Ottieni modelli disponibili del provider corrente
+         */
+        getAvailableModels() {
+            try {
+                if (!this.baseAssistant || !this.baseAssistant.currentProvider) {
+                    return {};
+                }
+
+                const currentProvider = this.baseAssistant.currentProvider;
+                if (currentProvider.getAvailableModels) {
+                    return currentProvider.getAvailableModels();
+                }
+                
+                return {};
+            } catch (error) {
+                console.error('❌ Errore ottenimento modelli:', error);
+                return {};
+            }
+        },
+
+        /**
+         * Ottieni provider disponibili
+         */
+        getAvailableProviders() {
+            try {
+                if (!this.baseAssistant) {
+                    return [];
+                }
+
+                return this.baseAssistant.getAvailableProviders();
+            } catch (error) {
+                console.error('❌ Errore ottenimento provider:', error);
+                return [];
+            }
+        },
+
+        /**
+         * Testa provider
+         */
+        async testProvider(providerId) {
+            try {
+                if (!this.baseAssistant) {
+                    console.error('❌ BaseAssistant non disponibile');
+                    return false;
+                }
+
+                // Se specificato un provider, cambia temporaneamente
+                if (providerId) {
+                    const currentProvider = this.baseAssistant.currentProvider;
+                    const switched = this.baseAssistant.setProvider(providerId);
+                    
+                    if (!switched) {
+                        console.error(`❌ Impossibile cambiare a provider: ${providerId}`);
+                        return false;
+                    }
+                    
+                    const result = await this.baseAssistant.testProvider();
+                    
+                    // Ripristina provider originale se necessario
+                    if (currentProvider && currentProvider !== this.baseAssistant.currentProvider) {
+                        // Trova l'ID del provider originale
+                        const providers = this.baseAssistant.getAvailableProviders();
+                        const originalProvider = providers.find(p => p.isActive);
+                        if (originalProvider) {
+                            this.baseAssistant.setProvider(originalProvider.id);
+                        }
+                    }
+                    
+                    return result;
+                } else {
+                    // Testa provider corrente
+                    return await this.baseAssistant.testProvider();
+                }
+            } catch (error) {
+                console.error('❌ Errore test provider:', error);
+                return false;
+            }
+        },
+
+        /**
+         * Ottieni statistiche provider
+         */
+        getProviderStats() {
+            try {
+                if (!this.baseAssistant || !this.baseAssistant.currentProvider) {
+                    return {
+                        provider: 'Nessun provider attivo',
+                        model: 'N/A',
+                        status: 'Non configurato'
+                    };
+                }
+
+                const currentProvider = this.baseAssistant.currentProvider;
+                
+                // Prova a ottenere le statistiche dal provider
+                if (currentProvider.getUsageStats) {
+                    return currentProvider.getUsageStats();
+                }
+                
+                // Fallback con informazioni di base
+                return {
+                    provider: 'Provider attivo',
+                    model: currentProvider.modelName || 'Modello sconosciuto',
+                    status: 'Configurato',
+                    isInitialized: !!currentProvider.isInitialized
+                };
+            } catch (error) {
+                console.error('❌ Errore ottenimento statistiche provider:', error);
+                return {
+                    provider: 'Errore',
+                    model: 'N/A',
+                    status: 'Errore: ' + error.message
+                };
+            }
+        },
+
+        /**
          * Ottieni stato
          */
         getStatus() {
@@ -623,6 +814,28 @@ window.FlavioAIAssistant = (function() {
             // Salva il messaggio originale per l'UI
             const originalMessage = message;
             
+            // ✅ AGGIUNGI CONTESTO PROVIDER AI
+            let providerContext = '';
+            const providerSelect = document.getElementById('ai-provider-select');
+            const modelSelect = document.getElementById('ai-model');
+            
+            if (providerSelect && providerSelect.value) {
+                const currentProvider = providerSelect.value;
+                const currentModel = modelSelect ? modelSelect.value : 'unknown';
+                
+                // Controlla se la domanda riguarda il modello/provider
+                if (message.toLowerCase().includes('modello') || message.toLowerCase().includes('ai') || 
+                    message.toLowerCase().includes('sistema') || message.toLowerCase().includes('utilizzando') ||
+                    message.toLowerCase().includes('quale')) {
+                    
+                    if (currentProvider === 'openai') {
+                        providerContext = `[CONTESTO: Stai usando OpenAI modello ${currentModel}. Sei specificamente il modello ${currentModel} di OpenAI. Quando chiesto del modello, rispondi esattamente: "Sono ${currentModel} di OpenAI".] `;
+                    } else if (currentProvider === 'anthropic') {
+                        providerContext = `[CONTESTO: Stai usando Anthropic modello ${currentModel}. Sei specificamente il modello ${currentModel} di Anthropic. Quando chiesto del modello, rispondi esattamente: "Sono ${currentModel} di Anthropic".] `;
+                    }
+                }
+            }
+            
             // Se il messaggio chiede l'ora, aggiungi contesto per l'AI
             if (message.toLowerCase().includes('ora') || message.toLowerCase().includes('ore') || 
                 message.toLowerCase().includes('tempo') || message.toLowerCase().includes('adesso')) {
@@ -631,6 +844,14 @@ window.FlavioAIAssistant = (function() {
                 const timeContext = `[IMPORTANTE: L'ora corrente esatta è ${now.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' })} del ${now.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })} (fuso orario: Europe/Rome)] `;
                 message = timeContext + message;
                 console.log('⏰ Aggiunto contesto temporale:', timeContext);
+            }
+            
+            // Aggiungi contesto provider se presente E se non è già presente
+            if (providerContext && !message.includes('[CONTESTO:')) {
+                message = providerContext + message;
+                console.log('🤖 Aggiunto contesto provider:', providerContext);
+            } else if (message.includes('[CONTESTO:')) {
+                console.log('🤖 Contesto già presente dal middleware - skip aggiunta');
             }
             
             this.addMessage(originalMessage, 'user');
@@ -646,9 +867,30 @@ window.FlavioAIAssistant = (function() {
 
             try {
                 const modelSelect = document.getElementById('ai-model');
-                const model = modelSelect ? modelSelect.value : 'claude-3-5-sonnet-20241022';
+                const providerSelect = document.getElementById('ai-provider-select');
                 
-                console.log('🚀 Tentativo chiamata API:', { message, model, isVoiceInput });
+                // ✅ FORZA IL MODELLO CORRETTO BASATO SUL PROVIDER
+                let model;
+                if (providerSelect && providerSelect.value === 'openai') {
+                    model = 'o1-preview'; // Forza modello OpenAI
+                    console.log('🔧 Forza modello OpenAI:', model);
+                } else if (providerSelect && providerSelect.value === 'anthropic') {
+                    model = 'claude-3-5-sonnet-20241022'; // Forza modello Anthropic
+                    console.log('🔧 Forza modello Anthropic:', model);
+                } else {
+                    model = modelSelect ? modelSelect.value : 'claude-3-5-sonnet-20241022';
+                }
+                
+                // ✅ AGGIORNA IL CONTESTO PROVIDER CON IL MODELLO CORRETTO (solo se non c'è già contesto dal middleware)
+                if (providerContext && !message.includes('[CONTESTO:')) {
+                    if (providerSelect && providerSelect.value === 'openai') {
+                        providerContext = `[CONTESTO: Stai usando OpenAI modello ${model}. Sei specificamente il modello ${model} di OpenAI. Quando chiesto del modello, rispondi esattamente: "Sono ${model} di OpenAI".] `;
+                    } else if (providerSelect && providerSelect.value === 'anthropic') {
+                        providerContext = `[CONTESTO: Stai usando Anthropic modello ${model}. Sei specificamente il modello ${model} di Anthropic. Quando chiesto del modello, rispondi esattamente: "Sono ${model} di Anthropic".] `;
+                    }
+                }
+                
+                console.log('🚀 Tentativo chiamata API:', { message, model, provider: providerSelect?.value, isVoiceInput });
                 
                 const response = await fetch('/.netlify/functions/claude-ai', {
                     method: 'POST',
@@ -659,6 +901,7 @@ window.FlavioAIAssistant = (function() {
                     body: JSON.stringify({
                         message: message,
                         model: model,
+                        provider: providerSelect ? providerSelect.value : 'anthropic',
                         isVoiceInput: isVoiceInput,
                         supabaseData: { 
                             timestamp: new Date().toISOString(),
@@ -871,6 +1114,10 @@ window.FlavioAIAssistant = (function() {
                 if (this.baseAssistant.setProvider(providerId)) {
                     console.log(`✅ Provider cambiato a: ${providerId}`);
                     this.addMessage(`🔄 Provider AI cambiato a: ${this.baseAssistant.getProviderDisplayName(providerId)}`, 'assistant');
+                    
+                    // ✅ SINCRONIZZA IL MODELLO CON IL PROVIDER
+                    this.syncModelWithProvider(providerId);
+                    
                     return true;
                 } else {
                     console.error(`❌ Impossibile cambiare provider a: ${providerId}`);
@@ -879,6 +1126,36 @@ window.FlavioAIAssistant = (function() {
                 }
             }
             return false;
+        },
+
+        /**
+         * Sincronizza il modello con il provider selezionato
+         */
+        syncModelWithProvider(providerId) {
+            const modelSelect = document.getElementById('ai-model');
+            if (!modelSelect) return;
+            
+            if (providerId === 'openai') {
+                // Modelli OpenAI
+                const openaiModels = ['gpt-4o', 'gpt-4o-mini', 'o1-preview', 'o1-mini', 'gpt-4-turbo'];
+                const currentModel = modelSelect.value;
+                
+                // Se il modello corrente non è OpenAI, cambialo
+                if (!openaiModels.includes(currentModel)) {
+                    modelSelect.value = 'o1-preview'; // Modello OpenAI predefinito
+                    console.log('🔄 Modello sincronizzato con OpenAI:', 'o1-preview');
+                }
+            } else if (providerId === 'anthropic') {
+                // Modelli Anthropic
+                const anthropicModels = ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'];
+                const currentModel = modelSelect.value;
+                
+                // Se il modello corrente non è Anthropic, cambialo
+                if (!anthropicModels.includes(currentModel)) {
+                    modelSelect.value = 'claude-3-5-sonnet-20241022'; // Modello Anthropic predefinito
+                    console.log('🔄 Modello sincronizzato con Anthropic:', 'claude-3-5-sonnet-20241022');
+                }
+            }
         },
 
         /**

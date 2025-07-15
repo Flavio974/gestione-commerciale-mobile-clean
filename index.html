@@ -1418,7 +1418,7 @@
             <h4>🔧 Configurazione Provider</h4>
             <div style="margin: 15px 0;">
               <label>Seleziona Provider AI:</label>
-              <select id="ai-provider-select" style="margin: 10px 0; padding: 8px; width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+              <select id="ai-provider-select" style="margin: 10px 0; padding: 8px; width: 200px; border: 1px solid #ddd; border-radius: 4px;" onchange="loadAvailableModels()">
                 <option value="">Seleziona...</option>
                 <option value="anthropic">Anthropic Claude</option>
                 <option value="openai">OpenAI GPT</option>
@@ -1426,27 +1426,25 @@
               <button onclick="changeAIProvider()" class="btn btn-primary" style="margin-left: 10px;">Cambia Provider</button>
             </div>
             
+            <div id="model-selection" style="margin: 15px 0; display: none;">
+              <label>Seleziona Modello:</label>
+              <select id="ai-model-select" style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">Seleziona un modello...</option>
+              </select>
+              <button onclick="changeAIModel()" class="btn btn-secondary" style="margin-left: 10px;">Cambia Modello</button>
+            </div>
+            
             <div id="ai-provider-status" style="margin-top: 10px; padding: 10px; border-radius: 4px; background: #f8f9fa;"></div>
           </div>
 
-          <!-- Configurazione API Keys -->
-          <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h4>🔑 Configurazione API Keys</h4>
-            
-            <div style="margin: 15px 0;">
-              <label>Anthropic API Key:</label>
-              <input type="password" id="anthropic-api-key" placeholder="sk-ant-..." style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
-              <button onclick="setAnthropicApiKey()" class="btn btn-secondary" style="margin-left: 10px;">Salva</button>
+          <!-- Info API Keys -->
+          <div style="margin: 20px 0; padding: 15px; background: #d4edda; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>✅ API Keys</h4>
+            <div style="margin: 10px 0;">
+              <strong>Status:</strong> API keys già configurate nel sistema.
             </div>
-            
-            <div style="margin: 15px 0;">
-              <label>OpenAI API Key:</label>
-              <input type="password" id="openai-api-key" placeholder="sk-..." style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
-              <button onclick="setOpenAIApiKey()" class="btn btn-secondary" style="margin-left: 10px;">Salva</button>
-            </div>
-            
-            <div style="margin: 15px 0; padding: 10px; background: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7;">
-              <strong>⚠️ Nota:</strong> Le API keys sono salvate solo in questo browser. Non verranno mai inviate a server esterni.
+            <div style="margin: 10px 0;">
+              <strong>Provider supportati:</strong> OpenAI GPT e Anthropic Claude
             </div>
           </div>
 
@@ -1708,11 +1706,98 @@
         if (success) {
           statusDiv.innerHTML = `<span style="color: green;">✅ Provider cambiato a: ${providerId}</span>`;
           window.updateProviderStats();
+          window.loadAvailableModels();
         } else {
           statusDiv.innerHTML = `<span style="color: red;">❌ Errore cambio provider: ${providerId}</span>`;
         }
       } else {
         statusDiv.innerHTML = '<span style="color: red;">❌ FlavioAIAssistant non disponibile</span>';
+      }
+    };
+
+    window.loadAvailableModels = function() {
+      const providerSelect = document.getElementById('ai-provider-select');
+      const modelSelect = document.getElementById('ai-model-select');
+      const modelDiv = document.getElementById('model-selection');
+      const providerId = providerSelect.value;
+      
+      if (!providerId) {
+        modelDiv.style.display = 'none';
+        return;
+      }
+      
+      // Attiva automaticamente il provider selezionato
+      if (window.FlavioAIAssistant) {
+        const success = window.FlavioAIAssistant.changeProvider(providerId);
+        console.log(`🔧 Provider ${providerId} ${success ? 'attivato' : 'errore attivazione'}`);
+        
+        // ✅ SINCRONIZZA IL MODELLO PRINCIPALE
+        const mainModelSelect = document.getElementById('ai-model');
+        if (mainModelSelect) {
+          if (providerId === 'openai') {
+            mainModelSelect.value = 'o1-preview'; // Modello OpenAI predefinito
+          } else if (providerId === 'anthropic') {
+            mainModelSelect.value = 'claude-3-5-sonnet-20241022'; // Modello Anthropic predefinito
+          }
+          console.log('🔄 Modello principale sincronizzato:', mainModelSelect.value);
+        }
+      }
+      
+      // Pulisci opzioni precedenti
+      modelSelect.innerHTML = '<option value="">Seleziona un modello...</option>';
+      
+      let models = {};
+      
+      if (providerId === 'anthropic' && window.AnthropicAI) {
+        models = window.AnthropicAI.getAvailableModels();
+      } else if (providerId === 'openai' && window.OpenAI) {
+        models = window.OpenAI.getAvailableModels();
+      }
+      
+      // Popola le opzioni
+      for (const [modelId, modelInfo] of Object.entries(models)) {
+        const option = document.createElement('option');
+        option.value = modelId;
+        option.textContent = `${modelInfo.name} - ${modelInfo.description}`;
+        modelSelect.appendChild(option);
+      }
+      
+      modelDiv.style.display = 'block';
+      
+      // Aggiorna le statistiche del provider
+      window.updateProviderStats();
+    };
+
+    window.changeAIModel = function() {
+      const modelSelect = document.getElementById('ai-model-select');
+      const providerSelect = document.getElementById('ai-provider-select');
+      const statusDiv = document.getElementById('ai-provider-status');
+      const modelId = modelSelect.value;
+      const providerId = providerSelect.value;
+      
+      if (!modelId) {
+        statusDiv.innerHTML = '<span style="color: red;">⚠️ Seleziona un modello</span>';
+        return;
+      }
+      
+      let success = false;
+      
+      // Assicurati che il provider sia attivo
+      if (window.FlavioAIAssistant) {
+        window.FlavioAIAssistant.changeProvider(providerId);
+      }
+      
+      if (providerId === 'anthropic' && window.AnthropicAI) {
+        success = window.AnthropicAI.setModel(modelId);
+      } else if (providerId === 'openai' && window.OpenAI) {
+        success = window.OpenAI.setModel(modelId);
+      }
+      
+      if (success) {
+        statusDiv.innerHTML = `<span style="color: green;">✅ Modello cambiato a: ${modelId}</span>`;
+        window.updateProviderStats();
+      } else {
+        statusDiv.innerHTML = `<span style="color: red;">❌ Errore cambio modello: ${modelId}</span>`;
       }
     };
     
@@ -1828,6 +1913,23 @@
         statsDiv.innerHTML = '<span style="color: red;">Sistema AI non disponibile</span>';
       }
     };
+
+    // Inizializza l'interfaccia AI quando la pagina è caricata
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        const providerSelect = document.getElementById('ai-provider-select');
+        if (providerSelect) {
+          // Se non c'è un provider selezionato, seleziona il primo disponibile
+          if (!providerSelect.value && providerSelect.options.length > 1) {
+            providerSelect.value = providerSelect.options[1].value; // Primo provider (skip "Seleziona...")
+          }
+          
+          if (providerSelect.value) {
+            window.loadAvailableModels();
+          }
+        }
+      }, 2000);
+    });
     
     window.sendAIMessage = function() {
       const input = document.getElementById('ai-input');
@@ -1963,6 +2065,7 @@
       // Core essenziali (parallelo per velocità)
       safeLoadQueue('/js/utils/italian-date-manager.js'),
       safeLoadQueue('/js/middleware/vocabulary-manager.js'),
+      safeLoadQueue('/config/ai-config.js'),
       safeLoadQueue('/js/ai/openai-ai.js'),
       safeLoadQueue('/js/ai/anthropic-ai.js'),
       safeLoadQueue('/js/ai/ai-assistant.js'),

@@ -46,8 +46,8 @@ exports.handler = async (event, context) => {
 
     try {
       console.log('📨 Request body:', event.body);
-      const { message, supabaseData, model, history, isVoiceInput } = JSON.parse(event.body);
-      console.log('🔍 Parsed data:', { message, model, hasSupabaseData: !!supabaseData });
+      const { message, supabaseData, model, history, isVoiceInput, provider } = JSON.parse(event.body);
+      console.log('🔍 Parsed data:', { message, model, provider, hasSupabaseData: !!supabaseData });
 
       if (!message) {
         return {
@@ -65,12 +65,12 @@ exports.handler = async (event, context) => {
         openAIKeyLength: OPENAI_API_KEY ? OPENAI_API_KEY.length : 0
       });
 
-      // Determina il provider basato sul modello
-      const isOpenAI = model && (model.includes('gpt') || model.includes('o1'));
-      const isClaudeModel = model && model.includes('claude');
+      // ✅ DETERMINA IL PROVIDER BASATO SUL PARAMETRO PROVIDER (prioritario)
+      const isOpenAI = provider === 'openai' || (model && (model.includes('gpt') || model.includes('o1')));
+      const isClaudeModel = provider === 'anthropic' || (model && model.includes('claude'));
       const isO1Model = model && model.includes('o1');
       
-      console.log('🤖 Provider selection:', { model, isOpenAI, isClaudeModel, isO1Model });
+      console.log('🤖 Provider selection:', { model, provider, isOpenAI, isClaudeModel, isO1Model });
 
       if (isOpenAI) {
         // Chiama OpenAI API

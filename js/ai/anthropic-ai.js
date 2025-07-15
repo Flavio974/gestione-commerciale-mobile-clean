@@ -9,37 +9,88 @@ window.AnthropicAI = (function() {
     const anthropic = {
         isInitialized: false,
         apiKey: null,
-        modelName: 'claude-3-5-sonnet-20241022', // Modello predefinito
+        modelName: 'claude-opus-4-20250514', // Modello predefinito Claude 4
         baseUrl: 'https://api.anthropic.com/v1/messages',
         maxTokens: 4000,
         temperature: 0.7,
         
-        // Modelli disponibili
+        // Modelli disponibili (aggiornati con Claude 4 - Luglio 2025)
         availableModels: {
+            // 🚀 CLAUDE 4 MODELS (Latest Generation - Released July 15, 2025)
+            'claude-opus-4-20250514': {
+                name: 'Claude Opus 4 🔥',
+                description: 'Il modello più potente al mondo per coding (72.5% SWE-bench)',
+                maxTokens: 200000,
+                contextWindow: 200000
+            },
+            'claude-sonnet-4-20250514': {
+                name: 'Claude Sonnet 4 🌟',
+                description: 'Prestazioni eccezionali con ragionamento avanzato',
+                maxTokens: 200000,
+                contextWindow: 200000
+            },
+            
+            // Claude 3.7 Generation
+            'claude-3-7-sonnet-20241022': {
+                name: 'Claude 3.7 Sonnet',
+                description: 'Stato dell\'arte per coding agentivo',
+                maxTokens: 200000,
+                contextWindow: 200000
+            },
+            
+            // Claude 3.5 Generation
             'claude-3-5-sonnet-20241022': {
                 name: 'Claude 3.5 Sonnet',
-                description: 'Modello bilanciato, ottimo per la maggior parte dei compiti',
+                description: 'Bilanciato e performante per uso generale',
                 maxTokens: 200000,
                 contextWindow: 200000
             },
             'claude-3-5-haiku-20241022': {
                 name: 'Claude 3.5 Haiku',
-                description: 'Modello veloce ed efficiente per compiti semplici',
+                description: 'Veloce ed economico per compiti semplici',
                 maxTokens: 200000,
                 contextWindow: 200000
             },
+            
+            // Claude 3 Generation
             'claude-3-opus-20240229': {
                 name: 'Claude 3 Opus',
-                description: 'Modello più potente per compiti complessi',
+                description: 'Il più potente della serie Claude 3',
                 maxTokens: 200000,
                 contextWindow: 200000
+            },
+            'claude-3-sonnet-20240229': {
+                name: 'Claude 3 Sonnet',
+                description: 'Bilanciato tra velocità e intelligenza',
+                maxTokens: 200000,
+                contextWindow: 200000
+            },
+            'claude-3-haiku-20240307': {
+                name: 'Claude 3 Haiku',
+                description: 'Il più veloce per risposte immediate',
+                maxTokens: 200000,
+                contextWindow: 200000
+            },
+            
+            // Legacy Models
+            'claude-2.1': {
+                name: 'Claude 2.1',
+                description: 'Versione precedente stabile e affidabile',
+                maxTokens: 100000,
+                contextWindow: 100000
+            },
+            'claude-instant-1.2': {
+                name: 'Claude Instant 1.2',
+                description: 'Ultra-veloce per compiti semplici e rapidi',
+                maxTokens: 100000,
+                contextWindow: 100000
             }
         },
 
         /**
          * Inizializzazione
          */
-        init(apiKey, modelName = 'claude-3-5-sonnet-20241022') {
+        init(apiKey, modelName = 'claude-opus-4-20250514') {
             try {
                 if (!apiKey) {
                     // Cerca API key dalle variabili d'ambiente o configurazione
@@ -48,6 +99,11 @@ window.AnthropicAI = (function() {
                         console.warn('⚠️ API Key Anthropic non configurata');
                         return false;
                     }
+                } else if (apiKey === 'backend') {
+                    // Usa backend per le API calls
+                    this.apiKey = 'backend';
+                    this.useBackend = true;
+                    console.log('✅ Anthropic configurato per usare backend');
                 } else {
                     this.apiKey = apiKey;
                 }
@@ -187,6 +243,41 @@ Rispondi sempre in italiano, sii preciso e professionale.`;
          * Chiamata API Anthropic
          */
         async callAnthropicAPI(systemPrompt, userMessage) {
+            // Se usa backend, invia alla funzione serverless
+            if (this.useBackend || this.apiKey === 'backend') {
+                const backendPayload = {
+                    provider: 'anthropic',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: userMessage
+                        }
+                    ],
+                    model: this.modelName,
+                    max_tokens: this.maxTokens,
+                    temperature: this.temperature,
+                    system: systemPrompt,
+                    stream: false
+                };
+
+                const response = await fetch('/.netlify/functions/claude-ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(backendPayload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`Backend API error: ${response.status} - ${errorData.error || 'Unknown error'}`);
+                }
+
+                const data = await response.json();
+                return data.content || data.message || 'Errore risposta backend';
+            }
+
+            // Altrimenti usa API diretta
             const payload = {
                 model: this.modelName,
                 max_tokens: this.maxTokens,
