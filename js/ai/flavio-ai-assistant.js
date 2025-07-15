@@ -718,6 +718,7 @@ window.FlavioAIAssistant = (function() {
                                 </optgroup>
                             </select>
                             <button onclick="window.FlavioAIAssistant.testConnection()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test API</button>
+                        <button onclick="window.FlavioAIAssistant.refreshStats()" style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">🔄 Aggiorna Stats</button>
                         </div>
                     </div>
 
@@ -1054,6 +1055,27 @@ window.FlavioAIAssistant = (function() {
                 const result = await response.json();
                 console.log('✅ Response received:', result);
                 
+                // ✅ TRACKING TOKEN UTILIZZATI
+                if (result.usage) {
+                    const tokensUsed = result.usage.total_tokens || result.usage.completion_tokens || 0;
+                    if (tokensUsed > 0) {
+                        // Salva token ultima richiesta
+                        sessionStorage.setItem('last_request_tokens', tokensUsed.toString());
+                        
+                        // Aggiorna totale sessione
+                        const currentTotal = parseInt(sessionStorage.getItem('total_tokens_used') || '0');
+                        const newTotal = currentTotal + tokensUsed;
+                        sessionStorage.setItem('total_tokens_used', newTotal.toString());
+                        
+                        console.log('📊 Token utilizzati:', tokensUsed, 'Totale sessione:', newTotal);
+                        
+                        // Aggiorna statistiche
+                        if (window.updateProviderStats) {
+                            setTimeout(() => window.updateProviderStats(), 100);
+                        }
+                    }
+                }
+                
                 // Rimuovi messaggio di caricamento
                 const messages = document.getElementById('ai-messages');
                 if (messages && messages.lastElementChild) {
@@ -1294,6 +1316,38 @@ window.FlavioAIAssistant = (function() {
                 return true;
             }
             return false;
+        },
+
+        /**
+         * Forza aggiornamento statistiche provider
+         */
+        refreshStats() {
+            console.log('🔄 REFRESH STATS FORZATO');
+            
+            // Sincronizza modello corrente
+            const modelSelect = document.getElementById('ai-model');
+            const providerSelect = document.getElementById('ai-provider-select');
+            
+            if (modelSelect && modelSelect.value && providerSelect && providerSelect.value) {
+                const selectedModel = modelSelect.value;
+                console.log('🔄 Sincronizzando modello:', selectedModel, 'per provider:', providerSelect.value);
+                
+                if (providerSelect.value === 'openai' && window.OpenAI) {
+                    const result = window.OpenAI.setModel(selectedModel);
+                    console.log('✅ OpenAI aggiornato:', result);
+                } else if (providerSelect.value === 'anthropic' && window.AnthropicAI) {
+                    const result = window.AnthropicAI.setModel(selectedModel);
+                    console.log('✅ Anthropic aggiornato:', result);
+                }
+            }
+            
+            // Forza aggiornamento statistiche
+            if (window.updateProviderStats) {
+                window.updateProviderStats();
+                console.log('📊 Statistiche aggiornate manualmente');
+            }
+            
+            this.addMessage('🔄 Statistiche provider aggiornate', 'assistant');
         }
 
     };

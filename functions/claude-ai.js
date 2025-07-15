@@ -154,7 +154,9 @@ exports.handler = async (event, context) => {
           },
           body: JSON.stringify({
             success: true,
-            response: data.choices[0].message.content
+            response: data.choices[0].message.content,
+            usage: data.usage, // ✅ Aggiungi informazioni sui token
+            model: model
           })
         };
 
@@ -212,7 +214,9 @@ exports.handler = async (event, context) => {
           },
           body: JSON.stringify({
             success: true,
-            response: data.content[0].text
+            response: data.content[0].text,
+            usage: data.usage, // ✅ Aggiungi informazioni sui token
+            model: model
           })
         };
       }

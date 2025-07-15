@@ -1922,6 +1922,10 @@
       if (window.FlavioAIAssistant) {
         const stats = window.FlavioAIAssistant.getProviderStats();
         if (stats) {
+          // Calcola token utilizzati dalla session storage
+          const totalTokens = parseInt(sessionStorage.getItem('total_tokens_used') || '0');
+          const lastRequestTokens = parseInt(sessionStorage.getItem('last_request_tokens') || '0');
+          
           statsDiv.innerHTML = `
             <h5>Provider Corrente:</h5>
             <div><strong>Nome:</strong> ${stats.provider || 'N/A'}</div>
@@ -1929,6 +1933,13 @@
             <div><strong>Max Tokens:</strong> ${stats.maxTokens || 'N/A'}</div>
             <div><strong>Temperature:</strong> ${stats.temperature || 'N/A'}</div>
             <div><strong>Inizializzato:</strong> ${stats.isInitialized ? '✅' : '❌'}</div>
+            <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;">
+              <strong>📊 Token Utilizzati:</strong>
+              <div style="margin-left: 20px;">
+                <div>Ultima richiesta: ${lastRequestTokens} token</div>
+                <div>Totale sessione: ${totalTokens} token</div>
+              </div>
+            </div>
           `;
         } else {
           statsDiv.innerHTML = '<span style="color: gray;">Nessun provider attivo</span>';
