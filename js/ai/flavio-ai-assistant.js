@@ -626,6 +626,23 @@ window.FlavioAIAssistant = (function() {
         },
 
         /**
+         * Ottieni modello corrente
+         */
+        getCurrentModel() {
+            try {
+                if (!this.baseAssistant || !this.baseAssistant.currentProvider) {
+                    return null;
+                }
+                
+                const currentProvider = this.baseAssistant.currentProvider;
+                return currentProvider.modelName || null;
+            } catch (error) {
+                console.error('❌ Errore getCurrentModel:', error);
+                return null;
+            }
+        },
+
+        /**
          * Ottieni statistiche provider
          */
         getProviderStats() {
@@ -1068,6 +1085,13 @@ window.FlavioAIAssistant = (function() {
                         sessionStorage.setItem('total_tokens_used', newTotal.toString());
                         
                         console.log('📊 Token utilizzati:', tokensUsed, 'Totale sessione:', newTotal);
+                        
+                        // ✅ AGGIORNA STATISTICHE GIORNALIERE
+                        if (window.updateDailyStats) {
+                            const currentProvider = this.baseAssistant?.currentProvider || 'openai';
+                            const currentModel = this.getCurrentModel() || 'gpt-3.5-turbo';
+                            window.updateDailyStats(tokensUsed, currentModel, currentProvider);
+                        }
                         
                         // Aggiorna statistiche
                         if (window.updateProviderStats) {

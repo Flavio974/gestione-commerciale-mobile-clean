@@ -405,6 +405,111 @@
       // sessionStorage.removeItem('last_request_tokens');
     };
     
+    // 💰 CALCOLO COSTI APPROSSIMATIVI AI
+    window.calculateAICost = function(tokens, modelName, provider) {
+      if (!tokens || tokens <= 0) return 0;
+      
+      // Prezzi approssimativi per 1000 token (aggiornati a luglio 2025)
+      const pricing = {
+        'openai': {
+          'gpt-4': 0.03,           // $0.03 per 1K token
+          'gpt-4-turbo': 0.01,     // $0.01 per 1K token
+          'gpt-4o': 0.005,         // $0.005 per 1K token
+          'gpt-4o-mini': 0.0015,   // $0.0015 per 1K token
+          'gpt-3.5-turbo': 0.002,  // $0.002 per 1K token
+          'o1-preview': 0.015,     // $0.015 per 1K token
+          'o1-mini': 0.003,        // $0.003 per 1K token
+          'o1-pro': 0.06          // $0.06 per 1K token
+        },
+        'anthropic': {
+          'claude-opus-4-20250514': 0.015,        // $0.015 per 1K token
+          'claude-sonnet-4-20250514': 0.003,      // $0.003 per 1K token
+          'claude-3-5-sonnet-20241022': 0.003,    // $0.003 per 1K token
+          'claude-3-5-haiku-20241022': 0.00025,   // $0.00025 per 1K token
+          'claude-3-opus-20240229': 0.015,        // $0.015 per 1K token
+          'claude-3-sonnet-20240229': 0.003,      // $0.003 per 1K token
+          'claude-3-haiku-20240307': 0.00025,     // $0.00025 per 1K token
+          'claude-2.1': 0.008,                    // $0.008 per 1K token
+          'claude-instant-1.2': 0.0008           // $0.0008 per 1K token
+        }
+      };
+      
+      // Trova il prezzo per il modello
+      let pricePerK = 0;
+      if (pricing[provider] && pricing[provider][modelName]) {
+        pricePerK = pricing[provider][modelName];
+      } else {
+        // Fallback: prezzi medi per provider
+        pricePerK = provider === 'openai' ? 0.01 : 0.005;
+      }
+      
+      // Calcola costo in USD
+      const costUSD = (tokens / 1000) * pricePerK;
+      
+      // Converti in EUR (cambio approssimativo)
+      const eurRate = 0.85; // 1 USD = 0.85 EUR circa
+      const costEUR = costUSD * eurRate;
+      
+      return {
+        usd: costUSD,
+        eur: costEUR,
+        tokens: tokens,
+        model: modelName,
+        provider: provider
+      };
+    };
+    
+    // 📅 GESTIONE DATI GIORNALIERI
+    window.getTodayKey = function() {
+      const today = new Date();
+      return `ai_daily_${today.getFullYear()}_${today.getMonth() + 1}_${today.getDate()}`;
+    };
+    
+    window.updateDailyStats = function(tokens, modelName, provider) {
+      if (!tokens || tokens <= 0) return;
+      
+      const todayKey = window.getTodayKey();
+      let dailyData = JSON.parse(localStorage.getItem(todayKey) || '{}');
+      
+      // Inizializza se non esiste
+      if (!dailyData.totalTokens) {
+        dailyData = {
+          totalTokens: 0,
+          totalCostUSD: 0,
+          totalCostEUR: 0,
+          interactions: 0,
+          models: {},
+          date: new Date().toISOString().split('T')[0]
+        };
+      }
+      
+      // Aggiorna dati
+      dailyData.totalTokens += tokens;
+      dailyData.interactions += 1;
+      
+      // Calcola costo
+      const cost = window.calculateAICost(tokens, modelName, provider);
+      dailyData.totalCostUSD += cost.usd || 0;
+      dailyData.totalCostEUR += cost.eur || 0;
+      
+      // Traccia modelli usati
+      const modelKey = `${provider}_${modelName}`;
+      if (!dailyData.models[modelKey]) {
+        dailyData.models[modelKey] = { tokens: 0, interactions: 0 };
+      }
+      dailyData.models[modelKey].tokens += tokens;
+      dailyData.models[modelKey].interactions += 1;
+      
+      // Salva
+      localStorage.setItem(todayKey, JSON.stringify(dailyData));
+      console.log('📅 Dati giornalieri aggiornati:', dailyData);
+    };
+    
+    window.getDailyStats = function() {
+      const todayKey = window.getTodayKey();
+      return JSON.parse(localStorage.getItem(todayKey) || '{"totalTokens": 0, "totalCostUSD": 0, "totalCostEUR": 0, "interactions": 0}');
+    };
+    
     // Aggiungi animazione per la notifica (scope isolato)
     (function() {
       if (!document.getElementById('chat-clear-animation')) {
@@ -1980,6 +2085,16 @@
           const totalTokens = parseInt(sessionStorage.getItem('total_tokens_used') || '0');
           const lastRequestTokens = parseInt(sessionStorage.getItem('last_request_tokens') || '0');
           
+          // Calcola costi approssimativi
+          const provider = stats.provider?.toLowerCase() || 'openai';
+          const modelName = stats.model || 'gpt-3.5-turbo';
+          
+          const lastCost = window.calculateAICost(lastRequestTokens, modelName, provider);
+          const totalCost = window.calculateAICost(totalTokens, modelName, provider);
+          
+          // Ottieni dati giornalieri
+          const dailyStats = window.getDailyStats();
+          
           statsDiv.innerHTML = `
             <h5>Provider Corrente:</h5>
             <div><strong>Nome:</strong> ${stats.provider || 'N/A'}</div>
@@ -1987,11 +2102,40 @@
             <div><strong>Max Tokens:</strong> ${stats.maxTokens || 'N/A'}</div>
             <div><strong>Temperature:</strong> ${stats.temperature || 'N/A'}</div>
             <div><strong>Inizializzato:</strong> ${stats.isInitialized ? '✅' : '❌'}</div>
+            
             <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;">
               <strong>📊 Token Utilizzati:</strong>
               <div style="margin-left: 20px;">
                 <div>Ultima richiesta: ${lastRequestTokens} token</div>
                 <div>Totale sessione: ${totalTokens} token</div>
+                <div style="color: #fd7e14;"><strong>Totale giornata:</strong> ${dailyStats.totalTokens} token</div>
+              </div>
+            </div>
+            
+            <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;">
+              <strong>💰 Costo Approssimativo:</strong>
+              <div style="margin-left: 20px;">
+                <div style="color: #28a745;">
+                  <strong>Ultima richiesta:</strong> 
+                  ~$${lastCost.usd ? lastCost.usd.toFixed(4) : '0.0000'} 
+                  (~€${lastCost.eur ? lastCost.eur.toFixed(4) : '0.0000'})
+                </div>
+                <div style="color: #17a2b8;">
+                  <strong>Totale sessione:</strong> 
+                  ~$${totalCost.usd ? totalCost.usd.toFixed(4) : '0.0000'} 
+                  (~€${totalCost.eur ? totalCost.eur.toFixed(4) : '0.0000'})
+                </div>
+                <div style="color: #fd7e14;">
+                  <strong>Totale giornata:</strong> 
+                  ~$${dailyStats.totalCostUSD ? dailyStats.totalCostUSD.toFixed(4) : '0.0000'} 
+                  (~€${dailyStats.totalCostEUR ? dailyStats.totalCostEUR.toFixed(4) : '0.0000'})
+                </div>
+                <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
+                  <em>Prezzi approssimativi - cambio USD/EUR ~0.85</em>
+                </div>
+                <div style="font-size: 12px; color: #6c757d;">
+                  <em>Interazioni oggi: ${dailyStats.interactions || 0}</em>
+                </div>
               </div>
             </div>
           `;
