@@ -1410,6 +1410,72 @@
       <!-- NUOVO TAB AI -->
       <div id="ai-content" class="tab-content">
         <!-- Contenuto AI verrà caricato dinamicamente -->
+        <div style="padding: 20px;">
+          <h3>🤖 Assistente AI - Gestione Provider</h3>
+          
+          <!-- Controlli Provider -->
+          <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>🔧 Configurazione Provider</h4>
+            <div style="margin: 15px 0;">
+              <label>Seleziona Provider AI:</label>
+              <select id="ai-provider-select" style="margin: 10px 0; padding: 8px; width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">Seleziona...</option>
+                <option value="anthropic">Anthropic Claude</option>
+                <option value="gemini">Google Gemini</option>
+              </select>
+              <button onclick="changeAIProvider()" class="btn btn-primary" style="margin-left: 10px;">Cambia Provider</button>
+            </div>
+            
+            <div id="ai-provider-status" style="margin-top: 10px; padding: 10px; border-radius: 4px; background: #f8f9fa;"></div>
+          </div>
+
+          <!-- Configurazione API Keys -->
+          <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>🔑 Configurazione API Keys</h4>
+            
+            <div style="margin: 15px 0;">
+              <label>Anthropic API Key:</label>
+              <input type="password" id="anthropic-api-key" placeholder="sk-ant-..." style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+              <button onclick="setAnthropicApiKey()" class="btn btn-secondary" style="margin-left: 10px;">Salva</button>
+            </div>
+            
+            <div style="margin: 15px 0;">
+              <label>Gemini API Key:</label>
+              <input type="password" id="gemini-api-key" placeholder="AIza..." style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+              <button onclick="setGeminiApiKey()" class="btn btn-secondary" style="margin-left: 10px;">Salva</button>
+            </div>
+            
+            <div style="margin: 15px 0; padding: 10px; background: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7;">
+              <strong>⚠️ Nota:</strong> Le API keys sono salvate solo in questo browser. Non verranno mai inviate a server esterni.
+            </div>
+          </div>
+
+          <!-- Test Connessione -->
+          <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>🧪 Test Connessione</h4>
+            <div style="margin: 15px 0;">
+              <button onclick="testCurrentProvider()" class="btn btn-info" style="margin-right: 10px;">Test Provider Corrente</button>
+              <button onclick="testAllProviders()" class="btn btn-secondary">Test Tutti i Provider</button>
+            </div>
+            <div id="test-results" style="margin-top: 10px; padding: 10px; border-radius: 4px; background: #f8f9fa;"></div>
+          </div>
+
+          <!-- Statistiche Provider -->
+          <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>📊 Statistiche Provider Corrente</h4>
+            <div id="provider-stats" style="margin-top: 10px; padding: 10px; border-radius: 4px; background: #f8f9fa;"></div>
+          </div>
+
+          <!-- Chat AI -->
+          <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4>💬 Chat AI</h4>
+            <div id="ai-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin: 10px 0; background: #f8f9fa;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="ai-input" placeholder="Scrivi il tuo messaggio..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onkeypress="if(event.key==='Enter') sendAIMessage()">
+              <button onclick="sendAIMessage()" class="btn btn-primary">Invia</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- TAB DEMO DATE ITALIANE -->
@@ -1625,6 +1691,167 @@
     
     console.log('✅ Sistema base moduli inizializzato');
     
+    // === FUNZIONI GESTIONE PROVIDER AI ===
+    
+    window.changeAIProvider = function() {
+      const select = document.getElementById('ai-provider-select');
+      const providerId = select.value;
+      const statusDiv = document.getElementById('ai-provider-status');
+      
+      if (!providerId) {
+        statusDiv.innerHTML = '<span style="color: red;">⚠️ Seleziona un provider</span>';
+        return;
+      }
+      
+      if (window.FlavioAIAssistant) {
+        const success = window.FlavioAIAssistant.changeProvider(providerId);
+        if (success) {
+          statusDiv.innerHTML = `<span style="color: green;">✅ Provider cambiato a: ${providerId}</span>`;
+          window.updateProviderStats();
+        } else {
+          statusDiv.innerHTML = `<span style="color: red;">❌ Errore cambio provider: ${providerId}</span>`;
+        }
+      } else {
+        statusDiv.innerHTML = '<span style="color: red;">❌ FlavioAIAssistant non disponibile</span>';
+      }
+    };
+    
+    window.setAnthropicApiKey = function() {
+      const input = document.getElementById('anthropic-api-key');
+      const apiKey = input.value.trim();
+      
+      if (!apiKey) {
+        alert('Inserisci una API key valida');
+        return;
+      }
+      
+      if (window.FlavioAIAssistant) {
+        const success = window.FlavioAIAssistant.setApiKey('anthropic', apiKey);
+        if (success) {
+          input.value = '';
+          alert('✅ API Key Anthropic configurata');
+        } else {
+          alert('❌ Errore configurazione API Key');
+        }
+      }
+    };
+    
+    window.setGeminiApiKey = function() {
+      const input = document.getElementById('gemini-api-key');
+      const apiKey = input.value.trim();
+      
+      if (!apiKey) {
+        alert('Inserisci una API key valida');
+        return;
+      }
+      
+      if (window.FlavioAIAssistant) {
+        const success = window.FlavioAIAssistant.setApiKey('gemini', apiKey);
+        if (success) {
+          input.value = '';
+          alert('✅ API Key Gemini configurata');
+        } else {
+          alert('❌ Errore configurazione API Key');
+        }
+      }
+    };
+    
+    window.testCurrentProvider = async function() {
+      const resultsDiv = document.getElementById('test-results');
+      resultsDiv.innerHTML = '🧪 Test in corso...';
+      
+      try {
+        if (window.FlavioAIAssistant && window.FlavioAIAssistant.baseAssistant) {
+          const success = await window.FlavioAIAssistant.baseAssistant.testProvider();
+          if (success) {
+            resultsDiv.innerHTML = '<span style="color: green;">✅ Test provider corrente riuscito</span>';
+          } else {
+            resultsDiv.innerHTML = '<span style="color: red;">❌ Test provider corrente fallito</span>';
+          }
+        } else {
+          resultsDiv.innerHTML = '<span style="color: red;">❌ Sistema AI non disponibile</span>';
+        }
+      } catch (error) {
+        resultsDiv.innerHTML = `<span style="color: red;">❌ Errore test: ${error.message}</span>`;
+      }
+    };
+    
+    window.testAllProviders = async function() {
+      const resultsDiv = document.getElementById('test-results');
+      resultsDiv.innerHTML = '🧪 Test di tutti i provider in corso...';
+      
+      try {
+        if (window.FlavioAIAssistant) {
+          const providers = window.FlavioAIAssistant.getAvailableProviders();
+          let results = '<h5>Risultati Test:</h5>';
+          
+          for (const provider of providers) {
+            results += `<div style="margin: 5px 0;">`;
+            try {
+              const success = await window.FlavioAIAssistant.testProvider(provider.id);
+              results += success ? 
+                `<span style="color: green;">✅ ${provider.name}: OK</span>` :
+                `<span style="color: red;">❌ ${provider.name}: FALLITO</span>`;
+            } catch (error) {
+              results += `<span style="color: red;">❌ ${provider.name}: ${error.message}</span>`;
+            }
+            results += `</div>`;
+          }
+          
+          resultsDiv.innerHTML = results;
+        } else {
+          resultsDiv.innerHTML = '<span style="color: red;">❌ Sistema AI non disponibile</span>';
+        }
+      } catch (error) {
+        resultsDiv.innerHTML = `<span style="color: red;">❌ Errore test: ${error.message}</span>`;
+      }
+    };
+    
+    window.updateProviderStats = function() {
+      const statsDiv = document.getElementById('provider-stats');
+      
+      if (window.FlavioAIAssistant) {
+        const stats = window.FlavioAIAssistant.getProviderStats();
+        if (stats) {
+          statsDiv.innerHTML = `
+            <h5>Provider Corrente:</h5>
+            <div><strong>Nome:</strong> ${stats.provider || 'N/A'}</div>
+            <div><strong>Modello:</strong> ${stats.model || 'N/A'}</div>
+            <div><strong>Max Tokens:</strong> ${stats.maxTokens || 'N/A'}</div>
+            <div><strong>Temperature:</strong> ${stats.temperature || 'N/A'}</div>
+            <div><strong>Inizializzato:</strong> ${stats.isInitialized ? '✅' : '❌'}</div>
+          `;
+        } else {
+          statsDiv.innerHTML = '<span style="color: gray;">Nessun provider attivo</span>';
+        }
+      } else {
+        statsDiv.innerHTML = '<span style="color: red;">Sistema AI non disponibile</span>';
+      }
+    };
+    
+    window.sendAIMessage = function() {
+      const input = document.getElementById('ai-input');
+      const message = input.value.trim();
+      
+      if (!message) return;
+      
+      if (window.FlavioAIAssistant) {
+        window.FlavioAIAssistant.sendMessage(message);
+        input.value = '';
+      } else {
+        alert('Sistema AI non disponibile');
+      }
+    };
+    
+    // Auto-update stats on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(() => {
+        if (window.updateProviderStats) {
+          window.updateProviderStats();
+        }
+      }, 2000);
+    });
+    
     // 🧪 SISTEMA DI TEST E DIAGNOSTIC
     window.SystemDiagnostic = {
       runTests: function() {
@@ -1737,6 +1964,7 @@
       safeLoadQueue('/js/utils/italian-date-manager.js'),
       safeLoadQueue('/js/middleware/vocabulary-manager.js'),
       safeLoadQueue('/js/ai/gemini-ai.js'),
+      safeLoadQueue('/js/ai/anthropic-ai.js'),
       safeLoadQueue('/js/ai/ai-assistant.js'),
       safeLoadQueue('/js/ai/flavio-ai-assistant.js'),
       safeLoadQueue('/js/ai/supabase-ai-integration.js')

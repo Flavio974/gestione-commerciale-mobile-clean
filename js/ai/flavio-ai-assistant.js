@@ -42,8 +42,10 @@ window.FlavioAIAssistant = (function() {
          */
         setupDefaultProvider() {
             if (this.baseAssistant) {
-                // Prova prima Gemini se disponibile
-                if (this.baseAssistant.setProvider('gemini')) {
+                // Prova prima Anthropic se disponibile
+                if (this.baseAssistant.setProvider('anthropic')) {
+                    console.log('✅ Anthropic AI configurato come provider');
+                } else if (this.baseAssistant.setProvider('gemini')) {
                     console.log('✅ Gemini AI configurato come provider');
                 } else {
                     console.warn('⚠️ Nessun provider AI disponibile');
@@ -859,6 +861,52 @@ window.FlavioAIAssistant = (function() {
             console.log('- User Agent:', navigator.userAgent);
             
             this.addMessage('🔍 Debug info stampato nella console. Controlla DevTools.', 'assistant');
+        },
+
+        /**
+         * Cambia provider AI
+         */
+        changeProvider(providerId) {
+            if (this.baseAssistant) {
+                if (this.baseAssistant.setProvider(providerId)) {
+                    console.log(`✅ Provider cambiato a: ${providerId}`);
+                    this.addMessage(`🔄 Provider AI cambiato a: ${this.baseAssistant.getProviderDisplayName(providerId)}`, 'assistant');
+                    return true;
+                } else {
+                    console.error(`❌ Impossibile cambiare provider a: ${providerId}`);
+                    this.addMessage(`❌ Impossibile cambiare provider a: ${providerId}`, 'assistant');
+                    return false;
+                }
+            }
+            return false;
+        },
+
+        /**
+         * Ottieni provider disponibili
+         */
+        getAvailableProviders() {
+            if (this.baseAssistant) {
+                return this.baseAssistant.getAvailableProviders();
+            }
+            return [];
+        },
+
+        /**
+         * Configura API key per provider
+         */
+        setApiKey(provider, apiKey) {
+            if (provider === 'anthropic' && window.AnthropicAI) {
+                window.AnthropicAI.setApiKey(apiKey);
+                console.log('✅ API Key Anthropic configurata');
+                this.addMessage('✅ API Key Anthropic configurata correttamente', 'assistant');
+                return true;
+            } else if (provider === 'gemini' && window.GeminiAI) {
+                window.GeminiAI.setApiKey(apiKey);
+                console.log('✅ API Key Gemini configurata');
+                this.addMessage('✅ API Key Gemini configurata correttamente', 'assistant');
+                return true;
+            }
+            return false;
         }
 
     };

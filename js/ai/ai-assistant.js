@@ -35,6 +35,11 @@ window.AIAssistant = (function() {
                 this.providers.gemini = window.GeminiAI;
             }
 
+            // Anthropic AI (Claude 4)
+            if (window.AnthropicAI) {
+                this.providers.anthropic = window.AnthropicAI;
+            }
+
             // Altri provider possono essere aggiunti qui
         },
 
@@ -135,7 +140,23 @@ window.AIAssistant = (function() {
          * Lista provider disponibili
          */
         getAvailableProviders() {
-            return Object.keys(this.providers);
+            return Object.keys(this.providers).map(key => ({
+                id: key,
+                name: this.getProviderDisplayName(key),
+                isActive: this.currentProvider === this.providers[key]
+            }));
+        },
+
+        /**
+         * Ottieni nome visualizzato del provider
+         */
+        getProviderDisplayName(providerId) {
+            const names = {
+                'gemini': 'Google Gemini',
+                'anthropic': 'Anthropic Claude',
+                'openai': 'OpenAI GPT'
+            };
+            return names[providerId] || providerId;
         },
 
         /**
