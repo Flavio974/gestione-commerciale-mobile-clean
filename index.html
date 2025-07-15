@@ -1421,7 +1421,7 @@
               <select id="ai-provider-select" style="margin: 10px 0; padding: 8px; width: 200px; border: 1px solid #ddd; border-radius: 4px;">
                 <option value="">Seleziona...</option>
                 <option value="anthropic">Anthropic Claude</option>
-                <option value="gemini">Google Gemini</option>
+                <option value="openai">OpenAI GPT</option>
               </select>
               <button onclick="changeAIProvider()" class="btn btn-primary" style="margin-left: 10px;">Cambia Provider</button>
             </div>
@@ -1440,9 +1440,9 @@
             </div>
             
             <div style="margin: 15px 0;">
-              <label>Gemini API Key:</label>
-              <input type="password" id="gemini-api-key" placeholder="AIza..." style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
-              <button onclick="setGeminiApiKey()" class="btn btn-secondary" style="margin-left: 10px;">Salva</button>
+              <label>OpenAI API Key:</label>
+              <input type="password" id="openai-api-key" placeholder="sk-..." style="margin: 10px 0; padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+              <button onclick="setOpenAIApiKey()" class="btn btn-secondary" style="margin-left: 10px;">Salva</button>
             </div>
             
             <div style="margin: 15px 0; padding: 10px; background: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7;">
@@ -1736,8 +1736,8 @@
       }
     };
     
-    window.setGeminiApiKey = function() {
-      const input = document.getElementById('gemini-api-key');
+    window.setOpenAIApiKey = function() {
+      const input = document.getElementById('openai-api-key');
       const apiKey = input.value.trim();
       
       if (!apiKey) {
@@ -1746,10 +1746,10 @@
       }
       
       if (window.FlavioAIAssistant) {
-        const success = window.FlavioAIAssistant.setApiKey('gemini', apiKey);
+        const success = window.FlavioAIAssistant.setApiKey('openai', apiKey);
         if (success) {
           input.value = '';
-          alert('✅ API Key Gemini configurata');
+          alert('✅ API Key OpenAI configurata');
         } else {
           alert('❌ Errore configurazione API Key');
         }
@@ -1963,7 +1963,7 @@
       // Core essenziali (parallelo per velocità)
       safeLoadQueue('/js/utils/italian-date-manager.js'),
       safeLoadQueue('/js/middleware/vocabulary-manager.js'),
-      safeLoadQueue('/js/ai/gemini-ai.js'),
+      safeLoadQueue('/js/ai/openai-ai.js'),
       safeLoadQueue('/js/ai/anthropic-ai.js'),
       safeLoadQueue('/js/ai/ai-assistant.js'),
       safeLoadQueue('/js/ai/flavio-ai-assistant.js'),

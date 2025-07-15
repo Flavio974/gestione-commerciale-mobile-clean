@@ -30,9 +30,9 @@ window.AIAssistant = (function() {
          * Registra provider AI disponibili
          */
         registerProviders() {
-            // Gemini AI
-            if (window.GeminiAI) {
-                this.providers.gemini = window.GeminiAI;
+            // OpenAI GPT
+            if (window.OpenAI) {
+                this.providers.openai = window.OpenAI;
             }
 
             // Anthropic AI (Claude 4)
@@ -152,9 +152,8 @@ window.AIAssistant = (function() {
          */
         getProviderDisplayName(providerId) {
             const names = {
-                'gemini': 'Google Gemini',
-                'anthropic': 'Anthropic Claude',
-                'openai': 'OpenAI GPT'
+                'openai': 'OpenAI GPT',
+                'anthropic': 'Anthropic Claude'
             };
             return names[providerId] || providerId;
         },

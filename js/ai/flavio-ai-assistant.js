@@ -45,8 +45,8 @@ window.FlavioAIAssistant = (function() {
                 // Prova prima Anthropic se disponibile
                 if (this.baseAssistant.setProvider('anthropic')) {
                     console.log('✅ Anthropic AI configurato come provider');
-                } else if (this.baseAssistant.setProvider('gemini')) {
-                    console.log('✅ Gemini AI configurato come provider');
+                } else if (this.baseAssistant.setProvider('openai')) {
+                    console.log('✅ OpenAI GPT configurato come provider');
                 } else {
                     console.warn('⚠️ Nessun provider AI disponibile');
                 }
@@ -900,10 +900,10 @@ window.FlavioAIAssistant = (function() {
                 console.log('✅ API Key Anthropic configurata');
                 this.addMessage('✅ API Key Anthropic configurata correttamente', 'assistant');
                 return true;
-            } else if (provider === 'gemini' && window.GeminiAI) {
-                window.GeminiAI.setApiKey(apiKey);
-                console.log('✅ API Key Gemini configurata');
-                this.addMessage('✅ API Key Gemini configurata correttamente', 'assistant');
+            } else if (provider === 'openai' && window.OpenAI) {
+                window.OpenAI.setApiKey(apiKey);
+                console.log('✅ API Key OpenAI configurata');
+                this.addMessage('✅ API Key OpenAI configurata correttamente', 'assistant');
                 return true;
             }
             return false;
