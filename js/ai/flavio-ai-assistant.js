@@ -837,6 +837,39 @@ window.FlavioAIAssistant = (function() {
             }, 2500); // Aumentato delay per assicurarsi che tutto sia completamente caricato
 
             console.log('✅ Interfaccia AI leggera renderizzata');
+            
+            // ✅ FORZA DEBUG IMMEDIATO PER VEDERE COSA SUCCEDE
+            setTimeout(() => {
+                console.log('🔄 DEBUG FORZATO - Controllo elementi dopo 3 secondi...');
+                const modelSelect = document.getElementById('ai-model');
+                const providerSelect = document.getElementById('ai-provider-select');
+                console.log('📝 Elementi trovati:', {
+                    modelSelect: modelSelect ? 'TROVATO' : 'NON TROVATO',
+                    modelValue: modelSelect?.value || 'VUOTO',
+                    providerSelect: providerSelect ? 'TROVATO' : 'NON TROVATO', 
+                    providerValue: providerSelect?.value || 'VUOTO'
+                });
+                
+                // Forza aggiornamento statistiche
+                if (window.updateProviderStats) {
+                    console.log('🔄 Forzando aggiornamento statistiche...');
+                    window.updateProviderStats();
+                }
+                
+                // Debug provider corrente
+                if (window.OpenAI) {
+                    console.log('🔍 Stato OpenAI:', {
+                        modelName: window.OpenAI.modelName,
+                        isInitialized: window.OpenAI.isInitialized
+                    });
+                }
+                if (window.AnthropicAI) {
+                    console.log('🔍 Stato AnthropicAI:', {
+                        modelName: window.AnthropicAI.modelName,
+                        isInitialized: window.AnthropicAI.isInitialized
+                    });
+                }
+            }, 3000);
         },
 
         /**
