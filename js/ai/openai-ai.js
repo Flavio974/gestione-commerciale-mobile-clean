@@ -268,9 +268,12 @@ Rispondi sempre in italiano, sii preciso e professionale.`;
 
             // Se usa backend, invia alla funzione serverless
             if (this.useBackend || this.apiKey === 'backend') {
+                // Estrai il messaggio dall'array messages per il backend
+                const userMessage = messages.find(msg => msg.role === 'user')?.content || 'Test';
+                
                 const backendPayload = {
                     provider: 'openai',
-                    messages: messages,
+                    message: userMessage,  // Backend si aspetta 'message' non 'messages'
                     model: this.modelName,
                     max_tokens: this.maxTokens,
                     stream: false

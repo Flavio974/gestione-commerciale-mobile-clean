@@ -247,12 +247,7 @@ Rispondi sempre in italiano, sii preciso e professionale.`;
             if (this.useBackend || this.apiKey === 'backend') {
                 const backendPayload = {
                     provider: 'anthropic',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: userMessage
-                        }
-                    ],
+                    message: userMessage,  // Backend si aspetta 'message' non 'messages'
                     model: this.modelName,
                     max_tokens: this.maxTokens,
                     temperature: this.temperature,
