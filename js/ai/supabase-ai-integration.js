@@ -824,15 +824,15 @@ class SupabaseAIIntegration {
                     totaleImporto: order.totaleImporto,
                     prodottoPrincipale: order.prodottoPrincipale || order.prodotti?.[0] || 'N/A',
                     numeroRighe: order.numeroRighe,
-                    // Include i primi 5 prodotti con dettagli essenziali
-                    dettagliProdotti: order.dettagliProdotti?.slice(0, 5).map(p => ({
+                    // Include TUTTI i prodotti con dettagli essenziali - NESSUN LIMITE
+                    dettagliProdotti: order.dettagliProdotti?.map(p => ({
                         nome: p.nome || 'N/A',
                         codice: p.codice || 'N/A',
                         qta: p.qta || 0,
                         importoRiga: p.importoRiga || 0
                     })) || [],
-                    // Lista semplice di tutti i prodotti nell'ordine
-                    tuttiiProdotti: order.prodotti?.slice(0, 10) || []
+                    // Lista semplice di TUTTI i prodotti nell'ordine - NESSUN LIMITE
+                    tuttiiProdotti: order.prodotti || []
                 })) || [],
                 summary: `Database archivio_ordini_venduto contiene ${data.historicalOrders.totalRecords} record`
             } : {
@@ -884,7 +884,7 @@ class SupabaseAIIntegration {
                     numeroOrdini: data.historicalOrders.statistics.numeroOrdini,
                     numeroClienti: data.historicalOrders.statistics.numeroClienti,
                     numeroProdotti: data.historicalOrders.statistics.numeroProdotti,
-                    topOrdini: data.historicalOrders.statistics.topOrdini?.slice(0, 5) || []
+                    topOrdini: data.historicalOrders.statistics.topOrdini || []
                 },
                 lastUpdate: data.historicalOrders.lastUpdate,
                 summary: `Database archivio_ordini_venduto contiene ${data.historicalOrders.totalRecords} record con ${data.historicalOrders.statistics.numeroOrdini || 0} ordini analizzati`

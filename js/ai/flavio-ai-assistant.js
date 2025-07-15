@@ -488,6 +488,12 @@ window.FlavioAIAssistant = (function() {
             const container = document.getElementById('ai-content');
             if (!container) return;
 
+            // Controlla se l'interfaccia è già renderizzata
+            if (container.querySelector('#ai-messages')) {
+                console.log('✅ Interfaccia AI già presente, mantengo la cronologia');
+                return;
+            }
+
             container.innerHTML = `
                 <div style="padding: 20px; max-width: 900px; margin: 0 auto;">
                     <div style="text-align: center; margin-bottom: 20px;">
@@ -563,7 +569,33 @@ window.FlavioAIAssistant = (function() {
                 });
             }
 
+            // Ripristina la cronologia se presente
+            this.restoreHistory();
+
             console.log('✅ Interfaccia AI leggera renderizzata');
+        },
+
+        /**
+         * Ripristina la cronologia dalla variabile chatHistory
+         */
+        restoreHistory() {
+            if (!this.chatHistory || this.chatHistory.length === 0) return;
+
+            const messagesContainer = document.getElementById('ai-messages');
+            if (!messagesContainer) return;
+
+            // Pulisci il messaggio di benvenuto predefinito se presente
+            if (messagesContainer.children.length === 1) {
+                messagesContainer.innerHTML = '';
+            }
+
+            // Ripristina tutti i messaggi dalla cronologia
+            this.chatHistory.forEach(message => {
+                const sender = message.type === 'user' ? 'user' : 'assistant';
+                this.addMessage(message.message, sender);
+            });
+
+            console.log(`🔄 Cronologia ripristinata: ${this.chatHistory.length} messaggi`);
         },
 
         /**
@@ -600,6 +632,14 @@ window.FlavioAIAssistant = (function() {
             }
             
             this.addMessage(originalMessage, 'user');
+            
+            // Salva messaggio utente nella cronologia
+            this.chatHistory.push({
+                type: 'user',
+                message: originalMessage,
+                timestamp: new Date()
+            });
+            
             this.addMessage(isVoiceInput ? '🎤 Sto elaborando il tuo messaggio vocale...' : '🤔 Sto elaborando...', 'assistant', true);
 
             try {
@@ -668,6 +708,13 @@ window.FlavioAIAssistant = (function() {
                 const aiResponse = result.response || 'Nessuna risposta ricevuta.';
                 this.addMessage(aiResponse, 'assistant');
                 
+                // Salva risposta AI nella cronologia
+                this.chatHistory.push({
+                    type: 'assistant',
+                    message: aiResponse,
+                    timestamp: new Date()
+                });
+                
                 // 🔊 SINTESI VOCALE PER INPUT VOCALI
                 if (isVoiceInput) {
                     console.log('🔊 Attivazione sintesi vocale per risposta AI');
@@ -687,9 +734,23 @@ window.FlavioAIAssistant = (function() {
                     this.addMessage('⚠️ API non configurata. Uso risposta di test:', 'assistant');
                     fallbackResponse = this.getFallbackResponse(message);
                     this.addMessage(fallbackResponse, 'assistant');
+                    
+                    // Salva fallback nella cronologia
+                    this.chatHistory.push({
+                        type: 'assistant',
+                        message: fallbackResponse,
+                        timestamp: new Date()
+                    });
                 } else {
                     fallbackResponse = '⚠️ Errore di rete. Verifica la connessione internet.';
                     this.addMessage(fallbackResponse, 'assistant');
+                    
+                    // Salva messaggio di errore nella cronologia
+                    this.chatHistory.push({
+                        type: 'assistant',
+                        message: fallbackResponse,
+                        timestamp: new Date()
+                    });
                 }
                 
                 // 🔊 SINTESI VOCALE ANCHE PER ERRORI SE INPUT VOCALE

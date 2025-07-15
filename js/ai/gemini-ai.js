@@ -53,7 +53,7 @@ window.GeminiAI = (function() {
                         temperature: 0.7,
                         topK: 40,
                         topP: 0.95,
-                        maxOutputTokens: 1024,
+                        maxOutputTokens: 4096,
                     }
                 };
 
@@ -94,7 +94,8 @@ window.GeminiAI = (function() {
             }
 
             fullPrompt += `Sei un assistente AI per un'applicazione di gestione commerciale italiana. `;
-            fullPrompt += `Rispondi in italiano in modo professionale e conciso.\n\n`;
+            fullPrompt += `Rispondi in italiano in modo professionale e conciso. `;
+            fullPrompt += `IMPORTANTE: Quando elenchi prodotti di un ordine, mostra SEMPRE TUTTI i prodotti senza troncare o abbreviare la lista.\n\n`;
             fullPrompt += `Domanda: ${userPrompt}`;
 
             return fullPrompt;

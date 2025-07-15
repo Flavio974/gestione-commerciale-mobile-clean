@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ClientAliasResolver</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        button { margin: 5px; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test ClientAliasResolver</h1>
+    
+    <div id="results"></div>
+    
+    <button onclick="testAliasResolver()">Test Alias Resolver</button>
+    <button onclick="testVoiceMapping()">Test Voice Mapping</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <script src="js/utils/client-alias-resolver.js"></script>
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+            console.log(message);
+        }
+        
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+        
+        async function testAliasResolver() {
+            try {
+                addResult('🚀 Inizializzazione ClientAliasResolver...');
+                
+                // Crea una mock per Supabase
+                window.supabase = {
+                    from: (table) => ({
+                        select: (fields) => Promise.resolve({
+                            data: [
+                                { id: 1, nome: 'ESSEMME SRL' },
+                                { id: 2, nome: 'DONAC SRL' },
+                                { id: 3, nome: 'AGRIMONTANA SPA' }
+                            ],
+                            error: null
+                        })
+                    })
+                };
+                
+                const resolver = new ClientAliasResolver();
+                await resolver.init();
+                
+                addResult('✅ ClientAliasResolver inizializzato', 'success');
+                
+                // Test vari alias
+                const testCases = [
+                    'SM',
+                    'ESSEMME',
+                    'ESSE EMME',
+                    'S.M.',
+                    'DONAC',
+                    'AGRIMONTANA',
+                    'CLIENTE_INESISTENTE'
+                ];
+                
+                for (const testCase of testCases) {
+                    const result = await resolver.resolveClientName(testCase);
+                    
+                    const message = `🔍 "${testCase}" → ${result.found ? 
+                        `✅ ${result.resolved} (${result.matchType})` : 
+                        `❌ Non trovato`}`;
+                    
+                    addResult(message, result.found ? 'success' : 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Errore: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testVoiceMapping() {
+            addResult('🎤 Test mapping vocale specifico...');
+            
+            const testMappings = {
+                'SM': 'ESSEMME SRL',
+                'ESSE EMME': 'ESSEMME SRL',
+                'S.M.': 'ESSEMME SRL',
+                'DONAC': 'DONAC SRL',
+                'AGRIMONTANA': 'AGRIMONTANA SPA'
+            };
+            
+            for (const [voice, expected] of Object.entries(testMappings)) {
+                addResult(`🎯 Mapping vocale: "${voice}" dovrebbe mappare a "${expected}"`, 'info');
+            }
+        }
+        
+        // Auto-run test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testAliasResolver();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

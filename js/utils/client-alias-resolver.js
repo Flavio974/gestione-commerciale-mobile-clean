@@ -107,12 +107,60 @@ class ClientAliasResolver {
                      .replace(/\bS\.P\.A\./gi, 'SPA')
         ];
         
+        // Aggiungi alias specifici per clienti problematici
+        this.addSpecificAliases(clientName, clientId, variants);
+        
         variants.forEach(variant => {
             if (variant && variant.trim() && variant !== clientName) {
                 const normalizedVariant = variant.toLowerCase().trim();
                 if (!this.aliases.has(normalizedVariant)) {
                     this.aliases.set(normalizedVariant, baseKey);
                 }
+            }
+        });
+    }
+    
+    /**
+     * Aggiunge alias specifici per clienti problematici
+     */
+    addSpecificAliases(clientName, clientId, variants) {
+        const baseKey = {
+            id: clientId,
+            nome_principale: clientName,
+            tipo: 'alias_vocale'
+        };
+        
+        // Mapping specifici per problemi di riconoscimento vocale
+        const specificMappings = {
+            'ESSEMME SRL': ['SM', 'S.M.', 'ESSE EMME', 'ESSEMME', 'S M', 'ESSEEMME'],
+            'ESSEMME': ['SM', 'S.M.', 'ESSE EMME', 'S M', 'ESSEEMME'],
+            'DONAC SRL': ['DONAC', 'D.O.N.A.C.', 'DONACESSERL', 'DONAC SRL'],
+            'AGRIMONTANA SPA': ['AGRIMONTANA', 'AGRI MONTANA', 'AGRIMONTANA SPA']
+        };
+        
+        // Cerca match per il nome cliente
+        const clientNameUpper = clientName.toUpperCase();
+        let matchedAliases = [];
+        
+        // Match esatto
+        if (specificMappings[clientNameUpper]) {
+            matchedAliases = specificMappings[clientNameUpper];
+        } else {
+            // Match parziale
+            for (const [key, aliases] of Object.entries(specificMappings)) {
+                if (clientNameUpper.includes(key) || key.includes(clientNameUpper)) {
+                    matchedAliases = aliases;
+                    break;
+                }
+            }
+        }
+        
+        // Aggiungi gli alias trovati
+        matchedAliases.forEach(alias => {
+            const normalizedAlias = alias.toLowerCase().trim();
+            if (!this.aliases.has(normalizedAlias)) {
+                this.aliases.set(normalizedAlias, baseKey);
+                console.log(`🔗 Alias specifico aggiunto: "${alias}" → "${clientName}"`);
             }
         });
     }

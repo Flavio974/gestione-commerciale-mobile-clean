@@ -7,6 +7,10 @@ class RequestMiddleware {
     constructor(supabaseAI) {
         this.supabaseAI = supabaseAI;
         
+        // Inizializza il ClientAliasResolver
+        this.aliasResolver = null;
+        this.initAliasResolver();
+        
         // Keywords per classificazione richieste
         this.operativeKeywords = {
             fatturato: ['fatturato', 'venduto', 'incasso', 'guadagno', 'euro', '€'],
@@ -71,6 +75,23 @@ class RequestMiddleware {
     }
     
     /**
+     * Inizializza il ClientAliasResolver
+     */
+    async initAliasResolver() {
+        try {
+            if (window.ClientAliasResolver) {
+                this.aliasResolver = new window.ClientAliasResolver();
+                await this.aliasResolver.init();
+                console.log('🔗 ClientAliasResolver integrato nel middleware');
+            } else {
+                console.log('⚠️ ClientAliasResolver non disponibile');
+            }
+        } catch (error) {
+            console.error('❌ Errore inizializzazione ClientAliasResolver:', error);
+        }
+    }
+    
+    /**
      * Verifica se il contesto è ancora valido
      */
     isContextValid() {
@@ -112,6 +133,44 @@ class RequestMiddleware {
     }
     
     /**
+     * Risolve nome cliente usando ClientAliasResolver (se disponibile) o normalizzazione
+     */
+    async resolveClientName(clientName) {
+        if (!clientName || typeof clientName !== 'string') {
+            return { resolved: '', original: clientName, found: false };
+        }
+        
+        // Usa ClientAliasResolver se disponibile
+        if (this.aliasResolver) {
+            try {
+                const result = await this.aliasResolver.resolveClientName(clientName);
+                if (result.found) {
+                    console.log(`🔍 ALIAS RESOLVER: "${clientName}" → "${result.resolved}"`);
+                    return {
+                        resolved: result.resolved,
+                        original: clientName,
+                        found: true,
+                        matchType: result.matchType,
+                        clientId: result.clientId
+                    };
+                }
+            } catch (error) {
+                console.error('❌ Errore ClientAliasResolver:', error);
+            }
+        }
+        
+        // Fallback alla normalizzazione classica
+        const normalized = this.normalizeClientName(clientName);
+        console.log(`🔄 NORMALIZZAZIONE: "${clientName}" → "${normalized}"`);
+        return {
+            resolved: normalized,
+            original: clientName,
+            found: false,
+            matchType: 'normalized'
+        };
+    }
+    
+    /**
      * Normalizza nome cliente per matching più flessibile
      */
     normalizeClientName(clienteName) {
@@ -139,13 +198,20 @@ class RequestMiddleware {
     /**
      * Trova l'ordine più recente usando il campo data migliore disponibile
      */
-    findLatestOrder(ordini) {
+    findLatestOrder(ordini, tipoData = null) {
         if (!ordini || ordini.length === 0) {
             return { displayDate: 'N/A', numero_ordine: 'N/A' };
         }
         
         // Campi data possibili in ordine di preferenza
-        const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp', 'date'];
+        let dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp', 'date'];
+        
+        // Se specificato tipo data, dai precedenza al campo corretto
+        if (tipoData === 'consegna') {
+            dateFields = ['data_consegna', 'data', 'data_ordine', 'data_documento', 'created_at', 'timestamp', 'date'];
+        } else if (tipoData === 'ordine') {
+            dateFields = ['data_ordine', 'data', 'data_consegna', 'data_documento', 'created_at', 'timestamp', 'date'];
+        }
         
         let bestField = null;
         let maxValid = 0;
@@ -251,15 +317,13 @@ class RequestMiddleware {
                     // Per altri formati (ISO, SQL date, etc.), parsalo prima poi formatta italiano
                     // CRITICAL FIX: Se è formato ISO dal database, potrebbe essere MM/DD invertito
                     if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                        // Formato ISO: YYYY-MM-DD
-                        // Ma potrebbe essere stato inserito come YYYY-DD-MM (americano)
+                        // Formato ISO: YYYY-MM-DD (standard SQL)
                         console.log('🔧 PARSING ISO DATE:', dateValue);
                         const [year, month, day] = dateValue.split('-');
                         
-                        // Crea data forzando interpretazione italiana: giorno e mese invertiti
-                        // Se DB ha "2025-02-01" ma significa "2 gennaio", lo interpretiamo come italiano
-                        date = new Date(parseInt(year), parseInt(day) - 1, parseInt(month));
-                        console.log('🔧 FORCED ITALIAN INTERPRETATION:', date);
+                        // Parsing corretto: YYYY-MM-DD dove MM è il mese e DD è il giorno
+                        date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        console.log('🔧 CORRECT ISO PARSING:', date);
                     } else {
                         date = new Date(dateValue);
                     }
@@ -674,6 +738,11 @@ class RequestMiddleware {
                 if (dateOrdiniMatch && dateOrdiniMatch[1] && dateOrdiniMatch[1].trim()) {
                     params.cliente = dateOrdiniMatch[1].trim();
                     params.tuttiOrdini = true;
+                    
+                    // Verifica se si tratta di data di consegna
+                    if (input.toLowerCase().includes('consegna')) {
+                        params.tipoData = 'consegna';
+                    }
                 } else {
                     // Controlla "Date degli ordini?" generico
                     const dateOrdiniGenericoMatch = input.match(this.patterns.dateOrdiniGenerico);
@@ -705,6 +774,11 @@ class RequestMiddleware {
                             let dataMatch = input.match(this.patterns.dataCliente);
                             if (dataMatch) {
                                 params.cliente = dataMatch[1].trim();
+                                
+                                // Verifica se si tratta di data di consegna
+                                if (input.toLowerCase().includes('consegna')) {
+                                    params.tipoData = 'consegna';
+                                }
                             } else {
                                 // Controlla se è una richiesta generica sulla data
                                 const dataGenericaMatch = input.match(this.patterns.dataGenerica);
@@ -713,12 +787,22 @@ class RequestMiddleware {
                                 if (dataGenericaMatch && validContext) {
                                     params.cliente = validContext;
                                     params.fromContext = true;
+                                    
+                                    // Verifica se si tratta di data di consegna
+                                    if (input.toLowerCase().includes('consegna')) {
+                                        params.tipoData = 'consegna';
+                                    }
                                 } else if (validContext) {
                                     // Fallback: se c'è un contesto valido e la query contiene parole chiave data
                                     const inputLower = input.toLowerCase();
                                     if (inputLower.includes('data') || inputLower.includes('ultimo') || inputLower.includes('quando')) {
                                         params.cliente = validContext;
                                         params.fromContext = true;
+                                        
+                                        // Verifica se si tratta di data di consegna
+                                        if (inputLower.includes('consegna')) {
+                                            params.tipoData = 'consegna';
+                                        }
                                     }
                                 }
                             }
@@ -1137,7 +1221,7 @@ class RequestMiddleware {
             
             // Analisi aggiuntiva - trova campo data migliore
             const nomeCliente = ordiniCliente[0].cliente;
-            const ultimoOrdine = this.findLatestOrder(ordiniCliente);
+            const ultimoOrdine = this.findLatestOrder(ordiniCliente, params.tipoData);
             
             // Estrai numeri ordine unici
             const numeriOrdine = [...new Set(
@@ -1203,14 +1287,26 @@ class RequestMiddleware {
                 console.log('📊 DEBUG: Campi disponibili:', Object.keys(ordini[0]));
             }
             
-            // Normalizza nome cliente per matching più flessibile
-            const clienteNorm = this.normalizeClientName(params.cliente);
-            console.log('📦 MIDDLEWARE: Nome cliente normalizzato:', clienteNorm);
+            // Risolve nome cliente usando ClientAliasResolver
+            const clienteResolved = await this.resolveClientName(params.cliente);
+            console.log('📦 MIDDLEWARE: Nome cliente risolto:', clienteResolved);
             
             const ordiniCliente = ordini.filter(ordine => {
                 if (!ordine.cliente) return false;
                 
+                // Se abbiamo un match esatto dall'alias resolver, usalo
+                if (clienteResolved.found) {
+                    const match = ordine.cliente.toLowerCase().includes(clienteResolved.resolved.toLowerCase()) || 
+                                clienteResolved.resolved.toLowerCase().includes(ordine.cliente.toLowerCase());
+                    if (match) {
+                        console.log('📦 MIDDLEWARE: Match trovato via alias resolver:', ordine.cliente, '→', clienteResolved.resolved);
+                        return true;
+                    }
+                }
+                
+                // Fallback al matching normalizzato
                 const nomeOrdineNorm = this.normalizeClientName(ordine.cliente);
+                const clienteNorm = clienteResolved.resolved.toLowerCase();
                 const match = nomeOrdineNorm.includes(clienteNorm) || clienteNorm.includes(nomeOrdineNorm);
                 
                 if (match) {
@@ -1238,8 +1334,8 @@ class RequestMiddleware {
                 };
             }
             
-            // Salva nel contesto per richieste successive
-            this.saveContext(params.cliente);
+            // Salva nel contesto per richieste successive (usa il nome risolto se disponibile)
+            this.saveContext(clienteResolved.found ? clienteResolved.resolved : params.cliente);
             
             const nomeCliente = ordiniCliente[0].cliente;
             
@@ -1320,7 +1416,7 @@ class RequestMiddleware {
                     ordiniDistinti: numOrdiniDistinti,
                     prodottiTotali: tuttiprodotti.length,
                     ordini: ordiniProdotti,
-                    dettaglio: ordiniDaMostrare
+                    dettaglio: ordiniArray
                 }
             };
             
@@ -1364,10 +1460,28 @@ class RequestMiddleware {
                 };
             }
             
-            const clienteNorm = params.cliente.toLowerCase();
-            const ordiniCliente = ordini.filter(ordine => 
-                ordine.cliente && ordine.cliente.toLowerCase().includes(clienteNorm)
-            );
+            // Risolve nome cliente usando ClientAliasResolver
+            const clienteResolved = await this.resolveClientName(params.cliente);
+            console.log('📅 MIDDLEWARE: Nome cliente risolto:', clienteResolved);
+            
+            const ordiniCliente = ordini.filter(ordine => {
+                if (!ordine.cliente) return false;
+                
+                // Se abbiamo un match esatto dall'alias resolver, usalo
+                if (clienteResolved.found) {
+                    const match = ordine.cliente.toLowerCase().includes(clienteResolved.resolved.toLowerCase()) || 
+                                clienteResolved.resolved.toLowerCase().includes(ordine.cliente.toLowerCase());
+                    if (match) {
+                        console.log('📅 MIDDLEWARE: Match trovato via alias resolver:', ordine.cliente, '→', clienteResolved.resolved);
+                        return true;
+                    }
+                }
+                
+                // Fallback al matching normalizzato
+                const nomeOrdineNorm = ordine.cliente.toLowerCase();
+                const clienteNorm = clienteResolved.resolved.toLowerCase();
+                return nomeOrdineNorm.includes(clienteNorm) || clienteNorm.includes(nomeOrdineNorm);
+            });
             
             if (ordiniCliente.length === 0) {
                 return {
@@ -1379,18 +1493,19 @@ class RequestMiddleware {
             
             // Salva nel contesto per richieste successive (se non già dal contesto)
             if (!params.fromContext) {
-                this.saveContext(params.cliente);
+                this.saveContext(clienteResolved.found ? clienteResolved.resolved : params.cliente);
             }
             
             // Trova l'ordine più recente
             const nomeCliente = ordiniCliente[0].cliente;
-            const ultimoOrdine = this.findLatestOrder(ordiniCliente);
+            const ultimoOrdine = this.findLatestOrder(ordiniCliente, params.tipoData);
             
             const contextNote = params.fromContext ? ' (dal contesto precedente)' : '';
+            const dataLabel = params.tipoData === 'consegna' ? 'data consegna' : 'data ordine';
             
             return {
                 success: true,
-                response: `Cliente ${nomeCliente}${contextNote}: ultimo ordine ${ultimoOrdine.numero_ordine} del ${ultimoOrdine.displayDate}`,
+                response: `Cliente ${nomeCliente}${contextNote}: ultimo ordine ${ultimoOrdine.numero_ordine} - ${dataLabel}: ${ultimoOrdine.displayDate}`,
                 data: { 
                     cliente: nomeCliente,
                     ultimaData: ultimoOrdine.displayDate,
