@@ -1734,12 +1734,18 @@
         // ✅ SINCRONIZZA IL MODELLO PRINCIPALE
         const mainModelSelect = document.getElementById('ai-model');
         if (mainModelSelect) {
-          if (providerId === 'openai') {
-            mainModelSelect.value = 'o1-preview'; // Modello OpenAI predefinito
-          } else if (providerId === 'anthropic') {
-            mainModelSelect.value = 'claude-3-5-sonnet-20241022'; // Modello Anthropic predefinito
+          // ✅ NON FORZA IL MODELLO - MANTIENI LA SELEZIONE DELL'UTENTE
+          // Solo se non c'è già un modello selezionato, usa il default
+          if (!mainModelSelect.value || mainModelSelect.value === '') {
+            if (providerId === 'openai') {
+              mainModelSelect.value = 'gpt-4'; // Modello OpenAI predefinito
+            } else if (providerId === 'anthropic') {
+              mainModelSelect.value = 'claude-3-5-sonnet-20241022'; // Modello Anthropic predefinito
+            }
+            console.log('🔄 Modello principale sincronizzato (solo se vuoto):', mainModelSelect.value);
+          } else {
+            console.log('🔄 Modello principale mantenuto (utente ha già selezionato):', mainModelSelect.value);
           }
-          console.log('🔄 Modello principale sincronizzato:', mainModelSelect.value);
         }
       }
       

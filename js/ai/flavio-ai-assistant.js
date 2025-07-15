@@ -869,16 +869,22 @@ window.FlavioAIAssistant = (function() {
                 const modelSelect = document.getElementById('ai-model');
                 const providerSelect = document.getElementById('ai-provider-select');
                 
-                // ✅ FORZA IL MODELLO CORRETTO BASATO SUL PROVIDER
+                // ✅ USA IL MODELLO EFFETTIVAMENTE SELEZIONATO DALL'UTENTE
                 let model;
-                if (providerSelect && providerSelect.value === 'openai') {
-                    model = 'o1-preview'; // Forza modello OpenAI
-                    console.log('🔧 Forza modello OpenAI:', model);
-                } else if (providerSelect && providerSelect.value === 'anthropic') {
-                    model = 'claude-3-5-sonnet-20241022'; // Forza modello Anthropic
-                    console.log('🔧 Forza modello Anthropic:', model);
+                if (modelSelect && modelSelect.value) {
+                    model = modelSelect.value; // Usa il modello selezionato dall'utente
+                    console.log('🔧 Usa modello selezionato dall\'utente:', model);
                 } else {
-                    model = modelSelect ? modelSelect.value : 'claude-3-5-sonnet-20241022';
+                    // Fallback basato sul provider se non c'è selezione
+                    if (providerSelect && providerSelect.value === 'openai') {
+                        model = 'gpt-4'; // Fallback OpenAI
+                        console.log('🔧 Fallback modello OpenAI:', model);
+                    } else if (providerSelect && providerSelect.value === 'anthropic') {
+                        model = 'claude-3-5-sonnet-20241022'; // Fallback Anthropic
+                        console.log('🔧 Fallback modello Anthropic:', model);
+                    } else {
+                        model = 'claude-3-5-sonnet-20241022'; // Fallback generale
+                    }
                 }
                 
                 // ✅ AGGIORNA IL CONTESTO PROVIDER CON IL MODELLO CORRETTO (solo se non c'è già contesto dal middleware)

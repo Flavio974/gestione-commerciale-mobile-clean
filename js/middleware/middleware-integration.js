@@ -367,11 +367,37 @@ class MiddlewareIntegration {
                                 message.toLowerCase().includes('quale')) {
                                 
                                 if (providerSelect.value === 'openai') {
-                                    const model = 'o1-preview'; // Modello OpenAI predefinito
-                                    providerContext = `[CONTESTO: Sei specificamente il modello ${model} di OpenAI. Quando chiesto del modello, rispondi esattamente: "Sono ${model} di OpenAI".] `;
+                                    // ✅ LEGGI IL MODELLO EFFETTIVAMENTE SELEZIONATO DALL'UTENTE
+                                    const modelSelect = document.getElementById('ai-model');
+                                    const selectedModel = modelSelect ? modelSelect.value : 'gpt-4';
+                                    
+                                    // Mappa il valore del select al nome del modello per l'AI
+                                    let modelName = selectedModel;
+                                    if (selectedModel === 'gpt-4') {
+                                        modelName = 'GPT-4';
+                                    } else if (selectedModel === 'o1-preview') {
+                                        modelName = 'o1-preview';
+                                    } else if (selectedModel === 'gpt-4o-mini') {
+                                        modelName = 'GPT-4o-mini';
+                                    }
+                                    
+                                    providerContext = `[CONTESTO: Sei specificamente il modello ${modelName} di OpenAI. Quando chiesto del modello, rispondi esattamente: "Sono ${modelName} di OpenAI".] `;
+                                    console.log('🔌 🎯 Usando modello selezionato dall\'utente:', modelName);
                                 } else if (providerSelect.value === 'anthropic') {
-                                    const model = 'claude-3-5-sonnet-20241022'; // Modello Anthropic predefinito
-                                    providerContext = `[CONTESTO: Sei specificamente il modello ${model} di Anthropic. Quando chiesto del modello, rispondi esattamente: "Sono ${model} di Anthropic".] `;
+                                    // ✅ LEGGI IL MODELLO EFFETTIVAMENTE SELEZIONATO DALL'UTENTE
+                                    const modelSelect = document.getElementById('ai-model');
+                                    const selectedModel = modelSelect ? modelSelect.value : 'claude-3-5-sonnet-20241022';
+                                    
+                                    // Mappa il valore del select al nome del modello per l'AI
+                                    let modelName = selectedModel;
+                                    if (selectedModel === 'claude-3-5-sonnet-20241022') {
+                                        modelName = 'Claude-3.5-Sonnet';
+                                    } else if (selectedModel === 'claude-3-haiku-20240307') {
+                                        modelName = 'Claude-3-Haiku';
+                                    }
+                                    
+                                    providerContext = `[CONTESTO: Sei specificamente il modello ${modelName} di Anthropic. Quando chiesto del modello, rispondi esattamente: "Sono ${modelName} di Anthropic".] `;
+                                    console.log('🔌 🎯 Usando modello selezionato dall\'utente:', modelName);
                                 }
                                 
                                 if (providerContext) {
