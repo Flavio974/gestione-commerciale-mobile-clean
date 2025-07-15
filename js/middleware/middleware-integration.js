@@ -352,11 +352,36 @@ class MiddlewareIntegration {
                             return originalSendMessage(message, isVoiceInput);
                         }
                         
-                        // ✅ RISPETTA LA SELEZIONE DEL PROVIDER UTENTE
-                        // Se l'utente ha selezionato un provider specifico, bypassiamo il middleware
+                        // ✅ LOGICA INTELLIGENTE: MIDDLEWARE PER DATI, AI PER CREATIVITÀ
                         const providerSelect = document.getElementById('ai-provider-select');
-                        if (providerSelect && providerSelect.value && aiInstance.baseAssistant?.currentProvider) {
-                            console.log('🔌 🎯 PROVIDER SELEZIONATO:', providerSelect.value, '- BYPASS MIDDLEWARE');
+                        const hasProviderSelected = providerSelect && providerSelect.value && aiInstance.baseAssistant?.currentProvider;
+                        
+                        // 🔍 ANALIZZA IL TIPO DI RICHIESTA
+                        const isDataRequest = this.isDataRelatedQuery(message);
+                        
+                        if (hasProviderSelected && !isDataRequest) {
+                            console.log('🔌 🎯 PROVIDER SELEZIONATO:', providerSelect.value, '- BYPASS MIDDLEWARE (richiesta creativa)');
+                        } else if (isDataRequest) {
+                            console.log('🔌 🎯 RICHIESTA DATI RILEVATA - USA MIDDLEWARE (gratis)', {
+                                hasProvider: hasProviderSelected,
+                                provider: providerSelect?.value || 'none'
+                            });
+                            
+                            // Gestisci richiesta di dati con middleware
+                            try {
+                                const dataResponse = await this.handleDataRequest(message);
+                                if (dataResponse) {
+                                    console.log('🔌 ✅ Risposta da middleware (gratis):', dataResponse);
+                                    return dataResponse;
+                                }
+                            } catch (error) {
+                                console.error('🔌 ❌ Errore middleware, fallback ad AI:', error);
+                                // Continua con AI come fallback
+                            }
+                        }
+                        
+                        if (hasProviderSelected && !isDataRequest) {
+                            console.log('🔌 🎯 PROVIDER SELEZIONATO:', providerSelect.value, '- BYPASS MIDDLEWARE (richiesta creativa)');
                             
                             // ✅ AGGIUNGI CONTESTO PROVIDER PER IDENTIFICAZIONE
                             let contextualMessage = message;
@@ -851,6 +876,60 @@ class MiddlewareIntegration {
                 document.body.removeChild(modal);
             }
         };
+    }
+
+    /**
+     * 🔍 RICONOSCE SE È UNA RICHIESTA DI DATI
+     */
+    isDataRelatedQuery(message) {
+        const dataKeywords = [
+            'ordini', 'clienti', 'prodotti', 'database', 'tabella', 'record',
+            'quanti', 'elenco', 'lista', 'cerca', 'trova', 'mostra',
+            'vendite', 'fatture', 'documenti', 'storico', 'archivio',
+            'magazzino', 'inventario', 'scorte', 'disponibilità',
+            'percorsi', 'tragitti', 'distanze', 'chilometri',
+            'statistiche', 'report', 'analisi', 'dati', 'informazioni',
+            'supabase', 'sql', 'query', 'connessione'
+        ];
+        
+        const messageLower = message.toLowerCase();
+        const isDataRelated = dataKeywords.some(keyword => 
+            messageLower.includes(keyword)
+        );
+        
+        console.log('🔌 🔍 Analisi richiesta:', {
+            message: message,
+            isDataRelated: isDataRelated,
+            matchedKeywords: dataKeywords.filter(k => messageLower.includes(k))
+        });
+        
+        return isDataRelated;
+    }
+
+    /**
+     * 🔧 GESTISCE RICHIESTE DI DATI CON MIDDLEWARE
+     */
+    async handleDataRequest(message) {
+        try {
+            // Verifica se abbiamo connessione Supabase
+            if (!this.supabaseAI) {
+                console.log('🔌 ❌ Supabase non disponibile per middleware');
+                return null;
+            }
+
+            // Prova a processare la richiesta di dati
+            const result = await this.supabaseAI.processRequest(message);
+            
+            if (result && result.response) {
+                console.log('🔌 ✅ Risposta middleware ottenuta:', result.response);
+                return result.response;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('🔌 ❌ Errore handleDataRequest:', error);
+            return null;
+        }
     }
 
     /**
