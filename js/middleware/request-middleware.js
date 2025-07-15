@@ -589,6 +589,12 @@ class RequestMiddleware {
             return 'valore_medio';
         }
         
+        // Controlla richieste di prodotti più venduti
+        if (/prodotto.*più.*venduto|più.*venduto.*prodotto|articolo.*più.*venduto|top.*vendite|bestseller/i.test(input)) {
+            console.log('🎯 MATCH DIRETTO: Prodotti più venduti');
+            return 'prodotti_piu_venduti';
+        }
+        
         
         // Controlla richieste di settimane future/calcoli
         if (/la\s+prossima\s+settimana|settimana\s+prossima|che\s+settimana\s+sarà|settimana\s+successiva/i.test(input)) {
@@ -1057,6 +1063,9 @@ class RequestMiddleware {
                 
             case 'data_corrente':
                 return await this.getDataCorrente(params);
+                
+            case 'prodotti_piu_venduti':
+                return await this.getProdottiPiuVenduti(params);
                 
             default:
                 return { 
@@ -2707,6 +2716,109 @@ class RequestMiddleware {
     }
 
     /**
+     * 📊 FUNZIONE: Prodotti più venduti
+     */
+    async getProdottiPiuVenduti(params) {
+        try {
+            console.log('📦 MIDDLEWARE: Analisi prodotti più venduti');
+            
+            // Forza refresh per dati aggiornati
+            console.log('📊 MIDDLEWARE: Forzando refresh dati per analisi prodotti...');
+            const supabaseData = await this.supabaseAI.getAllData(true); // Force refresh
+            let ordini = supabaseData.historicalOrders?.sampleData || [];
+            
+            if (ordini.length === 0) {
+                console.log('⚠️ MIDDLEWARE: Nessun dato storico trovato');
+                return {
+                    success: true,
+                    response: '❌ Nessun dato di vendita disponibile per l\'analisi dei prodotti',
+                    data: { prodotti: [] }
+                };
+            }
+            
+            console.log(`✅ MIDDLEWARE: Caricati ${ordini.length} record storici per analisi prodotti`);
+            
+            // Crea mappa dei prodotti venduti
+            const prodottiVenduti = {};
+            
+            ordini.forEach(ordine => {
+                const prodotto = ordine.prodotto || ordine.articolo || 'Prodotto sconosciuto';
+                const quantita = parseFloat(ordine.quantita) || 1;
+                const importo = parseFloat(ordine.importo) || 0;
+                
+                if (!prodottiVenduti[prodotto]) {
+                    prodottiVenduti[prodotto] = {
+                        nome: prodotto,
+                        quantitaTotale: 0,
+                        importoTotale: 0,
+                        numeroOrdini: 0,
+                        clienti: new Set()
+                    };
+                }
+                
+                prodottiVenduti[prodotto].quantitaTotale += quantita;
+                prodottiVenduti[prodotto].importoTotale += importo;
+                prodottiVenduti[prodotto].numeroOrdini++;
+                
+                if (ordine.cliente) {
+                    prodottiVenduti[prodotto].clienti.add(ordine.cliente);
+                }
+            });
+            
+            // Converti in array e ordina per quantità venduta
+            const prodottiArray = Object.values(prodottiVenduti)
+                .map(p => ({
+                    ...p,
+                    numeroClienti: p.clienti.size
+                }))
+                .sort((a, b) => b.quantitaTotale - a.quantitaTotale);
+            
+            // Prendi i top 10
+            const top10 = prodottiArray.slice(0, 10);
+            
+            // Crea risposta formattata
+            let response = '📊 **TOP 10 PRODOTTI PIÙ VENDUTI**\n\n';
+            
+            top10.forEach((prodotto, index) => {
+                response += `${index + 1}. **${prodotto.nome}**\n`;
+                response += `   • Quantità venduta: ${prodotto.quantitaTotale.toLocaleString('it-IT')}\n`;
+                response += `   • Fatturato: €${prodotto.importoTotale.toLocaleString('it-IT', {minimumFractionDigits: 2})}\n`;
+                response += `   • Ordini: ${prodotto.numeroOrdini}\n`;
+                response += `   • Clienti: ${prodotto.numeroClienti}\n\n`;
+            });
+            
+            // Aggiungi statistiche generali
+            const totaleQuantita = prodottiArray.reduce((sum, p) => sum + p.quantitaTotale, 0);
+            const totaleFatturato = prodottiArray.reduce((sum, p) => sum + p.importoTotale, 0);
+            
+            response += `📈 **STATISTICHE GENERALI**\n`;
+            response += `• Prodotti totali: ${prodottiArray.length}\n`;
+            response += `• Quantità totale venduta: ${totaleQuantita.toLocaleString('it-IT')}\n`;
+            response += `• Fatturato totale: €${totaleFatturato.toLocaleString('it-IT', {minimumFractionDigits: 2})}`;
+            
+            return {
+                success: true,
+                response: response,
+                data: {
+                    top10: top10,
+                    totali: {
+                        numeroProdotti: prodottiArray.length,
+                        quantitaTotale: totaleQuantita,
+                        fatturatoTotale: totaleFatturato
+                    }
+                }
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore analisi prodotti più venduti:', error);
+            return { 
+                success: false, 
+                error: 'Errore nell\'analisi dei prodotti più venduti' 
+            };
+        }
+    }
+
+    /**
      * FUNZIONE NUOVA: Settimane future
      */
     async getSettimanoFuture(params) {
@@ -2878,7 +2990,6 @@ class RequestMiddleware {
             /cliente.*con.*maggiore.*fatturato/i,
             /ordine.*più.*grande/i,
             /ordine.*più.*piccolo/i,
-            /prodotto.*più.*venduto/i,
             /mese.*migliore/i,
             /periodo.*migliore/i,
             /quando.*venduto.*di.*più/i,

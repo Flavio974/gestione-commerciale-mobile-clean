@@ -906,6 +906,11 @@ class MiddlewareIntegration {
             'chi ha', 'cosa ha', 'quale è', 'quanto è', 'quanto costa',
             'esiste', 'esistono', 'contiene', 'include', 'comprende',
             
+            // Query sui prodotti
+            'più venduto', 'più venduti', 'meno venduto', 'meno venduti',
+            'venduto', 'venduti', 'articolo', 'articoli', 'merce', 'merci',
+            'top vendite', 'bestseller', 'migliori vendite', 'peggiori vendite',
+            
             // Informazioni aziendali
             'indirizzo', 'telefono', 'email', 'contatto', 'partita iva',
             'codice fiscale', 'iban', 'banca', 'sede', 'filiale'
