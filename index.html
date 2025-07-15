@@ -1460,7 +1460,10 @@
 
           <!-- Statistiche Provider -->
           <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h4>📊 Statistiche Provider Corrente</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="margin: 0;">📊 Statistiche Provider Corrente</h4>
+              <button onclick="window.updateProviderStats()" style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">🔄 Aggiorna Stats</button>
+            </div>
             <div id="provider-stats" style="margin-top: 10px; padding: 10px; border-radius: 4px; background: #f8f9fa;"></div>
           </div>
 
