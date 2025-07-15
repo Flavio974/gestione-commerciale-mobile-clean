@@ -762,6 +762,33 @@ window.FlavioAIAssistant = (function() {
                 });
             }
 
+            // ✅ AGGIORNA IL MODELLO NEL PROVIDER QUANDO CAMBIA LA SELEZIONE
+            const modelSelect = document.getElementById('ai-model');
+            if (modelSelect) {
+                modelSelect.addEventListener('change', (e) => {
+                    const selectedModel = e.target.value;
+                    const providerSelect = document.getElementById('ai-provider-select');
+                    
+                    if (providerSelect && providerSelect.value) {
+                        console.log('🔄 Cambio modello a:', selectedModel);
+                        
+                        // Aggiorna il modello nel provider corrente
+                        if (providerSelect.value === 'openai' && window.OpenAI) {
+                            window.OpenAI.setModel(selectedModel);
+                            console.log('✅ Modello OpenAI aggiornato a:', selectedModel);
+                        } else if (providerSelect.value === 'anthropic' && window.AnthropicAI) {
+                            window.AnthropicAI.setModel(selectedModel);
+                            console.log('✅ Modello Anthropic aggiornato a:', selectedModel);
+                        }
+                        
+                        // Aggiorna anche nel baseAssistant se disponibile
+                        if (this.baseAssistant && this.baseAssistant.currentProvider) {
+                            this.changeModel(selectedModel);
+                        }
+                    }
+                });
+            }
+
             // Ripristina la cronologia se presente
             this.restoreHistory();
 

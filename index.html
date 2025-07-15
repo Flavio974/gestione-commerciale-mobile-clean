@@ -1745,6 +1745,16 @@
             console.log('🔄 Modello principale sincronizzato (solo se vuoto):', mainModelSelect.value);
           } else {
             console.log('🔄 Modello principale mantenuto (utente ha già selezionato):', mainModelSelect.value);
+            
+            // ✅ AGGIORNA IL MODELLO NEL PROVIDER CON LA SELEZIONE CORRENTE
+            const selectedModel = mainModelSelect.value;
+            if (providerId === 'openai' && window.OpenAI) {
+              window.OpenAI.setModel(selectedModel);
+              console.log('✅ Modello OpenAI sincronizzato con UI:', selectedModel);
+            } else if (providerId === 'anthropic' && window.AnthropicAI) {
+              window.AnthropicAI.setModel(selectedModel);
+              console.log('✅ Modello Anthropic sincronizzato con UI:', selectedModel);
+            }
           }
         }
       }
