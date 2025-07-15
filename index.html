@@ -301,7 +301,15 @@
           }
         });
         
-        // 2. Rimuovi tutti i possibili storage della cronologia
+        // 2. Pulisci anche il div ai-messages dell'interfaccia corrente
+        const aiMessagesDiv = document.getElementById('ai-messages');
+        if (aiMessagesDiv) {
+          aiMessagesDiv.innerHTML = '';
+          chatCleared = true;
+          console.log('✅ Div ai-messages pulito');
+        }
+        
+        // 3. Rimuovi tutti i possibili storage della cronologia
         const storageKeys = [
           'ai_conversation_history',
           'gc_mobile_ai_history',
@@ -377,6 +385,24 @@
         console.error('❌ Errore durante la cancellazione:', error);
         alert('❌ Errore durante la cancellazione della cronologia');
       }
+    };
+    
+    // ✅ FUNZIONE SEMPLICE PER PULSANTE CANCELLA CHAT
+    window.clearAIChat = function() {
+      console.log('🗑️ Pulsante cancella chat premuto');
+      
+      // Chiama la funzione principale
+      window.clearAIChatHistory();
+      
+      // Pulisci anche la cronologia di FlavioAIAssistant se presente
+      if (window.FlavioAIAssistant && window.FlavioAIAssistant.chatHistory) {
+        window.FlavioAIAssistant.chatHistory = [];
+        console.log('✅ Cronologia FlavioAIAssistant pulita');
+      }
+      
+      // Reset anche il session storage dei token se si vuole
+      // sessionStorage.removeItem('total_tokens_used');
+      // sessionStorage.removeItem('last_request_tokens');
     };
     
     // Aggiungi animazione per la notifica (scope isolato)
@@ -1469,7 +1495,10 @@
 
           <!-- Chat AI -->
           <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h4>💬 Chat AI</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="margin: 0;">💬 Chat AI</h4>
+              <button onclick="clearAIChat()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">🗑️ Cancella Chat</button>
+            </div>
             <div id="ai-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin: 10px 0; background: #f8f9fa;"></div>
             <div style="display: flex; gap: 10px;">
               <input type="text" id="ai-input" placeholder="Scrivi il tuo messaggio..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onkeypress="if(event.key==='Enter') sendAIMessage()">
