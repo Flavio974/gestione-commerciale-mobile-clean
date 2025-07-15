@@ -785,12 +785,43 @@ window.FlavioAIAssistant = (function() {
                         if (this.baseAssistant && this.baseAssistant.currentProvider) {
                             this.changeModel(selectedModel);
                         }
+                        
+                        // ✅ AGGIORNA LE STATISTICHE DEL PROVIDER
+                        if (window.updateProviderStats) {
+                            window.updateProviderStats();
+                            console.log('📊 Statistiche provider aggiornate');
+                        }
                     }
                 });
             }
 
             // Ripristina la cronologia se presente
             this.restoreHistory();
+            
+            // ✅ SINCRONIZZA IL MODELLO INIZIALE CON IL PROVIDER
+            setTimeout(() => {
+                const modelSelect = document.getElementById('ai-model');
+                const providerSelect = document.getElementById('ai-provider-select');
+                
+                if (modelSelect && modelSelect.value && providerSelect && providerSelect.value) {
+                    const selectedModel = modelSelect.value;
+                    console.log('🔄 Sincronizzazione iniziale modello:', selectedModel);
+                    
+                    if (providerSelect.value === 'openai' && window.OpenAI) {
+                        window.OpenAI.setModel(selectedModel);
+                        console.log('✅ Modello OpenAI sincronizzato all\'avvio:', selectedModel);
+                    } else if (providerSelect.value === 'anthropic' && window.AnthropicAI) {
+                        window.AnthropicAI.setModel(selectedModel);
+                        console.log('✅ Modello Anthropic sincronizzato all\'avvio:', selectedModel);
+                    }
+                    
+                    // Aggiorna le statistiche
+                    if (window.updateProviderStats) {
+                        window.updateProviderStats();
+                        console.log('📊 Statistiche provider aggiornate all\'avvio');
+                    }
+                }
+            }, 1000); // Delay per assicurarsi che tutto sia caricato
 
             console.log('✅ Interfaccia AI leggera renderizzata');
         },
