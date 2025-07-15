@@ -815,13 +815,15 @@ window.FlavioAIAssistant = (function() {
                         console.log('✅ Modello Anthropic sincronizzato all\'avvio:', selectedModel);
                     }
                     
-                    // Aggiorna le statistiche
-                    if (window.updateProviderStats) {
-                        window.updateProviderStats();
-                        console.log('📊 Statistiche provider aggiornate all\'avvio');
-                    }
+                    // Aggiorna le statistiche con un piccolo delay aggiuntivo per assicurarsi che setModel sia completato
+                    setTimeout(() => {
+                        if (window.updateProviderStats) {
+                            window.updateProviderStats();
+                            console.log('📊 Statistiche provider aggiornate all\'avvio');
+                        }
+                    }, 100);
                 }
-            }, 1000); // Delay per assicurarsi che tutto sia caricato
+            }, 2500); // Aumentato delay per assicurarsi che tutto sia completamente caricato
 
             console.log('✅ Interfaccia AI leggera renderizzata');
         },

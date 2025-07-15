@@ -1755,6 +1755,14 @@
               window.AnthropicAI.setModel(selectedModel);
               console.log('✅ Modello Anthropic sincronizzato con UI:', selectedModel);
             }
+            
+            // ✅ AGGIORNA IMMEDIATAMENTE LE STATISTICHE
+            setTimeout(() => {
+              if (window.updateProviderStats) {
+                window.updateProviderStats();
+                console.log('📊 Statistiche aggiornate dopo cambio provider');
+              }
+            }, 100);
           }
         }
       }
