@@ -233,8 +233,12 @@ window.FlavioAIAssistant = (function() {
         processVoiceInput(transcript) {
             console.log('🗣️ Input vocale ricevuto:', transcript);
             
-            // Invia messaggio con flag vocale
-            this.sendMessage(transcript, true);
+            // Verifica se è push-to-talk per forzare TTS
+            const isPushToTalk = window.VoiceRecognition && window.VoiceRecognition.isPushToTalk;
+            console.log('🔊 Push-to-Talk attivo:', isPushToTalk);
+            
+            // Invia messaggio con flag vocale e push-to-talk
+            this.sendMessage(transcript, true, isPushToTalk);
         },
 
         /**
@@ -916,7 +920,7 @@ window.FlavioAIAssistant = (function() {
         /**
          * Invia messaggio con API corretta, supporto vocale e fallback
          */
-        async sendMessage(customMessage = null, isVoiceInput = false) {
+        async sendMessage(customMessage = null, isVoiceInput = false, isPushToTalk = false) {
             let message;
             
             if (customMessage) {
@@ -1116,9 +1120,9 @@ window.FlavioAIAssistant = (function() {
                     timestamp: new Date()
                 });
                 
-                // 🔊 SINTESI VOCALE PER INPUT VOCALI
-                if (isVoiceInput) {
-                    console.log('🔊 Attivazione sintesi vocale per risposta AI');
+                // 🔊 SINTESI VOCALE PER INPUT VOCALI E PUSH-TO-TALK
+                if (isVoiceInput || isPushToTalk) {
+                    console.log('🔊 Attivazione sintesi vocale per risposta AI', isPushToTalk ? '(Push-to-Talk)' : '(Vocale)');
                     this.speakResponse(aiResponse);
                 }
                 
@@ -1154,9 +1158,9 @@ window.FlavioAIAssistant = (function() {
                     });
                 }
                 
-                // 🔊 SINTESI VOCALE ANCHE PER ERRORI SE INPUT VOCALE
-                if (isVoiceInput && fallbackResponse) {
-                    console.log('🔊 Attivazione sintesi vocale per fallback');
+                // 🔊 SINTESI VOCALE ANCHE PER ERRORI SE INPUT VOCALE O PUSH-TO-TALK
+                if ((isVoiceInput || isPushToTalk) && fallbackResponse) {
+                    console.log('🔊 Attivazione sintesi vocale per fallback', isPushToTalk ? '(Push-to-Talk)' : '(Vocale)');
                     this.speakResponse(fallbackResponse);
                 }
             }

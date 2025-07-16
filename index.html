@@ -2964,6 +2964,9 @@
           window.VoiceRecognition.engine.interimResults = true;
         }
         
+        // 🔊 MARCA COME PUSH-TO-TALK per abilitare TTS
+        window.VoiceRecognition.isPushToTalk = true;
+        
         window.VoiceRecognition.start();
         isPushToTalkActive = true;
         updatePushToTalkUI();
@@ -2979,6 +2982,11 @@
       
       if (window.VoiceRecognition && typeof window.VoiceRecognition.stop === 'function') {
         window.VoiceRecognition.stop();
+      }
+      
+      // 🔊 RIMUOVI FLAG PUSH-TO-TALK
+      if (window.VoiceRecognition) {
+        window.VoiceRecognition.isPushToTalk = false;
       }
       
       isPushToTalkActive = false;
