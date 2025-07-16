@@ -74,20 +74,33 @@ class RobustConnectionManager {
     async attemptConnection() {
         console.log('🔌 RobustConnectionManager: Tentativo connessione', this.reconnectAttempts + 1);
         
+        // Debug: stato corrente delle classi
+        console.log('🔌 🔍 Stato classi disponibili:', {
+            SupabaseAIIntegration: !!window.SupabaseAIIntegration,
+            VocabularyManager: !!window.VocabularyManager,
+            AIMiddleware: !!window.AIMiddleware,
+            RequestMiddleware: !!window.RequestMiddleware
+        });
+        
         try {
             // Step 1: Supabase
+            console.log('🔌 📋 Step 1: Connessione Supabase...');
             await this.connectSupabase();
             
             // Step 2: Vocabulary Manager
+            console.log('🔌 📋 Step 2: Connessione Vocabulary Manager...');
             await this.connectVocabulary();
             
             // Step 3: AI Middleware
+            console.log('🔌 📋 Step 3: Connessione AI Middleware...');
             await this.connectAIMiddleware();
             
             // Step 4: Request Middleware
+            console.log('🔌 📋 Step 4: Connessione Request Middleware...');
             await this.connectRequestMiddleware();
             
             // Step 5: Integrazione finale
+            console.log('🔌 📋 Step 5: Finalizzazione integrazione...');
             await this.finalizeIntegration();
             
             console.log('🔌 ✅ CONNESSIONE ROBUSTA COMPLETATA');
@@ -98,6 +111,7 @@ class RobustConnectionManager {
             
         } catch (error) {
             console.error('🔌 ❌ Errore connessione:', error);
+            console.error('🔌 ❌ Stack trace:', error.stack);
             this.reconnectAttempts++;
             
             if (this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -120,7 +134,12 @@ class RobustConnectionManager {
      */
     async connectSupabase() {
         return new Promise((resolve, reject) => {
+            let attemptCount = 0;
+            const maxAttempts = 30; // Max 15 seconds (30 * 500ms)
+            
             const attempt = () => {
+                attemptCount++;
+                
                 if (window.SupabaseAIIntegration) {
                     console.log('🔌 💾 Connessione Supabase: Classe trovata');
                     
@@ -134,8 +153,12 @@ class RobustConnectionManager {
                     
                     console.log('🔌 ✅ Supabase connesso');
                     resolve();
+                } else if (attemptCount >= maxAttempts) {
+                    console.error('🔌 ❌ Timeout connessione SupabaseAI dopo', maxAttempts, 'tentativi');
+                    console.log('🔌 🔍 Debug - SupabaseAIIntegration disponibile:', !!window.SupabaseAIIntegration);
+                    reject(new Error('Timeout connessione SupabaseAI'));
                 } else {
-                    console.log('🔌 ⏳ Attendo SupabaseAIIntegration...');
+                    console.log(`🔌 ⏳ Attendo SupabaseAIIntegration... (${attemptCount}/${maxAttempts})`);
                     setTimeout(attempt, 500);
                 }
             };
@@ -207,7 +230,12 @@ class RobustConnectionManager {
      */
     async connectRequestMiddleware() {
         return new Promise((resolve, reject) => {
+            let attemptCount = 0;
+            const maxAttempts = 30; // Max 15 seconds (30 * 500ms)
+            
             const attempt = () => {
+                attemptCount++;
+                
                 if (window.RequestMiddleware && this.instances.supabaseAI) {
                     console.log('🔌 📋 Connessione Request Middleware: Classe trovata');
                     
@@ -221,8 +249,14 @@ class RobustConnectionManager {
                     
                     console.log('🔌 ✅ RequestMiddleware connesso');
                     resolve();
+                } else if (attemptCount >= maxAttempts) {
+                    console.warn('🔌 ⏰ Timeout connessione RequestMiddleware dopo', maxAttempts, 'tentativi - procedo senza');
+                    console.log('🔌 🔍 Debug - RequestMiddleware disponibile:', !!window.RequestMiddleware);
+                    console.log('🔌 🔍 Debug - SupabaseAI disponibile:', !!this.instances.supabaseAI);
+                    // Non rifiutare la connessione, prosegui senza middleware
+                    resolve();
                 } else {
-                    console.log('🔌 ⏳ Attendo RequestMiddleware o SupabaseAI...');
+                    console.log(`🔌 ⏳ Attendo RequestMiddleware o SupabaseAI... (${attemptCount}/${maxAttempts})`);
                     setTimeout(attempt, 500);
                 }
             };
@@ -294,46 +328,62 @@ class RobustConnectionManager {
                 console.log('🔌 🎯 Messaggio utente aggiunto');
                 
                 // Controlla se è una richiesta di dati
-                if (this.isDataRequest(message)) {
-                    console.log('🔌 🎯 Richiesta dati - uso middleware');
+                const isDataRequestResult = this.isDataRequest(message);
+                console.log('🔌 🎯 Controllo richiesta dati:', { message, isDataRequestResult });
+                
+                if (isDataRequestResult) {
+                    console.log('🔌 🎯 Richiesta dati identificata - uso middleware');
                     
-                    // Aggiungi messaggio di caricamento
-                    window.FlavioAIAssistant.addMessage(isVoiceInput ? '🎤 Sto elaborando il tuo messaggio vocale...' : '🤔 Sto elaborando...', 'assistant', true);
-                    
-                    try {
-                        const response = await this.instances.requestMiddleware.processRequest(message);
-                        console.log('🔌 📊 Risposta middleware ricevuta:', response);
+                    // Verifica che il middleware sia disponibile
+                    if (!this.instances.requestMiddleware || !this.instances.requestMiddleware.processRequest) {
+                        console.error('🔌 ❌ RequestMiddleware non disponibile, fallback ad AI');
+                        console.log('🔌 🔍 Debug middleware:', {
+                            instance: !!this.instances.requestMiddleware,
+                            processRequest: !!(this.instances.requestMiddleware && this.instances.requestMiddleware.processRequest)
+                        });
+                    } else {
+                        console.log('🔌 ✅ RequestMiddleware disponibile, elaborazione in corso...');
                         
-                        if (response && response.handled) {
-                            console.log('🔌 ✅ Risposta da middleware:', response.response);
+                        // Aggiungi messaggio di caricamento
+                        window.FlavioAIAssistant.addMessage(isVoiceInput ? '🎤 Sto elaborando il tuo messaggio vocale...' : '🤔 Sto elaborando...', 'assistant', true);
+                        
+                        try {
+                            const response = await this.instances.requestMiddleware.processRequest(message);
+                            console.log('🔌 📊 Risposta middleware ricevuta:', response);
                             
-                            // Rimuovi messaggi di caricamento
-                            const messagesContainer = document.getElementById('ai-messages');
-                            if (messagesContainer) {
-                                const loadingMessages = messagesContainer.querySelectorAll('div');
-                                loadingMessages.forEach(msg => {
-                                    if (msg.textContent && (msg.textContent.includes('Sto elaborando') || msg.textContent.includes('🤔'))) {
-                                        msg.remove();
-                                    }
-                                });
+                            if (response && response.handled) {
+                                console.log('🔌 ✅ Risposta da middleware:', response.response);
+                                
+                                // Rimuovi messaggi di caricamento
+                                const messagesContainer = document.getElementById('ai-messages');
+                                if (messagesContainer) {
+                                    const loadingMessages = messagesContainer.querySelectorAll('div');
+                                    loadingMessages.forEach(msg => {
+                                        if (msg.textContent && (msg.textContent.includes('Sto elaborando') || msg.textContent.includes('🤔'))) {
+                                            msg.remove();
+                                        }
+                                    });
+                                }
+                                
+                                // Aggiungi risposta del middleware
+                                window.FlavioAIAssistant.addMessage(response.response, 'assistant');
+                                
+                                // 🔊 SINTESI VOCALE se è input vocale
+                                if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
+                                    console.log('🔊 Attivazione sintesi vocale per risposta middleware');
+                                    window.FlavioAIAssistant.speakResponse(response.response);
+                                }
+                                
+                                return response.response;
+                            } else {
+                                console.warn('🔌 ⚠️ Middleware response non valida:', response);
                             }
-                            
-                            // Aggiungi risposta del middleware
-                            window.FlavioAIAssistant.addMessage(response.response, 'assistant');
-                            
-                            // 🔊 SINTESI VOCALE se è input vocale
-                            if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
-                                console.log('🔊 Attivazione sintesi vocale per risposta middleware');
-                                window.FlavioAIAssistant.speakResponse(response.response);
-                            }
-                            
-                            return response.response;
-                        } else {
-                            console.warn('🔌 ⚠️ Middleware response non valida:', response);
+                        } catch (error) {
+                            console.error('🔌 ❌ Errore middleware, fallback ad AI:', error);
                         }
-                    } catch (error) {
-                        console.error('🔌 ❌ Errore middleware, fallback ad AI:', error);
                     }
+                } else {
+                    console.log('🔌 🎯 Non è una richiesta dati, uso AI normale');
                 }
                 
                 // Fallback ad AI normale - ma il messaggio utente è già stato aggiunto
@@ -428,13 +478,21 @@ class RobustConnectionManager {
             'ordini', 'clienti', 'prodotti', 'database', 'quanti', 'elenco', 'lista',
             'fatturato', 'vendite', 'cliente', 'ordine', 'prodotto', 'acquisti',
             'statistiche', 'report', 'analisi', 'dati', 'ricavi', 'venduto',
-            'acquistato', 'importo', 'totale', 'somma', 'costo', 'prezzo'
+            'acquistato', 'importo', 'totale', 'somma', 'costo', 'prezzo', 'gennaio',
+            'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto',
+            'settembre', 'ottobre', 'novembre', 'dicembre', 'mese', 'anno'
         ];
         
         const lowerMessage = message.toLowerCase();
-        const isDataRequest = dataKeywords.some(keyword => lowerMessage.includes(keyword));
+        const matchedKeywords = dataKeywords.filter(keyword => lowerMessage.includes(keyword));
+        const isDataRequest = matchedKeywords.length > 0;
         
-        console.log('🔌 🔍 Controllo richiesta dati:', { message, isDataRequest });
+        console.log('🔌 🔍 Controllo richiesta dati:', { 
+            message, 
+            lowerMessage, 
+            matchedKeywords, 
+            isDataRequest 
+        });
         
         return isDataRequest;
     }
@@ -454,9 +512,11 @@ class RobustConnectionManager {
         if (JSON.stringify(previousState) !== JSON.stringify(this.connections)) {
             console.log('🔌 🔄 Cambiamento stato connessioni:', this.connections);
             
-            if (!this.isFullyConnected()) {
+            if (!this.isFullyConnected() && this.reconnectAttempts === 0) {
                 console.log('🔌 🔄 Riconnessione automatica in corso...');
                 this.attemptConnection();
+            } else if (this.reconnectAttempts > 0) {
+                console.log('🔌 ⏸️ Riconnessione già in corso, salto controllo automatico');
             } else {
                 console.log('🔌 ✅ Connessioni stabili - nessuna riconnessione necessaria');
             }
@@ -570,6 +630,34 @@ class RobustConnectionManager {
     stop() {
         this.isActive = false;
         console.log('🔌 RobustConnectionManager: Fermato');
+    }
+    
+    /**
+     * Resetta lo stato del connection manager
+     */
+    reset() {
+        console.log('🔌 🔄 Reset RobustConnectionManager');
+        
+        this.isActive = false;
+        this.reconnectAttempts = 0;
+        
+        // Reset connessioni
+        this.connections = {
+            supabase: false,
+            vocabulary: false,
+            aiMiddleware: false,
+            requestMiddleware: false
+        };
+        
+        // Reset istanze
+        this.instances = {
+            supabaseAI: null,
+            vocabularyManager: null,
+            aiMiddleware: null,
+            requestMiddleware: null
+        };
+        
+        console.log('🔌 ✅ RobustConnectionManager resettato');
     }
 }
 
