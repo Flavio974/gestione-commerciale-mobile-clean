@@ -264,8 +264,19 @@ class RobustConnectionManager {
         if (window.FlavioAIAssistant && window.FlavioAIAssistant.sendMessage) {
             const originalSendMessage = window.FlavioAIAssistant.sendMessage.bind(window.FlavioAIAssistant);
             
-            window.FlavioAIAssistant.sendMessage = async (message, isVoiceInput = false) => {
-                console.log('🔌 🎯 Intercettazione ROBUSTA:', message);
+            window.FlavioAIAssistant.sendMessage = async (customMessage = null, isVoiceInput = false) => {
+                console.log('🔌 🎯 Intercettazione ROBUSTA - customMessage:', customMessage, 'isVoiceInput:', isVoiceInput);
+                
+                // Estrai il messaggio come fa la funzione originale
+                let message;
+                if (customMessage) {
+                    message = customMessage.trim();
+                } else {
+                    const input = document.getElementById('ai-input');
+                    message = input ? input.value.trim() : '';
+                }
+                
+                console.log('🔌 🎯 Messaggio estratto:', message);
                 
                 // Controlla se è una richiesta di dati
                 if (this.isDataRequest(message)) {
@@ -283,7 +294,7 @@ class RobustConnectionManager {
                 }
                 
                 // Fallback ad AI normale
-                return originalSendMessage(message, isVoiceInput);
+                return originalSendMessage(customMessage, isVoiceInput);
             };
             
             console.log('🔌 ✅ FlavioAIAssistant intercettato');
@@ -294,6 +305,11 @@ class RobustConnectionManager {
      * Verifica se è una richiesta di dati
      */
     isDataRequest(message) {
+        if (!message || typeof message !== 'string') {
+            console.warn('🔌 ⚠️ Messaggio non valido per isDataRequest:', message);
+            return false;
+        }
+        
         const dataKeywords = [
             'ordini', 'clienti', 'prodotti', 'database', 'quanti', 'elenco', 'lista',
             'che ora', 'orario', 'data', 'oggi', 'ieri', 'domani'
