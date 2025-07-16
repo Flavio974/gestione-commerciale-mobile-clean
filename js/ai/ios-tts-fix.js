@@ -65,8 +65,15 @@ class IOSTTSManager {
             
             if (italianVoices.length > 0) {
                 this.selectedVoice = italianVoices[0];
-                console.log(`✅ Voce selezionata: ${this.selectedVoice.name}`);
+                console.log(`✅ Voce italiana selezionata: ${this.selectedVoice.name}`);
                 this.voiceReady = true;
+            } else if (voices.length > 0) {
+                // Se non ci sono voci italiane, usa la prima disponibile
+                this.selectedVoice = voices[0];
+                console.log(`⚠️ Nessuna voce italiana, uso: ${this.selectedVoice.name}`);
+                this.voiceReady = true;
+            } else {
+                console.log(`❌ Nessuna voce disponibile`);
             }
         };
         

@@ -1569,6 +1569,25 @@
       }
     }
 
+    function testVoiceDaria() {
+      if (window.iosTTSManager) {
+        const voices = speechSynthesis.getVoices();
+        const dariaVoice = voices.find(v => v.name.toLowerCase().includes('daria'));
+        if (dariaVoice) {
+          window.iosTTSManager.selectedVoice = dariaVoice;
+          window.iosTTSManager.speak('Ciao, sono Daria. Mi senti bene?');
+        } else {
+          // Usa la prima voce disponibile
+          if (voices.length > 0) {
+            window.iosTTSManager.selectedVoice = voices[0];
+            window.iosTTSManager.speak('Ciao, sono la prima voce disponibile. Mi senti bene?');
+          } else {
+            alert('Nessuna voce disponibile');
+          }
+        }
+      }
+    }
+
     function showAllVoices() {
       const voices = speechSynthesis.getVoices();
       let voiceList = 'Voci disponibili:\n\n';
@@ -1655,6 +1674,7 @@
         <button onclick="testVoiceCosimo()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Cosimo</button>
         <button onclick="testVoiceElsa()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Elsa</button>
         <button onclick="testVoiceGoogle()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Google</button>
+        <button onclick="testVoiceDaria()" style="background: #e74c3c; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Daria</button>
         <button onclick="showAllVoices()" style="background: #17a2b8; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Mostra Tutte</button>
       </div>
       <div style="margin-top: 10px;">
