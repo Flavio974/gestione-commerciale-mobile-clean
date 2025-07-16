@@ -131,11 +131,9 @@ class ItalianDateManager {
      * OTTIENI l'orario corrente nel timezone italiano
      */
     getCurrentTime() {
-        const now = new Date();
-        
         try {
-            // Crea un oggetto Date con l'orario del timezone italiano
-            const italianTime = new Date(now.toLocaleString("it-IT", {timeZone: this.timezone}));
+            // Usa lo stesso approccio di getCurrentDate()
+            const italianTime = this.getCurrentDate();
             
             // Formatta l'orario in formato italiano
             const orario = italianTime.toLocaleTimeString('it-IT', {
@@ -148,7 +146,8 @@ class ItalianDateManager {
             console.log('🕐 getCurrentTime: Orario italiano:', orario);
             return orario;
         } catch (error) {
-            console.warn('⚠️ Timezone non supportato per orario, uso orario locale:', error);
+            console.warn('⚠️ Errore getCurrentTime, uso orario locale:', error);
+            const now = new Date();
             return now.toLocaleTimeString('it-IT', {
                 hour: '2-digit',
                 minute: '2-digit',
