@@ -53,7 +53,7 @@ window.FlavioAIAssistant = (function() {
         /**
          * Invia messaggio
          */
-        async sendMessage(message) {
+        async sendMessage(message, isVoiceInput = false) {
             try {
                 // Aggiungi alla cronologia
                 this.chatHistory.push({
@@ -82,6 +82,12 @@ window.FlavioAIAssistant = (function() {
 
                 // Aggiorna UI se presente
                 this.updateChatUI(message, response);
+
+                // Se è input vocale, pronuncia la risposta
+                if (isVoiceInput) {
+                    console.log('🔊 Input vocale rilevato, pronunciando risposta...');
+                    this.speakResponse(response);
+                }
 
                 return response;
 
@@ -205,9 +211,6 @@ window.FlavioAIAssistant = (function() {
             if (!text || typeof text !== 'string') return;
             
             try {
-                // Ferma qualsiasi speech in corso
-                speechSynthesis.cancel();
-                
                 // Pulisci il testo da markdown e HTML
                 const cleanText = text
                     .replace(/[#*`_~]/g, '') // Rimuovi markdown
@@ -218,6 +221,19 @@ window.FlavioAIAssistant = (function() {
                 if (!cleanText) return;
                 
                 console.log('🔊 Pronunciando risposta AI:', cleanText.substring(0, 50) + '...');
+                
+                // Controlla se è iPad e se IOSTTSManager è disponibile
+                const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+                
+                if (isIPad && window.IOSTTSManager) {
+                    console.log('🔊 Utilizzando IOSTTSManager per iPad');
+                    window.IOSTTSManager.speak(cleanText);
+                    return;
+                }
+                
+                // Fallback standard per altri dispositivi
+                // Ferma qualsiasi speech in corso
+                speechSynthesis.cancel();
                 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'it-IT';

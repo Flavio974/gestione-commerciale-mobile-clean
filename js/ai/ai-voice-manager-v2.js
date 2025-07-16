@@ -2079,17 +2079,14 @@ class AIVoiceManagerV2 {
             this.updateUIState('processing');
             
             try {
-                const response = await assistant.processCommand(transcript);
+                // Invia come input vocale per attivare TTS
+                const response = await assistant.sendMessage(transcript, true);
                 console.log('Risposta ricevuta:', response);
                 
-                // Mostra risposta in chat
-                if (response) {
-                    // RIABILITATO: TTS per risposta vocale su iPad
-                    await this.speak(response);
-                    console.log('🔊 TTS attivato per risposta vocale su iPad');
-                } else {
-                    console.log('Nessuna risposta ricevuta dall\'AI');
-                }
+                // Il TTS è già gestito dal metodo speakResponse di FlavioAIAssistant 
+                // quando isVoiceInput = true, quindi non serve chiamare speak qui
+                console.log('🔊 TTS gestito automaticamente da FlavioAIAssistant per input vocale');
+                
             } catch (error) {
                 console.error('Errore elaborazione comando:', error);
                 this.showNotification('Errore elaborazione comando', 'error');
