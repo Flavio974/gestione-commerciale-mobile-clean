@@ -1488,12 +1488,19 @@
     function testVoiceCosimo() {
       if (window.iosTTSManager) {
         const voices = speechSynthesis.getVoices();
-        const cosimoVoice = voices.find(v => v.name.includes('Cosimo'));
+        const cosimoVoice = voices.find(v => v.name.toLowerCase().includes('cosimo'));
         if (cosimoVoice) {
           window.iosTTSManager.selectedVoice = cosimoVoice;
           window.iosTTSManager.speak('Ciao, sono Cosimo. Mi senti bene?');
         } else {
-          alert('Voce Cosimo non trovata');
+          // Prova con prima voce italiana Microsoft
+          const microsoftVoice = voices.find(v => v.name.toLowerCase().includes('microsoft') && v.lang.includes('it'));
+          if (microsoftVoice) {
+            window.iosTTSManager.selectedVoice = microsoftVoice;
+            window.iosTTSManager.speak('Ciao, sono una voce Microsoft italiana. Mi senti bene?');
+          } else {
+            alert('Nessuna voce Microsoft italiana trovata');
+          }
         }
       }
     }
@@ -1501,12 +1508,19 @@
     function testVoiceElsa() {
       if (window.iosTTSManager) {
         const voices = speechSynthesis.getVoices();
-        const elsaVoice = voices.find(v => v.name.includes('Elsa'));
+        const elsaVoice = voices.find(v => v.name.toLowerCase().includes('elsa'));
         if (elsaVoice) {
           window.iosTTSManager.selectedVoice = elsaVoice;
           window.iosTTSManager.speak('Ciao, sono Elsa. Mi senti bene?');
         } else {
-          alert('Voce Elsa non trovata');
+          // Prova con seconda voce italiana
+          const italianVoices = voices.filter(v => v.lang.includes('it'));
+          if (italianVoices.length > 1) {
+            window.iosTTSManager.selectedVoice = italianVoices[1];
+            window.iosTTSManager.speak('Ciao, sono la seconda voce italiana. Mi senti bene?');
+          } else {
+            alert('Seconda voce italiana non trovata');
+          }
         }
       }
     }
@@ -1514,12 +1528,19 @@
     function testVoiceGoogle() {
       if (window.iosTTSManager) {
         const voices = speechSynthesis.getVoices();
-        const googleVoice = voices.find(v => v.name.includes('Google italiano'));
+        const googleVoice = voices.find(v => v.name.toLowerCase().includes('google') && v.lang.includes('it'));
         if (googleVoice) {
           window.iosTTSManager.selectedVoice = googleVoice;
           window.iosTTSManager.speak('Ciao, sono Google italiano. Mi senti bene?');
         } else {
-          alert('Voce Google italiano non trovata');
+          // Prova con qualsiasi voce Google
+          const anyGoogleVoice = voices.find(v => v.name.toLowerCase().includes('google'));
+          if (anyGoogleVoice) {
+            window.iosTTSManager.selectedVoice = anyGoogleVoice;
+            window.iosTTSManager.speak('Hello, I am Google voice. Can you hear me?');
+          } else {
+            alert('Nessuna voce Google trovata');
+          }
         }
       }
     }
@@ -1546,6 +1567,17 @@
         speechSynthesis.cancel();
         speechSynthesis.speak(utterance);
       }
+    }
+
+    function showAllVoices() {
+      const voices = speechSynthesis.getVoices();
+      let voiceList = 'Voci disponibili:\n\n';
+      
+      voices.forEach((voice, index) => {
+        voiceList += `${index}: ${voice.name} (${voice.lang})\n`;
+      });
+      
+      alert(voiceList);
     }
     
     // Aggiorna info debug
@@ -1623,6 +1655,7 @@
         <button onclick="testVoiceCosimo()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Cosimo</button>
         <button onclick="testVoiceElsa()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Elsa</button>
         <button onclick="testVoiceGoogle()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Google</button>
+        <button onclick="showAllVoices()" style="background: #17a2b8; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Mostra Tutte</button>
       </div>
       <div style="margin-top: 10px;">
         <h4 style="margin: 5px 0; font-size: 11px;">🔊 Test Volume:</h4>
