@@ -285,9 +285,33 @@ class RobustConnectionManager {
                     
                     try {
                         const response = await this.instances.requestMiddleware.processRequest(message);
+                        console.log('🔌 📊 Risposta middleware ricevuta:', response);
+                        
                         if (response && response.success) {
                             console.log('🔌 ✅ Risposta da middleware:', response.response);
+                            
+                            // Simula una risposta AI con la risposta del middleware
+                            const messagesContainer = document.getElementById('ai-messages');
+                            if (messagesContainer) {
+                                // Rimuovi messaggio di caricamento
+                                const loadingMessage = messagesContainer.lastElementChild;
+                                if (loadingMessage) {
+                                    messagesContainer.removeChild(loadingMessage);
+                                }
+                                
+                                // Aggiungi risposta del middleware
+                                window.FlavioAIAssistant.addMessage(response.response, 'assistant');
+                            }
+                            
+                            // 🔊 SINTESI VOCALE se è input vocale
+                            if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
+                                console.log('🔊 Attivazione sintesi vocale per risposta middleware');
+                                window.FlavioAIAssistant.speakResponse(response.response);
+                            }
+                            
                             return response.response;
+                        } else {
+                            console.warn('🔌 ⚠️ Middleware response non valida:', response);
                         }
                     } catch (error) {
                         console.error('🔌 ❌ Errore middleware, fallback ad AI:', error);
