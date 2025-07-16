@@ -2692,6 +2692,26 @@
         });
       }
 
+      // 📱 LISTENER PER IPAD - Aggiorna pulsante quando il riconoscimento termina
+      window.addEventListener('voicerecognition:end', () => {
+        const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+        if (isIPad && autoModeType === 'off') {
+          console.log('📱 iPad: Riconoscimento terminato - aggiorno pulsante');
+          isCurrentlyListening = false;
+          updateFloatingUI();
+        }
+      });
+
+      // 📱 LISTENER PER IPAD - Aggiorna pulsante quando il riconoscimento inizia
+      window.addEventListener('voicerecognition:start', () => {
+        const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+        if (isIPad && autoModeType === 'off') {
+          console.log('📱 iPad: Riconoscimento iniziato - aggiorno pulsante');
+          isCurrentlyListening = true;
+          updateFloatingUI();
+        }
+      });
+
       if (autoOnBtn) {
         autoOnBtn.addEventListener('click', () => {
           console.log('🚗 Click AUTO ON');
