@@ -275,8 +275,12 @@ class RobustConnectionManager {
                 } else {
                     const input = document.getElementById('ai-input');
                     message = input ? input.value.trim() : '';
+                    console.log('🔌 🎯 Input prima di svuotarlo:', message, 'Input element:', input);
                     // Svuota l'input immediatamente
-                    if (input) input.value = '';
+                    if (input) {
+                        input.value = '';
+                        console.log('🔌 🎯 Input svuotato, nuovo valore:', input.value);
+                    }
                 }
                 
                 if (!message) return;

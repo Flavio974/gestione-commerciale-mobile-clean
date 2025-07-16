@@ -342,7 +342,10 @@ window.FlavioAIAssistant = (function() {
             const input = document.getElementById('ai-input');
             if (input) {
                 input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.sendMessage();
+                    if (e.key === 'Enter') {
+                        // Usa sempre la funzione sendMessage globale (che potrebbe essere intercettata)
+                        window.FlavioAIAssistant.sendMessage();
+                    }
                 });
             }
             
