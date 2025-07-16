@@ -29,7 +29,8 @@ class RequestMiddleware {
             fatturato: /(?:fatturato|venduto|incasso).*?(?:con|di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
             // Pattern semplice per "fatturato X"
             fatturatoSemplice: /^(?:fatturato|venduto|incasso)\s+([A-Za-z\s]+?)(?:\?|$)/i,
-            ordiniCliente: /(?:quanti|numero|numeri).*ordini.*?(?:con|di|del|da|cliente|per|anche)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s+(?:in|con|da|per|base|ai|dati|caricati)|\?|$)/i,
+            // Pattern per ordini cliente - supporta sia conteggio che query semplici
+            ordiniCliente: /ordini.*?(?:di|del|da|cliente|per)\s+(?:cliente\s+)?([A-Za-z\s]+?)(?:\s*\?|$)/i,
             ordiniGenerici: /(?:mi\s+dici|dimmi|mostra|numero|numeri|identificativo).*(?:numero|numeri|identificativo|codici?).*(?:ordini?|dei\s+vari|vari)/i,
             // Pattern per conteggio ordini generici (senza cliente specifico)
             ordiniTotali: /(?:quanti|numero|numeri).*(?:ordini?).*(?:ci\s+sono|totali?|nel\s+database|complessivi?|in\s+tutto)(?:\?|$)/i,

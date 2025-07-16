@@ -135,25 +135,27 @@ class ItalianDateManager {
             // Usa lo stesso approccio di getCurrentDate()
             const italianTime = this.getCurrentDate();
             
-            // Formatta l'orario in formato italiano
-            const orario = italianTime.toLocaleTimeString('it-IT', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
+            // Verifica che l'oggetto Date sia valido
+            if (!italianTime || isNaN(italianTime.getTime())) {
+                throw new Error('Data non valida da getCurrentDate()');
+            }
+            
+            // Formatta l'orario manualmente per evitare problemi con toLocaleTimeString
+            const ore = italianTime.getHours().toString().padStart(2, '0');
+            const minuti = italianTime.getMinutes().toString().padStart(2, '0');
+            const secondi = italianTime.getSeconds().toString().padStart(2, '0');
+            
+            const orario = `${ore}:${minuti}:${secondi}`;
             
             console.log('🕐 getCurrentTime: Orario italiano:', orario);
             return orario;
         } catch (error) {
             console.warn('⚠️ Errore getCurrentTime, uso orario locale:', error);
             const now = new Date();
-            return now.toLocaleTimeString('it-IT', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
+            const ore = now.getHours().toString().padStart(2, '0');
+            const minuti = now.getMinutes().toString().padStart(2, '0');
+            const secondi = now.getSeconds().toString().padStart(2, '0');
+            return `${ore}:${minuti}:${secondi}`;
         }
     }
 
