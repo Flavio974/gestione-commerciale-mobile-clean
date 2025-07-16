@@ -735,17 +735,20 @@ const App = {
    * Aggiorna orologio
    */
   updateClock: function() {
-    const now = new Date();
     const dateEl = document.getElementById('dateDisplay');
     const clockEl = document.getElementById('staticClock');
     
-    if (dateEl) {
+    if (dateEl && window.italianDateManager) {
+      // Usa ItalianDateManager per la data corretta
+      const now = window.italianDateManager.getCurrentDate();
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       dateEl.textContent = now.toLocaleDateString('it-IT', options);
     }
     
-    if (clockEl) {
-      clockEl.textContent = Utils.formatDate(now, 'HH:mm:ss');
+    if (clockEl && window.italianDateManager) {
+      // Usa ItalianDateManager per l'orario corretto
+      const currentTime = window.italianDateManager.getCurrentTime();
+      clockEl.textContent = currentTime;
     }
   },
   

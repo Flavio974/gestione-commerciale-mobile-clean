@@ -290,18 +290,28 @@ class RobustConnectionManager {
                         if (response && response.handled) {
                             console.log('🔌 ✅ Risposta da middleware:', response.response);
                             
-                            // Simula una risposta AI con la risposta del middleware
+                            // Prima svuota l'input se non è un messaggio custom
+                            if (!customMessage) {
+                                const input = document.getElementById('ai-input');
+                                if (input) {
+                                    input.value = ''; // Svuota l'input
+                                }
+                            }
+                            
+                            // Rimuovi eventuali messaggi di caricamento prima di aggiungere il messaggio utente
                             const messagesContainer = document.getElementById('ai-messages');
                             if (messagesContainer) {
-                                // Rimuovi messaggio di caricamento
-                                const loadingMessage = messagesContainer.lastElementChild;
-                                if (loadingMessage) {
-                                    messagesContainer.removeChild(loadingMessage);
-                                }
-                                
-                                // Aggiungi risposta del middleware
-                                window.FlavioAIAssistant.addMessage(response.response, 'assistant');
+                                const loadingMessages = messagesContainer.querySelectorAll('div');
+                                loadingMessages.forEach(msg => {
+                                    if (msg.textContent && (msg.textContent.includes('Sto elaborando') || msg.textContent.includes('🤔'))) {
+                                        msg.remove();
+                                    }
+                                });
                             }
+                            
+                            // NON aggiungere il messaggio utente qui - sarà già stato aggiunto dalla funzione originale
+                            // Aggiungi solo la risposta del middleware
+                            window.FlavioAIAssistant.addMessage(response.response, 'assistant');
                             
                             // 🔊 SINTESI VOCALE se è input vocale
                             if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
