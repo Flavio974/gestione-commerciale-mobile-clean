@@ -2574,8 +2574,13 @@
     
     <!-- Controlli principali -->
     <div class="main-voice-controls">
-      <!-- Pulsante AI Assistant vocale -->
-      <button id="floating-mic-btn" class="floating-mic-btn" title="Parla con AI Assistant">
+      <!-- Pulsante PUSH-TO-TALK per iPad -->
+      <button id="floating-push-to-talk-btn" class="floating-mic-btn" title="Push-to-Talk (iPad)">
+        🎤
+      </button>
+      
+      <!-- Pulsante AI Assistant vocale (modalità automobile) -->
+      <button id="floating-mic-btn" class="floating-mic-btn" title="Modalità automobile (ascolto continuo)">
         🤖
       </button>
       
@@ -2706,15 +2711,25 @@
     // Gestione click pulsanti vocali
     document.addEventListener('DOMContentLoaded', () => {
       const micBtn = document.getElementById('floating-mic-btn');
+      const pushToTalkBtn = document.getElementById('floating-push-to-talk-btn');
       const autoOnBtn = document.getElementById('floating-auto-on-btn');
       const autoOffBtn = document.getElementById('floating-auto-off-btn');
       const stopBtn = document.getElementById('floating-stop-btn');
       const status = document.getElementById('floating-voice-status');
 
+      // 🎤 NUOVO PULSANTE PUSH-TO-TALK per iPad
+      if (pushToTalkBtn) {
+        pushToTalkBtn.addEventListener('click', () => {
+          console.log('🎤 Click pulsante push-to-talk');
+          togglePushToTalkRecognition();
+        });
+      }
+
+      // 🤖 PULSANTE MODALITÀ AUTOMOBILE (ascolto continuo)
       if (micBtn) {
         micBtn.addEventListener('click', () => {
-          console.log('🎤 Click pulsante microfono flottante');
-          toggleVoiceRecognition();
+          console.log('🤖 Click pulsante modalità automobile');
+          toggleContinuousMode();
         });
       }
 
@@ -2738,9 +2753,18 @@
         }
       });
 
+      // 📱 LISTENER PER PUSH-TO-TALK - Aggiorna pulsante quando il riconoscimento termina
+      window.addEventListener('voicerecognition:end', () => {
+        if (isPushToTalkActive) {
+          console.log('🎤 Push-to-Talk: Riconoscimento terminato - fermo automaticamente');
+          stopPushToTalkRecognition();
+        }
+      });
+
       // 🔍 DEBUG: Verifica pulsanti vocali
       console.log('🔍 DEBUG: Pulsanti vocali trovati:', {
         micBtn: micBtn ? 'SÌ' : 'NO',
+        pushToTalkBtn: pushToTalkBtn ? 'SÌ' : 'NO',
         autoOnBtn: autoOnBtn ? 'SÌ' : 'NO',
         autoOffBtn: autoOffBtn ? 'SÌ' : 'NO',
         stopBtn: stopBtn ? 'SÌ' : 'NO',
@@ -2917,6 +2941,92 @@
       } else {
         startAIVoiceRecognition();
       }
+    }
+
+    // 🎤 NUOVO SISTEMA PUSH-TO-TALK per iPad
+    let isPushToTalkActive = false;
+    
+    function togglePushToTalkRecognition() {
+      if (isPushToTalkActive) {
+        stopPushToTalkRecognition();
+      } else {
+        startPushToTalkRecognition();
+      }
+    }
+
+    function startPushToTalkRecognition() {
+      console.log('🎤 Avvio Push-to-Talk...');
+      
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.start === 'function') {
+        // Configura per modalità singola (NON continua)
+        if (window.VoiceRecognition.engine) {
+          window.VoiceRecognition.engine.continuous = false;
+          window.VoiceRecognition.engine.interimResults = true;
+        }
+        
+        window.VoiceRecognition.start();
+        isPushToTalkActive = true;
+        updatePushToTalkUI();
+        showFloatingStatus('🎤 Push-to-Talk attivo');
+      } else {
+        console.error('❌ VoiceRecognition non disponibile');
+        showFloatingStatus('❌ Sistema vocale non disponibile');
+      }
+    }
+
+    function stopPushToTalkRecognition() {
+      console.log('🎤 Stop Push-to-Talk...');
+      
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.stop === 'function') {
+        window.VoiceRecognition.stop();
+      }
+      
+      isPushToTalkActive = false;
+      updatePushToTalkUI();
+      showFloatingStatus('🎤 Push-to-Talk disattivato');
+    }
+
+    // 🤖 MODALITÀ AUTOMOBILE (ascolto continuo)
+    let isContinuousModeActive = false;
+    
+    function toggleContinuousMode() {
+      if (isContinuousModeActive) {
+        stopContinuousMode();
+      } else {
+        startContinuousMode();
+      }
+    }
+
+    function startContinuousMode() {
+      console.log('🤖 Avvio modalità automobile...');
+      
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.start === 'function') {
+        // Configura per modalità continua
+        if (window.VoiceRecognition.engine) {
+          window.VoiceRecognition.engine.continuous = true;
+          window.VoiceRecognition.engine.interimResults = true;
+        }
+        
+        window.VoiceRecognition.start();
+        isContinuousModeActive = true;
+        updateContinuousModeUI();
+        showFloatingStatus('🤖 Modalità automobile attiva');
+      } else {
+        console.error('❌ VoiceRecognition non disponibile');
+        showFloatingStatus('❌ Sistema vocale non disponibile');
+      }
+    }
+
+    function stopContinuousMode() {
+      console.log('🤖 Stop modalità automobile...');
+      
+      if (window.VoiceRecognition && typeof window.VoiceRecognition.stop === 'function') {
+        window.VoiceRecognition.stop();
+      }
+      
+      isContinuousModeActive = false;
+      updateContinuousModeUI();
+      showFloatingStatus('🤖 Modalità automobile disattivata');
     }
 
     // 🛑 FERMA RICONOSCIMENTO VOCALE GLOBALMENTE (chiamato dall'AI durante TTS)
@@ -3296,6 +3406,44 @@
           if (autoModeType === 'off') {
             showFloatingStatus('🤖 Pronto per AI');
           }
+        }
+      }
+    }
+
+    // 🎤 Aggiorna UI pulsante Push-to-Talk
+    function updatePushToTalkUI() {
+      const pushToTalkBtn = document.getElementById('floating-push-to-talk-btn');
+      
+      if (pushToTalkBtn) {
+        if (isPushToTalkActive) {
+          pushToTalkBtn.classList.add('listening');
+          pushToTalkBtn.textContent = '🛑';
+          pushToTalkBtn.title = 'Stop Push-to-Talk';
+          pushToTalkBtn.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+        } else {
+          pushToTalkBtn.classList.remove('listening');
+          pushToTalkBtn.textContent = '🎤';
+          pushToTalkBtn.title = 'Push-to-Talk (iPad)';
+          pushToTalkBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+        }
+      }
+    }
+
+    // 🤖 Aggiorna UI pulsante modalità automobile
+    function updateContinuousModeUI() {
+      const micBtn = document.getElementById('floating-mic-btn');
+      
+      if (micBtn) {
+        if (isContinuousModeActive) {
+          micBtn.classList.add('listening', 'auto-mode');
+          micBtn.textContent = '🛑';
+          micBtn.title = 'Stop modalità automobile';
+          micBtn.style.background = 'linear-gradient(135deg, #00b894, #00a085)';
+        } else {
+          micBtn.classList.remove('listening', 'auto-mode');
+          micBtn.textContent = '🤖';
+          micBtn.title = 'Modalità automobile (ascolto continuo)';
+          micBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
         }
       }
     }
