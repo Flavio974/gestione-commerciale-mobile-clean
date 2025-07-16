@@ -861,6 +861,16 @@ class AIVoiceManagerV2 {
 
             if (isFinal) {
                 this.processTranscript(transcript);
+                
+                // Su iPad, ferma automaticamente il riconoscimento dopo il risultato finale
+                // a meno che non sia in modalità auto
+                const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+                if (isIPad && !this.isAutoMode) {
+                    console.log('📱 iPad: Fermo riconoscimento dopo risultato finale');
+                    setTimeout(() => {
+                        this.stopListening();
+                    }, 100);
+                }
             } else {
                 // Mostra trascrizione in tempo reale
                 if (this.elements.transcriptionDisplay) {
@@ -1672,7 +1682,9 @@ class AIVoiceManagerV2 {
         
         try {
             this.isListening = true;
-            this.recognition.continuous = this.isAutoMode;
+            // Su iPad, NON usare mai modalità continua quando si clicca il pulsante
+            const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+            this.recognition.continuous = isIPad ? false : this.isAutoMode;
             this.recognition.start();
         } catch (error) {
             console.error('Errore avvio riconoscimento:', error);
@@ -2072,9 +2084,9 @@ class AIVoiceManagerV2 {
                 
                 // Mostra risposta in chat
                 if (response) {
-                    // DISABILITATO: Il TTS viene già gestito in index.html per evitare doppia lettura su iPad
-                    // await this.speak(response);
-                    console.log('🔇 TTS disabilitato qui - viene gestito in index.html');
+                    // RIABILITATO: TTS per risposta vocale su iPad
+                    await this.speak(response);
+                    console.log('🔊 TTS attivato per risposta vocale su iPad');
                 } else {
                     console.log('Nessuna risposta ricevuta dall\'AI');
                 }

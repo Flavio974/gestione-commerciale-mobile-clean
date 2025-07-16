@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Test Voice iPad - Fixed</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .status {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            min-height: 50px;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .mic-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #2196f3;
+            border: none;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+        }
+
+        .mic-button:active {
+            transform: scale(0.95);
+        }
+
+        .mic-button.listening {
+            background: #f44336;
+            animation: pulse 1.5s infinite;
+        }
+
+        .mic-button.speaking {
+            background: #4caf50;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+
+        .transcript {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            min-height: 60px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .test-button {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .test-button:active {
+            background: #f0f0f0;
+        }
+
+        .info {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .logs {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .feature-check {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .feature-check.ok {
+            border-left: 4px solid #4caf50;
+        }
+
+        .feature-check.fail {
+            border-left: 4px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Test Voice iPad Fixed</h1>
+        
+        <div class="info">
+            <strong>Modifiche implementate:</strong>
+            <ul>
+                <li>✅ TTS riabilitato per risposte vocali</li>
+                <li>✅ Modalità continua disattivata su iPad</li>
+                <li>✅ Stop automatico dopo parlato</li>
+            </ul>
+        </div>
+
+        <div id="status" class="status">Pronto per iniziare...</div>
+
+        <div class="controls">
+            <button class="test-button" onclick="testTTS()">Test TTS</button>
+            <button class="test-button" onclick="testMicrophone()">Test Microfono</button>
+            <button class="test-button" onclick="checkFeatures()">Check Features</button>
+        </div>
+
+        <button id="micButton" class="mic-button" onclick="toggleMicrophone()">
+            🎤
+        </button>
+
+        <div id="transcript" class="transcript">
+            In attesa di input vocale...
+        </div>
+
+        <div id="features" style="display:none;">
+            <h3>Feature Check:</h3>
+            <div id="featureList"></div>
+        </div>
+
+        <div id="logs" class="logs"></div>
+    </div>
+
+    <script>
+        let recognition = null;
+        let isListening = false;
+        let synthesis = window.speechSynthesis;
+        const isIPad = /iPad/.test(navigator.userAgent);
+        
+        // Log function
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ef5350' : type === 'success' ? '#66bb6a' : '#42a5f5';
+            logs.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Initialize
+        function init() {
+            log(`Device: ${isIPad ? 'iPad' : 'Other'} - UserAgent: ${navigator.userAgent.substring(0, 50)}...`);
+            
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = 'it-IT';
+                recognition.continuous = false; // IMPORTANTE: mai continuo su iPad
+                recognition.interimResults = true;
+                
+                recognition.onstart = () => {
+                    log('Riconoscimento avviato', 'success');
+                    updateUI('listening');
+                };
+                
+                recognition.onresult = (event) => {
+                    const current = event.resultIndex;
+                    const transcript = event.results[current][0].transcript;
+                    const isFinal = event.results[current].isFinal;
+                    
+                    document.getElementById('transcript').textContent = transcript;
+                    
+                    if (isFinal) {
+                        log(`Risultato finale: "${transcript}"`, 'success');
+                        
+                        // Risposta vocale
+                        setTimeout(() => {
+                            speakResponse(`Hai detto: ${transcript}`);
+                        }, 500);
+                        
+                        // Stop automatico su iPad
+                        if (isIPad) {
+                            log('iPad: Stop automatico dopo risultato finale');
+                            setTimeout(() => {
+                                stopListening();
+                            }, 100);
+                        }
+                    }
+                };
+                
+                recognition.onerror = (event) => {
+                    log(`Errore: ${event.error}`, 'error');
+                    updateUI('idle');
+                };
+                
+                recognition.onend = () => {
+                    log('Riconoscimento terminato');
+                    isListening = false;
+                    updateUI('idle');
+                };
+                
+                log('Speech Recognition inizializzato', 'success');
+            } else {
+                log('Speech Recognition non supportato!', 'error');
+            }
+        }
+
+        // Toggle microphone
+        function toggleMicrophone() {
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        // Start listening
+        function startListening() {
+            if (!recognition) {
+                log('Recognition non inizializzato', 'error');
+                return;
+            }
+            
+            try {
+                isListening = true;
+                recognition.start();
+                log('Avvio riconoscimento...');
+            } catch (e) {
+                log(`Errore avvio: ${e.message}`, 'error');
+                isListening = false;
+            }
+        }
+
+        // Stop listening
+        function stopListening() {
+            if (recognition && isListening) {
+                try {
+                    recognition.stop();
+                    isListening = false;
+                    log('Stop riconoscimento');
+                } catch (e) {
+                    log(`Errore stop: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        // Speak response
+        function speakResponse(text) {
+            if (!synthesis) {
+                log('Speech Synthesis non disponibile', 'error');
+                return;
+            }
+            
+            log(`TTS: "${text}"`);
+            updateUI('speaking');
+            
+            synthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'it-IT';
+            utterance.rate = 0.9;
+            utterance.volume = 1.0;
+            
+            // Trova voce italiana
+            const voices = synthesis.getVoices();
+            const italianVoice = voices.find(v => v.lang.includes('it'));
+            if (italianVoice) {
+                utterance.voice = italianVoice;
+                log(`Voce selezionata: ${italianVoice.name}`);
+            }
+            
+            utterance.onstart = () => {
+                log('TTS iniziato', 'success');
+            };
+            
+            utterance.onend = () => {
+                log('TTS completato', 'success');
+                updateUI('idle');
+            };
+            
+            utterance.onerror = (e) => {
+                log(`Errore TTS: ${e.error}`, 'error');
+                updateUI('idle');
+            };
+            
+            synthesis.speak(utterance);
+        }
+
+        // Test TTS
+        function testTTS() {
+            speakResponse('Ciao! Il sistema di sintesi vocale funziona correttamente su iPad.');
+        }
+
+        // Test Microphone
+        function testMicrophone() {
+            if (!isListening) {
+                startListening();
+                setTimeout(() => {
+                    if (isListening) {
+                        stopListening();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Check features
+        function checkFeatures() {
+            const features = document.getElementById('features');
+            const list = document.getElementById('featureList');
+            
+            features.style.display = 'block';
+            list.innerHTML = '';
+            
+            const checks = [
+                {
+                    name: 'Speech Recognition',
+                    ok: 'webkitSpeechRecognition' in window
+                },
+                {
+                    name: 'Speech Synthesis',
+                    ok: 'speechSynthesis' in window
+                },
+                {
+                    name: 'Italian Voices',
+                    ok: synthesis.getVoices().some(v => v.lang.includes('it'))
+                },
+                {
+                    name: 'Device is iPad',
+                    ok: isIPad
+                },
+                {
+                    name: 'Continuous Mode',
+                    ok: false // Sempre false su iPad
+                }
+            ];
+            
+            checks.forEach(check => {
+                const div = document.createElement('div');
+                div.className = `feature-check ${check.ok ? 'ok' : 'fail'}`;
+                div.textContent = `${check.ok ? '✅' : '❌'} ${check.name}`;
+                list.appendChild(div);
+            });
+            
+            log('Feature check completato');
+        }
+
+        // Update UI
+        function updateUI(state) {
+            const button = document.getElementById('micButton');
+            const status = document.getElementById('status');
+            
+            button.className = 'mic-button';
+            status.className = 'status';
+            
+            switch(state) {
+                case 'listening':
+                    button.className = 'mic-button listening';
+                    button.textContent = '🔴';
+                    status.textContent = 'In ascolto...';
+                    status.className = 'status success';
+                    break;
+                case 'speaking':
+                    button.className = 'mic-button speaking';
+                    button.textContent = '🔊';
+                    status.textContent = 'Risposta vocale in corso...';
+                    status.className = 'status success';
+                    break;
+                default:
+                    button.textContent = '🎤';
+                    status.textContent = 'Pronto - Tocca il microfono per parlare';
+                    break;
+            }
+        }
+
+        // Initialize on load
+        window.onload = () => {
+            init();
+            
+            // Load voices
+            if (synthesis.getVoices().length === 0) {
+                synthesis.onvoiceschanged = () => {
+                    log(`Voci caricate: ${synthesis.getVoices().length}`);
+                };
+            }
+            
+            // Unlock audio on first interaction
+            document.addEventListener('click', function unlock() {
+                if (synthesis) {
+                    const silent = new SpeechSynthesisUtterance('');
+                    silent.volume = 0;
+                    synthesis.speak(silent);
+                    log('Audio context sbloccato');
+                }
+                document.removeEventListener('click', unlock);
+            }, { once: true });
+        };
+    </script>
+</body>
+</html>
