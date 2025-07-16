@@ -2518,7 +2518,9 @@ class RequestMiddleware {
         try {
             console.log('🕐 MIDDLEWARE: Richiesta orario corrente');
             
-            const now = new Date();
+            // Usa il sistema date italiano con timezone corretto
+            const dateManager = window.italianDateManager || new ItalianDateManager();
+            const now = dateManager.getCurrentDate();
             const ore = now.getHours();
             const minuti = now.getMinutes();
             const secondi = now.getSeconds();

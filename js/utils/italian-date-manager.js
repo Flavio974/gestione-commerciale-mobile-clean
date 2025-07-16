@@ -67,8 +67,10 @@ class ItalianDateManager {
         
         // Forza il timezone italiano se supportato
         try {
-            const italianTime = new Date(now.toLocaleString("en-US", {timeZone: this.timezone}));
+            // Metodo più accurato per ottenere l'orario italiano
+            const italianTime = new Date(now.toLocaleString("it-IT", {timeZone: this.timezone}));
             console.log('🇮🇹 getCurrentDate: Data corrente (timezone italiano):', this.formatDate(italianTime));
+            console.log('🇮🇹 getCurrentDate: Orario italiano:', italianTime.toLocaleTimeString('it-IT'));
             return italianTime;
         } catch (error) {
             console.warn('⚠️ Timezone non supportato, uso data locale:', error);
@@ -76,6 +78,37 @@ class ItalianDateManager {
         }
     }
     
+    /**
+     * OTTIENI l'orario corrente nel timezone italiano
+     */
+    getCurrentTime() {
+        const now = new Date();
+        
+        try {
+            // Crea un oggetto Date con l'orario del timezone italiano
+            const italianTime = new Date(now.toLocaleString("it-IT", {timeZone: this.timezone}));
+            
+            // Formatta l'orario in formato italiano
+            const orario = italianTime.toLocaleTimeString('it-IT', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
+            console.log('🕐 getCurrentTime: Orario italiano:', orario);
+            return orario;
+        } catch (error) {
+            console.warn('⚠️ Timezone non supportato per orario, uso orario locale:', error);
+            return now.toLocaleTimeString('it-IT', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+    }
+
     /**
      * FORMATTA una data nel formato italiano DD/MM/YYYY
      */
