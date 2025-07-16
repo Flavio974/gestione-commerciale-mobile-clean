@@ -135,7 +135,8 @@ class ClientAliasResolver {
             'ESSEMME SRL': ['SM', 'S.M.', 'ESSE EMME', 'ESSEMME', 'S M', 'ESSEEMME'],
             'ESSEMME': ['SM', 'S.M.', 'ESSE EMME', 'S M', 'ESSEEMME'],
             'DONAC SRL': ['DONAC', 'D.O.N.A.C.', 'DONACESSERL', 'DONAC SRL'],
-            'AGRIMONTANA SPA': ['AGRIMONTANA', 'AGRI MONTANA', 'AGRIMONTANA SPA']
+            'AGRIMONTANA SPA': ['AGRIMONTANA', 'AGRI MONTANA', 'AGRIMONTANA SPA'],
+            'GABRIELIS SRL': ['GABRIELIS', 'GABRIELIS SRL', 'GABRIELIS.SRL', 'GABRIELIS S.R.L.', 'GABRIELIS S.R.L', 'GABRIELIS S R L']
         };
         
         // Cerca match per il nome cliente
@@ -204,7 +205,13 @@ class ClientAliasResolver {
             { key: 'donac', client: 'DONAC SRL', type: 'alias_vocale' },
             { key: 'd.o.n.a.c.', client: 'DONAC SRL', type: 'alias_vocale' },
             { key: 'agrimontana', client: 'AGRIMONTANA SPA', type: 'alias_vocale' },
-            { key: 'agri montana', client: 'AGRIMONTANA SPA', type: 'alias_vocale' }
+            { key: 'agri montana', client: 'AGRIMONTANA SPA', type: 'alias_vocale' },
+            { key: 'gabrielis', client: 'GABRIELIS SRL', type: 'alias_vocale' },
+            { key: 'gabrielis srl', client: 'GABRIELIS SRL', type: 'alias_vocale' },
+            { key: 'gabrielis.srl', client: 'GABRIELIS SRL', type: 'alias_vocale' },
+            { key: 'gabrielis s.r.l.', client: 'GABRIELIS SRL', type: 'alias_vocale' },
+            { key: 'gabrielis s.r.l', client: 'GABRIELIS SRL', type: 'alias_vocale' },
+            { key: 'gabrielis s r l', client: 'GABRIELIS SRL', type: 'alias_vocale' }
         ];
         
         defaultAliases.forEach(alias => {
