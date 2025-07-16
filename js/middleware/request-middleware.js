@@ -694,6 +694,12 @@ class RequestMiddleware {
                         params.cliente = fatturatoMatch[1].trim();
                     }
                 }
+                
+                // Estrai parametri temporali per fatturato
+                const periodoParams = this.extractTemporalParameters(input);
+                if (periodoParams) {
+                    params.periodo = periodoParams;
+                }
                 break;
                 
             case 'prodotti_ordine':
@@ -1094,6 +1100,13 @@ class RequestMiddleware {
                 console.log(`✅ MIDDLEWARE: Caricati ${ordini.length} record storici aggiornati`);
             }
             
+            // Applica filtro temporale se presente
+            if (params.periodo) {
+                console.log('📅 MIDDLEWARE: Applicando filtro temporale:', params.periodo);
+                ordini = this.filterDataByPeriod(ordini, params.periodo);
+                console.log(`📅 MIDDLEWARE: Dopo filtro temporale: ${ordini.length} record`);
+            }
+            
             if (!params.cliente) {
                 // Fatturato totale
                 const totale = ordini.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
@@ -1103,10 +1116,23 @@ class RequestMiddleware {
                     ordini.map(o => o.numero_ordine).filter(n => n && n !== null)
                 ).size;
                 
+                // Genera messaggio con informazioni sul periodo
+                let periodoText = '';
+                if (params.periodo) {
+                    if (params.periodo.mese) {
+                        periodoText = ` per ${params.periodo.mese}`;
+                        if (params.periodo.anno) {
+                            periodoText += ` ${params.periodo.anno}`;
+                        }
+                    } else if (params.periodo.anno) {
+                        periodoText = ` per l'anno ${params.periodo.anno}`;
+                    }
+                }
+                
                 return {
                     success: true,
-                    response: `Fatturato totale: ${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro su ${ordiniDistinti} ordini`,
-                    data: { fatturato: totale, ordini: ordiniDistinti, righe: ordini.length }
+                    response: `Fatturato totale${periodoText}: ${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro su ${ordiniDistinti} ordini`,
+                    data: { fatturato: totale, ordini: ordiniDistinti, righe: ordini.length, periodo: params.periodo }
                 };
             }
             
