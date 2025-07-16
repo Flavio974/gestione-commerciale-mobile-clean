@@ -232,20 +232,40 @@ window.FlavioAIAssistant = (function() {
          */
         processVoiceInput(transcript) {
             console.log('🗣️ SISTEMA ORIGINALE: Input vocale ricevuto:', transcript);
+            console.log('🔊 FORZO TTS: Questo è un input vocale, TTS DEVE attivarsi');
+            
+            // 📱 IPAD DEBUG: Verifica se siamo su iPad
+            const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+            if (isIPad) {
+                console.log('📱 IPAD DEBUG: Processando input vocale su iPad');
+            }
             
             // Sistema originale: invia sempre come input vocale
+            console.log('🔊 DEBUG: Chiamando sendMessage con isVoiceInput = true');
             this.sendMessage(transcript, true);
         },
 
         /**
          * Sintesi vocale della risposta
          */
-        speakResponse(text) {
+        async speakResponse(text) {
             if (!text || typeof text !== 'string') return;
             
             try {
+                // 📱 IPAD DEBUG: Log attivazione TTS
+                const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+                if (isIPad) {
+                    console.log('📱 IPAD TTS: Attivando TTS per iPad');
+                    console.log('📱 IPAD TTS: Testo da pronunciare:', text.substring(0, 100));
+                }
+                
                 // Ferma qualsiasi speech in corso
                 speechSynthesis.cancel();
+                
+                // 📱 IPAD: Attesa per cancellazione
+                if (isIPad) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
                 
                 // Pulisci il testo da markdown e HTML
                 const cleanText = text
@@ -261,6 +281,14 @@ window.FlavioAIAssistant = (function() {
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'it-IT';
                 
+                // 📱 IPAD: Configurazione specifica per iPad
+                if (isIPad) {
+                    utterance.volume = 1.0;
+                    utterance.rate = 0.8; // Più lento per iPad
+                    utterance.pitch = 1.0;
+                    console.log('📱 IPAD TTS: Configurazione specifica applicata');
+                }
+                
                 // 🎛️ USA IMPOSTAZIONI CONTROLLI AVANZATI
                 if (window.currentTTSSettings) {
                     utterance.volume = window.currentTTSSettings.volume || 1.0;
@@ -272,7 +300,7 @@ window.FlavioAIAssistant = (function() {
                     }
                 } else {
                     // Fallback valori predefiniti
-                    utterance.rate = 0.9;
+                    utterance.rate = isIPad ? 0.8 : 0.9;
                     utterance.volume = 1.0;
                 }
                 
@@ -294,6 +322,9 @@ window.FlavioAIAssistant = (function() {
                 
                 utterance.onstart = () => {
                     console.log('🔊 Sintesi vocale avviata');
+                    if (isIPad) {
+                        console.log('📱 IPAD TTS: Sintesi vocale avviata con successo');
+                    }
                     
                     // 🛑 FERMA IL RICONOSCIMENTO VOCALE QUANDO L'AI INIZIA A PARLARE
                     this.stopAllVoiceRecognition();
@@ -317,6 +348,9 @@ window.FlavioAIAssistant = (function() {
                 
                 utterance.onend = () => {
                     console.log('✅ Sintesi vocale completata');
+                    if (isIPad) {
+                        console.log('📱 IPAD TTS: Sintesi vocale completata con successo');
+                    }
                     
                     // 🛑 NASCONDI PULSANTE DI STOP FLOTTANTE
                     const floatingStopBtn = document.getElementById('floating-stop-btn');
@@ -343,6 +377,9 @@ window.FlavioAIAssistant = (function() {
                 
                 utterance.onerror = (event) => {
                     console.error('❌ Errore sintesi vocale:', event.error);
+                    if (isIPad) {
+                        console.error('📱 IPAD TTS: Errore sintesi vocale:', event.error);
+                    }
                     
                     // 🛑 NASCONDI PULSANTE DI STOP FLOTTANTE ANCHE IN CASO DI ERRORE
                     const floatingStopBtn = document.getElementById('floating-stop-btn');
@@ -363,20 +400,56 @@ window.FlavioAIAssistant = (function() {
                     }
                 };
                 
-                speechSynthesis.speak(utterance);
-                
-                // Fallback per iOS - doppio tentativo
-                if (/iPad|iPhone/.test(navigator.userAgent)) {
+                // 📱 IPAD: Attivazione TTS più robusta per iPad
+                if (isIPad) {
+                    console.log('📱 IPAD TTS: Attivando speechSynthesis per iPad');
+                    
+                    // Primo tentativo
+                    speechSynthesis.speak(utterance);
+                    
+                    // Secondo tentativo dopo 300ms
                     setTimeout(() => {
                         if (!speechSynthesis.speaking && !speechSynthesis.pending) {
-                            console.log('🔄 Retry speech synthesis per iOS');
+                            console.log('📱 IPAD TTS: Retry 1 - Tentativo immediato');
                             speechSynthesis.speak(utterance);
                         }
-                    }, 500);
+                    }, 300);
+                    
+                    // Terzo tentativo dopo 800ms
+                    setTimeout(() => {
+                        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+                            console.log('📱 IPAD TTS: Retry 2 - Tentativo ritardato');
+                            speechSynthesis.speak(utterance);
+                        }
+                    }, 800);
+                    
+                    // Quarto tentativo dopo 1.5s
+                    setTimeout(() => {
+                        if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+                            console.log('📱 IPAD TTS: Retry 3 - Tentativo finale');
+                            speechSynthesis.speak(utterance);
+                        }
+                    }, 1500);
+                } else {
+                    // Normale attivazione per desktop
+                    speechSynthesis.speak(utterance);
+                    
+                    // Fallback per iOS - doppio tentativo
+                    if (/iPhone/.test(navigator.userAgent)) {
+                        setTimeout(() => {
+                            if (!speechSynthesis.speaking && !speechSynthesis.pending) {
+                                console.log('🔄 Retry speech synthesis per iOS');
+                                speechSynthesis.speak(utterance);
+                            }
+                        }, 500);
+                    }
                 }
                 
             } catch (error) {
                 console.error('❌ Errore speech synthesis:', error);
+                if (isIPad) {
+                    console.error('📱 IPAD TTS: Errore critico:', error);
+                }
             }
         },
 
@@ -932,6 +1005,7 @@ window.FlavioAIAssistant = (function() {
             if (!message) return;
 
             console.log(`🗣️ Messaggio ${isVoiceInput ? 'VOCALE' : 'TESTUALE'}: ${message}`);
+            console.log(`🔊 DEBUG TTS: isVoiceInput = ${isVoiceInput}`);
             
             // Salva il messaggio originale per l'UI
             const originalMessage = message;
@@ -1117,9 +1191,13 @@ window.FlavioAIAssistant = (function() {
                 });
                 
                 // 🔊 SINTESI VOCALE PER INPUT VOCALI (SISTEMA ORIGINALE)
+                console.log('🔊 DEBUG TTS: Controllo isVoiceInput =', isVoiceInput);
                 if (isVoiceInput) {
                     console.log('🔊 SISTEMA ORIGINALE: Attivazione TTS per input vocale');
-                    this.speakResponse(aiResponse);
+                    console.log('🔊 DEBUG TTS: Chiamando speakResponse con testo:', aiResponse.substring(0, 100));
+                    await this.speakResponse(aiResponse);
+                } else {
+                    console.log('🔊 DEBUG TTS: NON è input vocale, TTS non attivato');
                 }
                 
             } catch (error) {
