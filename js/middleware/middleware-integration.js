@@ -714,7 +714,7 @@ class MiddlewareIntegration {
         
         if (isIPad) {
             // Usa il sistema TTS esistente ma con protezione anti-doppia
-            if (window.IOSTTSManager) {
+            if (window.iosTTSManager) {
                 // Verifica se già parlando
                 if (window.speechSynthesis.speaking) {
                     console.log('🔌 🛡️ TTS già in esecuzione - SKIP per evitare doppia lettura');
@@ -732,7 +732,7 @@ class MiddlewareIntegration {
                 
                 // Esegui TTS
                 console.log('🔌 🔊 MIDDLEWARE TTS per iPad');
-                window.IOSTTSManager.speak(response);
+                window.iosTTSManager.speak(response);
             }
         } else {
             // Desktop/altri dispositivi

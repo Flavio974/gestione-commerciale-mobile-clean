@@ -225,9 +225,9 @@ window.FlavioAIAssistant = (function() {
                 // Controlla se è iPad e se IOSTTSManager è disponibile
                 const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
                 
-                if (isIPad && window.IOSTTSManager) {
-                    console.log('🔊 Utilizzando IOSTTSManager per iPad');
-                    window.IOSTTSManager.speak(cleanText);
+                if (isIPad && window.iosTTSManager) {
+                    console.log('🔊 Utilizzando iosTTSManager per iPad');
+                    window.iosTTSManager.speak(cleanText);
                     return;
                 }
                 
