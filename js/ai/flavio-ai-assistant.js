@@ -50,54 +50,6 @@ window.FlavioAIAssistant = (function() {
             }
         },
 
-        /**
-         * Invia messaggio
-         */
-        async sendMessage(message, isVoiceInput = false) {
-            try {
-                // Aggiungi alla cronologia
-                this.chatHistory.push({
-                    type: 'user',
-                    message: message,
-                    timestamp: new Date()
-                });
-
-                // Prepara contesto
-                const context = this.buildContext();
-
-                // Invia al provider AI
-                let response;
-                if (this.baseAssistant) {
-                    response = await this.baseAssistant.sendMessage(message, context);
-                } else {
-                    response = this.getFallbackResponse(message);
-                }
-
-                // Aggiungi risposta alla cronologia
-                this.chatHistory.push({
-                    type: 'assistant',
-                    message: response,
-                    timestamp: new Date()
-                });
-
-                // Aggiorna UI se presente
-                this.updateChatUI(message, response);
-
-                // Se è input vocale, pronuncia la risposta
-                if (isVoiceInput) {
-                    console.log('🔊 Input vocale rilevato, pronunciando risposta...');
-                    this.speakResponse(response);
-                }
-
-                return response;
-
-            } catch (error) {
-                console.error('❌ Errore invio messaggio FlavioAI:', error);
-                const errorResponse = 'Mi dispiace, si è verificato un errore. Riprova più tardi.';
-                this.updateChatUI(message, errorResponse);
-                return errorResponse;
-            }
-        },
 
         /**
          * Costruisce contesto per l'AI
@@ -151,48 +103,6 @@ window.FlavioAIAssistant = (function() {
             return 'Non ho capito bene la tua richiesta. Puoi essere più specifico?';
         },
 
-        /**
-         * Aggiorna UI chat
-         */
-        updateChatUI(userMessage, response) {
-            // Cerca container chat
-            const chatContainer = document.getElementById('aiChatMessages') || 
-                                document.querySelector('.ai-chat-messages') ||
-                                document.querySelector('#ai-chat-messages');
-
-            if (!chatContainer) return;
-
-            // Aggiungi messaggio utente
-            const userDiv = document.createElement('div');
-            userDiv.className = 'chat-message user-message';
-            userDiv.innerHTML = `<strong>Tu:</strong> ${userMessage}`;
-            chatContainer.appendChild(userDiv);
-
-            // Aggiungi risposta AI
-            const aiDiv = document.createElement('div');
-            aiDiv.className = 'chat-message ai-message';
-            aiDiv.innerHTML = `<strong>AI:</strong> ${response}`;
-            chatContainer.appendChild(aiDiv);
-
-            // Scroll in fondo
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        },
-
-        /**
-         * Pulisci cronologia chat
-         */
-        clearHistory() {
-            this.chatHistory = [];
-            
-            // Pulisci UI
-            const chatContainer = document.getElementById('aiChatMessages') || 
-                                document.querySelector('.ai-chat-messages');
-            if (chatContainer) {
-                chatContainer.innerHTML = '';
-            }
-
-            console.log('🧹 Cronologia chat pulita');
-        },
 
         /**
          * Processa input vocale e fornisce risposta parlata
