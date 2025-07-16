@@ -375,18 +375,26 @@ window.FlavioAIAssistant = (function() {
                         </div>
                         
                         <!-- Contatori Token e Costi -->
-                        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 10px;">
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <span style="font-weight: bold;">📊 Token:</span>
-                                <span id="token-count" style="color: #007bff;">0</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <span style="font-weight: bold;">💰 Costo sessione:</span>
-                                <span id="cost-display" style="color: #28a745;">€0.00</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <span style="font-weight: bold;">📅 Oggi:</span>
-                                <span id="daily-cost" style="color: #fd7e14;">€0.00</span>
+                        <div style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 13px;">
+                                <!-- Ultima richiesta -->
+                                <div style="background: white; padding: 8px; border-radius: 4px; border-left: 3px solid #007bff;">
+                                    <div style="font-weight: bold; color: #495057; margin-bottom: 4px;">📊 Ultima richiesta</div>
+                                    <div>Token: <span id="last-request-tokens" style="color: #007bff;">0</span></div>
+                                    <div>Costo: <span id="last-request-cost" style="color: #28a745;">€0.0000</span></div>
+                                </div>
+                                <!-- Totale sessione -->
+                                <div style="background: white; padding: 8px; border-radius: 4px; border-left: 3px solid #28a745;">
+                                    <div style="font-weight: bold; color: #495057; margin-bottom: 4px;">💻 Totale sessione</div>
+                                    <div>Token: <span id="session-tokens" style="color: #007bff;">0</span></div>
+                                    <div>Costo: <span id="session-cost" style="color: #28a745;">€0.0000</span></div>
+                                </div>
+                                <!-- Totale giornaliero -->
+                                <div style="background: white; padding: 8px; border-radius: 4px; border-left: 3px solid #fd7e14;">
+                                    <div style="font-weight: bold; color: #495057; margin-bottom: 4px;">📅 Totale oggi</div>
+                                    <div>Token: <span id="daily-tokens" style="color: #007bff;">0</span></div>
+                                    <div>Costo: <span id="daily-cost" style="color: #fd7e14;">€0.0000</span></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -414,6 +422,7 @@ window.FlavioAIAssistant = (function() {
                         <button onclick="window.FlavioAIAssistant.quickQuery('Fatturato totale?')" style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">💰 Fatturato</button>
                         <button onclick="window.FlavioAIAssistant.quickQuery('Ordini in sospeso?')" style="padding: 10px; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer;">📋 Ordini</button>
                         <button onclick="window.FlavioAIAssistant.quickQuery('Statistiche vendite?')" style="padding: 10px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer;">📊 Stats</button>
+                        <button onclick="window.FlavioAIAssistant.clearChat()" style="padding: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️ Cancella Chat</button>
                         <button onclick="window.FlavioAIAssistant.debugAPI()" style="padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">🔍 Debug</button>
                     </div>
                 </div>
@@ -629,6 +638,38 @@ window.FlavioAIAssistant = (function() {
         },
 
         /**
+         * Cancella la chat corrente
+         */
+        clearChat() {
+            if (confirm('Sei sicuro di voler cancellare tutta la conversazione?')) {
+                // Svuota la cronologia
+                this.chatHistory = [];
+                
+                // Pulisci l'interfaccia
+                const messagesContainer = document.getElementById('ai-messages');
+                if (messagesContainer) {
+                    messagesContainer.innerHTML = `
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                <div style="width: 30px; height: 30px; background: #28a745; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">AI</div>
+                                <div>Ciao! Sono pronto ad aiutarti. Chiedimi qualsiasi cosa sui tuoi dati commerciali!</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Svuota anche l'input
+                const input = document.getElementById('ai-input');
+                if (input) {
+                    input.value = '';
+                    input.focus();
+                }
+                
+                console.log('🗑️ Chat cancellata');
+            }
+        },
+
+        /**
          * Debug API per sviluppatori
          */
         debugAPI() {
@@ -646,32 +687,50 @@ window.FlavioAIAssistant = (function() {
         initializeCounters() {
             try {
                 // Recupera valori dalla sessione
+                const lastTokens = parseInt(sessionStorage.getItem('last_request_tokens') || '0');
                 const totalTokens = parseInt(sessionStorage.getItem('total_tokens_used') || '0');
                 const sessionCost = parseFloat(sessionStorage.getItem('session_cost_eur') || '0');
+                const lastCost = parseFloat(sessionStorage.getItem('last_request_cost_eur') || '0');
                 
-                // Aggiorna UI token
-                const tokenElement = document.getElementById('token-count');
-                if (tokenElement) {
-                    tokenElement.textContent = totalTokens.toLocaleString();
+                // Aggiorna UI ultima richiesta
+                const lastTokensElement = document.getElementById('last-request-tokens');
+                if (lastTokensElement) {
+                    lastTokensElement.textContent = lastTokens.toLocaleString();
                 }
                 
-                // Aggiorna UI costo sessione
-                const costElement = document.getElementById('cost-display');
-                if (costElement) {
-                    costElement.textContent = `€${sessionCost.toFixed(4)}`;
+                const lastCostElement = document.getElementById('last-request-cost');
+                if (lastCostElement) {
+                    lastCostElement.textContent = `€${lastCost.toFixed(4)}`;
                 }
                 
-                // Aggiorna costo giornaliero
-                const dailyCostElement = document.getElementById('daily-cost');
-                if (dailyCostElement && window.getTodayKey) {
+                // Aggiorna UI totale sessione
+                const sessionTokensElement = document.getElementById('session-tokens');
+                if (sessionTokensElement) {
+                    sessionTokensElement.textContent = totalTokens.toLocaleString();
+                }
+                
+                const sessionCostElement = document.getElementById('session-cost');
+                if (sessionCostElement) {
+                    sessionCostElement.textContent = `€${sessionCost.toFixed(4)}`;
+                }
+                
+                // Aggiorna totali giornalieri
+                if (window.getTodayKey) {
                     const todayKey = window.getTodayKey();
                     const dailyData = JSON.parse(localStorage.getItem(todayKey) || '{}');
-                    if (dailyData.totalCostEUR) {
+                    
+                    const dailyTokensElement = document.getElementById('daily-tokens');
+                    if (dailyTokensElement && dailyData.totalTokens) {
+                        dailyTokensElement.textContent = dailyData.totalTokens.toLocaleString();
+                    }
+                    
+                    const dailyCostElement = document.getElementById('daily-cost');
+                    if (dailyCostElement && dailyData.totalCostEUR) {
                         dailyCostElement.textContent = `€${dailyData.totalCostEUR.toFixed(4)}`;
                     }
                 }
                 
-                console.log('📊 Contatori inizializzati:', { totalTokens, sessionCost });
+                console.log('📊 Contatori inizializzati:', { lastTokens, totalTokens, sessionCost });
                 
             } catch (error) {
                 console.error('❌ Errore inizializzazione contatori:', error);
@@ -695,31 +754,51 @@ window.FlavioAIAssistant = (function() {
                 const provider = model.includes('claude') ? 'anthropic' : 'openai';
                 const cost = window.calculateAICost ? window.calculateAICost(tokens, model, provider) : null;
                 
-                // Aggiorna UI
-                const tokenElement = document.getElementById('token-count');
-                if (tokenElement) {
-                    tokenElement.textContent = newTotal.toLocaleString();
+                // Salva costo ultima richiesta
+                if (cost) {
+                    sessionStorage.setItem('last_request_cost_eur', cost.eur.toString());
                 }
                 
-                const costElement = document.getElementById('cost-display');
-                if (costElement && cost) {
+                // Aggiorna UI ultima richiesta
+                const lastTokensElement = document.getElementById('last-request-tokens');
+                if (lastTokensElement) {
+                    lastTokensElement.textContent = tokens.toLocaleString();
+                }
+                
+                const lastCostElement = document.getElementById('last-request-cost');
+                if (lastCostElement && cost) {
+                    lastCostElement.textContent = `€${cost.eur.toFixed(4)}`;
+                }
+                
+                // Aggiorna UI totale sessione
+                const sessionTokensElement = document.getElementById('session-tokens');
+                if (sessionTokensElement) {
+                    sessionTokensElement.textContent = newTotal.toLocaleString();
+                }
+                
+                const sessionCostElement = document.getElementById('session-cost');
+                if (sessionCostElement && cost) {
                     const sessionCost = parseFloat(sessionStorage.getItem('session_cost_eur') || '0') + cost.eur;
                     sessionStorage.setItem('session_cost_eur', sessionCost.toString());
-                    costElement.textContent = `€${sessionCost.toFixed(4)}`;
+                    sessionCostElement.textContent = `€${sessionCost.toFixed(4)}`;
                 }
                 
                 // Aggiorna statistiche giornaliere
                 if (window.updateDailyStats) {
                     window.updateDailyStats(tokens, model, provider);
                     
-                    // Aggiorna display costo giornaliero
+                    // Aggiorna display totali giornalieri
+                    const todayKey = window.getTodayKey();
+                    const dailyData = JSON.parse(localStorage.getItem(todayKey) || '{}');
+                    
+                    const dailyTokensElement = document.getElementById('daily-tokens');
+                    if (dailyTokensElement && dailyData.totalTokens) {
+                        dailyTokensElement.textContent = dailyData.totalTokens.toLocaleString();
+                    }
+                    
                     const dailyCostElement = document.getElementById('daily-cost');
-                    if (dailyCostElement) {
-                        const todayKey = window.getTodayKey();
-                        const dailyData = JSON.parse(localStorage.getItem(todayKey) || '{}');
-                        if (dailyData.totalCostEUR) {
-                            dailyCostElement.textContent = `€${dailyData.totalCostEUR.toFixed(4)}`;
-                        }
+                    if (dailyCostElement && dailyData.totalCostEUR) {
+                        dailyCostElement.textContent = `€${dailyData.totalCostEUR.toFixed(4)}`;
                     }
                 }
                 
