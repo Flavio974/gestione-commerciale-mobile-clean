@@ -234,6 +234,27 @@ class IOSTTSManager {
         
         console.log('🔊 Pulsante attivazione audio creato');
     }
+    
+    /**
+     * Interrompe la sintesi vocale in corso
+     */
+    stop() {
+        console.log('🔇 Interruzione TTS richiesta');
+        
+        try {
+            // Cancella tutte le sintesi in corso
+            this.synth.cancel();
+            console.log('🔇 TTS interrotto con successo');
+            
+            // Mostra notifica visiva
+            this.showNotification('Sintesi vocale interrotta 🔇', 'warning');
+            
+            return true;
+        } catch (error) {
+            console.error('❌ Errore durante interruzione TTS:', error);
+            return false;
+        }
+    }
 }
 
 // Inizializza globalmente

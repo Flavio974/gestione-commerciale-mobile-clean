@@ -332,6 +332,7 @@ window.FlavioAIAssistant = (function() {
                         <button onclick="window.FlavioAIAssistant.quickQuery('Fatturato totale?')" style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">💰 Fatturato</button>
                         <button onclick="window.FlavioAIAssistant.quickQuery('Ordini in sospeso?')" style="padding: 10px; background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer;">📋 Ordini</button>
                         <button onclick="window.FlavioAIAssistant.quickQuery('Statistiche vendite?')" style="padding: 10px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer;">📊 Stats</button>
+                        <button onclick="window.FlavioAIAssistant.stopSpeech()" style="padding: 10px; background: #fd7e14; color: white; border: none; border-radius: 4px; cursor: pointer;">🔇 Stop Voce</button>
                         <button onclick="window.FlavioAIAssistant.clearChat()" style="padding: 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️ Cancella Chat</button>
                         <button onclick="window.FlavioAIAssistant.debugAPI()" style="padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">🔍 Debug</button>
                     </div>
@@ -592,6 +593,38 @@ window.FlavioAIAssistant = (function() {
             console.log('- User Agent:', navigator.userAgent);
             
             this.addMessage('🔍 Debug info stampato nella console. Controlla DevTools.', 'assistant');
+        },
+
+        /**
+         * Interrompe la sintesi vocale
+         */
+        stopSpeech() {
+            console.log('🔇 Interruzione sintesi vocale richiesta');
+            
+            try {
+                // Ferma la sintesi vocale standard
+                if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                    console.log('🔇 Sintesi vocale standard interrotta');
+                }
+                
+                // Ferma anche iOS TTS se disponibile
+                if (window.iosTTSManager && window.iosTTSManager.stop) {
+                    window.iosTTSManager.stop();
+                    console.log('🔇 iOS TTS Manager interrotto');
+                }
+                
+                // Aggiorna status
+                if (window.showFloatingStatus) {
+                    window.showFloatingStatus('🔇 Sintesi vocale interrotta');
+                }
+                
+                this.addMessage('🔇 Sintesi vocale interrotta', 'assistant');
+                
+            } catch (error) {
+                console.error('❌ Errore durante interruzione sintesi vocale:', error);
+                this.addMessage('⚠️ Errore durante interruzione sintesi vocale', 'assistant');
+            }
         },
 
         /**
