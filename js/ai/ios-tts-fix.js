@@ -16,16 +16,26 @@ class IOSTTSManager {
     }
     
     init() {
-        if (!this.isIOS) {
-            console.log('📱 Non iOS - TTS standard');
+        // Rileva dispositivi touch/mobile (inclusi emulati)
+        const isMobileOrTouch = this.isIOS || 
+                               (navigator.maxTouchPoints > 0) || 
+                               /Mobile/.test(navigator.userAgent) ||
+                               localStorage.getItem('force_ipad_mode') === 'true';
+        
+        if (!isMobileOrTouch) {
+            console.log('📱 Non mobile/touch - TTS standard');
             this.initialized = true;
+            this.voiceReady = true;
             return;
         }
         
-        console.log('🍎 iOS rilevato - Inizializzazione speciale TTS');
+        console.log('🍎 Mobile/Touch rilevato - Inizializzazione speciale TTS');
         
         // Carica le voci
         this.loadVoices();
+        
+        // Crea pulsante di attivazione audio
+        this.createAudioActivationButton();
         
         // iOS richiede che speechSynthesis sia usato in risposta a un evento utente
         // Aggiungiamo listener a TUTTO il documento per la prima interazione
@@ -170,6 +180,52 @@ class IOSTTSManager {
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+    
+    createAudioActivationButton() {
+        // Verifica se già esiste
+        if (document.getElementById('audio-activation-btn')) return;
+        
+        const button = document.createElement('button');
+        button.id = 'audio-activation-btn';
+        button.innerHTML = '🔊 Attiva Audio per Risposte Vocali';
+        button.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10001;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+            transition: all 0.3s ease;
+        `;
+        
+        button.addEventListener('click', () => {
+            console.log('🔊 Pulsante attivazione audio cliccato');
+            this.initializeTTS();
+            button.remove();
+        });
+        
+        // Aggiungi al body
+        document.body.appendChild(button);
+        
+        // Animazione pulsante
+        button.addEventListener('mouseenter', () => {
+            button.style.transform = 'translate(-50%, -50%) scale(1.05)';
+        });
+        
+        button.addEventListener('mouseleave', () => {
+            button.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+        
+        console.log('🔊 Pulsante attivazione audio creato');
     }
 }
 
