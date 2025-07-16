@@ -2738,6 +2738,15 @@
         }
       });
 
+      // 🔍 DEBUG: Verifica pulsanti vocali
+      console.log('🔍 DEBUG: Pulsanti vocali trovati:', {
+        micBtn: micBtn ? 'SÌ' : 'NO',
+        autoOnBtn: autoOnBtn ? 'SÌ' : 'NO',
+        autoOffBtn: autoOffBtn ? 'SÌ' : 'NO',
+        stopBtn: stopBtn ? 'SÌ' : 'NO',
+        status: status ? 'SÌ' : 'NO'
+      });
+
       if (autoOnBtn) {
         autoOnBtn.addEventListener('click', () => {
           console.log('🚗 Click AUTO ON');
@@ -3314,10 +3323,6 @@
           }
         }, 500); // Controlla ogni mezzo secondo
       }
-    }
-      
-      // Aggiorna anche l'UI dei pulsanti automobile
-      updateAutoModeUI();
     }
 
     // Mostra status
