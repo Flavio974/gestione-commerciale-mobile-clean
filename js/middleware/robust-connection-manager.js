@@ -53,19 +53,19 @@ class RobustConnectionManager {
      * Monitora costantemente lo stato delle connessioni
      */
     startMonitoring() {
-        // Controlla ogni 5 secondi
+        // Controlla ogni 30 secondi (ridotto da 5 secondi)
         setInterval(() => {
             if (this.isActive) {
                 this.checkConnections();
             }
-        }, 5000);
+        }, 30000);
         
-        // Controllo approfondito ogni 30 secondi
+        // Controllo approfondito ogni 5 minuti (ridotto da 30 secondi)
         setInterval(() => {
             if (this.isActive) {
                 this.deepConnectionCheck();
             }
-        }, 30000);
+        }, 300000);
     }
 
     /**
@@ -91,6 +91,7 @@ class RobustConnectionManager {
             await this.finalizeIntegration();
             
             console.log('🔌 ✅ CONNESSIONE ROBUSTA COMPLETATA');
+            this.reconnectAttempts = 0; // Reset counter dopo successo
             this.notifyStatusChange('connected');
             
             return true;
@@ -312,11 +313,17 @@ class RobustConnectionManager {
         
         const dataKeywords = [
             'ordini', 'clienti', 'prodotti', 'database', 'quanti', 'elenco', 'lista',
-            'che ora', 'orario', 'data', 'oggi', 'ieri', 'domani'
+            'fatturato', 'vendite', 'cliente', 'ordine', 'prodotto', 'acquisti',
+            'statistiche', 'report', 'analisi', 'dati', 'ricavi', 'venduto',
+            'acquistato', 'importo', 'totale', 'somma', 'costo', 'prezzo'
         ];
         
         const lowerMessage = message.toLowerCase();
-        return dataKeywords.some(keyword => lowerMessage.includes(keyword));
+        const isDataRequest = dataKeywords.some(keyword => lowerMessage.includes(keyword));
+        
+        console.log('🔌 🔍 Controllo richiesta dati:', { message, isDataRequest });
+        
+        return isDataRequest;
     }
 
     /**
@@ -330,13 +337,15 @@ class RobustConnectionManager {
         this.connections.aiMiddleware = !!(window.aiMiddleware && this.instances.aiMiddleware);
         this.connections.requestMiddleware = !!(window.requestMiddleware && this.instances.requestMiddleware);
         
-        // Se qualcosa è cambiato, riconnetti
+        // Se qualcosa è cambiato E non siamo completamente connessi, riconnetti
         if (JSON.stringify(previousState) !== JSON.stringify(this.connections)) {
             console.log('🔌 🔄 Cambiamento stato connessioni:', this.connections);
             
             if (!this.isFullyConnected()) {
                 console.log('🔌 🔄 Riconnessione automatica in corso...');
                 this.attemptConnection();
+            } else {
+                console.log('🔌 ✅ Connessioni stabili - nessuna riconnessione necessaria');
             }
         }
     }
@@ -356,10 +365,12 @@ class RobustConnectionManager {
         
         console.log('🔌 📊 Stato connessioni:', status);
         
-        // Se qualcosa non funziona, riconnetti
-        if (!Object.values(status).every(s => s)) {
+        // Se qualcosa non funziona E non siamo in un tentativo di connessione, riconnetti
+        if (!Object.values(status).every(s => s) && this.reconnectAttempts === 0) {
             console.log('🔌 🔄 Riconnessione necessaria');
             this.attemptConnection();
+        } else if (Object.values(status).every(s => s)) {
+            console.log('🔌 ✅ Tutte le connessioni funzionano correttamente');
         }
     }
 
