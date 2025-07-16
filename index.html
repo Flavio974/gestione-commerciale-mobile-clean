@@ -2570,7 +2570,7 @@
   <!-- Configurazione Supabase spostata in config/supabase-config.js -->
   
   <!-- 🤖 PULSANTI FLOTTANTI AI VOCALI TRASCINABILI CON CONTROLLI AVANZATI -->
-  <div id="floating-voice-container" class="floating-voice-container" style="display: none;">
+  <div id="floating-voice-container" class="floating-voice-container" style="display: flex;">
     
     <!-- Controlli principali -->
     <div class="main-voice-controls">
@@ -2669,16 +2669,39 @@
     // Mostra i controlli vocali dopo il caricamento e inizializza drag & drop
     setTimeout(() => {
       const container = document.getElementById('floating-voice-container');
+      console.log('🔍 DEBUG: Container trovato:', container ? 'SÌ' : 'NO');
+      
       if (container) {
         container.style.display = 'flex';
-        setupFloatingVoiceDragAndDrop(container);
-        loadSavedFloatingPosition(container);
+        console.log('🔍 DEBUG: Display impostato a flex');
+        
+        try {
+          setupFloatingVoiceDragAndDrop(container);
+          console.log('🔍 DEBUG: Drag&Drop configurato');
+        } catch (error) {
+          console.error('❌ Errore setupFloatingVoiceDragAndDrop:', error);
+        }
+        
+        try {
+          loadSavedFloatingPosition(container);
+          console.log('🔍 DEBUG: Posizione caricata');
+        } catch (error) {
+          console.error('❌ Errore loadSavedFloatingPosition:', error);
+        }
+        
         console.log('🎤 Pulsanti vocali flottanti trascinabili attivati');
+      } else {
+        console.error('❌ Container floating-voice-container non trovato!');
       }
       
       // 📱 Avvia monitoraggio per iPad
-      startVoiceStateMonitoring();
-    }, 3000);
+      try {
+        startVoiceStateMonitoring();
+        console.log('🔍 DEBUG: Monitoraggio iPad avviato');
+      } catch (error) {
+        console.error('❌ Errore startVoiceStateMonitoring:', error);
+      }
+    }, 1000); // Riduco il timeout a 1 secondo
 
     // Gestione click pulsanti vocali
     document.addEventListener('DOMContentLoaded', () => {
