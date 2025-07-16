@@ -207,6 +207,9 @@ class MiddlewareIntegration {
                         window.supabaseAI = new SupabaseAIIntegration();
                     }
                     
+                    // Assegna anche alla proprietà locale
+                    this.supabaseAI = window.supabaseAI;
+                    
                     resolve();
                 } else {
                     console.log('🔌 ⏳ Attendo Supabase...');
@@ -948,7 +951,19 @@ class MiddlewareIntegration {
             // Verifica se abbiamo connessione Supabase
             if (!this.supabaseAI) {
                 console.log('🔌 ❌ Supabase non disponibile per middleware');
-                return null;
+                console.log('🔌 🔍 Debug supabase:', {
+                    thisSupabaseAI: !!this.supabaseAI,
+                    windowSupabaseAI: !!window.supabaseAI,
+                    windowSupabaseAIIntegration: !!window.SupabaseAIIntegration
+                });
+                
+                // Tentativo di recupero
+                if (window.supabaseAI) {
+                    console.log('🔌 🔄 Tentativo recupero supabaseAI da window');
+                    this.supabaseAI = window.supabaseAI;
+                } else {
+                    return null;
+                }
             }
 
             // Prova a processare la richiesta di dati
