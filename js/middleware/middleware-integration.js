@@ -712,7 +712,11 @@ class MiddlewareIntegration {
         // Controlla se è iPad
         const isIPad = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                       (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document) ||
-                      (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+                      (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
+                      // Supporto per Chrome DevTools Device Emulation
+                      (navigator.maxTouchPoints > 0 && /Mobile/.test(navigator.userAgent)) ||
+                      // Forza per test se localStorage contiene flag
+                      localStorage.getItem('force_ipad_mode') === 'true';
         
         if (isIPad) {
             // Usa il sistema TTS esistente ma con protezione anti-doppia
