@@ -68,13 +68,62 @@ class ItalianDateManager {
         // Forza il timezone italiano se supportato
         try {
             // Metodo più accurato per ottenere l'orario italiano
-            const italianTime = new Date(now.toLocaleString("it-IT", {timeZone: this.timezone}));
-            console.log('🇮🇹 getCurrentDate: Data corrente (timezone italiano):', this.formatDate(italianTime));
-            console.log('🇮🇹 getCurrentDate: Orario italiano:', italianTime.toLocaleTimeString('it-IT'));
-            return italianTime;
+            const italianTimeString = now.toLocaleString("it-IT", {timeZone: this.timezone});
+            console.log('🇮🇹 getCurrentDate: String italiano:', italianTimeString);
+            
+            // Parsing più robusto della stringa italiana
+            const italianTime = this.parseItalianDateTime(italianTimeString);
+            
+            if (italianTime && !isNaN(italianTime.getTime())) {
+                console.log('🇮🇹 getCurrentDate: Data corrente (timezone italiano):', this.formatDate(italianTime));
+                console.log('🇮🇹 getCurrentDate: Orario italiano:', italianTime.toLocaleTimeString('it-IT'));
+                return italianTime;
+            } else {
+                throw new Error('Parsing failed');
+            }
         } catch (error) {
             console.warn('⚠️ Timezone non supportato, uso data locale:', error);
             return now;
+        }
+    }
+    
+    /**
+     * PARSING robusto di data/ora italiana da stringa locale
+     */
+    parseItalianDateTime(dateTimeString) {
+        try {
+            // Formato tipico: "16/7/2025, 12:34:56"
+            const [datePart, timePart] = dateTimeString.split(', ');
+            
+            if (datePart) {
+                // Parsing della data
+                const [day, month, year] = datePart.split('/').map(num => parseInt(num, 10));
+                
+                // Parsing del tempo (se presente)
+                let hour = 0, minute = 0, second = 0;
+                if (timePart) {
+                    const [h, m, s] = timePart.split(':').map(num => parseInt(num, 10));
+                    hour = h || 0;
+                    minute = m || 0;
+                    second = s || 0;
+                }
+                
+                // Crea la data
+                const date = new Date(year, month - 1, day, hour, minute, second);
+                
+                console.log('🇮🇹 parseItalianDateTime:', {
+                    input: dateTimeString,
+                    parsed: { day, month, year, hour, minute, second },
+                    result: date
+                });
+                
+                return date;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('❌ parseItalianDateTime error:', error);
+            return null;
         }
     }
     

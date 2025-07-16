@@ -287,7 +287,7 @@ class RobustConnectionManager {
                         const response = await this.instances.requestMiddleware.processRequest(message);
                         console.log('🔌 📊 Risposta middleware ricevuta:', response);
                         
-                        if (response && response.success) {
+                        if (response && response.handled) {
                             console.log('🔌 ✅ Risposta da middleware:', response.response);
                             
                             // Simula una risposta AI con la risposta del middleware
