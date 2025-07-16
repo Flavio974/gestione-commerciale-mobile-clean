@@ -272,6 +272,7 @@ class RobustConnectionManager {
                 let message;
                 if (customMessage) {
                     message = customMessage.trim();
+                    console.log('🔌 🎯 Messaggio da customMessage:', message);
                 } else {
                     const input = document.getElementById('ai-input');
                     message = input ? input.value.trim() : '';
@@ -288,7 +289,9 @@ class RobustConnectionManager {
                 console.log('🔌 🎯 Messaggio estratto:', message);
                 
                 // SEMPRE aggiungi il messaggio dell'utente alla chat
+                console.log('🔌 🎯 Aggiungendo messaggio utente alla chat:', message);
                 window.FlavioAIAssistant.addMessage(message, 'user');
+                console.log('🔌 🎯 Messaggio utente aggiunto');
                 
                 // Controlla se è una richiesta di dati
                 if (this.isDataRequest(message)) {
