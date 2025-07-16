@@ -1483,6 +1483,70 @@
         alert('iosTTSManager non disponibile');
       }
     }
+
+    // Test delle voci specifiche
+    function testVoiceCosimo() {
+      if (window.iosTTSManager) {
+        const voices = speechSynthesis.getVoices();
+        const cosimoVoice = voices.find(v => v.name.includes('Cosimo'));
+        if (cosimoVoice) {
+          window.iosTTSManager.selectedVoice = cosimoVoice;
+          window.iosTTSManager.speak('Ciao, sono Cosimo. Mi senti bene?');
+        } else {
+          alert('Voce Cosimo non trovata');
+        }
+      }
+    }
+
+    function testVoiceElsa() {
+      if (window.iosTTSManager) {
+        const voices = speechSynthesis.getVoices();
+        const elsaVoice = voices.find(v => v.name.includes('Elsa'));
+        if (elsaVoice) {
+          window.iosTTSManager.selectedVoice = elsaVoice;
+          window.iosTTSManager.speak('Ciao, sono Elsa. Mi senti bene?');
+        } else {
+          alert('Voce Elsa non trovata');
+        }
+      }
+    }
+
+    function testVoiceGoogle() {
+      if (window.iosTTSManager) {
+        const voices = speechSynthesis.getVoices();
+        const googleVoice = voices.find(v => v.name.includes('Google italiano'));
+        if (googleVoice) {
+          window.iosTTSManager.selectedVoice = googleVoice;
+          window.iosTTSManager.speak('Ciao, sono Google italiano. Mi senti bene?');
+        } else {
+          alert('Voce Google italiano non trovata');
+        }
+      }
+    }
+
+    function testVolumeMax() {
+      if (window.iosTTSManager) {
+        const utterance = new SpeechSynthesisUtterance('Test volume massimo! Dovresti sentirmi molto forte!');
+        utterance.volume = 1.0;
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.lang = 'it-IT';
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+      }
+    }
+
+    function testSlowSpeech() {
+      if (window.iosTTSManager) {
+        const utterance = new SpeechSynthesisUtterance('Test velocità lenta. Ogni parola dovrebbe essere chiara e distinta.');
+        utterance.volume = 1.0;
+        utterance.rate = 0.6;
+        utterance.pitch = 1.0;
+        utterance.lang = 'it-IT';
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+      }
+    }
     
     // Aggiorna info debug
     function updateDebugInfo() {
@@ -1553,6 +1617,17 @@
       <div style="margin-top: 10px;">
         <button onclick="forceIPadMode()" style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-right: 5px;">Force iPad</button>
         <button onclick="testTTS()" style="background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px;">Test TTS</button>
+      </div>
+      <div style="margin-top: 10px;">
+        <h4 style="margin: 5px 0; font-size: 11px;">🔊 Test Voci:</h4>
+        <button onclick="testVoiceCosimo()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Cosimo</button>
+        <button onclick="testVoiceElsa()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Elsa</button>
+        <button onclick="testVoiceGoogle()" style="background: #6f42c1; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Google</button>
+      </div>
+      <div style="margin-top: 10px;">
+        <h4 style="margin: 5px 0; font-size: 11px;">🔊 Test Volume:</h4>
+        <button onclick="testVolumeMax()" style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Volume Max</button>
+        <button onclick="testSlowSpeech()" style="background: #fd7e14; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Lento</button>
       </div>
     </div>
 
