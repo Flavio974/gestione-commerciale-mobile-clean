@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Debug iPad Button</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .debug-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .device-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .test-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .test-button.listening {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+
+        .status-panel {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .logs {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .control-btn:active {
+            background: #f0f0f0;
+        }
+
+        .event-log {
+            background: #fff3e0;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .state-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .state-indicator.active {
+            background: #4caf50;
+        }
+
+        .state-indicator.inactive {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🐛 Debug iPad Button</h1>
+        
+        <div class="device-info">
+            <div><strong>Device:</strong> <span id="deviceInfo"></span></div>
+            <div><strong>User Agent:</strong> <span id="userAgent"></span></div>
+            <div><strong>Is iPad:</strong> <span id="isIpad"></span></div>
+        </div>
+
+        <div class="button-container">
+            <button id="testButton" class="test-button">
+                🎤
+            </button>
+            <div style="margin-top: 10px;">
+                <span class="state-indicator" id="buttonState"></span>
+                <span id="buttonStateText">Idle</span>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <div><strong>Current State:</strong> <span id="currentState">idle</span></div>
+            <div><strong>Recognition Active:</strong> <span id="recognitionActive">false</span></div>
+            <div><strong>Button Listening:</strong> <span id="buttonListening">false</span></div>
+            <div><strong>Auto Mode:</strong> <span id="autoMode">off</span></div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" onclick="testButtonState()">Test Button State</button>
+            <button class="control-btn" onclick="simulateStart()">Simulate Start</button>
+            <button class="control-btn" onclick="simulateEnd()">Simulate End</button>
+            <button class="control-btn" onclick="clearLogs()">Clear Logs</button>
+            <button class="control-btn" onclick="testRealVoice()">Test Real Voice</button>
+        </div>
+
+        <div id="eventLog"></div>
+        <div id="logs" class="logs"></div>
+    </div>
+
+    <script>
+        let isCurrentlyListening = false;
+        let autoModeType = 'off';
+        let recognition = null;
+        let eventCount = 0;
+        
+        // Device detection
+        const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+        
+        // Initialize
+        function init() {
+            document.getElementById('deviceInfo').textContent = isIPad ? 'iPad' : 'Other Device';
+            document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 80) + '...';
+            document.getElementById('isIpad').textContent = isIPad ? 'YES' : 'NO';
+            
+            updateStateDisplay();
+            log('Sistema inizializzato');
+            
+            // Initialize speech recognition
+            initSpeechRecognition();
+            
+            // Setup button
+            setupButton();
+            
+            // Setup event listeners
+            setupEventListeners();
+        }
+
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = 'it-IT';
+                recognition.continuous = isIPad ? false : true;
+                recognition.interimResults = true;
+                
+                recognition.onstart = () => {
+                    log('REAL EVENT: recognition.onstart');
+                    isCurrentlyListening = true;
+                    updateStateDisplay();
+                    updateButtonState();
+                    
+                    // Dispatch custom event
+                    window.dispatchEvent(new CustomEvent('voicerecognition:start'));
+                };
+                
+                recognition.onend = () => {
+                    log('REAL EVENT: recognition.onend');
+                    isCurrentlyListening = false;
+                    updateStateDisplay();
+                    updateButtonState();
+                    
+                    // Dispatch custom event
+                    window.dispatchEvent(new CustomEvent('voicerecognition:end'));
+                };
+                
+                recognition.onresult = (event) => {
+                    const current = event.resultIndex;
+                    const transcript = event.results[current][0].transcript;
+                    const isFinal = event.results[current].isFinal;
+                    
+                    log(`REAL EVENT: recognition.onresult - ${isFinal ? 'FINAL' : 'INTERIM'}: "${transcript}"`);
+                    
+                    if (isFinal && isIPad) {
+                        log('iPad: Stopping recognition after final result');
+                        setTimeout(() => {
+                            recognition.stop();
+                        }, 100);
+                    }
+                };
+                
+                recognition.onerror = (event) => {
+                    log(`REAL EVENT: recognition.onerror - ${event.error}`);
+                };
+                
+                log('Speech recognition initialized');
+            } else {
+                log('Speech recognition not supported');
+            }
+        }
+
+        function setupButton() {
+            const button = document.getElementById('testButton');
+            button.addEventListener('click', () => {
+                log('BUTTON CLICKED');
+                toggleVoiceRecognition();
+            });
+        }
+
+        function setupEventListeners() {
+            // Listen for custom events
+            window.addEventListener('voicerecognition:start', () => {
+                logEvent('voicerecognition:start');
+                if (isIPad && autoModeType === 'off') {
+                    log('iPad: Custom event start - updating button');
+                    isCurrentlyListening = true;
+                    updateButtonState();
+                }
+            });
+            
+            window.addEventListener('voicerecognition:end', () => {
+                logEvent('voicerecognition:end');
+                if (isIPad && autoModeType === 'off') {
+                    log('iPad: Custom event end - updating button');
+                    isCurrentlyListening = false;
+                    updateButtonState();
+                }
+            });
+        }
+
+        function toggleVoiceRecognition() {
+            if (isCurrentlyListening) {
+                log('Stopping voice recognition');
+                if (recognition) {
+                    recognition.stop();
+                }
+            } else {
+                log('Starting voice recognition');
+                if (recognition) {
+                    recognition.start();
+                }
+            }
+        }
+
+        function updateButtonState() {
+            const button = document.getElementById('testButton');
+            const stateIndicator = document.getElementById('buttonState');
+            const stateText = document.getElementById('buttonStateText');
+            
+            if (isCurrentlyListening) {
+                button.classList.add('listening');
+                button.textContent = '🛑';
+                stateIndicator.className = 'state-indicator active';
+                stateText.textContent = 'Listening';
+                log('Button state: LISTENING');
+            } else {
+                button.classList.remove('listening');
+                button.textContent = '🎤';
+                stateIndicator.className = 'state-indicator inactive';
+                stateText.textContent = 'Idle';
+                log('Button state: IDLE');
+            }
+        }
+
+        function updateStateDisplay() {
+            document.getElementById('currentState').textContent = isCurrentlyListening ? 'listening' : 'idle';
+            document.getElementById('recognitionActive').textContent = recognition && recognition.isActive ? 'true' : 'false';
+            document.getElementById('buttonListening').textContent = isCurrentlyListening ? 'true' : 'false';
+            document.getElementById('autoMode').textContent = autoModeType;
+        }
+
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            logs.innerHTML += `<div>[${time}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function logEvent(eventName) {
+            const eventLog = document.getElementById('eventLog');
+            const time = new Date().toLocaleTimeString();
+            eventCount++;
+            
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event-log';
+            eventDiv.innerHTML = `<strong>#${eventCount} [${time}]</strong> Event: ${eventName}`;
+            eventLog.appendChild(eventDiv);
+            
+            // Keep only last 10 events
+            while (eventLog.children.length > 10) {
+                eventLog.removeChild(eventLog.firstChild);
+            }
+        }
+
+        function testButtonState() {
+            log('=== TESTING BUTTON STATE ===');
+            log(`isCurrentlyListening: ${isCurrentlyListening}`);
+            log(`autoModeType: ${autoModeType}`);
+            log(`isIPad: ${isIPad}`);
+            log(`recognition exists: ${recognition ? 'YES' : 'NO'}`);
+            log(`recognition.continuous: ${recognition ? recognition.continuous : 'N/A'}`);
+            updateButtonState();
+            updateStateDisplay();
+        }
+
+        function simulateStart() {
+            log('=== SIMULATING START EVENT ===');
+            isCurrentlyListening = true;
+            window.dispatchEvent(new CustomEvent('voicerecognition:start'));
+            updateStateDisplay();
+        }
+
+        function simulateEnd() {
+            log('=== SIMULATING END EVENT ===');
+            isCurrentlyListening = false;
+            window.dispatchEvent(new CustomEvent('voicerecognition:end'));
+            updateStateDisplay();
+        }
+
+        function testRealVoice() {
+            log('=== TESTING REAL VOICE SYSTEM ===');
+            if (recognition) {
+                log('Starting real speech recognition...');
+                recognition.start();
+            } else {
+                log('No speech recognition available');
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('eventLog').innerHTML = '';
+            eventCount = 0;
+        }
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>

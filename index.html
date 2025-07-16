@@ -2675,6 +2675,9 @@
         loadSavedFloatingPosition(container);
         console.log('🎤 Pulsanti vocali flottanti trascinabili attivati');
       }
+      
+      // 📱 Avvia monitoraggio per iPad
+      startVoiceStateMonitoring();
     }, 3000);
 
     // Gestione click pulsanti vocali
@@ -3263,6 +3266,32 @@
           }
         }
       }
+    }
+
+    // 📱 MONITORAGGIO CONTINUO STATO VOCALE PER IPAD
+    function startVoiceStateMonitoring() {
+      const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+      
+      if (isIPad) {
+        console.log('📱 iPad: Avvio monitoraggio stato vocale');
+        
+        setInterval(() => {
+          // Controlla stato reale del sistema VoiceRecognition
+          let actualListening = false;
+          
+          if (window.VoiceRecognition) {
+            actualListening = window.VoiceRecognition.isActive || window.VoiceRecognition.isListening();
+          }
+          
+          // Se lo stato è diverso da quello che pensiamo, correggi
+          if (actualListening !== isCurrentlyListening && autoModeType === 'off') {
+            console.log(`📱 iPad: Correzione stato - era ${isCurrentlyListening}, ora ${actualListening}`);
+            isCurrentlyListening = actualListening;
+            updateFloatingUI();
+          }
+        }, 500); // Controlla ogni mezzo secondo
+      }
+    }
       
       // Aggiorna anche l'UI dei pulsanti automobile
       updateAutoModeUI();
