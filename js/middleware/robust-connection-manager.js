@@ -272,7 +272,7 @@ class RobustConnectionManager {
                     console.log('🔌 🎯 Richiesta dati - uso middleware');
                     
                     try {
-                        const response = await this.instances.requestMiddleware.processMessage(message);
+                        const response = await this.instances.requestMiddleware.processRequest(message);
                         if (response && response.success) {
                             console.log('🔌 ✅ Risposta da middleware:', response.response);
                             return response.response;
@@ -379,8 +379,8 @@ class RobustConnectionManager {
      */
     testRequestMiddlewareConnection() {
         return !!(this.instances.requestMiddleware && 
-                 this.instances.requestMiddleware.processMessage && 
-                 typeof this.instances.requestMiddleware.processMessage === 'function');
+                 this.instances.requestMiddleware.processRequest && 
+                 typeof this.instances.requestMiddleware.processRequest === 'function');
     }
 
     /**

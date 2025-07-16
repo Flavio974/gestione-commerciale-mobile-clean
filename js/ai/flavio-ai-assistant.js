@@ -373,6 +373,22 @@ window.FlavioAIAssistant = (function() {
                             </select>
                             <button onclick="window.FlavioAIAssistant.testConnection()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Test API</button>
                         </div>
+                        
+                        <!-- Contatori Token e Costi -->
+                        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 10px;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span style="font-weight: bold;">📊 Token:</span>
+                                <span id="token-count" style="color: #007bff;">0</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span style="font-weight: bold;">💰 Costo sessione:</span>
+                                <span id="cost-display" style="color: #28a745;">€0.00</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span style="font-weight: bold;">📅 Oggi:</span>
+                                <span id="daily-cost" style="color: #fd7e14;">€0.00</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div style="background: white; border: 1px solid #dee2e6; border-radius: 8px; height: 450px; display: flex; flex-direction: column;">
@@ -410,6 +426,9 @@ window.FlavioAIAssistant = (function() {
                     if (e.key === 'Enter') this.sendMessage();
                 });
             }
+            
+            // Inizializza contatori
+            this.initializeCounters();
 
             console.log('✅ Interfaccia AI leggera renderizzata');
         },
@@ -483,6 +502,11 @@ window.FlavioAIAssistant = (function() {
                 
                 const aiResponse = result.response || 'Nessuna risposta ricevuta.';
                 this.addMessage(aiResponse, 'assistant');
+                
+                // 📊 Aggiorna contatori token e costi
+                if (result.usage) {
+                    this.updateTokenCounters(result.usage, model);
+                }
                 
                 // 🔊 SINTESI VOCALE PER INPUT VOCALI
                 if (isVoiceInput) {
@@ -614,6 +638,96 @@ window.FlavioAIAssistant = (function() {
             console.log('- User Agent:', navigator.userAgent);
             
             this.addMessage('🔍 Debug info stampato nella console. Controlla DevTools.', 'assistant');
+        },
+
+        /**
+         * Inizializza contatori all'avvio
+         */
+        initializeCounters() {
+            try {
+                // Recupera valori dalla sessione
+                const totalTokens = parseInt(sessionStorage.getItem('total_tokens_used') || '0');
+                const sessionCost = parseFloat(sessionStorage.getItem('session_cost_eur') || '0');
+                
+                // Aggiorna UI token
+                const tokenElement = document.getElementById('token-count');
+                if (tokenElement) {
+                    tokenElement.textContent = totalTokens.toLocaleString();
+                }
+                
+                // Aggiorna UI costo sessione
+                const costElement = document.getElementById('cost-display');
+                if (costElement) {
+                    costElement.textContent = `€${sessionCost.toFixed(4)}`;
+                }
+                
+                // Aggiorna costo giornaliero
+                const dailyCostElement = document.getElementById('daily-cost');
+                if (dailyCostElement && window.getTodayKey) {
+                    const todayKey = window.getTodayKey();
+                    const dailyData = JSON.parse(localStorage.getItem(todayKey) || '{}');
+                    if (dailyData.totalCostEUR) {
+                        dailyCostElement.textContent = `€${dailyData.totalCostEUR.toFixed(4)}`;
+                    }
+                }
+                
+                console.log('📊 Contatori inizializzati:', { totalTokens, sessionCost });
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione contatori:', error);
+            }
+        },
+
+        /**
+         * Aggiorna contatori token e costi
+         */
+        updateTokenCounters(usage, model) {
+            try {
+                const tokens = usage.total_tokens || usage.totalTokens || 0;
+                
+                // Aggiorna token totali nella sessione
+                const currentTokens = parseInt(sessionStorage.getItem('total_tokens_used') || '0');
+                const newTotal = currentTokens + tokens;
+                sessionStorage.setItem('total_tokens_used', newTotal.toString());
+                sessionStorage.setItem('last_request_tokens', tokens.toString());
+                
+                // Calcola costo
+                const provider = model.includes('claude') ? 'anthropic' : 'openai';
+                const cost = window.calculateAICost ? window.calculateAICost(tokens, model, provider) : null;
+                
+                // Aggiorna UI
+                const tokenElement = document.getElementById('token-count');
+                if (tokenElement) {
+                    tokenElement.textContent = newTotal.toLocaleString();
+                }
+                
+                const costElement = document.getElementById('cost-display');
+                if (costElement && cost) {
+                    const sessionCost = parseFloat(sessionStorage.getItem('session_cost_eur') || '0') + cost.eur;
+                    sessionStorage.setItem('session_cost_eur', sessionCost.toString());
+                    costElement.textContent = `€${sessionCost.toFixed(4)}`;
+                }
+                
+                // Aggiorna statistiche giornaliere
+                if (window.updateDailyStats) {
+                    window.updateDailyStats(tokens, model, provider);
+                    
+                    // Aggiorna display costo giornaliero
+                    const dailyCostElement = document.getElementById('daily-cost');
+                    if (dailyCostElement) {
+                        const todayKey = window.getTodayKey();
+                        const dailyData = JSON.parse(localStorage.getItem(todayKey) || '{}');
+                        if (dailyData.totalCostEUR) {
+                            dailyCostElement.textContent = `€${dailyData.totalCostEUR.toFixed(4)}`;
+                        }
+                    }
+                }
+                
+                console.log('📊 Token update:', { tokens, model, cost });
+                
+            } catch (error) {
+                console.error('❌ Errore aggiornamento contatori:', error);
+            }
         },
 
         /**
