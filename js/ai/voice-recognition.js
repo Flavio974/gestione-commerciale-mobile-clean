@@ -46,9 +46,15 @@ window.VoiceRecognition = (function() {
             if (!this.engine) return;
 
             this.engine.lang = 'it-IT';
-            this.engine.continuous = true;
+            
+            // Su iPad, NON usare modalità continua per evitare problemi
+            const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+            this.engine.continuous = isIPad ? false : true;
+            
             this.engine.interimResults = true;
             this.engine.maxAlternatives = 3;
+            
+            console.log(`🎤 Configurazione vocale: iPad=${isIPad}, continuous=${this.engine.continuous}`);
         },
 
         /**
@@ -186,6 +192,15 @@ window.VoiceRecognition = (function() {
         onFinalResult(transcript) {
             console.log('🗣️ Testo riconosciuto:', transcript);
             this.dispatchEvent('voicerecognition:final', { transcript });
+
+            // Su iPad, ferma automaticamente il riconoscimento dopo risultato finale
+            const isIPad = /iPad/.test(navigator.userAgent) || localStorage.getItem('force_ipad_mode') === 'true';
+            if (isIPad) {
+                console.log('📱 iPad: Fermo riconoscimento automaticamente dopo risultato finale');
+                setTimeout(() => {
+                    this.stop();
+                }, 100);
+            }
 
             // Invia all'AI se disponibile
             if (window.FlavioAIAssistant && window.FlavioAIAssistant.processVoiceInput) {
