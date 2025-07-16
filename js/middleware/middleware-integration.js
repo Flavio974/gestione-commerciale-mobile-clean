@@ -989,6 +989,36 @@ class MiddlewareIntegration {
     }
 
     /**
+     * Riavvia il middleware
+     */
+    async restart() {
+        console.log('🔌 Riavvio middleware integration...');
+        
+        try {
+            // Disattiva se attivo
+            if (this.isActive) {
+                this.isActive = false;
+                console.log('🔌 Middleware disattivato per riavvio');
+            }
+            
+            // Reinizializza i componenti
+            const success = await this.initialize();
+            
+            if (success) {
+                console.log('✅ Middleware riavviato con successo');
+                return true;
+            } else {
+                console.error('❌ Errore riavvio middleware');
+                return false;
+            }
+            
+        } catch (error) {
+            console.error('❌ Errore riavvio middleware:', error);
+            return false;
+        }
+    }
+
+    /**
      * Disattiva il middleware e ripristina funzioni originali
      */
     deactivate() {

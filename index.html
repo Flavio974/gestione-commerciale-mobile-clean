@@ -1598,6 +1598,71 @@
       
       alert(voiceList);
     }
+
+    function checkMiddlewareStatus() {
+      const status = {
+        middlewareIntegration: !!window.middlewareIntegration,
+        supabaseAI: !!window.supabaseAI,
+        vocabularyManager: !!window.vocabularyManager,
+        requestMiddleware: !!window.requestMiddleware,
+        aiMiddleware: !!window.aiMiddleware,
+        supabaseClient: !!window.supabase
+      };
+      
+      let statusText = '🔌 STATO MIDDLEWARE:\n\n';
+      Object.entries(status).forEach(([key, value]) => {
+        statusText += `${value ? '✅' : '❌'} ${key}: ${value ? 'OK' : 'NON TROVATO'}\n`;
+      });
+      
+      // Controlla se middleware è attivo
+      if (window.middlewareIntegration && window.middlewareIntegration.isActive) {
+        statusText += '\n🔌 Middleware: ATTIVO';
+      } else {
+        statusText += '\n⚠️ Middleware: NON ATTIVO';
+      }
+      
+      alert(statusText);
+    }
+
+    function restartMiddleware() {
+      console.log('🔌 Riavvio middleware...');
+      
+      try {
+        // Verifica che tutti i componenti siano presenti
+        if (!window.SupabaseAIIntegration) {
+          alert('❌ SupabaseAIIntegration non disponibile');
+          return;
+        }
+        
+        if (!window.VocabularyManager) {
+          alert('❌ VocabularyManager non disponibile');
+          return;
+        }
+        
+        // Inizializza manualmente i componenti
+        if (!window.supabaseAI) {
+          window.supabaseAI = new SupabaseAIIntegration();
+        }
+        
+        if (!window.vocabularyManager) {
+          window.vocabularyManager = new VocabularyManager();
+        }
+        
+        // Riavvia il middleware
+        if (window.middlewareIntegration) {
+          window.middlewareIntegration.restart();
+        } else {
+          // Crea nuovo middleware
+          window.middlewareIntegration = new MiddlewareIntegration();
+        }
+        
+        alert('✅ Middleware riavviato! Prova ora i comandi vocali.');
+        
+      } catch (error) {
+        console.error('❌ Errore riavvio middleware:', error);
+        alert('❌ Errore riavvio middleware: ' + error.message);
+      }
+    }
     
     // Aggiorna info debug
     function updateDebugInfo() {
@@ -1681,6 +1746,11 @@
         <h4 style="margin: 5px 0; font-size: 11px;">🔊 Test Volume:</h4>
         <button onclick="testVolumeMax()" style="background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Volume Max</button>
         <button onclick="testSlowSpeech()" style="background: #fd7e14; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Lento</button>
+      </div>
+      <div style="margin-top: 10px;">
+        <h4 style="margin: 5px 0; font-size: 11px;">🔌 Debug Middleware:</h4>
+        <button onclick="checkMiddlewareStatus()" style="background: #17a2b8; color: white; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Stato</button>
+        <button onclick="restartMiddleware()" style="background: #ffc107; color: black; border: none; padding: 3px 8px; border-radius: 3px; margin: 2px; font-size: 10px;">Riavvia</button>
       </div>
     </div>
 
