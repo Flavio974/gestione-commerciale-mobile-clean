@@ -710,7 +710,9 @@ class MiddlewareIntegration {
      */
     handleTTSResponse(response) {
         // Controlla se è iPad
-        const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+        const isIPad = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                      (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document) ||
+                      (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
         
         if (isIPad) {
             // Usa il sistema TTS esistente ma con protezione anti-doppia
