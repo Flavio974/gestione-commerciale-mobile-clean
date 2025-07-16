@@ -231,14 +231,10 @@ window.FlavioAIAssistant = (function() {
          * Processa input vocale e fornisce risposta parlata
          */
         processVoiceInput(transcript) {
-            console.log('🗣️ Input vocale ricevuto:', transcript);
+            console.log('🗣️ SISTEMA ORIGINALE: Input vocale ricevuto:', transcript);
             
-            // Verifica se è push-to-talk per forzare TTS
-            const isPushToTalk = window.VoiceRecognition && window.VoiceRecognition.isPushToTalk;
-            console.log('🔊 Push-to-Talk attivo:', isPushToTalk);
-            
-            // Invia messaggio con flag vocale e push-to-talk
-            this.sendMessage(transcript, true, isPushToTalk);
+            // Sistema originale: invia sempre come input vocale
+            this.sendMessage(transcript, true);
         },
 
         /**
@@ -920,7 +916,7 @@ window.FlavioAIAssistant = (function() {
         /**
          * Invia messaggio con API corretta, supporto vocale e fallback
          */
-        async sendMessage(customMessage = null, isVoiceInput = false, isPushToTalk = false) {
+        async sendMessage(customMessage = null, isVoiceInput = false) {
             let message;
             
             if (customMessage) {
@@ -1120,9 +1116,9 @@ window.FlavioAIAssistant = (function() {
                     timestamp: new Date()
                 });
                 
-                // 🔊 SINTESI VOCALE PER INPUT VOCALI E PUSH-TO-TALK
-                if (isVoiceInput || isPushToTalk) {
-                    console.log('🔊 Attivazione sintesi vocale per risposta AI', isPushToTalk ? '(Push-to-Talk)' : '(Vocale)');
+                // 🔊 SINTESI VOCALE PER INPUT VOCALI (SISTEMA ORIGINALE)
+                if (isVoiceInput) {
+                    console.log('🔊 SISTEMA ORIGINALE: Attivazione TTS per input vocale');
                     this.speakResponse(aiResponse);
                 }
                 
@@ -1158,9 +1154,9 @@ window.FlavioAIAssistant = (function() {
                     });
                 }
                 
-                // 🔊 SINTESI VOCALE ANCHE PER ERRORI SE INPUT VOCALE O PUSH-TO-TALK
-                if ((isVoiceInput || isPushToTalk) && fallbackResponse) {
-                    console.log('🔊 Attivazione sintesi vocale per fallback', isPushToTalk ? '(Push-to-Talk)' : '(Vocale)');
+                // 🔊 SINTESI VOCALE PER FALLBACK (SISTEMA ORIGINALE)
+                if (isVoiceInput && fallbackResponse) {
+                    console.log('🔊 SISTEMA ORIGINALE: Attivazione TTS per fallback');
                     this.speakResponse(fallbackResponse);
                 }
             }

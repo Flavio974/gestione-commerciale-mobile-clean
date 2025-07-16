@@ -2964,8 +2964,7 @@
           window.VoiceRecognition.engine.interimResults = true;
         }
         
-        // 🔊 MARCA COME PUSH-TO-TALK per abilitare TTS
-        window.VoiceRecognition.isPushToTalk = true;
+        // 🔊 SISTEMA ORIGINALE: Niente flag complicate
         
         window.VoiceRecognition.start();
         isPushToTalkActive = true;
@@ -2984,10 +2983,7 @@
         window.VoiceRecognition.stop();
       }
       
-      // 🔊 RIMUOVI FLAG PUSH-TO-TALK
-      if (window.VoiceRecognition) {
-        window.VoiceRecognition.isPushToTalk = false;
-      }
+      // 🔊 SISTEMA ORIGINALE: Niente flag da rimuovere
       
       isPushToTalkActive = false;
       updatePushToTalkUI();
