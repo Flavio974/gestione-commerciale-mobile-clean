@@ -608,6 +608,32 @@ window.FlavioAIAssistant = (function() {
             console.log('- User Agent:', navigator.userAgent);
             
             this.addMessage('🔍 Debug info stampato nella console. Controlla DevTools.', 'assistant');
+        },
+
+        /**
+         * Ottieni statistiche del provider AI
+         */
+        getProviderStats() {
+            return {
+                currentProvider: this.baseAssistant?.currentProvider || 'none',
+                totalRequests: this.chatHistory.length,
+                hasProvider: !!this.baseAssistant,
+                isInitialized: this.isInitialized
+            };
+        },
+
+        /**
+         * Cambia provider AI
+         */
+        changeProvider(providerName) {
+            console.log(`🔄 Tentativo cambio provider a: ${providerName}`);
+            
+            if (this.baseAssistant && this.baseAssistant.setProvider) {
+                return this.baseAssistant.setProvider(providerName);
+            } else {
+                console.warn('⚠️ BaseAssistant non disponibile per cambio provider');
+                return false;
+            }
         }
 
     };
