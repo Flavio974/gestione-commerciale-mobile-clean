@@ -116,12 +116,16 @@ class MiddlewareIntegration {
             }
             
             this.middleware = new AIMiddleware();
+            // Esporta globalmente per debug
+            window.aiMiddleware = this.middleware;
             console.log('🔌 Step 3: ✅ AIMiddleware creato');
             
             console.log('🔌 Step 4: Collegamento Supabase...');
             // Passa il riferimento a Supabase se disponibile
             if (window.supabaseAI && window.RequestMiddleware) {
                 this.middleware.requestMiddleware = new RequestMiddleware(window.supabaseAI);
+                // Esporta globalmente per debug
+                window.requestMiddleware = this.middleware.requestMiddleware;
                 console.log('🔌 💾 Middleware collegato a Supabase');
             } else {
                 if (!window.RequestMiddleware) {

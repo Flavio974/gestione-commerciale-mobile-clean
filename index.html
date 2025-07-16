@@ -1641,18 +1641,33 @@
         
         // Inizializza manualmente i componenti
         if (!window.supabaseAI) {
+          console.log('🔌 Creando SupabaseAI...');
           window.supabaseAI = new SupabaseAIIntegration();
         }
         
         if (!window.vocabularyManager) {
+          console.log('🔌 Creando VocabularyManager...');
           window.vocabularyManager = new VocabularyManager();
+        }
+        
+        // Crea RequestMiddleware se mancante
+        if (!window.requestMiddleware && window.RequestMiddleware) {
+          console.log('🔌 Creando RequestMiddleware...');
+          window.requestMiddleware = new RequestMiddleware();
+        }
+        
+        // Crea AIMiddleware se mancante
+        if (!window.aiMiddleware && window.AIMiddleware) {
+          console.log('🔌 Creando AIMiddleware...');
+          window.aiMiddleware = new AIMiddleware();
         }
         
         // Riavvia il middleware
         if (window.middlewareIntegration) {
+          console.log('🔌 Riavviando middleware esistente...');
           window.middlewareIntegration.restart();
         } else {
-          // Crea nuovo middleware
+          console.log('🔌 Creando nuovo middleware...');
           window.middlewareIntegration = new MiddlewareIntegration();
         }
         
