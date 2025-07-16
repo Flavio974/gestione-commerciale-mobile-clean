@@ -1606,7 +1606,8 @@
         vocabularyManager: !!window.vocabularyManager,
         requestMiddleware: !!window.requestMiddleware,
         aiMiddleware: !!window.aiMiddleware,
-        supabaseClient: !!window.supabase
+        supabaseClient: !!window.supabase,
+        robustConnectionManager: !!window.robustConnectionManager
       };
       
       let statusText = '🔌 STATO MIDDLEWARE:\n\n';
@@ -1621,6 +1622,20 @@
         statusText += '\n⚠️ Middleware: NON ATTIVO';
       }
       
+      // Controlla sistema robusto
+      if (window.robustConnectionManager) {
+        const robustStatus = window.robustConnectionManager.getStatus();
+        statusText += '\n\n🔌 SISTEMA ROBUSTO:';
+        statusText += `\n✅ Attivo: ${robustStatus.isActive ? 'SÌ' : 'NO'}`;
+        statusText += `\n✅ Connesso: ${robustStatus.isFullyConnected ? 'SÌ' : 'NO'}`;
+        statusText += `\n🔄 Tentativi: ${robustStatus.reconnectAttempts}`;
+        
+        statusText += '\n\n📊 CONNESSIONI:';
+        Object.entries(robustStatus.connections).forEach(([key, value]) => {
+          statusText += `\n${value ? '✅' : '❌'} ${key}`;
+        });
+      }
+      
       alert(statusText);
     }
 
@@ -1628,6 +1643,27 @@
       console.log('🔌 Riavvio middleware...');
       
       try {
+        // Usa il sistema robusto se disponibile
+        if (window.robustConnectionManager) {
+          console.log('🔌 Uso sistema connessione robusta...');
+          
+          window.robustConnectionManager.start().then((connected) => {
+            if (connected) {
+              alert('✅ Sistema connessione robusta attivato! Prova ora i comandi vocali.');
+            } else {
+              alert('⚠️ Sistema connessione robusta avviato ma non completamente connesso. Riprova tra qualche secondo.');
+            }
+          }).catch((error) => {
+            console.error('❌ Errore sistema robusto:', error);
+            alert('❌ Errore sistema robusto: ' + error.message);
+          });
+          
+          return;
+        }
+        
+        // Fallback al sistema classico
+        console.log('🔌 Fallback al sistema classico...');
+        
         // Verifica che tutti i componenti siano presenti
         if (!window.SupabaseAIIntegration) {
           alert('❌ SupabaseAIIntegration non disponibile');
@@ -2608,7 +2644,8 @@
       console.log('🔄 Caricamento middleware AI...');
       return safeLoadQueue(
         '/js/middleware/request-middleware.js',
-        '/js/middleware/ai-middleware.js', 
+        '/js/middleware/ai-middleware.js',
+        '/js/middleware/robust-connection-manager.js',
         '/js/middleware/middleware-integration.js'
       );
     })
@@ -2719,6 +2756,20 @@
           )
         ]).then(() => {
           console.log('🎉 Caricamento background completato!');
+          
+          // 🔌 AVVIO SISTEMA CONNESSIONE ROBUSTA
+          setTimeout(() => {
+            console.log('🔌 Avvio sistema connessione robusta...');
+            if (window.robustConnectionManager) {
+              window.robustConnectionManager.start().then((connected) => {
+                if (connected) {
+                  console.log('🔌 ✅ Sistema connessione robusta attivo');
+                } else {
+                  console.log('🔌 ⚠️ Sistema connessione robusta: connessione parziale');
+                }
+              });
+            }
+          }, 3000); // 3 secondi dopo il caricamento
         });
       }, 100); // Inizia subito dopo bootstrap
       
