@@ -1459,6 +1459,79 @@
     
     console.log('🐛 Error listener attivo - catturerà tutti gli Uncaught');
   </script>
+  
+  <!-- Funzioni Debug iPad -->
+  <script>
+    // Mostra/nascondi pannello debug
+    function toggleDebugPanel() {
+      const panel = document.getElementById('ipad-debug-panel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    // Attiva modalità iPad forzata
+    function forceIPadMode() {
+      localStorage.setItem('force_ipad_mode', 'true');
+      alert('Modalità iPad forzata attivata. Ricarica la pagina.');
+      location.reload();
+    }
+    
+    // Test TTS diretto
+    function testTTS() {
+      if (window.iosTTSManager) {
+        window.iosTTSManager.speak('Test TTS diretto da pannello debug');
+      } else {
+        alert('iosTTSManager non disponibile');
+      }
+    }
+    
+    // Aggiorna info debug
+    function updateDebugInfo() {
+      const debugInfo = document.getElementById('debug-info');
+      if (!debugInfo) return;
+      
+      const isIPad = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document) ||
+                    (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
+                    (navigator.maxTouchPoints > 0 && /Mobile/.test(navigator.userAgent)) ||
+                    localStorage.getItem('force_ipad_mode') === 'true';
+      
+      debugInfo.innerHTML = `
+        <div><strong>User Agent:</strong><br>${navigator.userAgent}</div><br>
+        <div><strong>maxTouchPoints:</strong> ${navigator.maxTouchPoints}</div>
+        <div><strong>Mobile test:</strong> ${/Mobile/.test(navigator.userAgent)}</div>
+        <div><strong>Force flag:</strong> ${localStorage.getItem('force_ipad_mode')}</div>
+        <div><strong>🎯 iPad rilevato:</strong> <span style="color: ${isIPad ? 'lime' : 'red'}">${isIPad}</span></div>
+        <div><strong>iosTTSManager:</strong> <span style="color: ${window.iosTTSManager ? 'lime' : 'red'}">${!!window.iosTTSManager}</span></div>
+      `;
+    }
+    
+    // Mostra pannello debug automaticamente su dispositivi mobili
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(() => {
+        if (navigator.maxTouchPoints > 0 || /Mobile/.test(navigator.userAgent)) {
+          document.getElementById('ipad-debug-panel').style.display = 'block';
+          updateDebugInfo();
+          
+          // Aggiorna ogni 2 secondi
+          setInterval(updateDebugInfo, 2000);
+        }
+      }, 3000);
+    });
+    
+    // Aggiungi gesture per mostrare pannello (triplo tap)
+    let tapCount = 0;
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 3) {
+        tapCount++;
+        setTimeout(() => tapCount = 0, 1000);
+        
+        if (tapCount === 3) {
+          toggleDebugPanel();
+          updateDebugInfo();
+        }
+      }
+    });
+  </script>
 
   <div id="app-container">
     <!-- Header -->
@@ -1469,6 +1542,19 @@
         <div id="staticClock" class="header-clock">--:--:--</div>
       </div>
     </header>
+    
+    <!-- Pannello Debug iPad -->
+    <div id="ipad-debug-panel" style="display: none; position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.9); color: white; padding: 15px; border-radius: 8px; z-index: 10000; font-family: monospace; font-size: 12px; max-width: 300px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <strong>🔍 iPad Debug Panel</strong>
+        <button onclick="toggleDebugPanel()" style="background: red; color: white; border: none; padding: 2px 8px; border-radius: 4px;">✕</button>
+      </div>
+      <div id="debug-info"></div>
+      <div style="margin-top: 10px;">
+        <button onclick="forceIPadMode()" style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-right: 5px;">Force iPad</button>
+        <button onclick="testTTS()" style="background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px;">Test TTS</button>
+      </div>
+    </div>
 
     <!-- Navigation Tabs -->
     <nav id="main-navigation" class="tabs">
