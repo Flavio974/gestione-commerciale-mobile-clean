@@ -275,13 +275,23 @@ class RobustConnectionManager {
                 } else {
                     const input = document.getElementById('ai-input');
                     message = input ? input.value.trim() : '';
+                    // Svuota l'input immediatamente
+                    if (input) input.value = '';
                 }
                 
+                if (!message) return;
+                
                 console.log('🔌 🎯 Messaggio estratto:', message);
+                
+                // SEMPRE aggiungi il messaggio dell'utente alla chat
+                window.FlavioAIAssistant.addMessage(message, 'user');
                 
                 // Controlla se è una richiesta di dati
                 if (this.isDataRequest(message)) {
                     console.log('🔌 🎯 Richiesta dati - uso middleware');
+                    
+                    // Aggiungi messaggio di caricamento
+                    window.FlavioAIAssistant.addMessage(isVoiceInput ? '🎤 Sto elaborando il tuo messaggio vocale...' : '🤔 Sto elaborando...', 'assistant', true);
                     
                     try {
                         const response = await this.instances.requestMiddleware.processRequest(message);
@@ -290,15 +300,7 @@ class RobustConnectionManager {
                         if (response && response.handled) {
                             console.log('🔌 ✅ Risposta da middleware:', response.response);
                             
-                            // Prima svuota l'input se non è un messaggio custom
-                            if (!customMessage) {
-                                const input = document.getElementById('ai-input');
-                                if (input) {
-                                    input.value = ''; // Svuota l'input
-                                }
-                            }
-                            
-                            // Rimuovi eventuali messaggi di caricamento prima di aggiungere il messaggio utente
+                            // Rimuovi messaggi di caricamento
                             const messagesContainer = document.getElementById('ai-messages');
                             if (messagesContainer) {
                                 const loadingMessages = messagesContainer.querySelectorAll('div');
@@ -309,8 +311,7 @@ class RobustConnectionManager {
                                 });
                             }
                             
-                            // NON aggiungere il messaggio utente qui - sarà già stato aggiunto dalla funzione originale
-                            // Aggiungi solo la risposta del middleware
+                            // Aggiungi risposta del middleware
                             window.FlavioAIAssistant.addMessage(response.response, 'assistant');
                             
                             // 🔊 SINTESI VOCALE se è input vocale
@@ -328,8 +329,79 @@ class RobustConnectionManager {
                     }
                 }
                 
-                // Fallback ad AI normale
-                return originalSendMessage(customMessage, isVoiceInput);
+                // Fallback ad AI normale - ma il messaggio utente è già stato aggiunto
+                // Aggiungi messaggio di caricamento
+                window.FlavioAIAssistant.addMessage(isVoiceInput ? '🎤 Sto elaborando il tuo messaggio vocale...' : '🤔 Sto elaborando...', 'assistant', true);
+                
+                try {
+                    const modelSelect = document.getElementById('ai-model');
+                    const model = modelSelect ? modelSelect.value : 'claude-3-5-sonnet-20241022';
+                    
+                    const response = await fetch('/.netlify/functions/claude-ai', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            model: model,
+                            isVoiceInput: isVoiceInput,
+                            supabaseData: { timestamp: new Date().toISOString() }
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Rimuovi messaggio di caricamento
+                    const messagesContainer = document.getElementById('ai-messages');
+                    if (messagesContainer) {
+                        const loadingMessages = messagesContainer.querySelectorAll('div');
+                        loadingMessages.forEach(msg => {
+                            if (msg.textContent && (msg.textContent.includes('Sto elaborando') || msg.textContent.includes('🤔'))) {
+                                msg.remove();
+                            }
+                        });
+                    }
+                    
+                    const aiResponse = result.response || 'Nessuna risposta ricevuta.';
+                    window.FlavioAIAssistant.addMessage(aiResponse, 'assistant');
+                    
+                    // 🔊 SINTESI VOCALE PER INPUT VOCALI
+                    if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
+                        console.log('🔊 Attivazione sintesi vocale per risposta AI');
+                        window.FlavioAIAssistant.speakResponse(aiResponse);
+                    }
+                    
+                    return aiResponse;
+                    
+                } catch (error) {
+                    console.error('🔌 ❌ Errore AI:', error);
+                    
+                    // Rimuovi messaggio di caricamento
+                    const messagesContainer = document.getElementById('ai-messages');
+                    if (messagesContainer) {
+                        const loadingMessages = messagesContainer.querySelectorAll('div');
+                        loadingMessages.forEach(msg => {
+                            if (msg.textContent && (msg.textContent.includes('Sto elaborando') || msg.textContent.includes('🤔'))) {
+                                msg.remove();
+                            }
+                        });
+                    }
+                    
+                    const fallbackResponse = '⚠️ Errore di connessione. Verifica la configurazione API.';
+                    window.FlavioAIAssistant.addMessage(fallbackResponse, 'assistant');
+                    
+                    if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
+                        window.FlavioAIAssistant.speakResponse(fallbackResponse);
+                    }
+                    
+                    return fallbackResponse;
+                }
             };
             
             console.log('🔌 ✅ FlavioAIAssistant intercettato');
