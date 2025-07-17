@@ -821,7 +821,6 @@ class RequestMiddleware {
                             }
                         }
                     }
-                }
                 break;
                 
             case 'percorsi':
