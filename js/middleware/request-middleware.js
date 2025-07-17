@@ -773,55 +773,57 @@ class RequestMiddleware {
                             params.cliente = dataTuttiMatch[1].trim();
                             params.tuttiOrdini = true;
                         } else {
-                        // Controlla se è una richiesta per TUTTI gli ordini generica (senza cliente)
-                        const dataTuttiGenericaMatch = input.match(this.patterns.dataTuttiGenerica);
-                        if (dataTuttiGenericaMatch) {
-                            const validContext = this.getValidContext();
-                            if (validContext) {
-                                params.cliente = validContext;
-                                params.fromContext = true;
-                                params.tuttiOrdini = true;
-                            }
-                        } else {
-                            // Poi controlla se è per un singolo ordine
-                            let dataMatch = input.match(this.patterns.dataCliente);
-                            if (dataMatch) {
-                                params.cliente = dataMatch[1].trim();
-                                
-                                // Verifica se si tratta di data di consegna
-                                if (input.toLowerCase().includes('consegna')) {
-                                    params.tipoData = 'consegna';
-                                }
-                            } else {
-                                // Controlla se è una richiesta generica sulla data
-                                const dataGenericaMatch = input.match(this.patterns.dataGenerica);
+                            // Controlla se è una richiesta per TUTTI gli ordini generica (senza cliente)
+                            const dataTuttiGenericaMatch = input.match(this.patterns.dataTuttiGenerica);
+                            if (dataTuttiGenericaMatch) {
                                 const validContext = this.getValidContext();
-                                
-                                if (dataGenericaMatch && validContext) {
+                                if (validContext) {
                                     params.cliente = validContext;
                                     params.fromContext = true;
+                                    params.tuttiOrdini = true;
+                                }
+                            } else {
+                                // Poi controlla se è per un singolo ordine
+                                let dataMatch = input.match(this.patterns.dataCliente);
+                                if (dataMatch) {
+                                    params.cliente = dataMatch[1].trim();
                                     
                                     // Verifica se si tratta di data di consegna
                                     if (input.toLowerCase().includes('consegna')) {
                                         params.tipoData = 'consegna';
                                     }
-                                } else if (validContext) {
-                                    // Fallback: se c'è un contesto valido e la query contiene parole chiave data
-                                    const inputLower = input.toLowerCase();
-                                    if (inputLower.includes('data') || inputLower.includes('ultimo') || inputLower.includes('quando')) {
+                                } else {
+                                    // Controlla se è una richiesta generica sulla data
+                                    const dataGenericaMatch = input.match(this.patterns.dataGenerica);
+                                    const validContext = this.getValidContext();
+                                    
+                                    if (dataGenericaMatch && validContext) {
                                         params.cliente = validContext;
                                         params.fromContext = true;
                                         
                                         // Verifica se si tratta di data di consegna
-                                        if (inputLower.includes('consegna')) {
+                                        if (input.toLowerCase().includes('consegna')) {
                                             params.tipoData = 'consegna';
+                                        }
+                                    } else if (validContext) {
+                                        // Fallback: se c'è un contesto valido e la query contiene parole chiave data
+                                        const inputLower = input.toLowerCase();
+                                        if (inputLower.includes('data') || inputLower.includes('ultimo') || inputLower.includes('quando')) {
+                                            params.cliente = validContext;
+                                            params.fromContext = true;
+                                            
+                                            // Verifica se si tratta di data di consegna
+                                            if (inputLower.includes('consegna')) {
+                                                params.tipoData = 'consegna';
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                break;
+                }
+            break;
                 
             case 'percorsi':
                 const percorsoMatch = input.match(this.patterns.tempoPercorso);
@@ -1328,23 +1330,13 @@ class RequestMiddleware {
             const ordiniCliente = ordini.filter(ordine => {
                 if (!ordine.cliente) return false;
                 
-                // Se abbiamo un match esatto dall'alias resolver, usalo
-                if (clienteResolved.found) {
-                    const match = ordine.cliente.toLowerCase().includes(clienteResolved.resolved.toLowerCase()) || 
-                                clienteResolved.resolved.toLowerCase().includes(ordine.cliente.toLowerCase());
-                    if (match) {
-                        console.log('📦 MIDDLEWARE: Match trovato via alias resolver:', ordine.cliente, '→', clienteResolved.resolved);
-                        return true;
-                    }
-                }
-                
-                // Fallback al matching normalizzato
-                const nomeOrdineNorm = this.normalizeClientName(ordine.cliente);
-                const clienteNorm = clienteResolved.resolved.toLowerCase();
-                const match = nomeOrdineNorm.includes(clienteNorm) || clienteNorm.includes(nomeOrdineNorm);
+                // Usa la stessa logica semplice di calculateFatturato per coerenza
+                const clienteNorm = params.cliente.toLowerCase();
+                const ordineNorm = ordine.cliente.toLowerCase();
+                const match = ordineNorm.includes(clienteNorm);
                 
                 if (match) {
-                    console.log('📦 MIDDLEWARE: Match trovato:', ordine.cliente, '→', nomeOrdineNorm);
+                    console.log('📦 MIDDLEWARE: Match trovato (logica semplice):', ordine.cliente, '→', clienteNorm);
                     // Debug specifico per le date di questo ordine
                     console.log('📅 DEBUG DATE ORDINE:', {
                         data_ordine: ordine.data_ordine,
@@ -2137,43 +2129,67 @@ class RequestMiddleware {
         if (!periodo) return data;
         
         const now = new Date();
+        console.log(`📅 DEBUG FILTERDATABYPERIOD: periodo = ${JSON.stringify(periodo)}`);
+        console.log(`📅 DEBUG FILTERDATABYPERIOD: dati in ingresso = ${data.length} record`);
         
-        return data.filter(item => {
+        let matchingItems = 0;
+        
+        const filtered = data.filter(item => {
             const itemDate = this.parseItemDate(item);
-            if (!itemDate) return false;
+            if (!itemDate) {
+                console.log(`❌ DEBUG FILTERDATABYPERIOD: nessuna data valida per item:`, item);
+                return false;
+            }
+            
+            let matches = false;
             
             switch (periodo.tipo) {
                 case 'settimana':
                     if (periodo.valore === 'corrente') {
-                        return this.getWeekNumberSimple(itemDate) === this.getWeekNumberSimple(now) &&
-                               itemDate.getFullYear() === now.getFullYear();
+                        matches = this.getWeekNumberSimple(itemDate) === this.getWeekNumberSimple(now) &&
+                                 itemDate.getFullYear() === now.getFullYear();
                     } else {
-                        return this.getWeekNumberSimple(itemDate) === periodo.valore &&
-                               itemDate.getFullYear() === periodo.anno;
+                        matches = this.getWeekNumberSimple(itemDate) === periodo.valore &&
+                                 itemDate.getFullYear() === periodo.anno;
                     }
+                    break;
                     
                 case 'mese':
                     if (periodo.valore === 'corrente') {
-                        return itemDate.getMonth() === now.getMonth() &&
-                               itemDate.getFullYear() === now.getFullYear();
+                        matches = itemDate.getMonth() === now.getMonth() &&
+                                 itemDate.getFullYear() === now.getFullYear();
                     } else {
-                        return itemDate.getMonth() + 1 === periodo.valore &&
-                               itemDate.getFullYear() === periodo.anno;
+                        matches = itemDate.getMonth() + 1 === periodo.valore &&
+                                 itemDate.getFullYear() === periodo.anno;
+                        console.log(`📅 DEBUG FILTERDATABYPERIOD MESE: itemDate.getMonth() + 1 = ${itemDate.getMonth() + 1}, periodo.valore = ${periodo.valore}, itemDate.getFullYear() = ${itemDate.getFullYear()}, periodo.anno = ${periodo.anno}, matches = ${matches}`);
                     }
+                    break;
                     
                 case 'giorno':
                     if (periodo.valore === 'corrente') {
-                        return itemDate.toDateString() === now.toDateString();
+                        matches = itemDate.toDateString() === now.toDateString();
                     } else {
-                        return itemDate.getDate() === periodo.valore &&
-                               itemDate.getMonth() + 1 === periodo.mese &&
-                               itemDate.getFullYear() === periodo.anno;
+                        matches = itemDate.getDate() === periodo.valore &&
+                                 itemDate.getMonth() + 1 === periodo.mese &&
+                                 itemDate.getFullYear() === periodo.anno;
                     }
+                    break;
                     
                 default:
-                    return true;
+                    matches = true;
+                    break;
             }
+            
+            if (matches) {
+                matchingItems++;
+                console.log(`✅ DEBUG FILTERDATABYPERIOD: MATCH trovato per data ${itemDate.toISOString()} (mese: ${itemDate.getMonth() + 1})`);
+            }
+            
+            return matches;
         });
+        
+        console.log(`📅 DEBUG FILTERDATABYPERIOD: record filtrati = ${filtered.length} / ${data.length} (${matchingItems} matches)`);
+        return filtered;
     }
     
     /**
@@ -2184,10 +2200,13 @@ class RequestMiddleware {
         
         for (const field of dateFields) {
             if (item[field]) {
+                console.log(`📅 DEBUG PARSEITEMDATE: campo "${field}" = "${item[field]}" (tipo: ${typeof item[field]})`);
+                
                 // Usa parser italiano robusto se disponibile
                 if (window.ItalianDateParser) {
                     const date = window.ItalianDateParser.parseDate(item[field]);
                     if (date) {
+                        console.log(`✅ DEBUG PARSEITEMDATE: ItalianDateParser ha parsato "${item[field]}" -> ${date.toISOString()} (mese: ${date.getMonth() + 1})`);
                         return date;
                     }
                 }
@@ -2195,11 +2214,13 @@ class RequestMiddleware {
                 // Fallback: parsing standard (meno affidabile per date ambigue)
                 const date = new Date(item[field]);
                 if (!isNaN(date.getTime())) {
+                    console.log(`⚠️ DEBUG PARSEITEMDATE: Fallback standard ha parsato "${item[field]}" -> ${date.toISOString()} (mese: ${date.getMonth() + 1})`);
                     return date;
                 }
             }
         }
         
+        console.log(`❌ DEBUG PARSEITEMDATE: Nessuna data valida trovata per:`, Object.keys(item).filter(k => dateFields.includes(k)).map(k => `${k}="${item[k]}"`));
         return null;
     }
     
