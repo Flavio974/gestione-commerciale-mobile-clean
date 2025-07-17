@@ -2129,67 +2129,43 @@ class RequestMiddleware {
         if (!periodo) return data;
         
         const now = new Date();
-        console.log(`📅 DEBUG FILTERDATABYPERIOD: periodo = ${JSON.stringify(periodo)}`);
-        console.log(`📅 DEBUG FILTERDATABYPERIOD: dati in ingresso = ${data.length} record`);
         
-        let matchingItems = 0;
-        
-        const filtered = data.filter(item => {
+        return data.filter(item => {
             const itemDate = this.parseItemDate(item);
-            if (!itemDate) {
-                console.log(`❌ DEBUG FILTERDATABYPERIOD: nessuna data valida per item:`, item);
-                return false;
-            }
-            
-            let matches = false;
+            if (!itemDate) return false;
             
             switch (periodo.tipo) {
                 case 'settimana':
                     if (periodo.valore === 'corrente') {
-                        matches = this.getWeekNumberSimple(itemDate) === this.getWeekNumberSimple(now) &&
-                                 itemDate.getFullYear() === now.getFullYear();
+                        return this.getWeekNumberSimple(itemDate) === this.getWeekNumberSimple(now) &&
+                               itemDate.getFullYear() === now.getFullYear();
                     } else {
-                        matches = this.getWeekNumberSimple(itemDate) === periodo.valore &&
-                                 itemDate.getFullYear() === periodo.anno;
+                        return this.getWeekNumberSimple(itemDate) === periodo.valore &&
+                               itemDate.getFullYear() === periodo.anno;
                     }
-                    break;
                     
                 case 'mese':
                     if (periodo.valore === 'corrente') {
-                        matches = itemDate.getMonth() === now.getMonth() &&
-                                 itemDate.getFullYear() === now.getFullYear();
+                        return itemDate.getMonth() === now.getMonth() &&
+                               itemDate.getFullYear() === now.getFullYear();
                     } else {
-                        matches = itemDate.getMonth() + 1 === periodo.valore &&
-                                 itemDate.getFullYear() === periodo.anno;
-                        console.log(`📅 DEBUG FILTERDATABYPERIOD MESE: itemDate.getMonth() + 1 = ${itemDate.getMonth() + 1}, periodo.valore = ${periodo.valore}, itemDate.getFullYear() = ${itemDate.getFullYear()}, periodo.anno = ${periodo.anno}, matches = ${matches}`);
+                        return itemDate.getMonth() + 1 === periodo.valore &&
+                               itemDate.getFullYear() === periodo.anno;
                     }
-                    break;
                     
                 case 'giorno':
                     if (periodo.valore === 'corrente') {
-                        matches = itemDate.toDateString() === now.toDateString();
+                        return itemDate.toDateString() === now.toDateString();
                     } else {
-                        matches = itemDate.getDate() === periodo.valore &&
-                                 itemDate.getMonth() + 1 === periodo.mese &&
-                                 itemDate.getFullYear() === periodo.anno;
+                        return itemDate.getDate() === periodo.valore &&
+                               itemDate.getMonth() + 1 === periodo.mese &&
+                               itemDate.getFullYear() === periodo.anno;
                     }
-                    break;
                     
                 default:
-                    matches = true;
-                    break;
+                    return true;
             }
-            
-            if (matches) {
-                matchingItems++;
-                console.log(`✅ DEBUG FILTERDATABYPERIOD: MATCH trovato per data ${itemDate.toISOString()} (mese: ${itemDate.getMonth() + 1})`);
-            }
-            
-            return matches;
         });
-        
-        console.log(`📅 DEBUG FILTERDATABYPERIOD: record filtrati = ${filtered.length} / ${data.length} (${matchingItems} matches)`);
-        return filtered;
     }
     
     /**
@@ -2200,13 +2176,10 @@ class RequestMiddleware {
         
         for (const field of dateFields) {
             if (item[field]) {
-                console.log(`📅 DEBUG PARSEITEMDATE: campo "${field}" = "${item[field]}" (tipo: ${typeof item[field]})`);
-                
                 // Usa parser italiano robusto se disponibile
                 if (window.ItalianDateParser) {
                     const date = window.ItalianDateParser.parseDate(item[field]);
                     if (date) {
-                        console.log(`✅ DEBUG PARSEITEMDATE: ItalianDateParser ha parsato "${item[field]}" -> ${date.toISOString()} (mese: ${date.getMonth() + 1})`);
                         return date;
                     }
                 }
@@ -2214,13 +2187,11 @@ class RequestMiddleware {
                 // Fallback: parsing standard (meno affidabile per date ambigue)
                 const date = new Date(item[field]);
                 if (!isNaN(date.getTime())) {
-                    console.log(`⚠️ DEBUG PARSEITEMDATE: Fallback standard ha parsato "${item[field]}" -> ${date.toISOString()} (mese: ${date.getMonth() + 1})`);
                     return date;
                 }
             }
         }
         
-        console.log(`❌ DEBUG PARSEITEMDATE: Nessuna data valida trovata per:`, Object.keys(item).filter(k => dateFields.includes(k)).map(k => `${k}="${item[k]}"`));
         return null;
     }
     
