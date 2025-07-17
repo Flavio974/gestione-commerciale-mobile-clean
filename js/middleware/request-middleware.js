@@ -63,7 +63,7 @@ class RequestMiddleware {
             // Pattern per periodi temporali nelle domande di valore
             periodoTemporale: /(?:nella|nel|durante|in)?\s*(?:settimana|mese|giorno|anno|trimestre|semestre)\s*(\d+|scorso|scorsa|corrente|attuale|ultimo|ultima|questo|questa)?\s*(?:del)?\s*(\d{4})?/i,
             settimanaSpecifica: /settimana\s*(\d+)(?:\s*del\s*(\d{4}))?/i,
-            meseSpecifico: /mese\s*(\d+|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)(?:\s*del\s*(\d{4}))?/i,
+            meseSpecifico: /(?:mese\s*|(?:di|per|in)\s+)(\d+|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)(?:\s*del\s*(\d{4}))?/i,
             giornoSpecifico: /giorno\s*(\d+)(?:\s*del\s*mese)?(?:\s*(\d+))?(?:\s*del\s*(\d{4}))?/i
         };
         
