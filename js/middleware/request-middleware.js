@@ -822,7 +822,6 @@ class RequestMiddleware {
                         }
                     }
                 }
-                }
                 break;
                 
             case 'percorsi':
@@ -872,9 +871,9 @@ class RequestMiddleware {
             case 'valore_minimo':
             case 'valore_medio':
                 // Estrai parametri temporali
-                const periodoParams = this.extractTemporalParameters(input);
-                if (periodoParams) {
-                    params.periodo = periodoParams;
+                const valoreParams = this.extractTemporalParameters(input);
+                if (valoreParams) {
+                    params.periodo = valoreParams;
                 }
                 break;
         }
