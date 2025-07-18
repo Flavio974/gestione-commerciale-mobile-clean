@@ -1538,13 +1538,10 @@ class RequestMiddleware {
                 
                 // DEBUG SPECIALE: mostra i primi 3 nomi clienti per capire il formato
                 possibleMatches.slice(0, 3).forEach((match, index) => {
-                    console.log(`🔍 MATCH ${index + 1}:`, {
-                        cliente: match.cliente,
-                        lunghezza: match.cliente?.length,
-                        contiene_essemme: match.cliente?.toLowerCase().includes('essemme'),
-                        contiene_conad: match.cliente?.toLowerCase().includes('conad'),
-                        contiene_montegrosso: match.cliente?.toLowerCase().includes('montegrosso')
-                    });
+                    console.log(`🔍 MATCH ${index + 1}: "${match.cliente}" (${match.cliente?.length} chars)`);
+                    console.log(`  - Contiene essemme: ${match.cliente?.toLowerCase().includes('essemme')}`);
+                    console.log(`  - Contiene conad: ${match.cliente?.toLowerCase().includes('conad')}`);
+                    console.log(`  - Contiene montegrosso: ${match.cliente?.toLowerCase().includes('montegrosso')}`);
                 });
             }
             
@@ -1561,13 +1558,12 @@ class RequestMiddleware {
                 
                 // DEBUG: Mostra solo i primi 3 confronti per vedere il pattern
                 if (debugCount < 3) {
-                    console.log('🔍 CONFRONTO ' + (debugCount + 1) + ':', {
-                        cercato: clienteNorm,
-                        trovato: nomeOrdineNorm,
-                        includes1: nomeOrdineNorm.includes(clienteNorm),
-                        includes2: clienteNorm.includes(nomeOrdineNorm),
-                        match: match
-                    });
+                    console.log(`🔍 CONFRONTO ${debugCount + 1}:`);
+                    console.log(`  - Cercato: "${clienteNorm}"`);
+                    console.log(`  - Trovato: "${nomeOrdineNorm}"`);
+                    console.log(`  - DB contiene cercato: ${nomeOrdineNorm.includes(clienteNorm)}`);
+                    console.log(`  - Cercato contiene DB: ${clienteNorm.includes(nomeOrdineNorm)}`);
+                    console.log(`  - MATCH: ${match}`);
                     debugCount++;
                 }
                 
