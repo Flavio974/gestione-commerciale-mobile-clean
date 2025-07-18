@@ -482,6 +482,26 @@ class SupabaseAIIntegration {
             
             console.log('✅ HISTORICAL: Record recuperati:', data?.length || 0);
             
+            // Pulisci i nomi dei prodotti da problemi di encoding PDF
+            if (data && data.length > 0) {
+                console.log('🧹 HISTORICAL: Pulizia nomi prodotti in corso...');
+                data.forEach(record => {
+                    if (record.prodotto) {
+                        record.prodotto = this.cleanProductName(record.prodotto);
+                    }
+                    if (record.descrizione_prodotto) {
+                        record.descrizione_prodotto = this.cleanProductName(record.descrizione_prodotto);
+                    }
+                    if (record.descrizione) {
+                        record.descrizione = this.cleanProductName(record.descrizione);
+                    }
+                    if (record.nome_prodotto) {
+                        record.nome_prodotto = this.cleanProductName(record.nome_prodotto);
+                    }
+                });
+                console.log('✅ HISTORICAL: Pulizia nomi prodotti completata');
+            }
+            
             // Calcola statistiche aggregate
             const stats = this.calculateHistoricalStats(data || []);
             
@@ -497,6 +517,16 @@ class SupabaseAIIntegration {
             
             // Fallback con dati di test se Supabase non è disponibile
             const testData = this.generateTestOrderData();
+            
+            // Pulisci anche i dati di test
+            testData.forEach(record => {
+                if (record.prodotto) {
+                    record.prodotto = this.cleanProductName(record.prodotto);
+                }
+                if (record.descrizione_prodotto) {
+                    record.descrizione_prodotto = this.cleanProductName(record.descrizione_prodotto);
+                }
+            });
             
             return {
                 totalRecords: testData.length,
@@ -1095,6 +1125,59 @@ class SupabaseAIIntegration {
             console.error('Errore query personalizzata:', error);
             return [];
         }
+    }
+    
+    /**
+     * Pulisce i nomi dei prodotti da problemi di encoding/estrazione PDF
+     */
+    cleanProductName(productName) {
+        if (!productName || typeof productName !== 'string') {
+            return productName;
+        }
+        
+        return productName
+            // Fix per caratteri doppi separati erroneamente durante estrazione PDF
+            .replace(/\bAC C IUGHE\b/g, 'ACCIUGHE')
+            .replace(/\bC AUDA\b/g, 'CAUDA')
+            .replace(/\bFRESC HI\b/g, 'FRESCHI')
+            .replace(/\bGNOC C HI\b/g, 'GNOCCHI')
+            .replace(/\bRAVIOL I\b/g, 'RAVIOLI')
+            .replace(/\bTAJARIN\b/g, 'TAJARIN')
+            .replace(/\bAGNOLOT T I\b/g, 'AGNOLOTTI')
+            .replace(/\bLASAGN E\b/g, 'LASAGNE')
+            .replace(/\bTORTEL L INI\b/g, 'TORTELLINI')
+            .replace(/\bPAP PARDELLE\b/g, 'PAPPARDELLE')
+            .replace(/\bFETT UC C INE\b/g, 'FETTUCCINE')
+            .replace(/\bPENNET T E\b/g, 'PENNETTE')
+            .replace(/\bRIG ATONI\b/g, 'RIGATONI')
+            .replace(/\bSPAGHET T I\b/g, 'SPAGHETTI')
+            .replace(/\bTROF IE\b/g, 'TROFIE')
+            .replace(/\bORECC HIET T E\b/g, 'ORECCHIETTE')
+            .replace(/\bGRIS S INI\b/g, 'GRISSINI')
+            .replace(/\bBRUS C HET T A\b/g, 'BRUSCHETTA')
+            .replace(/\bFOC AC C IA\b/g, 'FOCACCIA')
+            .replace(/\bMOZ Z AREL L A\b/g, 'MOZZARELLA')
+            .replace(/\bPAR MIGIANO\b/g, 'PARMIGIANO')
+            .replace(/\bGOR GONZOLA\b/g, 'GORGONZOLA')
+            .replace(/\bPROSC IUT T O\b/g, 'PROSCIUTTO')
+            .replace(/\bSALAM E\b/g, 'SALAME')
+            .replace(/\bCOPPA\b/g, 'COPPA')
+            .replace(/\bPANET T ONE\b/g, 'PANETTONE')
+            .replace(/\bPANDOR O\b/g, 'PANDORO')
+            .replace(/\bTOR RONE\b/g, 'TORRONE')
+            .replace(/\bNUT EL L A\b/g, 'NUTELLA')
+            .replace(/\bAL FIERI\b/g, 'ALFIERI')
+            .replace(/\bCONAD\b/g, 'CONAD')
+            .replace(/\bESSEMM E\b/g, 'ESSEMME')
+            .replace(/\bGABRIEL IS\b/g, 'GABRIELIS')
+            .replace(/\bMARO TT A\b/g, 'MAROTTA')
+            // Fix generico per pattern "X Y" dove X e Y sono lettere singole (probabile errore)
+            .replace(/\b([A-Z]) ([A-Z])\b/g, '$1$2')
+            // Fix per pattern "XXX X" dove l'ultima X è separata
+            .replace(/\b([A-Z]{2,}) ([A-Z])\b/g, '$1$2')
+            // Pulisce spazi multipli
+            .replace(/\s+/g, ' ')
+            .trim();
     }
 }
 
