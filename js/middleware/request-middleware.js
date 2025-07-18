@@ -1512,7 +1512,15 @@ class RequestMiddleware {
             
             // Usa la stessa logica di getOrdiniCliente per consistenza
             const clienteNorm = clienteResolved.resolved.toLowerCase();
-            console.log('📅 MIDDLEWARE: Cerco ordini per cliente normalizzato:', clienteNorm);
+            const clienteOriginale = params.cliente.toLowerCase();
+            console.log('📅 MIDDLEWARE: Cerco ordini per:', {
+                clienteOriginale: clienteOriginale,
+                clienteRisolto: clienteNorm
+            });
+            
+            // Estrai parole chiave per matching più flessibile
+            const parolaChiave = clienteOriginale.split(' ')[0]; // Prende la prima parola dell'input originale
+            console.log('📅 MIDDLEWARE: Parola chiave per matching:', parolaChiave);
             console.log('📅 MIDDLEWARE: Totale ordini da filtrare:', ordini.length);
             
             // Debug: mostra primi 5 nomi clienti dalla tabella
@@ -1551,19 +1559,23 @@ class RequestMiddleware {
                 
                 const nomeOrdineNorm = ordine.cliente.toLowerCase();
                 
-                // Match se il nome cliente dell'ordine contiene il termine cercato
-                // o se il termine cercato contiene il nome dell'ordine
-                const match = nomeOrdineNorm.includes(clienteNorm) || 
-                            clienteNorm.includes(nomeOrdineNorm);
+                // Nuovo matching: cerca se il nome nel database contiene la parola chiave originale
+                const matchParolaChiave = nomeOrdineNorm.includes(parolaChiave);
+                
+                // Fallback: mantieni la logica originale per compatibilità
+                const matchOriginale = nomeOrdineNorm.includes(clienteNorm) || 
+                                      clienteNorm.includes(nomeOrdineNorm);
+                
+                const match = matchParolaChiave || matchOriginale;
                 
                 // DEBUG: Mostra solo i primi 3 confronti per vedere il pattern
                 if (debugCount < 3) {
                     console.log(`🔍 CONFRONTO ${debugCount + 1}:`);
-                    console.log(`  - Cercato: "${clienteNorm}"`);
-                    console.log(`  - Trovato: "${nomeOrdineNorm}"`);
-                    console.log(`  - DB contiene cercato: ${nomeOrdineNorm.includes(clienteNorm)}`);
-                    console.log(`  - Cercato contiene DB: ${clienteNorm.includes(nomeOrdineNorm)}`);
-                    console.log(`  - MATCH: ${match}`);
+                    console.log(`  - Parola chiave: "${parolaChiave}"`);
+                    console.log(`  - Nome DB: "${nomeOrdineNorm}"`);
+                    console.log(`  - DB contiene parola chiave: ${matchParolaChiave}`);
+                    console.log(`  - Match originale: ${matchOriginale}`);
+                    console.log(`  - MATCH FINALE: ${match}`);
                     debugCount++;
                 }
                 
