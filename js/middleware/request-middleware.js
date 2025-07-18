@@ -684,14 +684,20 @@ class RequestMiddleware {
         
         switch (requestType) {
             case 'fatturato':
-                let fatturatoMatch = input.match(this.patterns.fatturato);
-                if (fatturatoMatch) {
-                    params.cliente = fatturatoMatch[1].trim();
+                // Prima controlla se è una richiesta di fatturato totale (senza cliente specifico)
+                if (/fatturato\s+totale/i.test(input)) {
+                    // Fatturato totale - non impostare cliente
+                    params.cliente = undefined;
                 } else {
-                    // Prova pattern semplice "fatturato X"
-                    fatturatoMatch = input.match(this.patterns.fatturatoSemplice);
+                    let fatturatoMatch = input.match(this.patterns.fatturato);
                     if (fatturatoMatch) {
                         params.cliente = fatturatoMatch[1].trim();
+                    } else {
+                        // Prova pattern semplice "fatturato X"
+                        fatturatoMatch = input.match(this.patterns.fatturatoSemplice);
+                        if (fatturatoMatch) {
+                            params.cliente = fatturatoMatch[1].trim();
+                        }
                     }
                 }
                 
@@ -823,7 +829,7 @@ class RequestMiddleware {
                         }
                     }
                 }
-            break;
+                break;
                 
             case 'percorsi':
                 const percorsoMatch = input.match(this.patterns.tempoPercorso);
@@ -1137,10 +1143,17 @@ class RequestMiddleware {
             }
             
             // Fatturato cliente specifico
-            const clienteNorm = params.cliente.toLowerCase();
-            const ordiniCliente = ordini.filter(ordine => 
-                ordine.cliente && ordine.cliente.toLowerCase().includes(clienteNorm)
-            );
+            // Risolve nome cliente usando ClientAliasResolver per consistenza
+            const clienteResolved = await this.resolveClientName(params.cliente);
+            console.log('💰 MIDDLEWARE: Nome cliente risolto:', clienteResolved);
+            
+            const clienteNorm = clienteResolved.resolved.toLowerCase();
+            const ordiniCliente = ordini.filter(ordine => {
+                if (!ordine.cliente) return false;
+                const nomeOrdineNorm = ordine.cliente.toLowerCase();
+                return nomeOrdineNorm.includes(clienteNorm) || 
+                       clienteNorm.includes(nomeOrdineNorm);
+            });
             
             if (ordiniCliente.length === 0) {
                 return {
@@ -1232,10 +1245,17 @@ class RequestMiddleware {
                 };
             }
             
-            const clienteNorm = params.cliente.toLowerCase();
-            const ordiniCliente = ordini.filter(ordine => 
-                ordine.cliente && ordine.cliente.toLowerCase().includes(clienteNorm)
-            );
+            // Risolve nome cliente usando ClientAliasResolver per consistenza
+            const clienteResolved = await this.resolveClientName(params.cliente);
+            console.log('📊 MIDDLEWARE: Nome cliente risolto:', clienteResolved);
+            
+            const clienteNorm = clienteResolved.resolved.toLowerCase();
+            const ordiniCliente = ordini.filter(ordine => {
+                if (!ordine.cliente) return false;
+                const nomeOrdineNorm = ordine.cliente.toLowerCase();
+                return nomeOrdineNorm.includes(clienteNorm) || 
+                       clienteNorm.includes(nomeOrdineNorm);
+            });
             
             if (ordiniCliente.length === 0) {
                 return {
@@ -1490,23 +1510,24 @@ class RequestMiddleware {
             const clienteResolved = await this.resolveClientName(params.cliente);
             console.log('📅 MIDDLEWARE: Nome cliente risolto:', clienteResolved);
             
+            // Usa la stessa logica di getOrdiniCliente per consistenza
+            const clienteNorm = clienteResolved.resolved.toLowerCase();
             const ordiniCliente = ordini.filter(ordine => {
                 if (!ordine.cliente) return false;
                 
-                // Se abbiamo un match esatto dall'alias resolver, usalo
-                if (clienteResolved.found) {
-                    const match = ordine.cliente.toLowerCase().includes(clienteResolved.resolved.toLowerCase()) || 
-                                clienteResolved.resolved.toLowerCase().includes(ordine.cliente.toLowerCase());
-                    if (match) {
-                        console.log('📅 MIDDLEWARE: Match trovato via alias resolver:', ordine.cliente, '→', clienteResolved.resolved);
-                        return true;
-                    }
+                const nomeOrdineNorm = ordine.cliente.toLowerCase();
+                
+                // Match se il nome cliente dell'ordine contiene il termine cercato
+                // o se il termine cercato contiene il nome dell'ordine
+                const match = nomeOrdineNorm.includes(clienteNorm) || 
+                            clienteNorm.includes(nomeOrdineNorm);
+                
+                if (match) {
+                    console.log('📅 MIDDLEWARE: Match trovato:', ordine.cliente, 
+                               clienteResolved.found ? `(via alias: ${clienteResolved.original} → ${clienteResolved.resolved})` : '');
                 }
                 
-                // Fallback al matching normalizzato
-                const nomeOrdineNorm = ordine.cliente.toLowerCase();
-                const clienteNorm = clienteResolved.resolved.toLowerCase();
-                return nomeOrdineNorm.includes(clienteNorm) || clienteNorm.includes(nomeOrdineNorm);
+                return match;
             });
             
             if (ordiniCliente.length === 0) {
@@ -2034,24 +2055,37 @@ class RequestMiddleware {
     extractTemporalParameters(text) {
         const lowerText = text.toLowerCase();
         
+        console.log('🔍 DEBUG extractTemporalParameters:');
+        console.log('  - Testo input:', text);
+        console.log('  - Testo lowercase:', lowerText);
+        
         // Settimana specifica
         const weekMatch = lowerText.match(this.patterns.settimanaSpecifica);
         if (weekMatch) {
             const weekNum = parseInt(weekMatch[1]);
             const year = weekMatch[2] ? parseInt(weekMatch[2]) : new Date().getFullYear();
-            return {
+            const result = {
                 tipo: 'settimana',
                 valore: weekNum,
                 anno: year,
                 descrizione: `settimana ${weekNum} del ${year}`
             };
+            console.log('  - Match settimana:', weekMatch);
+            console.log('  - Risultato:', result);
+            return result;
         }
         
         // Mese specifico
         const monthMatch = lowerText.match(this.patterns.meseSpecifico);
+        console.log('  - Pattern mese:', this.patterns.meseSpecifico);
+        console.log('  - Match mese:', monthMatch);
+        
         if (monthMatch) {
             const monthInput = monthMatch[1];
             const year = monthMatch[2] ? parseInt(monthMatch[2]) : new Date().getFullYear();
+            
+            console.log('  - Input mese:', monthInput);
+            console.log('  - Anno:', year);
             
             let monthNum;
             if (isNaN(parseInt(monthInput))) {
@@ -2062,17 +2096,23 @@ class RequestMiddleware {
                     'settembre': 9, 'ottobre': 10, 'novembre': 11, 'dicembre': 12
                 };
                 monthNum = mesi[monthInput.toLowerCase()];
+                console.log('  - Nome mese parsato:', monthInput, '→', monthNum);
             } else {
                 monthNum = parseInt(monthInput);
+                console.log('  - Numero mese parsato:', monthNum);
             }
             
             if (monthNum >= 1 && monthNum <= 12) {
-                return {
+                const result = {
                     tipo: 'mese',
                     valore: monthNum,
                     anno: year,
                     descrizione: `mese ${monthNum} del ${year}`
                 };
+                console.log('  - Risultato finale:', result);
+                return result;
+            } else {
+                console.log('  - Mese non valido:', monthNum);
             }
         }
         
@@ -2094,31 +2134,43 @@ class RequestMiddleware {
         
         // Periodi generici
         const periodoMatch = lowerText.match(this.patterns.periodoTemporale);
+        console.log('  - Pattern generico:', this.patterns.periodoTemporale);
+        console.log('  - Match generico:', periodoMatch);
+        
         if (periodoMatch) {
             const periodo = periodoMatch[0];
+            console.log('  - Periodo trovato:', periodo);
+            
             if (periodo.includes('settimana')) {
-                return {
+                const result = {
                     tipo: 'settimana',
                     valore: 'corrente',
                     descrizione: 'settimana corrente'
                 };
+                console.log('  - Risultato settimana generica:', result);
+                return result;
             }
             if (periodo.includes('mese')) {
-                return {
+                const result = {
                     tipo: 'mese',
                     valore: 'corrente',
                     descrizione: 'mese corrente'
                 };
+                console.log('  - Risultato mese generico:', result);
+                return result;
             }
             if (periodo.includes('giorno')) {
-                return {
+                const result = {
                     tipo: 'giorno',
                     valore: 'corrente',
                     descrizione: 'giorno corrente'
                 };
+                console.log('  - Risultato giorno generico:', result);
+                return result;
             }
         }
         
+        console.log('  - ❌ Nessun pattern temporale trovato');
         return null;
     }
     
@@ -2128,44 +2180,101 @@ class RequestMiddleware {
     filterDataByPeriod(data, periodo) {
         if (!periodo) return data;
         
-        const now = new Date();
+        console.log('🔍 DEBUG filterDataByPeriod:');
+        console.log('  - Periodo oggetto:', JSON.stringify(periodo, null, 2));
+        console.log('  - Totale record da filtrare:', data.length);
         
-        return data.filter(item => {
+        // Mostra esempi di date nei primi 5 record
+        const campioneDateExample = data.slice(0, 5);
+        console.log('  - Esempio format date nei primi 5 record:');
+        campioneDateExample.forEach((item, index) => {
+            const dateFields = ['data', 'data_ordine', 'data_consegna', 'data_documento', 'created_at', 'timestamp'];
+            const foundDates = {};
+            dateFields.forEach(field => {
+                if (item[field]) {
+                    foundDates[field] = item[field];
+                }
+            });
+            console.log(`    Record ${index + 1}:`, foundDates);
+        });
+        
+        const now = new Date();
+        console.log('  - Data corrente:', now.toISOString());
+        
+        let matchedCount = 0;
+        let failedParseCount = 0;
+        
+        const filtered = data.filter(item => {
             const itemDate = this.parseItemDate(item);
-            if (!itemDate) return false;
+            if (!itemDate) {
+                failedParseCount++;
+                return false;
+            }
+            
+            let isMatch = false;
             
             switch (periodo.tipo) {
                 case 'settimana':
                     if (periodo.valore === 'corrente') {
-                        return this.getWeekNumberSimple(itemDate) === this.getWeekNumberSimple(now) &&
+                        isMatch = this.getWeekNumberSimple(itemDate) === this.getWeekNumberSimple(now) &&
                                itemDate.getFullYear() === now.getFullYear();
                     } else {
-                        return this.getWeekNumberSimple(itemDate) === periodo.valore &&
+                        isMatch = this.getWeekNumberSimple(itemDate) === periodo.valore &&
                                itemDate.getFullYear() === periodo.anno;
                     }
+                    break;
                     
                 case 'mese':
                     if (periodo.valore === 'corrente') {
-                        return itemDate.getMonth() === now.getMonth() &&
+                        isMatch = itemDate.getMonth() === now.getMonth() &&
                                itemDate.getFullYear() === now.getFullYear();
                     } else {
-                        return itemDate.getMonth() + 1 === periodo.valore &&
-                               itemDate.getFullYear() === periodo.anno;
+                        const itemMonth = itemDate.getMonth() + 1;
+                        const itemYear = itemDate.getFullYear();
+                        isMatch = itemMonth === periodo.valore && itemYear === periodo.anno;
+                        
+                        // Debug dettagliato per ogni confronto
+                        if (matchedCount < 3) { // Solo primi 3 per non sovraccaricare
+                            console.log(`    🔍 Confronto mese record:`, {
+                                dataOriginale: item.data_ordine || item.data || item.created_at,
+                                dataParsata: itemDate.toISOString(),
+                                meseRecord: itemMonth,
+                                annoRecord: itemYear,
+                                meseRicercato: periodo.valore,
+                                annoRicercato: periodo.anno,
+                                match: isMatch
+                            });
+                        }
                     }
+                    break;
                     
                 case 'giorno':
                     if (periodo.valore === 'corrente') {
-                        return itemDate.toDateString() === now.toDateString();
+                        isMatch = itemDate.toDateString() === now.toDateString();
                     } else {
-                        return itemDate.getDate() === periodo.valore &&
+                        isMatch = itemDate.getDate() === periodo.valore &&
                                itemDate.getMonth() + 1 === periodo.mese &&
                                itemDate.getFullYear() === periodo.anno;
                     }
+                    break;
                     
                 default:
-                    return true;
+                    isMatch = true;
             }
+            
+            if (isMatch) {
+                matchedCount++;
+            }
+            
+            return isMatch;
         });
+        
+        console.log('  - Risultati filtro:');
+        console.log(`    ✅ Record che fanno match: ${matchedCount}`);
+        console.log(`    ❌ Record con date non parsabili: ${failedParseCount}`);
+        console.log(`    📊 Record processati: ${data.length - failedParseCount}`);
+        
+        return filtered;
     }
     
     /**
@@ -2191,6 +2300,16 @@ class RequestMiddleware {
                 }
             }
         }
+        
+        // Debug per item che non hanno date parsabili
+        console.log('⚠️ parseItemDate fallito per item:', {
+            campiTrovati: Object.keys(item).filter(k => dateFields.includes(k)),
+            valoriDate: dateFields.reduce((acc, field) => {
+                if (item[field]) acc[field] = item[field];
+                return acc;
+            }, {}),
+            italianParserDisponibile: !!window.ItalianDateParser
+        });
         
         return null;
     }

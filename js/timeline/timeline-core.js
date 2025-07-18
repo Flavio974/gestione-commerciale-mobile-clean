@@ -45,7 +45,11 @@ const Timeline = {
     this.state.currentDate = today;
     
     // Carica eventi salvati
-    TimelineEvents.loadEvents(this.state);
+    if (typeof TimelineEvents !== 'undefined' && TimelineEvents.loadEvents) {
+      TimelineEvents.loadEvents(this.state);
+    } else {
+      console.warn('TimelineEvents not loaded yet - skipping event load');
+    }
     
     // Setup event listeners globali per gli input time
     this.setupGlobalTimeInputListeners();
@@ -106,7 +110,9 @@ const Timeline = {
         }
         
         // Procedi sempre per gestire anche la cancellazione
-        TimelineEvents.updateRealTime(e, this.state);
+        if (typeof TimelineEvents !== 'undefined' && TimelineEvents.updateRealTime) {
+          TimelineEvents.updateRealTime(e, this.state);
+        }
       }
     }
   },
@@ -172,7 +178,9 @@ const Timeline = {
     
     // Procedi sempre per gestire anche la cancellazione
     const fakeEvent = { target: input };
-    TimelineEvents.updateRealTime(fakeEvent, this.state);
+    if (typeof TimelineEvents !== 'undefined' && TimelineEvents.updateRealTime) {
+      TimelineEvents.updateRealTime(fakeEvent, this.state);
+    }
   },
   
   /**
@@ -191,7 +199,9 @@ const Timeline = {
    * Cleanup quando si lascia il tab
    */
   onLeave: function() {
-    TimelineEvents.saveEvents(this.state);
+    if (typeof TimelineEvents !== 'undefined' && TimelineEvents.saveEvents) {
+      TimelineEvents.saveEvents(this.state);
+    }
     this.stopTimelineUpdater();
     
     // Rimuovi pulsanti flottanti
@@ -296,7 +306,9 @@ const Timeline = {
     
     // Salva stato
     if (saveState) {
+      if (typeof TimelineEvents !== 'undefined' && TimelineEvents.saveEvents) {
       TimelineEvents.saveEvents(this.state);
+    }
     }
   },
   
@@ -564,11 +576,15 @@ const Timeline = {
   
   // Metodi delegati per compatibilità
   deleteEvent: function(id) {
-    TimelineEvents.deleteEvent(id, this.state);
+    if (typeof TimelineEvents !== 'undefined' && TimelineEvents.deleteEvent) {
+      TimelineEvents.deleteEvent(id, this.state);
+    }
   },
   
   updateRealTime: function(e) {
-    TimelineEvents.updateRealTime(e, this.state);
+    if (typeof TimelineEvents !== 'undefined' && TimelineEvents.updateRealTime) {
+      TimelineEvents.updateRealTime(e, this.state);
+    }
   },
   
   getVisibleCenterHour: function() {
