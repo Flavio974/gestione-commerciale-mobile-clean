@@ -1537,6 +1537,7 @@ class RequestMiddleware {
                 })));
             }
             
+            let debugCount = 0;
             const ordiniCliente = ordini.filter(ordine => {
                 if (!ordine.cliente) return false;
                 
@@ -1546,6 +1547,18 @@ class RequestMiddleware {
                 // o se il termine cercato contiene il nome dell'ordine
                 const match = nomeOrdineNorm.includes(clienteNorm) || 
                             clienteNorm.includes(nomeOrdineNorm);
+                
+                // DEBUG: Mostra solo i primi 3 confronti per vedere il pattern
+                if (debugCount < 3) {
+                    console.log('🔍 CONFRONTO ' + (debugCount + 1) + ':', {
+                        cercato: clienteNorm,
+                        trovato: nomeOrdineNorm,
+                        includes1: nomeOrdineNorm.includes(clienteNorm),
+                        includes2: clienteNorm.includes(nomeOrdineNorm),
+                        match: match
+                    });
+                    debugCount++;
+                }
                 
                 if (match) {
                     console.log('📅 MIDDLEWARE: Match trovato:', ordine.cliente, 
