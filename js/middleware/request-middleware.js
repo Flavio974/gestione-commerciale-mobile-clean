@@ -1535,6 +1535,17 @@ class RequestMiddleware {
                     data_ordine: o.data_ordine,
                     data_consegna: o.data_consegna
                 })));
+                
+                // DEBUG SPECIALE: mostra i primi 3 nomi clienti per capire il formato
+                possibleMatches.slice(0, 3).forEach((match, index) => {
+                    console.log(`🔍 MATCH ${index + 1}:`, {
+                        cliente: match.cliente,
+                        lunghezza: match.cliente?.length,
+                        contiene_essemme: match.cliente?.toLowerCase().includes('essemme'),
+                        contiene_conad: match.cliente?.toLowerCase().includes('conad'),
+                        contiene_montegrosso: match.cliente?.toLowerCase().includes('montegrosso')
+                    });
+                });
             }
             
             let debugCount = 0;
