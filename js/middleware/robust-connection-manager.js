@@ -327,7 +327,35 @@ class RobustConnectionManager {
                 window.FlavioAIAssistant.addMessage(message, 'user');
                 console.log('🔌 🎯 Messaggio utente aggiunto');
                 
-                // Controlla se è una richiesta di dati
+                // PRIORITÀ 1: Controlla SEMPRE il vocabolario per primo
+                console.log('🔌 🎯 Controllando vocabolario per primi...');
+                
+                // Verifica se il vocabolario può gestire la richiesta
+                if (this.instances.vocabularyManager && this.instances.vocabularyManager.findMatch) {
+                    try {
+                        const vocabularyMatch = await this.instances.vocabularyManager.findMatch(message);
+                        if (vocabularyMatch) {
+                            console.log('🔌 📚 Match trovato nel vocabolario:', vocabularyMatch);
+                            
+                            // Aggiungi messaggio di caricamento
+                            window.FlavioAIAssistant.addMessage(isVoiceInput ? '🎤 Sto eseguendo il comando vocale...' : '📚 Eseguendo comando dal vocabolario...', 'assistant', true);
+                            
+                            // Esegui azione dal vocabolario tramite AIMiddleware
+                            if (this.instances.aiMiddleware && this.instances.aiMiddleware.executeLocalAction) {
+                                const vocabularyResponse = await this.instances.aiMiddleware.executeLocalAction(vocabularyMatch, message, {});
+                                if (vocabularyResponse && vocabularyResponse.success) {
+                                    console.log('🔌 ✅ Risposta da vocabolario:', vocabularyResponse.response);
+                                    window.FlavioAIAssistant.addMessage(vocabularyResponse.response, 'assistant');
+                                    return;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('🔌 ❌ Errore nel controllo vocabolario:', error);
+                    }
+                }
+                
+                // PRIORITÀ 2: Se vocabolario non gestisce, controlla se è richiesta dati
                 const isDataRequestResult = this.isDataRequest(message);
                 console.log('🔌 🎯 Controllo richiesta dati:', { message, isDataRequestResult });
                 

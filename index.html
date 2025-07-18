@@ -1689,7 +1689,7 @@
         // Crea RequestMiddleware se mancante
         if (!window.requestMiddleware && window.RequestMiddleware) {
           console.log('🔌 Creando RequestMiddleware...');
-          window.requestMiddleware = new RequestMiddleware();
+          window.requestMiddleware = new RequestMiddleware(window.supabaseAI);
         }
         
         // Crea AIMiddleware se mancante
