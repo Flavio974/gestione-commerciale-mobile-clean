@@ -1158,6 +1158,7 @@ class SupabaseAIIntegration {
             .replace(/\bGRISSINIC\b/g, 'GRISSINI C')
             .replace(/\bGRISSINICON\b/g, 'GRISSINI CON')
             .replace(/\bGNOCCHICOME\b/g, 'GNOCCHI COME')
+            .replace(/\bPLINCARNE\b/g, 'PLIN CARNE')
             .replace(/\bTORTELLINIPR\.C\b/g, 'TORTELLINI PR.C')
             .replace(/\bBRUS C HET T A\b/g, 'BRUSCHETTA')
             .replace(/\bFOC AC C IA\b/g, 'FOCACCIA')
@@ -1202,6 +1203,12 @@ class SupabaseAIIntegration {
             .replace(/\b([A-Z]+)C ([A-Z]+)\b/g, '$1C$2')
             // Fix per pattern "XXXD' XXX" dove D' è separata
             .replace(/\b([A-Z]+)D'([A-Z]+)\b/g, '$1D\'$2')
+            // Fix per parole concatenate comuni (pattern specifici)
+            .replace(/\b([A-Z]+)COME\b/g, '$1 COME')
+            .replace(/\b([A-Z]+)CON\b/g, '$1 CON')
+            .replace(/\b([A-Z]+)CARNE\b/g, '$1 CARNE')
+            .replace(/\b([A-Z]+)POLLO\b/g, '$1 POLLO')
+            .replace(/\b([A-Z]+)PESCE\b/g, '$1 PESCE')
             // Pulisce spazi multipli
             .replace(/\s+/g, ' ')
             .trim();
