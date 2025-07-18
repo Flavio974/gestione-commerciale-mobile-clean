@@ -1446,7 +1446,7 @@ class RequestMiddleware {
             const ordiniArray = Object.values(ordiniProdotti);
             
             ordiniArray.forEach(ordine => {
-                response += `📋 Ordine ${ordine.numero} (${ordine.data}):\n`;
+                response += `📋 Ordine ${ordine.numero} (${this.formatDate(ordine.data)}):\n`;
                 // Mostra TUTTI i prodotti (nessuna limitazione a 5)
                 ordine.prodotti.forEach(prodotto => {
                     response += `  • ${prodotto.descrizione} (${prodotto.codice}) - Q.tà: ${prodotto.quantita}\n`;
@@ -3553,6 +3553,9 @@ class RequestMiddleware {
             .replace(/\bORECC HIET T E\b/g, 'ORECCHIETTE')
             .replace(/\bGRIS S INI\b/g, 'GRISSINI')
             .replace(/\bGRISSINIC\b/g, 'GRISSINI C')
+            .replace(/\bGRISSINICON\b/g, 'GRISSINI CON')
+            .replace(/\bGNOCCHICOME\b/g, 'GNOCCHI COME')
+            .replace(/\bTORTELLINIPR\.C\b/g, 'TORTELLINI PR.C')
             .replace(/\bBRUS C HET T A\b/g, 'BRUSCHETTA')
             .replace(/\bFOC AC C IA\b/g, 'FOCACCIA')
             .replace(/\bMOZ Z AREL L A\b/g, 'MOZZARELLA')
