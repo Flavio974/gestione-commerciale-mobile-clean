@@ -1512,6 +1512,31 @@ class RequestMiddleware {
             
             // Usa la stessa logica di getOrdiniCliente per consistenza
             const clienteNorm = clienteResolved.resolved.toLowerCase();
+            console.log('📅 MIDDLEWARE: Cerco ordini per cliente normalizzato:', clienteNorm);
+            console.log('📅 MIDDLEWARE: Totale ordini da filtrare:', ordini.length);
+            
+            // Debug: mostra primi 5 nomi clienti dalla tabella
+            const sampleClients = ordini.slice(0, 5).map(o => o.cliente);
+            console.log('📅 MIDDLEWARE: Esempi clienti nel database:', sampleClients);
+            
+            // Debug: cerca tutti i clienti che contengono le parole chiave
+            const possibleMatches = ordini.filter(o => {
+                const clienteLower = o.cliente?.toLowerCase() || '';
+                return clienteLower.includes('essemme') || 
+                       clienteLower.includes('marotta') || 
+                       clienteLower.includes('gabrielis') ||
+                       clienteLower.includes('conad');
+            });
+            console.log('📅 MIDDLEWARE: Possibili match trovati:', possibleMatches.length);
+            if (possibleMatches.length > 0) {
+                console.log('📅 MIDDLEWARE: Primi 3 match:', possibleMatches.slice(0, 3).map(o => ({
+                    cliente: o.cliente,
+                    numero_ordine: o.numero_ordine,
+                    data_ordine: o.data_ordine,
+                    data_consegna: o.data_consegna
+                })));
+            }
+            
             const ordiniCliente = ordini.filter(ordine => {
                 if (!ordine.cliente) return false;
                 
