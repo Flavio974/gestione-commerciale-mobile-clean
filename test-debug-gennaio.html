@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Debug Gennaio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #result {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        .debug-section h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Debug Filtro Gennaio</h1>
+        
+        <div class="debug-section">
+            <h3>Obiettivo</h3>
+            <p>Investigare perché la query "fatturato totale del mese di Gennaio" non filtra correttamente i dati.</p>
+            <p>Il sistema:</p>
+            <ul>
+                <li>Riconosce correttamente la query</li>
+                <li>Scarica 102 record dal database</li>
+                <li>Applica il filtro temporale ma restituisce 0 record</li>
+            </ul>
+        </div>
+        
+        <button onclick="testGennaio()">Test Query Gennaio</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <!-- Dipendenze -->
+    <script src="js/utils/supabase-ai.js"></script>
+    <script src="js/utils/italian-date-middleware.js"></script>
+    <script src="js/middleware/request-middleware.js"></script>
+    <script src="js/middleware/ai-middleware.js"></script>
+    <script src="js/middleware/vocabolario-middleware.js"></script>
+
+    <script>
+        let requestMiddleware;
+        let aiMiddleware;
+        let vocabolarioMiddleware;
+
+        async function initializeMiddleware() {
+            try {
+                // Inizializza i middleware
+                requestMiddleware = new RequestMiddleware();
+                aiMiddleware = new AIMiddleware();
+                vocabolarioMiddleware = new VocabolarioMiddleware();
+
+                // Carica il vocabolario
+                await vocabolarioMiddleware.loadVocabolario();
+                
+                console.log('✅ Middleware inizializzati');
+                return true;
+            } catch (error) {
+                console.error('❌ Errore inizializzazione middleware:', error);
+                return false;
+            }
+        }
+
+        async function testGennaio() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Inizializzando middleware...';
+
+            try {
+                // Inizializza middleware
+                const initialized = await initializeMiddleware();
+                if (!initialized) {
+                    resultDiv.innerHTML = 'Errore durante l\'inizializzazione dei middleware';
+                    return;
+                }
+
+                resultDiv.innerHTML = 'Eseguendo test query "fatturato totale del mese di Gennaio"...';
+                
+                // Cattura tutti i log della console
+                const originalConsoleLog = console.log;
+                let logs = [];
+                
+                console.log = function(...args) {
+                    logs.push(args.join(' '));
+                    originalConsoleLog.apply(console, args);
+                };
+
+                // Esegui la query problematica
+                const query = "fatturato totale del mese di Gennaio";
+                console.log('🔍 INIZIO TEST:', query);
+                
+                const result = await requestMiddleware.processRequest(query);
+                
+                console.log('📊 RISULTATO FINALE:', result);
+                
+                // Ripristina console.log
+                console.log = originalConsoleLog;
+                
+                // Mostra i risultati
+                let output = `QUERY: ${query}\n\n`;
+                output += `RISULTATO:\n${JSON.stringify(result, null, 2)}\n\n`;
+                output += `LOGS DEBUG:\n${logs.join('\n')}\n`;
+                
+                resultDiv.innerHTML = output;
+                
+            } catch (error) {
+                console.error('❌ Errore durante il test:', error);
+                resultDiv.innerHTML = `Errore durante il test: ${error.message}\n\nStack trace:\n${error.stack}`;
+            }
+        }
+
+        // Inizializza automaticamente al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Pagina caricata, pronta per il test');
+        });
+    </script>
+</body>
+</html>

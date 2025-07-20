@@ -10,7 +10,7 @@ fi
 
 echo "📤 Deploy diretto dei file..."
 # Deploy senza build (tutti i file statici)
-netlify deploy --prod --dir . --site dreamy-kitsune-efae50
+netlify deploy --prod --dir . --site dancing-kashata-353af9
 
 echo "✅ Deploy completato!"
 echo ""

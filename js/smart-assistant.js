@@ -175,9 +175,14 @@ class SmartAssistant {
         <div class="kpi-dashboard-section">
           <div class="kpi-header">
             <h3>📊 Dashboard KPI</h3>
-            <button id="refresh-kpi-btn" class="refresh-btn">
-              <i class="fas fa-sync-alt"></i>
-            </button>
+            <div class="header-buttons">
+              <button onclick="window.SmartAssistant.showSecureFolders()" class="btn btn-success" style="background: #28a745; color: white; margin-right: 10px; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
+                🔐 Cartelle Sicure
+              </button>
+              <button id="refresh-kpi-btn" class="refresh-btn">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
           </div>
           
           <div class="kpi-grid" id="kpi-grid">
@@ -1260,6 +1265,9 @@ class SmartAssistant {
       
       // Aggiorna UI
       this.renderVoiceNotes();
+      
+      // 🔐 NOTIFICA SISTEMA SICURO per organizzazione automatica
+      this.notifySecureStorage(note);
       
       // Mostra notifica successo con analisi
       this.showNotification('✅ Trascrizione e analisi completate!', 'success');
@@ -4145,6 +4153,285 @@ Usa console per dettagli completi.
     this.updateStatus(diagnosisText, diagnosis.startButton.disabled ? 'error' : 'success');
     
     return diagnosis;
+  }
+
+  /**
+   * 🔐 NOTIFICA SISTEMA STORAGE SICURO
+   */
+  notifySecureStorage(note) {
+    try {
+      // Emette evento personalizzato per il sistema di storage sicuro
+      const event = new CustomEvent('smartAssistantNoteCreated', {
+        detail: { note: note }
+      });
+      document.dispatchEvent(event);
+      
+      console.log('🔐 Notifica inviata al sistema storage sicuro per nota:', note.id);
+    } catch (error) {
+      console.error('❌ Errore notifica storage sicuro:', error);
+    }
+  }
+
+  /**
+   * 📁 MOSTRA INTERFACCIA CARTELLE SICURE
+   */
+  showSecureFolders() {
+    if (!window.SmartAssistantSecureStorage) {
+      this.showNotification('⚠️ Sistema storage sicuro non disponibile', 'warning');
+      return;
+    }
+
+    const folders = window.SmartAssistantSecureStorage.getFoldersOverview();
+    const stats = window.SmartAssistantSecureStorage.getUsageStatistics();
+
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal';
+    modal.innerHTML = `
+      <div class="smart-modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+        <div class="modal-header">
+          <h2>🔐 Cartelle Sicure Organizzate</h2>
+          <button class="modal-close" onclick="this.closest('.smart-modal').remove()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+          <!-- Statistiche Generali -->
+          <div class="stats-overview" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3>📊 Statistiche Generali</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px;">
+              <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                <div style="font-size: 24px; font-weight: bold; color: #007bff;">${stats.totalNotes}</div>
+                <div style="font-size: 12px; color: #666;">Note Totali</div>
+              </div>
+              <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                <div style="font-size: 24px; font-weight: bold; color: #28a745;">${stats.totalCategories}</div>
+                <div style="font-size: 12px; color: #666;">Categorie</div>
+              </div>
+              <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                <div style="font-size: 24px; font-weight: bold; color: #ffc107;">${stats.pendingSync}</div>
+                <div style="font-size: 12px; color: #666;">In Sync</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Griglia Cartelle -->
+          <div class="folders-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+            ${folders.map(folder => `
+              <div class="folder-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: white; cursor: pointer; transition: all 0.2s;" 
+                   onclick="window.SmartAssistant.openSecureFolder('${folder.id}')">
+                <div class="folder-header" style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <span style="font-size: 24px; margin-right: 10px;">${folder.icon}</span>
+                  <div>
+                    <h4 style="margin: 0; color: #333;">${folder.name}</h4>
+                    <small style="color: #666;">${folder.noteCount} note</small>
+                  </div>
+                </div>
+                
+                <div class="folder-preview">
+                  ${folder.recentNotes.length > 0 ? `
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Ultime note:</div>
+                    ${folder.recentNotes.map(note => `
+                      <div style="background: #f8f9fa; padding: 5px 8px; border-radius: 4px; margin-bottom: 3px; font-size: 11px;">
+                        ${note.preview}
+                      </div>
+                    `).join('')}
+                  ` : `
+                    <div style="color: #999; font-style: italic; font-size: 12px;">Nessuna nota ancora</div>
+                  `}
+                </div>
+                
+                ${folder.lastUpdated ? `
+                  <div style="margin-top: 10px; font-size: 10px; color: #999;">
+                    Ultimo aggiornamento: ${new Date(folder.lastUpdated).toLocaleDateString('it-IT')}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Azioni -->
+          <div class="folder-actions" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="window.SmartAssistant.searchSecureNotes()" class="btn btn-primary">
+              🔍 Cerca nelle Note Sicure
+            </button>
+            <button onclick="window.SmartAssistant.syncSecureNotes()" class="btn btn-success">
+              🔄 Sincronizza con Supabase
+            </button>
+            <button onclick="window.SmartAssistant.exportSecureNotes()" class="btn btn-info">
+              📤 Esporta Backup
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  }
+
+  /**
+   * 📂 APRE CARTELLA SPECIFICA
+   */
+  openSecureFolder(categoryId) {
+    if (!window.SmartAssistantSecureStorage) return;
+
+    const notes = window.SmartAssistantSecureStorage.getFolderNotes(categoryId);
+    const categories = window.SmartAssistantSecureStorage.categories;
+    const category = categories[categoryId];
+
+    if (!category) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal';
+    modal.innerHTML = `
+      <div class="smart-modal-content" style="max-width: 800px; max-height: 80vh;">
+        <div class="modal-header">
+          <h2>${category.icon} ${category.name}</h2>
+          <button class="modal-close" onclick="this.closest('.smart-modal').remove()">&times;</button>
+        </div>
+        
+        <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+          ${notes.length > 0 ? `
+            <div class="notes-list">
+              ${notes.map(note => `
+                <div class="secure-note-item" style="border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: white;">
+                  <div class="note-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <small style="color: #666;">${new Date(note.secureTimestamp).toLocaleString('it-IT')}</small>
+                    <div class="note-confidence" style="background: ${note.confidence > 0.7 ? '#d4edda' : note.confidence > 0.4 ? '#fff3cd' : '#f8d7da'}; 
+                                                            color: ${note.confidence > 0.7 ? '#155724' : note.confidence > 0.4 ? '#856404' : '#721c24'};
+                                                            padding: 2px 6px; border-radius: 3px; font-size: 10px;">
+                      ${Math.round(note.confidence * 100)}% sicurezza
+                    </div>
+                  </div>
+                  
+                  <div class="note-content" style="margin-bottom: 8px; line-height: 1.4;">
+                    ${note.transcription}
+                  </div>
+                  
+                  ${note.keywords.length > 0 ? `
+                    <div class="note-keywords" style="margin-bottom: 8px;">
+                      ${note.keywords.map(keyword => `
+                        <span style="background: #e9ecef; color: #495057; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 4px;">
+                          ${keyword}
+                        </span>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                  
+                  <div class="note-actions" style="display: flex; gap: 5px;">
+                    <button onclick="window.SmartAssistant.playSecureNote('${note.id}')" class="btn btn-sm btn-outline-primary">🎵 Audio</button>
+                    <button onclick="window.SmartAssistant.exportSecureNote('${note.id}')" class="btn btn-sm btn-outline-info">📤 Esporta</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div style="text-align: center; padding: 40px; color: #666;">
+              <div style="font-size: 48px; margin-bottom: 10px;">${category.icon}</div>
+              <p>Nessuna nota in questa categoria</p>
+              <small>Le note verranno organizzate automaticamente quando create</small>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  }
+
+  /**
+   * 🔍 CERCA NELLE NOTE SICURE
+   */
+  searchSecureNotes() {
+    const query = prompt('🔍 Cerca nelle note sicure:');
+    if (!query || !window.SmartAssistantSecureStorage) return;
+
+    const results = window.SmartAssistantSecureStorage.searchSecureNotes(query);
+    
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal';
+    modal.innerHTML = `
+      <div class="smart-modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+          <h2>🔍 Risultati ricerca: "${query}"</h2>
+          <button class="modal-close" onclick="this.closest('.smart-modal').remove()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+          ${results.length > 0 ? `
+            <p style="color: #666; margin-bottom: 15px;">Trovate ${results.length} note</p>
+            <div class="search-results">
+              ${results.map(note => `
+                <div class="search-result-item" style="border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="background: #e9ecef; padding: 4px 8px; border-radius: 3px; font-size: 12px;">
+                      ${note.categoryIcon} ${note.categoryName}
+                    </span>
+                    <small style="color: #666;">${new Date(note.secureTimestamp).toLocaleDateString('it-IT')}</small>
+                  </div>
+                  <div style="line-height: 1.4;">
+                    ${note.transcription.replace(new RegExp(query, 'gi'), `<mark>$&</mark>`)}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div style="text-align: center; padding: 40px; color: #666;">
+              <div style="font-size: 48px; margin-bottom: 10px;">🔍</div>
+              <p>Nessun risultato trovato per "${query}"</p>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  }
+
+  /**
+   * 🔄 SINCRONIZZA NOTE SICURE
+   */
+  async syncSecureNotes() {
+    if (!window.SmartAssistantSecureStorage) return;
+
+    this.showNotification('🔄 Sincronizzazione in corso...', 'info');
+    
+    try {
+      await window.SmartAssistantSecureStorage.attemptSupabaseSync();
+      this.showNotification('✅ Sincronizzazione completata!', 'success');
+    } catch (error) {
+      console.error('❌ Errore sincronizzazione:', error);
+      this.showNotification('❌ Errore durante la sincronizzazione', 'error');
+    }
+  }
+
+  /**
+   * 📤 ESPORTA NOTE SICURE
+   */
+  exportSecureNotes() {
+    if (!window.SmartAssistantSecureStorage) return;
+
+    const stats = window.SmartAssistantSecureStorage.getUsageStatistics();
+    const folders = window.SmartAssistantSecureStorage.getFoldersOverview();
+    
+    const exportData = {
+      metadata: {
+        exportDate: new Date().toISOString(),
+        version: '1.0',
+        totalNotes: stats.totalNotes,
+        totalCategories: stats.totalCategories
+      },
+      statistics: stats,
+      folders: folders
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `smart-assistant-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    this.showNotification('📤 Backup esportato con successo!', 'success');
   }
 }
 

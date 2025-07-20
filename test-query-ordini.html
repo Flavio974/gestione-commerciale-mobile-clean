@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Query Ordini</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Test Query Ordini Supabase</h1>
+    <button onclick="testQuery()">Test Query</button>
+    <pre id="results"></pre>
+
+    <script>
+        // Config Supabase
+        const SUPABASE_URL = 'https://xfzzgpcvqnxdsjgfvjta.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmenpncGN2cW54ZHNqZ2Z2anRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjAwOTkyMjIsImV4cCI6MjAzNTY3NTIyMn0.M1CqHqLKpqGvpIzJsN7aLoh2rv-6C-7FdQJPBcTTcNw';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function testQuery() {
+            const results = document.getElementById('results');
+            results.textContent = 'Caricamento...';
+
+            try {
+                // Test 1: Verifica struttura tabella
+                console.log('Test 1: Primi 5 record...');
+                const { data: sample, error: sampleError } = await supabase
+                    .from('archivio_ordini_venduto')
+                    .select('*')
+                    .limit(5);
+                
+                if (sampleError) throw sampleError;
+                
+                // Test 2: Cerca ordini per clienti specifici
+                const clienti = ['ESSEMME', 'MAROTTA', 'GABRIELIS'];
+                const queryResults = [];
+                
+                for (const cliente of clienti) {
+                    console.log(`Test 2: Cerco ordini per ${cliente}...`);
+                    
+                    // Query esatta
+                    const { data: exactMatch, error: error1 } = await supabase
+                        .from('archivio_ordini_venduto')
+                        .select('*')
+                        .eq('cliente', cliente)
+                        .limit(5);
+                    
+                    // Query con LIKE
+                    const { data: likeMatch, error: error2 } = await supabase
+                        .from('archivio_ordini_venduto')
+                        .select('*')
+                        .ilike('cliente', `%${cliente}%`)
+                        .limit(5);
+                    
+                    queryResults.push({
+                        cliente,
+                        exactMatch: exactMatch?.length || 0,
+                        likeMatch: likeMatch?.length || 0,
+                        samples: likeMatch?.slice(0, 2)
+                    });
+                }
+                
+                // Test 3: Lista tutti i nomi clienti unici
+                console.log('Test 3: Lista clienti unici...');
+                const { data: allRecords, error: allError } = await supabase
+                    .from('archivio_ordini_venduto')
+                    .select('cliente')
+                    .order('cliente');
+                
+                const uniqueClients = [...new Set(allRecords?.map(r => r.cliente))].sort();
+                
+                // Cerca varianti dei clienti
+                const essemmeVariants = uniqueClients.filter(c => 
+                    c?.toUpperCase().includes('ESSEMME') || 
+                    c?.toUpperCase().includes('ESSE') ||
+                    c?.toUpperCase().includes('SM') ||
+                    c?.toUpperCase().includes('S.M.')
+                );
+                
+                const marottaVariants = uniqueClients.filter(c => 
+                    c?.toUpperCase().includes('MAROTTA')
+                );
+                
+                const gabrielisVariants = uniqueClients.filter(c => 
+                    c?.toUpperCase().includes('GABRIELIS')
+                );
+                
+                results.innerHTML = `
+                    <h2>Struttura Tabella (primi 5 record):</h2>
+                    <pre>${JSON.stringify(sample, null, 2)}</pre>
+                    
+                    <h2>Risultati Query:</h2>
+                    <pre>${JSON.stringify(queryResults, null, 2)}</pre>
+                    
+                    <h2>Varianti Nomi Clienti:</h2>
+                    <h3>ESSEMME:</h3>
+                    <pre>${JSON.stringify(essemmeVariants, null, 2)}</pre>
+                    
+                    <h3>MAROTTA:</h3>
+                    <pre>${JSON.stringify(marottaVariants, null, 2)}</pre>
+                    
+                    <h3>GABRIELIS:</h3>
+                    <pre>${JSON.stringify(gabrielisVariants, null, 2)}</pre>
+                    
+                    <h2>Totale clienti unici: ${uniqueClients.length}</h2>
+                `;
+                
+            } catch (error) {
+                console.error('Errore:', error);
+                results.textContent = 'Errore: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifica Clienti Database Supabase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .client-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f9f9f9;
+        }
+        .client-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+        }
+        .client-detail {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .log-area {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .search-section {
+            margin: 20px 0;
+        }
+        .search-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .no-results {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Verifica Clienti Database Supabase</h1>
+        
+        <div class="info">
+            <strong>Verifica presenza clienti:</strong> "La Mandria" e "Bottega della carne"
+        </div>
+        
+        <div id="connectionStatus" class="status"></div>
+        
+        <div style="margin: 20px 0;">
+            <button class="button" onclick="verificaConnessione()">🔗 Verifica Connessione</button>
+            <button class="button" onclick="eseguiVerificaClienti()">🔍 Verifica Clienti Specifici</button>
+            <button class="button" onclick="ottieniStatistiche()">📊 Statistiche Generali</button>
+            <button class="button" onclick="elencaTuttiClienti()">📋 Elenca Tutti i Clienti</button>
+        </div>
+        
+        <div style="margin: 20px 0; border-top: 1px solid #ddd; padding-top: 20px;">
+            <h3>📝 Gestione Clienti di Esempio</h3>
+            <button class="button" onclick="inserisciClientiEsempio()">📝 Inserisci Clienti di Esempio</button>
+            <button class="button" onclick="verificaEInserisciClientiMancanti()">🔍 Verifica e Inserisci se Mancanti</button>
+            <button class="button" onclick="rimuoviClientiEsempio()" style="background-color: #dc3545;">🧹 Rimuovi Clienti di Esempio</button>
+        </div>
+        
+        <div class="search-section">
+            <h3>🔍 Ricerca Personalizzata</h3>
+            <input type="text" id="searchTerm" class="search-input" placeholder="Termine di ricerca...">
+            <select id="searchField" class="search-input">
+                <option value="nome">Nome</option>
+                <option value="codice_cliente">Codice Cliente</option>
+                <option value="citta">Città</option>
+                <option value="zona">Zona</option>
+                <option value="via">Via</option>
+            </select>
+            <button class="button" onclick="eseguiRicercaPersonalizzata()">🔍 Cerca</button>
+        </div>
+        
+        <div id="results" class="results"></div>
+        
+        <div class="container">
+            <h3>📋 Log Console</h3>
+            <div id="logArea" class="log-area"></div>
+            <button class="button" onclick="clearLog()">🧹 Pulisci Log</button>
+        </div>
+    </div>
+
+    <!-- Includi Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    
+    <!-- Includi configurazione Supabase -->
+    <script src="config/supabase-config.js"></script>
+    
+    <!-- Includi script di verifica -->
+    <script src="verifica-clienti-supabase.js"></script>
+    
+    <!-- Includi script di inserimento -->
+    <script src="inserisci-clienti-esempio.js"></script>
+
+    <script>
+        // Override console.log per mostrare nel log area
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function appendToLog(message, type = 'log') {
+            const logArea = document.getElementById('logArea');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '📝';
+            logArea.textContent += `${timestamp} ${prefix} ${message}\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            appendToLog(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            appendToLog(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            appendToLog(args.join(' '), 'warn');
+        };
+        
+        function clearLog() {
+            document.getElementById('logArea').textContent = '';
+        }
+        
+        function updateConnectionStatus(connected, message) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (connected) {
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Connesso a Supabase';
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ ' + (message || 'Non connesso a Supabase');
+            }
+        }
+        
+        function showResults(content) {
+            document.getElementById('results').innerHTML = content;
+        }
+        
+        async function verificaConnessione() {
+            console.log('🔗 Verifica connessione Supabase...');
+            
+            if (!window.supabaseClient) {
+                console.error('❌ Supabase client non disponibile');
+                updateConnectionStatus(false, 'Client non inizializzato');
+                return;
+            }
+            
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('clients')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    console.error('❌ Errore connessione:', error);
+                    updateConnectionStatus(false, error.message);
+                    return;
+                }
+                
+                console.log('✅ Connessione Supabase riuscita');
+                updateConnectionStatus(true);
+                
+            } catch (error) {
+                console.error('❌ Errore generale:', error);
+                updateConnectionStatus(false, error.message);
+            }
+        }
+        
+        async function eseguiVerificaClienti() {
+            console.log('🔍 Inizio verifica clienti specifici...');
+            
+            const risultati = await verificaClientiSupabase();
+            
+            if (!risultati) {
+                showResults('<div class="error">❌ Errore durante la verifica clienti</div>');
+                return;
+            }
+            
+            let html = '<h3>📋 Risultati Verifica Clienti</h3>';
+            
+            // Statistiche generali
+            html += `<div class="info">
+                <strong>Totale clienti nel database:</strong> ${risultati.totalClients}
+            </div>`;
+            
+            // La Mandria
+            if (risultati.laMandria) {
+                html += `<div class="success">
+                    <h4>✅ LA MANDRIA TROVATA</h4>
+                    <div class="client-card">
+                        <div class="client-name">${risultati.laMandria.nome}</div>
+                        <div class="client-detail"><strong>Codice:</strong> ${risultati.laMandria.codice_cliente}</div>
+                        <div class="client-detail"><strong>Contatto:</strong> ${risultati.laMandria.contatto || 'N/A'}</div>
+                        <div class="client-detail"><strong>Indirizzo:</strong> ${risultati.laMandria.via || 'N/A'} ${risultati.laMandria.numero || ''}</div>
+                        <div class="client-detail"><strong>Città:</strong> ${risultati.laMandria.citta || 'N/A'} (${risultati.laMandria.provincia || 'N/A'})</div>
+                        <div class="client-detail"><strong>Zona:</strong> ${risultati.laMandria.zona || 'N/A'}</div>
+                        <div class="client-detail"><strong>Telefono:</strong> ${risultati.laMandria.telefono || 'N/A'}</div>
+                        <div class="client-detail"><strong>Priorità:</strong> ${risultati.laMandria.priorita || 'N/A'}</div>
+                        <div class="client-detail"><strong>Ultima visita:</strong> ${risultati.laMandria.ultima_visita || 'Mai visitato'}</div>
+                        <div class="client-detail"><strong>Stato:</strong> ${risultati.laMandria.stato || 'N/A'}</div>
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="warning">
+                    <h4>⚠️ LA MANDRIA NON TROVATA</h4>
+                    <p>Il cliente "La Mandria" non è presente nel database.</p>
+                </div>`;
+            }
+            
+            // Bottega della carne
+            if (risultati.bottegaDellaCarne) {
+                html += `<div class="success">
+                    <h4>✅ BOTTEGA DELLA CARNE TROVATA</h4>
+                    <div class="client-card">
+                        <div class="client-name">${risultati.bottegaDellaCarne.nome}</div>
+                        <div class="client-detail"><strong>Codice:</strong> ${risultati.bottegaDellaCarne.codice_cliente}</div>
+                        <div class="client-detail"><strong>Contatto:</strong> ${risultati.bottegaDellaCarne.contatto || 'N/A'}</div>
+                        <div class="client-detail"><strong>Indirizzo:</strong> ${risultati.bottegaDellaCarne.via || 'N/A'} ${risultati.bottegaDellaCarne.numero || ''}</div>
+                        <div class="client-detail"><strong>Città:</strong> ${risultati.bottegaDellaCarne.citta || 'N/A'} (${risultati.bottegaDellaCarne.provincia || 'N/A'})</div>
+                        <div class="client-detail"><strong>Zona:</strong> ${risultati.bottegaDellaCarne.zona || 'N/A'}</div>
+                        <div class="client-detail"><strong>Telefono:</strong> ${risultati.bottegaDellaCarne.telefono || 'N/A'}</div>
+                        <div class="client-detail"><strong>Priorità:</strong> ${risultati.bottegaDellaCarne.priorita || 'N/A'}</div>
+                        <div class="client-detail"><strong>Ultima visita:</strong> ${risultati.bottegaDellaCarne.ultima_visita || 'Mai visitato'}</div>
+                        <div class="client-detail"><strong>Stato:</strong> ${risultati.bottegaDellaCarne.stato || 'N/A'}</div>
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="warning">
+                    <h4>⚠️ BOTTEGA DELLA CARNE NON TROVATA</h4>
+                    <p>Il cliente "Bottega della carne" non è presente nel database.</p>
+                </div>`;
+            }
+            
+            // Clienti simili
+            if (risultati.clientiConMandria && risultati.clientiConMandria.length > 0) {
+                html += `<div class="info">
+                    <h4>🔍 Clienti con pattern "mandria/azienda/agr":</h4>
+                    <ul>`;
+                risultati.clientiConMandria.forEach(c => {
+                    html += `<li>${c.nome} (${c.codice_cliente})</li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            if (risultati.clientiConBottega && risultati.clientiConBottega.length > 0) {
+                html += `<div class="info">
+                    <h4>🔍 Clienti con pattern "bottega/carne/macelleria":</h4>
+                    <ul>`;
+                risultati.clientiConBottega.forEach(c => {
+                    html += `<li>${c.nome} (${c.codice_cliente})</li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            showResults(html);
+        }
+        
+        async function ottieniStatistiche() {
+            console.log('📊 Ottenimento statistiche...');
+            
+            const stats = await getClientiStatistiche();
+            
+            if (!stats || stats.length === 0) {
+                showResults('<div class="error">❌ Errore nell\'ottenimento delle statistiche</div>');
+                return;
+            }
+            
+            const stat = stats[0];
+            
+            const html = `
+                <h3>📊 Statistiche Database Clienti</h3>
+                <div class="client-card">
+                    <div class="client-detail"><strong>Totale clienti:</strong> ${stat.total_clienti}</div>
+                    <div class="client-detail"><strong>Clienti attivi:</strong> ${stat.clienti_attivi}</div>
+                    <div class="client-detail"><strong>Clienti inattivi:</strong> ${stat.clienti_inattivi}</div>
+                    <div class="client-detail"><strong>Città servite:</strong> ${stat.citta_servite}</div>
+                    <div class="client-detail"><strong>Zone commerciali:</strong> ${stat.zone_commerciali}</div>
+                    <div class="client-detail"><strong>Priorità alta:</strong> ${stat.clienti_priorita_alta}</div>
+                    <div class="client-detail"><strong>Priorità media:</strong> ${stat.clienti_priorita_media}</div>
+                    <div class="client-detail"><strong>Priorità bassa:</strong> ${stat.clienti_priorita_bassa}</div>
+                    <div class="client-detail"><strong>Clienti visitati:</strong> ${stat.clienti_visitati}</div>
+                    <div class="client-detail"><strong>Visite ultimo mese:</strong> ${stat.visite_ultimo_mese}</div>
+                </div>
+            `;
+            
+            showResults(html);
+        }
+        
+        async function elencaTuttiClienti() {
+            console.log('📋 Elenco tutti i clienti...');
+            
+            if (!window.supabaseClient) {
+                showResults('<div class="error">❌ Supabase client non disponibile</div>');
+                return;
+            }
+            
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('clients')
+                    .select('*')
+                    .order('nome', { ascending: true });
+                
+                if (error) {
+                    console.error('❌ Errore nell\'elenco clienti:', error);
+                    showResults('<div class="error">❌ Errore nell\'elenco clienti</div>');
+                    return;
+                }
+                
+                if (!data || data.length === 0) {
+                    showResults('<div class="no-results">Nessun cliente trovato nel database</div>');
+                    return;
+                }
+                
+                let html = `<h3>📋 Tutti i Clienti (${data.length} totali)</h3>`;
+                
+                data.forEach((client, index) => {
+                    html += `<div class="client-card">
+                        <div class="client-name">${index + 1}. ${client.nome}</div>
+                        <div class="client-detail"><strong>Codice:</strong> ${client.codice_cliente}</div>
+                        <div class="client-detail"><strong>Città:</strong> ${client.citta || 'N/A'}</div>
+                        <div class="client-detail"><strong>Zona:</strong> ${client.zona || 'N/A'}</div>
+                        <div class="client-detail"><strong>Stato:</strong> ${client.stato || 'N/A'}</div>
+                        <div class="client-detail"><strong>Priorità:</strong> ${client.priorita || 'N/A'}</div>
+                    </div>`;
+                });
+                
+                showResults(html);
+                
+            } catch (error) {
+                console.error('❌ Errore generale:', error);
+                showResults('<div class="error">❌ Errore generale nell\'elenco clienti</div>');
+            }
+        }
+        
+        async function eseguiRicercaPersonalizzata() {
+            const searchTerm = document.getElementById('searchTerm').value;
+            const searchField = document.getElementById('searchField').value;
+            
+            if (!searchTerm.trim()) {
+                showResults('<div class="warning">⚠️ Inserire un termine di ricerca</div>');
+                return;
+            }
+            
+            console.log(`🔍 Ricerca personalizzata: "${searchTerm}" in campo "${searchField}"`);
+            
+            const risultati = await queryClientiPersonalizzata(searchTerm, searchField);
+            
+            if (!risultati) {
+                showResults('<div class="error">❌ Errore nella ricerca personalizzata</div>');
+                return;
+            }
+            
+            if (risultati.length === 0) {
+                showResults('<div class="no-results">Nessun risultato trovato per la ricerca</div>');
+                return;
+            }
+            
+            let html = `<h3>🔍 Risultati Ricerca: "${searchTerm}" in "${searchField}" (${risultati.length} trovati)</h3>`;
+            
+            risultati.forEach((client, index) => {
+                html += `<div class="client-card">
+                    <div class="client-name">${index + 1}. ${client.nome}</div>
+                    <div class="client-detail"><strong>Codice:</strong> ${client.codice_cliente}</div>
+                    <div class="client-detail"><strong>Campo cercato (${searchField}):</strong> ${client[searchField] || 'N/A'}</div>
+                    <div class="client-detail"><strong>Città:</strong> ${client.citta || 'N/A'}</div>
+                    <div class="client-detail"><strong>Zona:</strong> ${client.zona || 'N/A'}</div>
+                    <div class="client-detail"><strong>Stato:</strong> ${client.stato || 'N/A'}</div>
+                </div>`;
+            });
+            
+            showResults(html);
+        }
+        
+        // Verifica automatica della connessione al caricamento
+        window.addEventListener('load', function() {
+            setTimeout(verificaConnessione, 2000);
+        });
+        
+        // Gestione Enter nella ricerca
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('searchTerm').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    eseguiRicercaPersonalizzata();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
