@@ -3879,6 +3879,10 @@ window.testRecording = async function() {
 // Funzione per riattaccare gli event listener
 window.reattachRecordingListeners = function() {
   const startBtn = document.getElementById('start-recording-btn');
+  const stopBtn = document.getElementById('stop-recording-btn');
+  
+  let success = false;
+  
   if (startBtn) {
     // Rimuovi tutti i listener esistenti clonando il pulsante
     const newBtn = startBtn.cloneNode(true);
@@ -3894,8 +3898,62 @@ window.reattachRecordingListeners = function() {
       }
     });
     
-    console.log('✅ Event listener riattaccato con successo');
-    return true;
+    console.log('✅ Start button event listener riattaccato');
+    success = true;
   }
-  return false;
+  
+  if (stopBtn) {
+    // Rimuovi tutti i listener esistenti clonando il pulsante
+    const newStopBtn = stopBtn.cloneNode(true);
+    stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
+    
+    // Riattacca il listener
+    newStopBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🎤 [REATTACHED] Stop button clicked!');
+      if (window.SmartAssistant) {
+        window.SmartAssistant.stopRecording();
+      }
+    });
+    
+    console.log('✅ Stop button event listener riattaccato');
+    success = true;
+  }
+  
+  if (success) {
+    console.log('✅ Event listeners riattaccati con successo');
+  }
+  
+  return success;
+};
+
+// Funzione di debug per controllare stato UI
+window.debugRecordingUI = function() {
+  const startBtn = document.getElementById('start-recording-btn');
+  const stopBtn = document.getElementById('stop-recording-btn');
+  
+  console.log('🔍 DEBUG RECORDING UI STATE:');
+  console.log('Start button:', {
+    found: !!startBtn,
+    disabled: startBtn?.disabled,
+    display: startBtn?.style.display,
+    classes: startBtn?.className
+  });
+  console.log('Stop button:', {
+    found: !!stopBtn,
+    disabled: stopBtn?.disabled,
+    display: stopBtn?.style.display,
+    classes: stopBtn?.className
+  });
+  
+  if (window.SmartAssistant) {
+    console.log('SmartAssistant recording state:', window.SmartAssistant.isRecording);
+  }
+  
+  return {
+    startButton: !!startBtn,
+    stopButton: !!stopBtn,
+    isRecording: window.SmartAssistant?.isRecording
+  };
 };
