@@ -1610,6 +1610,7 @@ class SmartAssistant {
     try {
       // Costruisci URL API
       const apiUrl = `${this.apiEndpoint}/speech-to-text`;
+      console.log('🌐 Chiamando API trascrizione:', apiUrl);
       
       // Chiama API direttamente con base64
       const timeout = this.isIPad ? IPAD_CONFIG.reducedTimeout : 30000;
@@ -1636,7 +1637,7 @@ class SmartAssistant {
       return result.transcription;
       
     } catch (error) {
-      console.error('❌ Errore API trascrizione base64:', error);
+      console.error('❌ Errore API trascrizione base64:', error.message || error);
       
       // Fallback per iPad o errori 502
       if (this.isIPad || error.message.includes('502')) {
