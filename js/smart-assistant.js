@@ -98,8 +98,8 @@ class SmartAssistant {
     this.render();
     this.setupEventListeners();
     
-    // Verifica supporto browser per audio
-    await this.checkAudioSupport();
+    // Verifica supporto browser per audio con retry
+    await this.checkAudioSupportWithRetry();
     
     // IMPORTANTE: Renderizza subito le note salvate dopo init
     this.renderVoiceNotes();
@@ -393,6 +393,92 @@ class SmartAssistant {
       console.error('❌ Errore supporto audio:', error);
       this.updateStatus('❌ Microfono non disponibile', 'error');
     }
+  }
+
+  /**
+   * Verifica supporto browser per audio con retry logic
+   */
+  async checkAudioSupportWithRetry() {
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        console.log(`🎤 Tentativo ${attempts + 1}/${maxAttempts} verifica audio...`);
+        
+        // Test MediaRecorder
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('MediaDevices API non supportata');
+        }
+
+        if (!window.MediaRecorder) {
+          throw new Error('MediaRecorder API non supportata');
+        }
+
+        // Test accesso microfono
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        stream.getTracks().forEach(track => track.stop());
+
+        // Aspetta che il DOM sia pronto
+        await this.waitForElement('start-recording-btn', 5000);
+
+        // Abilita pulsante registrazione con controllo aggiuntivo
+        const startBtn = document.getElementById('start-recording-btn');
+        if (startBtn) {
+          startBtn.disabled = false;
+          startBtn.classList.add('ready');
+          startBtn.style.opacity = '1';
+          startBtn.style.cursor = 'pointer';
+          
+          console.log('✅ Pulsante registrazione abilitato');
+          this.updateStatus('✅ Microfono pronto', 'success');
+          return; // Successo, esci dal loop
+        } else {
+          throw new Error('Pulsante registrazione non trovato nel DOM');
+        }
+
+      } catch (error) {
+        attempts++;
+        console.error(`❌ Tentativo ${attempts} fallito:`, error.message);
+        
+        if (attempts < maxAttempts) {
+          console.log(`🔄 Riprovo tra 2 secondi...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+          console.error('❌ Tutti i tentativi falliti');
+          this.updateStatus('❌ Microfono non disponibile - Ricarica la pagina', 'error');
+        }
+      }
+    }
+  }
+
+  /**
+   * Aspetta che un elemento esista nel DOM
+   */
+  async waitForElement(elementId, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      
+      const checkElement = () => {
+        const element = document.getElementById(elementId);
+        if (element) {
+          console.log(`✅ Elemento ${elementId} trovato`);
+          resolve(element);
+        } else if (Date.now() - startTime > timeout) {
+          reject(new Error(`Timeout: elemento ${elementId} non trovato dopo ${timeout}ms`));
+        } else {
+          setTimeout(checkElement, 100);
+        }
+      };
+      
+      checkElement();
+    });
   }
 
   /**
@@ -3561,6 +3647,93 @@ ${report.interazioni.map(item =>
       
       this.showNotification('🗑️ Storico pulito', 'info');
     }
+  }
+
+  /**
+   * 🔧 DEBUG: Forza abilitazione pulsante registrazione
+   * Metodo di emergenza per risolvere problemi di inizializzazione
+   */
+  async forceEnableRecordingButton() {
+    console.log('🔧 DEBUG: Forzando abilitazione pulsante registrazione...');
+    
+    try {
+      // Test rapido permessi
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      
+      // Trova e forza abilitazione
+      const startBtn = document.getElementById('start-recording-btn');
+      if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.classList.add('ready');
+        startBtn.style.opacity = '1';
+        startBtn.style.cursor = 'pointer';
+        startBtn.style.backgroundColor = '#28a745';
+        startBtn.style.borderColor = '#28a745';
+        
+        this.updateStatus('✅ Pulsante forzato - Pronto!', 'success');
+        console.log('✅ DEBUG: Pulsante registrazione forzato con successo');
+        return true;
+      } else {
+        console.error('❌ DEBUG: Pulsante non trovato nel DOM');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ DEBUG: Errore nel forzare abilitazione:', error);
+      this.updateStatus('❌ Permessi microfono negati', 'error');
+      return false;
+    }
+  }
+
+  /**
+   * 🔧 DEBUG: Diagnostica completa stato voice recording
+   */
+  diagnoseMicrophoneIssue() {
+    console.log('🔍 DEBUG: Diagnostica stato microfono...');
+    
+    const startBtn = document.getElementById('start-recording-btn');
+    const stopBtn = document.getElementById('stop-recording-btn');
+    
+    const diagnosis = {
+      timestamp: new Date().toISOString(),
+      startButton: {
+        exists: !!startBtn,
+        disabled: startBtn?.disabled,
+        classes: startBtn?.className,
+        style: startBtn?.style.cssText
+      },
+      stopButton: {
+        exists: !!stopBtn,
+        disabled: stopBtn?.disabled,
+        classes: stopBtn?.className
+      },
+      browserSupport: {
+        mediaDevices: !!navigator.mediaDevices,
+        getUserMedia: !!navigator.mediaDevices?.getUserMedia,
+        mediaRecorder: !!window.MediaRecorder
+      },
+      smartAssistant: {
+        isRecording: this.isRecording,
+        mediaRecorder: !!this.mediaRecorder,
+        audioChunks: this.audioChunks?.length || 0
+      }
+    };
+    
+    console.table(diagnosis);
+    
+    // Mostra in UI se possibile
+    const diagnosisText = `
+Diagnosi Microfono:
+- Pulsante Start: ${diagnosis.startButton.exists ? (diagnosis.startButton.disabled ? 'DISABILITATO' : 'Abilitato') : 'NON TROVATO'}
+- Browser Support: ${diagnosis.browserSupport.getUserMedia ? 'OK' : 'NON SUPPORTATO'}
+- MediaRecorder: ${diagnosis.browserSupport.mediaRecorder ? 'OK' : 'NON SUPPORTATO'}
+
+Usa console per dettagli completi.
+    `.trim();
+    
+    this.updateStatus(diagnosisText, diagnosis.startButton.disabled ? 'error' : 'success');
+    
+    return diagnosis;
   }
 }
 

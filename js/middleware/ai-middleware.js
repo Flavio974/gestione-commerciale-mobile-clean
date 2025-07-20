@@ -748,7 +748,7 @@ class AIMiddleware {
             let risposta = "📋 **Ultimi 10 ordini:**\\n\\n";
             listaOrdini.forEach(ordine => {
                 risposta += `• **${ordine.numero}** - ${ordine.cliente}\\n`;
-                risposta += `  Data: ${ordine.data} | Importo: €${ordine.importo.toFixed(2)} | Righe: ${ordine.righe}\\n\\n`;
+                risposta += `  Data: ${new Date(ordine.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })} | Importo: €${ordine.importo.toFixed(2)} | Righe: ${ordine.righe}\\n\\n`;
             });
             
             return risposta;
