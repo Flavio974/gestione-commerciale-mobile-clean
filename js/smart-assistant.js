@@ -762,31 +762,139 @@ class SmartAssistant {
    * Mostra UI durante registrazione
    */
   showRecordingUI() {
+    console.log('🎤 showRecordingUI: Configurazione UI per registrazione');
+    
     const startBtn = document.getElementById('start-recording-btn');
     const stopBtn = document.getElementById('stop-recording-btn');
     const visualization = document.getElementById('audio-visualization');
     const recordingInfo = document.getElementById('recording-info');
 
-    if (startBtn) startBtn.style.display = 'none';
+    console.log('🎤 showRecordingUI: Elementi trovati:', {
+      startBtn: !!startBtn,
+      stopBtn: !!stopBtn,
+      visualization: !!visualization,
+      recordingInfo: !!recordingInfo
+    });
+
+    if (startBtn) {
+      startBtn.style.display = 'none';
+      console.log('🎤 showRecordingUI: Pulsante Start nascosto');
+    }
+    
     if (stopBtn) {
       stopBtn.style.display = 'inline-flex';
       stopBtn.disabled = false;
+      stopBtn.style.opacity = '1';
+      stopBtn.style.cursor = 'pointer';
+      stopBtn.style.backgroundColor = '#dc3545';
+      stopBtn.style.borderColor = '#dc3545';
+      console.log('🎤 showRecordingUI: Pulsante Stop mostrato e abilitato');
+    } else {
+      console.error('❌ showRecordingUI: Pulsante Stop non trovato!');
     }
+    
+    // Aggiungi indicatore visivo di registrazione
+    this.addRecordingIndicator();
+    
     if (visualization) visualization.style.display = 'block';
     if (recordingInfo) recordingInfo.style.display = 'flex';
+  }
+
+  /**
+   * Aggiunge indicatore visivo di registrazione
+   */
+  addRecordingIndicator() {
+    // Rimuovi indicatore esistente se presente
+    this.removeRecordingIndicator();
+    
+    // Crea indicatore pulsante rosso animato
+    const indicator = document.createElement('div');
+    indicator.id = 'recording-indicator';
+    indicator.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: #dc3545;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+      z-index: 10000;
+      animation: pulse 1.5s infinite;
+      cursor: pointer;
+    `;
+    indicator.innerHTML = `
+      <div style="text-align: center;">
+        <div style="font-size: 18px;">🔴</div>
+        <div>REC</div>
+      </div>
+    `;
+    
+    // Aggiungi click listener per fermare la registrazione
+    indicator.addEventListener('click', () => {
+      console.log('🎤 Recording indicator clicked - stopping recording');
+      this.stopRecording();
+    });
+    
+    document.body.appendChild(indicator);
+    
+    // Aggiungi CSS per animazione se non esiste
+    if (!document.getElementById('recording-pulse-css')) {
+      const style = document.createElement('style');
+      style.id = 'recording-pulse-css';
+      style.textContent = `
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.1); opacity: 0.8; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    console.log('✅ Indicatore di registrazione aggiunto');
+  }
+
+  /**
+   * Rimuove indicatore visivo di registrazione
+   */
+  removeRecordingIndicator() {
+    const indicator = document.getElementById('recording-indicator');
+    if (indicator) {
+      indicator.remove();
+      console.log('✅ Indicatore di registrazione rimosso');
+    }
   }
 
   /**
    * Nascondi UI registrazione
    */
   hideRecordingUI() {
+    console.log('🎤 hideRecordingUI: Ripristino UI normale');
+    
     const startBtn = document.getElementById('start-recording-btn');
     const stopBtn = document.getElementById('stop-recording-btn');
     const visualization = document.getElementById('audio-visualization');
     const recordingInfo = document.getElementById('recording-info');
 
-    if (startBtn) startBtn.style.display = 'inline-flex';
-    if (stopBtn) stopBtn.style.display = 'none';
+    if (startBtn) {
+      startBtn.style.display = 'inline-flex';
+      console.log('🎤 hideRecordingUI: Pulsante Start mostrato');
+    }
+    if (stopBtn) {
+      stopBtn.style.display = 'none';
+      console.log('🎤 hideRecordingUI: Pulsante Stop nascosto');
+    }
+    
+    // Rimuovi indicatore visivo
+    this.removeRecordingIndicator();
+    
     if (visualization) visualization.style.display = 'none';
     if (recordingInfo) recordingInfo.style.display = 'none';
   }
