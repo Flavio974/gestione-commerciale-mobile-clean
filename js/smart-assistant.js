@@ -342,7 +342,16 @@ class SmartAssistant {
     const clearHistoryBtn = document.getElementById('clear-history-btn');
     const clientSearchInput = document.getElementById('client-search-input');
 
-    if (startBtn) startBtn.addEventListener('click', () => this.startRecording());
+    if (startBtn) {
+      console.log('🎤 Attaching click listener to start button');
+      startBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('🎤 Start button clicked!');
+        this.startRecording();
+      });
+    } else {
+      console.error('❌ Start recording button not found');
+    }
     if (stopBtn) stopBtn.addEventListener('click', () => this.stopRecording());
     if (transcribeBtn) transcribeBtn.addEventListener('click', () => this.transcribeAudio());
     if (refreshKpiBtn) refreshKpiBtn.addEventListener('click', () => this.refreshKPI());
@@ -3855,4 +3864,38 @@ window.forceEnableRecordingButton = async function() {
     console.error('❌ Errore permessi microfono:', error);
     return false;
   }
+};
+
+// Funzione di test per la registrazione
+window.testRecording = async function() {
+  console.log('🎤 TEST RECORDING - Avvio test registrazione manuale');
+  if (window.SmartAssistant) {
+    await window.SmartAssistant.startRecording();
+  } else {
+    console.error('❌ SmartAssistant non trovato');
+  }
+};
+
+// Funzione per riattaccare gli event listener
+window.reattachRecordingListeners = function() {
+  const startBtn = document.getElementById('start-recording-btn');
+  if (startBtn) {
+    // Rimuovi tutti i listener esistenti clonando il pulsante
+    const newBtn = startBtn.cloneNode(true);
+    startBtn.parentNode.replaceChild(newBtn, startBtn);
+    
+    // Riattacca il listener
+    newBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🎤 [REATTACHED] Start button clicked!');
+      if (window.SmartAssistant) {
+        await window.SmartAssistant.startRecording();
+      }
+    });
+    
+    console.log('✅ Event listener riattaccato con successo');
+    return true;
+  }
+  return false;
 };
