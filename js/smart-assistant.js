@@ -5,17 +5,17 @@
 
 // URL base per le API con fallback per iPad
 const API_ENDPOINTS = {
-  primary: 'https://395d12df-1597-448e-8190-4c79e73a20ec-00-29g0ynu2kldi8.janeway.replit.dev',
-  fallback: null, // Utilizzeremo Netlify Functions come fallback
+  primary: '/.netlify/functions', // Usa Netlify Functions
+  fallback: null,
   local: 'http://localhost:3000'
 };
 
 // Configurazione specifica per iPad
 const IPAD_CONFIG = {
-  useLocalSpeechRecognition: true,
-  disableServerTranscription: true,
-  enableMockResponses: true,
-  reducedTimeout: 10000
+  useLocalSpeechRecognition: false, // Abilita trascrizione server anche per iPad
+  disableServerTranscription: false, // Abilita trascrizione server
+  enableMockResponses: false,
+  reducedTimeout: 30000 // Timeout aumentato per Netlify Functions
 };
 
 class SmartAssistant {
@@ -1388,7 +1388,7 @@ class SmartAssistant {
       const base64Audio = await this.blobToBase64(audioBlob);
       
       // Costruisci URL API
-      const apiUrl = `${this.apiEndpoint}/speech-to-text.php`;
+      const apiUrl = `${this.apiEndpoint}/speech-to-text`;
       console.log('🌐 Chiamando API:', apiUrl);
       
       // Chiama API con timeout ridotto per iPad
@@ -1609,7 +1609,7 @@ class SmartAssistant {
     
     try {
       // Costruisci URL API
-      const apiUrl = `${this.apiEndpoint}/speech-to-text.php`;
+      const apiUrl = `${this.apiEndpoint}/speech-to-text`;
       
       // Chiama API direttamente con base64
       const timeout = this.isIPad ? IPAD_CONFIG.reducedTimeout : 30000;
