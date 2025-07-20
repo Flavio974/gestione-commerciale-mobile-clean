@@ -1191,7 +1191,28 @@ class SmartAssistant {
     const note = savedNotes.find(n => n.id === noteId);
     
     if (note && note.transcription) {
-      alert(`Trascrizione:\n\n${note.transcription}`);
+      // Mostra trascrizione con opzione di modifica
+      const editTranscript = prompt(
+        `📝 Trascrizione della nota vocale:\n\n${note.transcription}\n\n` +
+        `💡 Puoi modificare il testo qui sotto e cliccare OK per salvare le modifiche:`,
+        note.transcription
+      );
+      
+      // Se l'utente ha modificato il testo, salvalo
+      if (editTranscript !== null && editTranscript !== note.transcription) {
+        note.transcription = editTranscript;
+        
+        // Salva le modifiche
+        const updatedNotes = savedNotes.map(n => n.id === noteId ? note : n);
+        localStorage.setItem('smart_voice_notes', JSON.stringify(updatedNotes));
+        
+        // Aggiorna la UI
+        this.renderVoiceNotes();
+        
+        this.showNotification('✅ Trascrizione aggiornata con successo!', 'success');
+      }
+    } else {
+      alert('❌ Nessuna trascrizione disponibile per questa nota.');
     }
   }
 
@@ -1501,12 +1522,39 @@ class SmartAssistant {
           resolve('Trascrizione fallback completata (errore: ' + event.error + ')');
         };
         
-        // Per ora usiamo un placeholder dato che non possiamo convertire base64 direttamente
-        // In futuro si può implementare la conversione audio
-        console.log('⚠️ Web Speech API richiede stream audio dal vivo, usando placeholder...');
-        setTimeout(() => {
-          resolve('Trascrizione completata con Web Speech API (modalità offline)');
-        }, 1000);
+        // Tenta di convertire base64 in audio per trascrizione
+        console.log('🔄 Tentativo conversione audio da base64...');
+        
+        try {
+          // Converti base64 in blob
+          const response = await fetch(base64Audio);
+          const blob = await response.blob();
+          
+          // Crea un audio element per la riproduzione
+          const audio = new Audio();
+          const audioUrl = URL.createObjectURL(blob);
+          audio.src = audioUrl;
+          
+          // Per ora offriamo trascrizione user-assisted
+          setTimeout(() => {
+            const userTranscript = prompt('🎤 Per completare la trascrizione, puoi inserire il testo che hai pronunciato nella registrazione:\n\n(Oppure clicca Annulla per usare il placeholder)');
+            
+            if (userTranscript && userTranscript.trim()) {
+              resolve(userTranscript.trim());
+            } else {
+              resolve('📝 Trascrizione vocale salvata (modalità offline)\n\n💡 Suggerimento: Puoi modificare manualmente questa trascrizione cliccando sul pulsante "Mostra Trascrizione" della nota.');
+            }
+            
+            // Cleanup
+            URL.revokeObjectURL(audioUrl);
+          }, 500);
+          
+        } catch (error) {
+          console.error('❌ Errore conversione audio:', error);
+          setTimeout(() => {
+            resolve('📝 Nota vocale salvata con successo\n\n⚠️ Trascrizione automatica non disponibile - puoi aggiungere note testuali manualmente');
+          }, 500);
+        }
         
       } catch (error) {
         console.error('❌ Errore inizializzazione Web Speech API:', error);
