@@ -485,7 +485,10 @@ class SmartAssistant {
    * Avvia registrazione audio
    */
   async startRecording() {
+    console.log('🎤 === START RECORDING DEBUG ===');
+    
     try {
+      console.log('🎤 Step 1: Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           echoCancellation: true,
@@ -493,29 +496,47 @@ class SmartAssistant {
           sampleRate: 44100
         } 
       });
+      console.log(`✅ Microphone access granted, tracks: ${stream.getAudioTracks().length}`);
 
+      console.log('🎤 Step 2: Creating MediaRecorder...');
       this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       this.audioChunks = [];
+      console.log('✅ MediaRecorder created, audioChunks reset');
 
+      console.log('🎤 Step 3: Setting up event listeners...');
       this.mediaRecorder.ondataavailable = (event) => {
+        console.log(`📊 ondataavailable: ${event.data.size} bytes`);
         if (event.data.size > 0) {
           this.audioChunks.push(event.data);
+          console.log(`📦 Audio chunk added. Total chunks: ${this.audioChunks.length}`);
         }
       };
 
       this.mediaRecorder.onstop = () => {
+        console.log('⏹️ MediaRecorder onstop event triggered');
         this.processRecording();
       };
 
-      this.mediaRecorder.start();
-      this.isRecording = true;
+      this.mediaRecorder.onerror = (event) => {
+        console.error(`❌ MediaRecorder error:`, event.error);
+      };
+      console.log('✅ Event listeners configured');
 
+      console.log('🎤 Step 4: Starting recording...');
+      this.mediaRecorder.start(1000); // Collect data every second
+      this.isRecording = true;
+      console.log('✅ Recording started');
+
+      console.log('🎤 Step 5: Updating UI...');
       this.showRecordingUI();
       this.startRecordingTimer();
       this.updateStatus('🔴 Registrazione in corso...', 'recording');
+      console.log('✅ === START RECORDING COMPLETED ===');
 
     } catch (error) {
+      console.error('❌ === START RECORDING ERROR ===');
       console.error('❌ Errore avvio registrazione:', error);
+      console.error('❌ Error stack:', error.stack);
       this.updateStatus('❌ Errore microfono', 'error');
     }
   }
@@ -539,48 +560,97 @@ class SmartAssistant {
    * Processa registrazione completata
    */
   processRecording() {
-    if (this.audioChunks.length === 0) return;
+    console.log('🔄 === PROCESS RECORDING DEBUG ===');
+    console.log(`📊 Audio chunks available: ${this.audioChunks.length}`);
+    
+    if (this.audioChunks.length === 0) {
+      console.log('❌ No audio chunks available');
+      this.showNotification('❌ Nessun audio registrato', 'error');
+      return;
+    }
 
+    console.log('🔄 Creating audio blob...');
     const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+    console.log(`📦 Audio blob created: ${audioBlob.size} bytes`);
+    
+    console.log('🔄 Creating object URL...');
     const audioUrl = URL.createObjectURL(audioBlob);
+    console.log(`🔗 Audio URL created: ${audioUrl.substring(0, 50)}...`);
 
     // Salva la registrazione
+    console.log('💾 Saving voice note...');
     this.saveVoiceNote(audioBlob, audioUrl);
 
     // Mostra pulsante trascrizione
+    console.log('🔄 Setting up transcription button...');
     const transcribeBtn = document.getElementById('transcribe-btn');
     if (transcribeBtn) {
       transcribeBtn.style.display = 'inline-flex';
       transcribeBtn.disabled = false;
       transcribeBtn.setAttribute('data-audio-blob', audioUrl);
+      console.log('✅ Transcription button configured');
+    } else {
+      console.log('⚠️ Transcription button not found');
     }
+    
+    console.log('✅ === PROCESS RECORDING COMPLETED ===');
   }
 
   /**
    * Salva nota vocale
    */
   async saveVoiceNote(audioBlob, audioUrl) {
-    const timestamp = new Date().toISOString();
-    const noteId = 'note_' + Date.now();
+    console.log('💾 === SAVE VOICE NOTE DEBUG ===');
+    console.log(`📦 Audio blob size: ${audioBlob.size} bytes`);
+    console.log(`🔗 Audio URL: ${audioUrl.substring(0, 50)}...`);
     
-    // Converti blob in base64 per storage
-    const base64Audio = await this.blobToBase64(audioBlob);
-    
-    const voiceNote = {
-      id: noteId,
-      timestamp: timestamp,
-      audioUrl: audioUrl,
-      audioBase64: base64Audio, // Salva base64 invece del blob
-      transcription: null,
-      size: Math.round(audioBlob.size / 1024) + ' KB'
-    };
+    try {
+      const timestamp = new Date().toISOString();
+      const noteId = 'note_' + Date.now();
+      console.log(`📝 Note ID: ${noteId}`);
+      console.log(`⏰ Timestamp: ${timestamp}`);
+      
+      // Converti blob in base64 per storage
+      console.log('🔄 Converting blob to base64...');
+      const base64Audio = await this.blobToBase64(audioBlob);
+      console.log(`✅ Base64 conversion completed: ${base64Audio.length} characters`);
+      
+      const voiceNote = {
+        id: noteId,
+        timestamp: timestamp,
+        audioUrl: audioUrl,
+        audioBase64: base64Audio, // Salva base64 invece del blob
+        transcription: null,
+        size: Math.round(audioBlob.size / 1024) + ' KB'
+      };
+      console.log(`📦 Voice note object created: ${JSON.stringify(voiceNote, null, 2).substring(0, 300)}...`);
 
-    // Salva in localStorage
-    const savedNotes = this.getSavedNotes();
-    savedNotes.unshift(voiceNote);
-    localStorage.setItem('smart_voice_notes', JSON.stringify(savedNotes.slice(0, 10))); // Keep only last 10
+      // Salva in localStorage
+      console.log('📚 Getting existing notes...');
+      const savedNotes = this.getSavedNotes();
+      console.log(`📊 Existing notes count: ${savedNotes.length}`);
+      
+      savedNotes.unshift(voiceNote);
+      const notesToSave = savedNotes.slice(0, 10); // Keep only last 10
+      console.log(`💾 Saving ${notesToSave.length} notes to localStorage...`);
+      
+      localStorage.setItem('smart_voice_notes', JSON.stringify(notesToSave));
+      console.log('✅ Saved to localStorage successfully');
 
-    this.renderVoiceNotes();
+      console.log('🔄 Rendering voice notes...');
+      this.renderVoiceNotes();
+      console.log('✅ === SAVE VOICE NOTE COMPLETED ===');
+      
+      // Show success notification
+      this.showNotification(`✅ Nota vocale salvata (${voiceNote.size})`, 'success');
+      
+    } catch (error) {
+      console.error('❌ === SAVE VOICE NOTE ERROR ===');
+      console.error(`❌ Error: ${error.message}`);
+      console.error(`❌ Stack: ${error.stack}`);
+      this.showNotification(`❌ Errore salvataggio: ${error.message}`, 'error');
+      throw error;
+    }
   }
 
   /**

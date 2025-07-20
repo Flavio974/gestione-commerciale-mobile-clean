@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Voice Recording Detailed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn.recording {
+            background: #dc3545;
+            animation: pulse 1s infinite;
+        }
+        .btn.success {
+            background: #28a745;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .log-area {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .voice-note {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .voice-note audio {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .voice-note .info {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Voice Recording - Step by Step</h1>
+
+    <!-- Main Controls -->
+    <div class="debug-section">
+        <h3>🎤 Registrazione Audio</h3>
+        <button id="start-recording" class="btn">🔴 Inizia Registrazione</button>
+        <button id="stop-recording" class="btn" disabled>⏹️ Stop Registrazione</button>
+        <div id="recording-status"></div>
+        <div id="recording-timer" style="font-size: 1.2em; font-weight: bold;"></div>
+    </div>
+
+    <!-- Voice Notes List -->
+    <div class="debug-section">
+        <h3>📝 Note Vocali Salvate</h3>
+        <button class="btn" onclick="refreshNotesList()">🔄 Aggiorna Lista</button>
+        <button class="btn" onclick="clearAllNotes()" style="background: #dc3545;">🗑️ Cancella Tutte</button>
+        <div id="notes-count">Note salvate: 0</div>
+        <div id="voice-notes-list"></div>
+    </div>
+
+    <!-- Debug Log -->
+    <div class="debug-section">
+        <h3>📋 Log Debug Dettagliato</h3>
+        <div class="log-area" id="debug-log"></div>
+        <button class="btn" onclick="clearLog()">Clear Log</button>
+        <button class="btn" onclick="downloadLog()">💾 Download Log</button>
+    </div>
+
+    <!-- Local Storage Debug -->
+    <div class="debug-section">
+        <h3>💾 Debug Local Storage</h3>
+        <button class="btn" onclick="checkLocalStorage()">📊 Verifica Storage</button>
+        <div id="storage-info"></div>
+    </div>
+
+    <script>
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let recordingStartTime = null;
+        let recordingTimer = null;
+
+        function log(message) {
+            const logArea = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logArea.textContent += `[${timestamp}] ${message}\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+            console.log(`[VOICE-DEBUG] ${message}`);
+        }
+
+        function showStatus(message, type = 'success') {
+            const statusEl = document.getElementById('recording-status');
+            statusEl.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function clearLog() {
+            document.getElementById('debug-log').textContent = '';
+        }
+
+        function downloadLog() {
+            const logContent = document.getElementById('debug-log').textContent;
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `voice-debug-log-${new Date().toISOString()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Simula il comportamento esatto di SmartAssistant
+        async function startRecording() {
+            try {
+                log('🎤 === INIZIO REGISTRAZIONE ===');
+                log('🎤 Step 1: Richiesta permessi microfono...');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: { 
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+                
+                log('✅ Step 1 COMPLETATO: Permessi microfono ottenuti');
+                log(`📊 Audio tracks: ${stream.getAudioTracks().length}`);
+
+                log('🎤 Step 2: Creazione MediaRecorder...');
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                audioChunks = [];
+                log('✅ Step 2 COMPLETATO: MediaRecorder creato');
+
+                log('🎤 Step 3: Setup event listeners...');
+                mediaRecorder.ondataavailable = (event) => {
+                    log(`📊 ondataavailable: ${event.data.size} bytes`);
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                        log(`📦 Audio chunk aggiunto. Totale chunks: ${audioChunks.length}`);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    log('⏹️ MediaRecorder onstop event triggered');
+                    processRecording();
+                };
+
+                mediaRecorder.onerror = (event) => {
+                    log(`❌ MediaRecorder error: ${event.error}`);
+                };
+
+                log('✅ Step 3 COMPLETATO: Event listeners configurati');
+
+                log('🎤 Step 4: Avvio registrazione...');
+                mediaRecorder.start(1000); // Collect data every second
+                isRecording = true;
+                recordingStartTime = Date.now();
+                
+                log('✅ Step 4 COMPLETATO: Registrazione avviata');
+
+                // Update UI
+                document.getElementById('start-recording').disabled = true;
+                document.getElementById('start-recording').className = 'btn recording';
+                document.getElementById('stop-recording').disabled = false;
+                showStatus('🔴 Registrazione in corso...', 'warning');
+
+                // Start timer
+                startRecordingTimer();
+
+                log('🎤 === REGISTRAZIONE ATTIVA ===');
+
+            } catch (error) {
+                log(`❌ ERRORE startRecording: ${error.message}`);
+                showStatus(`❌ Errore: ${error.message}`, 'error');
+            }
+        }
+
+        function stopRecording() {
+            log('⏹️ === STOP REGISTRAZIONE ===');
+            
+            if (mediaRecorder && isRecording) {
+                log('⏹️ Step 1: Fermando MediaRecorder...');
+                mediaRecorder.stop();
+                
+                log('⏹️ Step 2: Fermando stream tracks...');
+                mediaRecorder.stream.getTracks().forEach(track => {
+                    track.stop();
+                    log(`🔄 Track fermato: ${track.label}`);
+                });
+                
+                isRecording = false;
+                stopRecordingTimer();
+                
+                log('✅ STOP COMPLETATO');
+
+                // Update UI
+                document.getElementById('start-recording').disabled = false;
+                document.getElementById('start-recording').className = 'btn';
+                document.getElementById('stop-recording').disabled = true;
+                showStatus('⏹️ Registrazione fermata', 'success');
+            } else {
+                log('⚠️ Stop chiamato ma registrazione non attiva');
+            }
+        }
+
+        function processRecording() {
+            log('🔄 === PROCESS RECORDING ===');
+            log(`📊 Audio chunks disponibili: ${audioChunks.length}`);
+
+            if (audioChunks.length === 0) {
+                log('❌ Nessun audio chunk disponibile');
+                showStatus('❌ Nessun audio registrato', 'error');
+                return;
+            }
+
+            log('🔄 Step 1: Creazione blob audio...');
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            log(`📦 Blob creato: ${audioBlob.size} bytes`);
+
+            log('🔄 Step 2: Creazione URL oggetto...');
+            const audioUrl = URL.createObjectURL(audioBlob);
+            log(`🔗 URL creato: ${audioUrl.substring(0, 50)}...`);
+
+            log('🔄 Step 3: Salvataggio nota vocale...');
+            saveVoiceNote(audioBlob, audioUrl);
+        }
+
+        async function saveVoiceNote(audioBlob, audioUrl) {
+            log('💾 === SAVE VOICE NOTE ===');
+            
+            try {
+                log('💾 Step 1: Generazione metadati...');
+                const timestamp = new Date().toISOString();
+                const noteId = 'note_' + Date.now();
+                log(`📝 ID nota: ${noteId}`);
+                log(`⏰ Timestamp: ${timestamp}`);
+
+                log('💾 Step 2: Conversione blob to base64...');
+                const base64Audio = await blobToBase64(audioBlob);
+                log(`📊 Base64 length: ${base64Audio.length} characters`);
+
+                log('💾 Step 3: Creazione oggetto nota...');
+                const voiceNote = {
+                    id: noteId,
+                    timestamp: timestamp,
+                    audioUrl: audioUrl,
+                    audioBase64: base64Audio,
+                    transcription: null,
+                    size: Math.round(audioBlob.size / 1024) + ' KB'
+                };
+                log(`📦 Nota creata: ${JSON.stringify(voiceNote, null, 2).substring(0, 200)}...`);
+
+                log('💾 Step 4: Lettura note esistenti...');
+                const savedNotes = getSavedNotes();
+                log(`📚 Note esistenti: ${savedNotes.length}`);
+
+                log('💾 Step 5: Aggiunta nuova nota...');
+                savedNotes.unshift(voiceNote);
+                const notesToSave = savedNotes.slice(0, 10); // Keep only last 10
+                log(`💾 Note da salvare: ${notesToSave.length}`);
+
+                log('💾 Step 6: Salvataggio in localStorage...');
+                localStorage.setItem('smart_voice_notes', JSON.stringify(notesToSave));
+                log('✅ Salvato in localStorage');
+
+                log('💾 Step 7: Refresh UI...');
+                refreshNotesList();
+
+                log('✅ === SAVE COMPLETATO ===');
+                showStatus(`✅ Nota salvata: ${voiceNote.size}`, 'success');
+
+            } catch (error) {
+                log(`❌ ERRORE saveVoiceNote: ${error.message}`);
+                log(`❌ Stack trace: ${error.stack}`);
+                showStatus(`❌ Errore salvataggio: ${error.message}`, 'error');
+            }
+        }
+
+        function blobToBase64(blob) {
+            log('🔄 Conversione blob to base64...');
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    log('✅ Conversione base64 completata');
+                    resolve(reader.result);
+                };
+                reader.onerror = (error) => {
+                    log(`❌ Errore conversione base64: ${error}`);
+                    reject(error);
+                };
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function getSavedNotes() {
+            try {
+                const savedNotes = JSON.parse(localStorage.getItem('smart_voice_notes') || '[]');
+                log(`📚 Note lette da localStorage: ${savedNotes.length}`);
+                return savedNotes;
+            } catch (error) {
+                log(`❌ Errore lettura note: ${error.message}`);
+                return [];
+            }
+        }
+
+        function refreshNotesList() {
+            log('🔄 Refresh lista note...');
+            const notesList = document.getElementById('voice-notes-list');
+            const notesCount = document.getElementById('notes-count');
+            
+            const savedNotes = getSavedNotes();
+            notesCount.textContent = `Note salvate: ${savedNotes.length}`;
+            
+            if (savedNotes.length === 0) {
+                notesList.innerHTML = '<p>Nessuna nota vocale salvata</p>';
+                return;
+            }
+
+            let html = '';
+            savedNotes.forEach((note, index) => {
+                const date = new Date(note.timestamp).toLocaleString('it-IT');
+                html += `
+                    <div class="voice-note">
+                        <div class="info">
+                            <strong>Nota #${index + 1}</strong> - ${date} - ${note.size}
+                        </div>
+                        <audio controls>
+                            <source src="${note.audioUrl}" type="audio/webm">
+                            Il tuo browser non supporta l'audio.
+                        </audio>
+                        <div>
+                            <button class="btn" onclick="deleteNote('${note.id}')" style="background: #dc3545;">🗑️ Elimina</button>
+                            <button class="btn" onclick="showNoteDetails('${note.id}')">📋 Dettagli</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            notesList.innerHTML = html;
+            log(`✅ Lista note aggiornata: ${savedNotes.length} note`);
+        }
+
+        function deleteNote(noteId) {
+            log(`🗑️ Eliminazione nota: ${noteId}`);
+            const savedNotes = getSavedNotes();
+            const filteredNotes = savedNotes.filter(note => note.id !== noteId);
+            localStorage.setItem('smart_voice_notes', JSON.stringify(filteredNotes));
+            refreshNotesList();
+            log(`✅ Nota eliminata: ${noteId}`);
+        }
+
+        function clearAllNotes() {
+            if (confirm('Sei sicuro di voler eliminare tutte le note vocali?')) {
+                localStorage.removeItem('smart_voice_notes');
+                refreshNotesList();
+                log('🗑️ Tutte le note eliminate');
+            }
+        }
+
+        function showNoteDetails(noteId) {
+            const savedNotes = getSavedNotes();
+            const note = savedNotes.find(n => n.id === noteId);
+            if (note) {
+                alert(`Dettagli Nota:\n\nID: ${note.id}\nTimestamp: ${note.timestamp}\nDimensione: ${note.size}\nBase64 Length: ${note.audioBase64?.length || 'N/A'}`);
+            }
+        }
+
+        function checkLocalStorage() {
+            log('💾 === CHECK LOCAL STORAGE ===');
+            
+            try {
+                // Check storage availability
+                const testKey = 'test_storage_' + Date.now();
+                localStorage.setItem(testKey, 'test');
+                localStorage.removeItem(testKey);
+                log('✅ localStorage disponibile');
+
+                // Check notes
+                const notesData = localStorage.getItem('smart_voice_notes');
+                log(`📚 smart_voice_notes raw data: ${notesData ? notesData.length + ' chars' : 'null'}`);
+
+                if (notesData) {
+                    try {
+                        const notes = JSON.parse(notesData);
+                        log(`📊 Parsed notes: ${notes.length} items`);
+                        notes.forEach((note, i) => {
+                            log(`  Note ${i + 1}: ${note.id} (${note.size})`);
+                        });
+                    } catch (parseError) {
+                        log(`❌ Errore parsing notes: ${parseError.message}`);
+                    }
+                }
+
+                // Check storage usage
+                let totalSize = 0;
+                for (let key in localStorage) {
+                    if (localStorage.hasOwnProperty(key)) {
+                        totalSize += localStorage[key].length;
+                    }
+                }
+                log(`📊 Total localStorage usage: ${Math.round(totalSize / 1024)} KB`);
+
+                document.getElementById('storage-info').innerHTML = `
+                    <div class="status success">
+                        ✅ localStorage OK<br>
+                        📚 Note trovate: ${notesData ? JSON.parse(notesData).length : 0}<br>
+                        📊 Spazio utilizzato: ${Math.round(totalSize / 1024)} KB
+                    </div>
+                `;
+
+            } catch (error) {
+                log(`❌ Errore check storage: ${error.message}`);
+                document.getElementById('storage-info').innerHTML = `
+                    <div class="status error">❌ Errore localStorage: ${error.message}</div>
+                `;
+            }
+        }
+
+        function startRecordingTimer() {
+            recordingTimer = setInterval(() => {
+                if (recordingStartTime) {
+                    const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                    const seconds = (elapsed % 60).toString().padStart(2, '0');
+                    document.getElementById('recording-timer').textContent = `⏱️ ${minutes}:${seconds}`;
+                }
+            }, 100);
+        }
+
+        function stopRecordingTimer() {
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+                recordingTimer = null;
+            }
+            document.getElementById('recording-timer').textContent = '';
+        }
+
+        // Setup event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Debug page loaded');
+            
+            document.getElementById('start-recording').addEventListener('click', startRecording);
+            document.getElementById('stop-recording').addEventListener('click', stopRecording);
+            
+            // Initial checks
+            checkLocalStorage();
+            refreshNotesList();
+            
+            log('✅ Debug page ready');
+        });
+    </script>
+</body>
+</html>
