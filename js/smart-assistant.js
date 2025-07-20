@@ -179,6 +179,9 @@ class SmartAssistant {
               <button onclick="window.SmartAssistant.showSecureFolders()" class="btn btn-success" style="background: #28a745; color: white; margin-right: 10px; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
                 🔐 Cartelle Sicure
               </button>
+              <button onclick="window.SmartAssistant.debugTranscriptions()" class="btn btn-info" style="background: #17a2b8; color: white; margin-right: 10px; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
+                🔍 Debug Trascrizioni
+              </button>
               <button id="refresh-kpi-btn" class="refresh-btn">
                 <i class="fas fa-sync-alt"></i>
               </button>
@@ -831,8 +834,13 @@ class SmartAssistant {
         </div>
         
         ${note.transcription ? 
-          `<div class="note-transcription">${note.transcription}</div>` : 
-          ''
+          `<div class="note-transcription" style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; border-left: 3px solid #007bff;">
+            <strong>📝 Trascrizione:</strong><br>
+            ${note.transcription}
+          </div>` : 
+          `<div class="note-no-transcription" style="background: #fff3cd; padding: 8px; border-radius: 4px; margin-top: 10px; color: #856404; font-size: 12px;">
+            ⚠️ Trascrizione non disponibile - clicca su 🔤 per trascrivere
+          </div>`
         }
       </div>
     `).join('');
@@ -1217,7 +1225,15 @@ class SmartAssistant {
         this.showNotification('✅ Trascrizione aggiornata con successo!', 'success');
       }
     } else {
-      alert('❌ Nessuna trascrizione disponibile per questa nota.');
+      // Se non c'è trascrizione, offri di crearne una
+      const shouldTranscribe = confirm(
+        '❌ Trascrizione non disponibile per questa nota.\n\n' +
+        '🔤 Vuoi tentare di trascriverla ora?'
+      );
+      
+      if (shouldTranscribe) {
+        this.transcribeNote(noteId);
+      }
     }
   }
 
@@ -4401,6 +4417,36 @@ Usa console per dettagli completi.
       console.error('❌ Errore sincronizzazione:', error);
       this.showNotification('❌ Errore durante la sincronizzazione', 'error');
     }
+  }
+
+  /**
+   * 🔍 DEBUG TRASCRIZIONI - Metodo per verificare lo stato delle note
+   */
+  debugTranscriptions() {
+    const notes = this.getSavedNotes();
+    console.log('🔍 DEBUG TRASCRIZIONI - Stato attuale note:');
+    console.log(`Totale note: ${notes.length}`);
+    
+    notes.forEach((note, index) => {
+      console.log(`\n📝 Nota ${index + 1}:`);
+      console.log(`- ID: ${note.id}`);
+      console.log(`- Data: ${new Date(note.timestamp).toLocaleString()}`);
+      console.log(`- Ha Audio: ${!!note.audioBase64}`);
+      console.log(`- Ha Trascrizione: ${!!note.transcription}`);
+      if (note.transcription) {
+        console.log(`- Testo: "${note.transcription.substring(0, 100)}..."`);
+      }
+      console.log(`- Oggetto completo:`, note);
+    });
+    
+    // Mostra anche informazioni in un alert user-friendly
+    const summary = notes.map(note => {
+      const hasTranscription = !!note.transcription;
+      const date = new Date(note.timestamp).toLocaleDateString();
+      return `${date}: ${hasTranscription ? '✅ Trascrizione OK' : '❌ Manca trascrizione'}`;
+    }).join('\n');
+    
+    alert(`📊 Stato Trascrizioni:\n\n${summary}\n\nDettagli completi in console (F12)`);
   }
 
   /**
