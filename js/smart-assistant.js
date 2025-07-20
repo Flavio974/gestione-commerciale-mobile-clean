@@ -344,9 +344,29 @@ class SmartAssistant {
 
     if (startBtn) {
       console.log('🎤 Attaching click listener to start button');
+      
+      // FORZA l'abilitazione del pulsante immediatamente se non è già abilitato
+      if (startBtn.disabled) {
+        console.log('🔧 Force enabling start button immediately...');
+        startBtn.disabled = false;
+        startBtn.classList.add('ready');
+        startBtn.style.opacity = '1';
+        startBtn.style.cursor = 'pointer';
+        startBtn.style.backgroundColor = '#28a745';
+        startBtn.style.borderColor = '#28a745';
+      }
+      
       startBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         console.log('🎤 Start button clicked!');
+        
+        // Doppio controllo: se il pulsante è ancora disabilitato, abilitalo
+        if (startBtn.disabled) {
+          console.log('🔧 Button was disabled, forcing enable...');
+          startBtn.disabled = false;
+        }
+        
         this.startRecording();
       });
     } else {
