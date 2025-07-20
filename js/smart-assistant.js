@@ -380,12 +380,19 @@ class SmartAssistant {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach(track => track.stop());
 
-      // Abilita pulsante registrazione
-      const startBtn = document.getElementById('start-recording-btn');
-      if (startBtn) {
-        startBtn.disabled = false;
-        startBtn.classList.add('ready');
-      }
+      // Abilita pulsante registrazione con timeout per assicurarsi che il DOM sia pronto
+      setTimeout(() => {
+        const startBtn = document.getElementById('start-recording-btn');
+        if (startBtn) {
+          startBtn.disabled = false;
+          startBtn.classList.add('ready');
+          startBtn.style.opacity = '1';
+          startBtn.style.cursor = 'pointer';
+          console.log('✅ Pulsante registrazione abilitato da checkAudioSupport');
+        } else {
+          console.warn('⚠️ Pulsante registrazione non trovato nel DOM');
+        }
+      }, 1000);
 
       this.updateStatus('✅ Microfono pronto', 'success');
 
@@ -3812,3 +3819,40 @@ window.SmartAssistant = new SmartAssistant();
 
 // NON auto-inizializzare qui - lasciamo che Navigation chiami onEnter
 // che a sua volta chiamerà init() quando necessario
+
+// Funzione globale di emergenza per abilitare il pulsante
+window.forceEnableRecordingButton = async function() {
+  try {
+    // Test rapido permessi
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(track => track.stop());
+    
+    // Trova e abilita il pulsante
+    const startBtn = document.getElementById('start-recording-btn');
+    if (startBtn) {
+      startBtn.disabled = false;
+      startBtn.classList.add('ready');
+      startBtn.style.opacity = '1';
+      startBtn.style.cursor = 'pointer';
+      startBtn.style.backgroundColor = '#28a745';
+      startBtn.style.borderColor = '#28a745';
+      
+      console.log('✅ Pulsante registrazione forzato con successo');
+      
+      // Aggiorna anche lo status
+      const statusElement = document.querySelector('.recording-status .status-text');
+      if (statusElement) {
+        statusElement.textContent = 'Pronto per registrare';
+        statusElement.parentElement.className = 'recording-status success';
+      }
+      
+      return true;
+    } else {
+      console.error('❌ Pulsante non trovato nel DOM');
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Errore permessi microfono:', error);
+    return false;
+  }
+};
