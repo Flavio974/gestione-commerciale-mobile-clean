@@ -1297,6 +1297,16 @@ class SmartAssistant {
       
       console.log('✅ Analisi AI completata:', analysis);
       
+      // 💾 SALVA SU SUPABASE (modulo isolato)
+      if (window.smartAssistantSupabase) {
+        try {
+          await window.smartAssistantSupabase.saveNoteToSupabase(note, analysis);
+        } catch (supabaseError) {
+          // Non bloccare se Supabase fallisce
+          console.warn('⚠️ Salvataggio Supabase fallito (non bloccante):', supabaseError);
+        }
+      }
+      
     } catch (error) {
       console.error('❌ Errore analisi AI:', error);
       this.showNotification('⚠️ Analisi AI fallita, nota salvata comunque', 'error');
