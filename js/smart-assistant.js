@@ -96,7 +96,6 @@ class SmartAssistant {
     }
 
     this.render();
-    this.setupEventListeners();
     
     // Verifica supporto browser per audio con retry
     await this.checkAudioSupportWithRetry();
@@ -106,6 +105,9 @@ class SmartAssistant {
     this.renderCallList();
     this.renderWhatsappList();
     this.renderTaskList();
+    
+    // CRITICO: Setup event listeners DOPO tutti i render per evitare che vengano distrutti
+    this.setupEventListeners();
     
     // Inizializza sistema promemoria
     this.initializeReminders();
@@ -369,6 +371,9 @@ class SmartAssistant {
         
         this.startRecording();
       });
+      
+      // Marca come avente listener attaccato
+      startBtn._smartAssistantListenerAttached = true;
     } else {
       console.error('❌ Start recording button not found');
     }
@@ -392,6 +397,39 @@ class SmartAssistant {
           this.searchClientHistory();
         }
       });
+    }
+  }
+
+  /**
+   * Assicura che gli event listeners siano attaccati
+   */
+  ensureEventListeners() {
+    const startBtn = document.getElementById('start-recording-btn');
+    if (!startBtn) return;
+    
+    // Controlla se l'event listener è già presente testando una proprietà speciale
+    if (!startBtn._smartAssistantListenerAttached) {
+      console.log('🔧 Event listener mancante, riattacco...');
+      
+      // Forza abilitazione
+      startBtn.disabled = false;
+      startBtn.classList.add('ready');
+      startBtn.style.opacity = '1';
+      startBtn.style.cursor = 'pointer';
+      startBtn.style.backgroundColor = '#28a745';
+      startBtn.style.borderColor = '#28a745';
+      
+      // Riattacca listener
+      startBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🎤 Start button clicked! (reattached)');
+        this.startRecording();
+      });
+      
+      // Marca come riattaccato
+      startBtn._smartAssistantListenerAttached = true;
+      console.log('✅ Event listener riattaccato con successo');
     }
   }
 
@@ -715,6 +753,10 @@ class SmartAssistant {
 
     const savedNotes = this.getSavedNotes();
     console.log(`🎤 Rendering ${savedNotes.length} note vocali`);
+    
+    // Salva riferimento ai pulsanti prima del render
+    const startBtn = document.getElementById('start-recording-btn');
+    const wasStartBtnEnabled = startBtn ? !startBtn.disabled : false;
 
     if (savedNotes.length === 0) {
       notesList.innerHTML = `
@@ -762,6 +804,11 @@ class SmartAssistant {
         }
       </div>
     `).join('');
+    
+    // CRITICO: Riattacca event listeners se i pulsanti di controllo potrebbero essere stati influenzati
+    setTimeout(() => {
+      this.ensureEventListeners();
+    }, 100);
   }
 
   /**
