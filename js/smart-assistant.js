@@ -1527,27 +1527,31 @@ class SmartAssistant {
         
         try {
           // Converti base64 in blob
-          const response = await fetch(base64Audio);
-          const blob = await response.blob();
-          
-          // Crea un audio element per la riproduzione
-          const audio = new Audio();
-          const audioUrl = URL.createObjectURL(blob);
-          audio.src = audioUrl;
-          
-          // Per ora offriamo trascrizione user-assisted
-          setTimeout(() => {
-            const userTranscript = prompt('🎤 Per completare la trascrizione, puoi inserire il testo che hai pronunciato nella registrazione:\n\n(Oppure clicca Annulla per usare il placeholder)');
+          fetch(base64Audio).then(response => response.blob()).then(blob => {
+            // Crea un audio element per la riproduzione
+            const audio = new Audio();
+            const audioUrl = URL.createObjectURL(blob);
+            audio.src = audioUrl;
             
-            if (userTranscript && userTranscript.trim()) {
-              resolve(userTranscript.trim());
-            } else {
-              resolve('📝 Trascrizione vocale salvata (modalità offline)\n\n💡 Suggerimento: Puoi modificare manualmente questa trascrizione cliccando sul pulsante "Mostra Trascrizione" della nota.');
-            }
-            
-            // Cleanup
-            URL.revokeObjectURL(audioUrl);
-          }, 500);
+            // Per ora offriamo trascrizione user-assisted
+            setTimeout(() => {
+              const userTranscript = prompt('🎤 Per completare la trascrizione, puoi inserire il testo che hai pronunciato nella registrazione:\n\n(Oppure clicca Annulla per usare il placeholder)');
+              
+              if (userTranscript && userTranscript.trim()) {
+                resolve(userTranscript.trim());
+              } else {
+                resolve('📝 Trascrizione vocale salvata (modalità offline)\n\n💡 Suggerimento: Puoi modificare manualmente questa trascrizione cliccando sul pulsante "Mostra Trascrizione" della nota.');
+              }
+              
+              // Cleanup
+              URL.revokeObjectURL(audioUrl);
+            }, 500);
+          }).catch(error => {
+            console.error('❌ Errore fetch audio:', error);
+            setTimeout(() => {
+              resolve('📝 Nota vocale salvata con successo\n\n⚠️ Trascrizione automatica non disponibile - puoi aggiungere note testuali manualmente');
+            }, 500);
+          });
           
         } catch (error) {
           console.error('❌ Errore conversione audio:', error);
