@@ -377,7 +377,17 @@ class SmartAssistant {
     } else {
       console.error('❌ Start recording button not found');
     }
-    if (stopBtn) stopBtn.addEventListener('click', () => this.stopRecording());
+    
+    if (stopBtn) {
+      stopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🛑 Stop button clicked!');
+        this.stopRecording();
+      });
+      // Marca come avente listener attaccato
+      stopBtn._smartAssistantStopListenerAttached = true;
+    }
     if (transcribeBtn) transcribeBtn.addEventListener('click', () => this.transcribeAudio());
     if (refreshKpiBtn) refreshKpiBtn.addEventListener('click', () => this.refreshKPI());
     if (clearNotesBtn) clearNotesBtn.addEventListener('click', () => this.clearNotes());
@@ -405,11 +415,11 @@ class SmartAssistant {
    */
   ensureEventListeners() {
     const startBtn = document.getElementById('start-recording-btn');
-    if (!startBtn) return;
+    const stopBtn = document.getElementById('stop-recording-btn');
     
-    // Controlla se l'event listener è già presente testando una proprietà speciale
-    if (!startBtn._smartAssistantListenerAttached) {
-      console.log('🔧 Event listener mancante, riattacco...');
+    // Fix Start Button
+    if (startBtn && !startBtn._smartAssistantListenerAttached) {
+      console.log('🔧 Start button event listener mancante, riattacco...');
       
       // Forza abilitazione
       startBtn.disabled = false;
@@ -429,7 +439,24 @@ class SmartAssistant {
       
       // Marca come riattaccato
       startBtn._smartAssistantListenerAttached = true;
-      console.log('✅ Event listener riattaccato con successo');
+      console.log('✅ Start button event listener riattaccato');
+    }
+    
+    // Fix Stop Button
+    if (stopBtn && !stopBtn._smartAssistantStopListenerAttached) {
+      console.log('🔧 Stop button event listener mancante, riattacco...');
+      
+      // Riattacca listener
+      stopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🛑 Stop button clicked! (reattached)');
+        this.stopRecording();
+      });
+      
+      // Marca come riattaccato
+      stopBtn._smartAssistantStopListenerAttached = true;
+      console.log('✅ Stop button event listener riattaccato');
     }
   }
 
@@ -1177,9 +1204,11 @@ class SmartAssistant {
     
     if (!note) return;
     
+    // Dichiara noteElement fuori dal try/catch per usarlo nel catch
+    const noteElement = document.querySelector(`[data-note-id="${noteId}"]`);
+    
     try {
       // Mostra stato trascrizione
-      const noteElement = document.querySelector(`[data-note-id="${noteId}"]`);
       if (noteElement) {
         const transcribeBtn = noteElement.querySelector('.transcribe-btn');
         if (transcribeBtn) {
