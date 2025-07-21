@@ -858,6 +858,52 @@ class SmartAssistantSecureStorage {
   }
 
   /**
+   * Cancella una singola nota dalla cartella
+   */
+  deleteSingleNote(noteId, categoryId) {
+    try {
+      console.log(`🗑️ Cancellazione nota singola: ${noteId} dalla categoria ${categoryId}`);
+      
+      // Ottieni l'indice delle cartelle
+      const foldersIndex = this.getSecureItem('folders_index') || {};
+      
+      if (!foldersIndex[categoryId]) {
+        console.log(`⚠️ Categoria ${categoryId} non trovata`);
+        return false;
+      }
+      
+      const folder = foldersIndex[categoryId];
+      
+      // Rimuovi la nota dall'array delle note della cartella
+      const initialCount = folder.notes.length;
+      folder.notes = folder.notes.filter(note => note.id !== noteId);
+      
+      if (folder.notes.length === initialCount) {
+        console.log(`⚠️ Nota ${noteId} non trovata nella cartella`);
+        return false;
+      }
+      
+      // Aggiorna contatori
+      folder.noteCount = folder.notes.length;
+      folder.lastUpdated = new Date().toISOString();
+      
+      // Salva l'indice aggiornato
+      this.setSecureItem('folders_index', foldersIndex);
+      
+      // Rimuovi la nota completa dallo storage
+      const noteKey = `note_${noteId}`;
+      localStorage.removeItem(`${this.storagePrefix}${noteKey}`);
+      
+      console.log(`✅ Nota ${noteId} cancellata dalla categoria ${categoryId}`);
+      return true;
+      
+    } catch (error) {
+      console.error(`❌ Errore cancellazione nota singola:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Cancella tutte le note di una cartella specifica
    */
   clearFolder(categoryId) {

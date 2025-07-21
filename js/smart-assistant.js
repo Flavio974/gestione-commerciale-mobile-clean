@@ -4322,6 +4322,45 @@ Usa console per dettagli completi.
   }
 
   /**
+   * 🗑️ CANCELLA SINGOLA NOTA DA CARTELLA SICURA
+   */
+  deleteSecureNote(noteId, categoryId) {
+    if (!window.SmartAssistantSecureStorage) {
+      this.showNotification('⚠️ Sistema storage sicuro non disponibile', 'warning');
+      return;
+    }
+
+    // Conferma prima della cancellazione
+    if (!confirm('Vuoi davvero cancellare questa nota?')) {
+      return;
+    }
+
+    try {
+      const deleted = window.SmartAssistantSecureStorage.deleteSingleNote(noteId, categoryId);
+      
+      if (deleted) {
+        console.log(`✅ Nota ${noteId} cancellata`);
+        this.showNotification('🗑️ Nota cancellata con successo', 'success');
+        
+        // Ricarica la vista della cartella
+        setTimeout(() => {
+          // Chiude e riapre il modal per aggiornare la vista
+          const modal = document.querySelector('.smart-modal');
+          if (modal) modal.remove();
+          this.openSecureFolder(categoryId);
+        }, 500);
+        
+      } else {
+        throw new Error('Cancellazione fallita');
+      }
+      
+    } catch (error) {
+      console.error('❌ Errore durante cancellazione nota:', error);
+      this.showNotification(`❌ Errore: ${error.message}`, 'error');
+    }
+  }
+
+  /**
    * 🗑️ CANCELLA TUTTE LE NOTE DI UNA CARTELLA
    */
   clearFolder(folderId, folderName) {
@@ -4390,7 +4429,15 @@ Usa console per dettagli completi.
       <div class="smart-modal-content" style="max-width: 800px; max-height: 80vh;">
         <div class="modal-header">
           <h2>${category.icon} ${category.name}</h2>
-          <button class="modal-close" onclick="this.closest('.smart-modal').remove()">&times;</button>
+          <div style="display: flex; gap: 10px;">
+            <button class="clear-folder-btn" 
+                    style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 8px 16px; font-size: 14px; cursor: pointer; font-weight: 500;"
+                    onclick="if(confirm('Vuoi davvero cancellare TUTTE le note di questa cartella?')) { window.SmartAssistant.clearFolder('${categoryId}', '${category.name}'); this.closest('.smart-modal').remove(); }"
+                    title="Cancella tutte le note di questa cartella">
+              🗑️ Cancella Tutto
+            </button>
+            <button class="modal-close" onclick="this.closest('.smart-modal').remove()">&times;</button>
+          </div>
         </div>
         
         <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
@@ -4400,10 +4447,18 @@ Usa console per dettagli completi.
                 <div class="secure-note-item" style="border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: white;">
                   <div class="note-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <small style="color: #666;">${new Date(note.secureTimestamp).toLocaleString('it-IT')}</small>
-                    <div class="note-confidence" style="background: ${note.confidence > 0.7 ? '#d4edda' : note.confidence > 0.4 ? '#fff3cd' : '#f8d7da'}; 
-                                                            color: ${note.confidence > 0.7 ? '#155724' : note.confidence > 0.4 ? '#856404' : '#721c24'};
-                                                            padding: 2px 6px; border-radius: 3px; font-size: 10px;">
-                      ${Math.round(note.confidence * 100)}% sicurezza
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="note-confidence" style="background: ${note.confidence > 0.7 ? '#d4edda' : note.confidence > 0.4 ? '#fff3cd' : '#f8d7da'}; 
+                                                              color: ${note.confidence > 0.7 ? '#155724' : note.confidence > 0.4 ? '#856404' : '#721c24'};
+                                                              padding: 2px 6px; border-radius: 3px; font-size: 10px;">
+                        ${Math.round(note.confidence * 100)}% sicurezza
+                      </div>
+                      <button class="delete-note-btn"
+                              style="background: #dc3545; color: white; border: none; border-radius: 3px; padding: 4px 8px; font-size: 11px; cursor: pointer;"
+                              onclick="window.SmartAssistant.deleteSecureNote('${note.id}', '${categoryId}')"
+                              title="Cancella questa nota">
+                        🗑️
+                      </button>
                     </div>
                   </div>
                   
