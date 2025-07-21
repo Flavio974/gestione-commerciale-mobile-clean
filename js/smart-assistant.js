@@ -4242,12 +4242,22 @@ Usa console per dettagli completi.
             ${folders.map(folder => `
               <div class="folder-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: white; cursor: pointer; transition: all 0.2s;" 
                    onclick="window.SmartAssistant.openSecureFolder('${folder.id}')">
-                <div class="folder-header" style="display: flex; align-items: center; margin-bottom: 10px;">
-                  <span style="font-size: 24px; margin-right: 10px;">${folder.icon}</span>
-                  <div>
-                    <h4 style="margin: 0; color: #333;">${folder.name}</h4>
-                    <small style="color: #666;">${folder.noteCount} note</small>
+                <div class="folder-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                  <div style="display: flex; align-items: center;">
+                    <span style="font-size: 24px; margin-right: 10px;">${folder.icon}</span>
+                    <div>
+                      <h4 style="margin: 0; color: #333;">${folder.name}</h4>
+                      <small style="color: #666;">${folder.noteCount} note</small>
+                    </div>
                   </div>
+                  <button class="clear-folder-btn" 
+                          style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 8px; font-size: 12px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s;"
+                          onclick="event.stopPropagation(); window.SmartAssistant.clearFolder('${folder.id}', '${folder.name}')"
+                          onmouseover="this.style.opacity='1'"
+                          onmouseout="this.style.opacity='0.7'"
+                          title="Cancella tutte le note di questa cartella">
+                    <i class="fas fa-trash" style="font-size: 10px;"></i>
+                  </button>
                 </div>
                 
                 <div class="folder-preview">
@@ -4289,6 +4299,57 @@ Usa console per dettagli completi.
     `;
 
     document.body.appendChild(modal);
+  }
+
+  /**
+   * 🗑️ CANCELLA TUTTE LE NOTE DI UNA CARTELLA
+   */
+  clearFolder(folderId, folderName) {
+    if (!window.SmartAssistantSecureStorage) {
+      this.showNotification('⚠️ Sistema storage sicuro non disponibile', 'warning');
+      return;
+    }
+
+    // Conferma prima della cancellazione
+    const confirmMessage = `🗑️ ATTENZIONE!\n\nSei sicuro di voler cancellare TUTTE le note dalla cartella:\n"${folderName}"?\n\nQuesta operazione è IRREVERSIBILE!\n\nPremi OK per confermare la cancellazione.`;
+    
+    if (!confirm(confirmMessage)) {
+      console.log('🚫 Cancellazione annullata dall\'utente');
+      return;
+    }
+
+    try {
+      console.log(`🗑️ Cancellazione cartella: ${folderId} (${folderName})`);
+      
+      // Ottiene le note della cartella prima di cancellarle
+      const folderNotes = window.SmartAssistantSecureStorage.getFolderNotes(folderId);
+      const noteCount = folderNotes.length;
+      
+      // Cancella tutte le note dalla cartella
+      const deleted = window.SmartAssistantSecureStorage.clearFolder(folderId);
+      
+      if (deleted) {
+        console.log(`✅ Cancellate ${noteCount} note dalla cartella ${folderName}`);
+        this.showNotification(`🗑️ Cancellate ${noteCount} note da "${folderName}"`, 'success');
+        
+        // Ricarica l'interfaccia delle cartelle
+        setTimeout(() => {
+          // Chiude il modal corrente
+          const modal = document.querySelector('.smart-modal');
+          if (modal) modal.remove();
+          
+          // Riapre le cartelle aggiornate
+          this.showSecureFolders();
+        }, 1000);
+        
+      } else {
+        throw new Error('Operazione di cancellazione fallita');
+      }
+      
+    } catch (error) {
+      console.error('❌ Errore durante cancellazione cartella:', error);
+      this.showNotification(`❌ Errore: ${error.message}`, 'error');
+    }
   }
 
   /**

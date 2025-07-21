@@ -781,6 +781,57 @@ class SmartAssistantSecureStorage {
   }
 
   /**
+   * Cancella tutte le note di una cartella specifica
+   */
+  clearFolder(categoryId) {
+    try {
+      console.log(`🗑️ Inizio cancellazione cartella: ${categoryId}`);
+      
+      // Ottieni l'indice delle cartelle
+      const foldersIndex = this.getSecureItem('folders_index') || {};
+      
+      if (!foldersIndex[categoryId]) {
+        console.log(`⚠️ Cartella ${categoryId} non trovata`);
+        return false;
+      }
+      
+      const folder = foldersIndex[categoryId];
+      const noteIds = folder.notes || [];
+      let deletedCount = 0;
+      
+      // Cancella ogni singola nota
+      for (const noteId of noteIds) {
+        try {
+          const noteKey = `note_${noteId}`;
+          localStorage.removeItem(`${this.storagePrefix}${noteKey}`);
+          deletedCount++;
+          console.log(`🗑️ Nota cancellata: ${noteId}`);
+        } catch (error) {
+          console.error(`❌ Errore cancellazione nota ${noteId}:`, error);
+        }
+      }
+      
+      // Reset della cartella nell'indice
+      foldersIndex[categoryId] = {
+        ...folder,
+        notes: [],
+        noteCount: 0,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Salva l'indice aggiornato
+      this.setSecureItem('folders_index', foldersIndex);
+      
+      console.log(`✅ Cartella ${categoryId} svuotata: ${deletedCount} note cancellate`);
+      return true;
+      
+    } catch (error) {
+      console.error(`❌ Errore durante cancellazione cartella ${categoryId}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Metodi sicuri per localStorage con prefisso
    */
   getSecureItem(key) {
