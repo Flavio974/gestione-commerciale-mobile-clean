@@ -37,6 +37,13 @@
 
 # Functions configuration already specified in [build] section
 
+# 🚀 API REDIRECTS - Netlify Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = false
+
 # ✅ STATIC FILES PASSTHROUGH - Fix redirect priority
 
 # Fix per file JS nella root

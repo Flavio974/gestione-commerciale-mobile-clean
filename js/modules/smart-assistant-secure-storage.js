@@ -329,19 +329,26 @@ class SmartAssistantSecureStorage {
     try {
       const syncQueue = this.getSecureItem('supabase_sync_queue') || [];
       
-      // Prepara payload per Supabase (senza audio per risparmiare spazio)
+      // Prepara payload per Supabase (adattato al formato note_ai)
       const supabasePayload = {
-        note_id: secureNote.id,
+        testo_originale: secureNote.transcription,
+        persone: secureNote.extractedEntities.persone || [],
+        aziende: secureNote.extractedEntities.aziende || [],
+        categoria: secureNote.category.toLowerCase(),
+        priorita: 'media', // Default, può essere migliorato con analisi
+        azioni: secureNote.keywords || [],
+        date_rilevate: secureNote.extractedEntities.date || {},
         timestamp: secureNote.secureTimestamp,
-        category: secureNote.category,
-        transcription: secureNote.transcription,
-        confidence: secureNote.confidence,
-        extracted_entities: secureNote.extractedEntities,
-        keywords: secureNote.keywords,
+        origine: 'smart_assistant_secure_storage',
+        audio_base64: secureNote.audioBase64,
         metadata: {
+          source_note_id: secureNote.id,
+          confidence: secureNote.confidence,
           duration: secureNote.metadata.duration,
           security_level: secureNote.metadata.securityLevel,
-          has_audio_backup: !!secureNote.audioBase64
+          has_audio_backup: !!secureNote.audioBase64,
+          original_category: secureNote.category,
+          keywords: secureNote.keywords
         }
       };
       
@@ -381,7 +388,7 @@ class SmartAssistantSecureStorage {
       for (const noteData of syncQueue) {
         try {
           const { data, error } = await window.supabaseClient
-            .from('smart_assistant_secure_notes')
+            .from('note_ai')
             .upsert(noteData);
           
           if (error) {
