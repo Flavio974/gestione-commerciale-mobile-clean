@@ -176,7 +176,7 @@ class SmartAssistant {
           <div class="kpi-header">
             <h3>📊 Dashboard KPI</h3>
             <div class="header-buttons">
-              <button onclick="window.SmartAssistant.showSecureFolders()" class="btn btn-success" style="background: #28a745; color: white; margin-right: 10px; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
+              <button onclick="console.log('🔍 Click Cartelle Sicure'); if(window.SmartAssistant) { window.SmartAssistant.showSecureFolders(); } else { console.error('❌ window.SmartAssistant not found'); }" class="btn btn-success" style="background: #28a745; color: white; margin-right: 10px; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
                 🔐 Cartelle Sicure
               </button>
               <button onclick="window.SmartAssistant.debugTranscriptions()" class="btn btn-info" style="background: #17a2b8; color: white; margin-right: 10px; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
@@ -4200,7 +4200,20 @@ Usa console per dettagli completi.
    * 📁 MOSTRA INTERFACCIA CARTELLE SICURE
    */
   showSecureFolders() {
+    console.log('🚀 showSecureFolders() chiamato - INIZIO');
+    
+    // Ferma il middleware problematico se attivo
+    if (window.robustConnectionManager) {
+      try {
+        window.robustConnectionManager.stop();
+        console.log('🛑 Middleware fermato per evitare interferenze');
+      } catch (e) {
+        console.warn('⚠️ Errore fermando middleware:', e);
+      }
+    }
+    
     if (!window.SmartAssistantSecureStorage) {
+      console.error('❌ Sistema storage sicuro NON disponibile');
       this.showNotification('⚠️ Sistema storage sicuro non disponibile', 'warning');
       return;
     }
@@ -4301,8 +4314,12 @@ Usa console per dettagli completi.
 
     document.body.appendChild(modal);
     
+    console.log('✅ Modal aggiunto al DOM');
+    console.log('🔍 Numero totale di cartelle:', folders.length);
+    
     // Debug: verifica che i pulsanti siano stati creati
     setTimeout(() => {
+      console.log('⏰ DEBUG timeout - controllo pulsanti...');
       const clearButtons = modal.querySelectorAll('.clear-folder-btn');
       console.log(`🔍 DEBUG: Trovati ${clearButtons.length} pulsanti di cancellazione`);
       if (clearButtons.length === 0) {
@@ -4310,15 +4327,22 @@ Usa console per dettagli completi.
         // Prova a cercare qualsiasi pulsante
         const allButtons = modal.querySelectorAll('button');
         console.log(`🔍 DEBUG: Trovati ${allButtons.length} pulsanti totali nel modal`);
+        
+        // Verifica se ci sono errori nella generazione HTML
+        console.log('🔍 DEBUG: HTML del modal generato:', modal.innerHTML.length, 'caratteri');
+        console.log('🔍 DEBUG: Cartelle disponibili:', folders);
       } else {
         console.log('✅ Pulsanti di cancellazione creati correttamente');
         // Verifica che siano visibili
         clearButtons.forEach((btn, index) => {
           const rect = btn.getBoundingClientRect();
           console.log(`🔍 Pulsante ${index + 1} - Visibile: ${rect.width > 0 && rect.height > 0}, Posizione: ${rect.top}, ${rect.left}`);
+          console.log(`🔍 Pulsante ${index + 1} - HTML:`, btn.outerHTML);
         });
       }
     }, 100);
+    
+    console.log('🏁 showSecureFolders() completato - FINE');
   }
 
   /**
