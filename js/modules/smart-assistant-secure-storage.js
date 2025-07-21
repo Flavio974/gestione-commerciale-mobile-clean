@@ -508,6 +508,12 @@ class SmartAssistantSecureStorage {
       // Analizza il contenuto
       const contentAnalysis = this.analyzeContent(note.transcription);
       
+      // Rileva clienti specifici per il payload Supabase
+      const specificClients = this.detectSpecificClients(
+        note.transcription, 
+        note.aiAnalysis?.entities || {}
+      );
+      
       // Crea nota sicura
       const secureNote = {
         id: note.id,
@@ -523,6 +529,16 @@ class SmartAssistantSecureStorage {
         genericType: contentAnalysis.isGenericTask?.type || null,
         actions: contentAnalysis.actions || [],
         timeReferences: contentAnalysis.timeReferences || [],
+        // Aggiunge clienti rilevati per Supabase
+        detectedClients: specificClients.filter(client => 
+          // Filtra solo persone (non aziende)
+          !client.includes('SRL') && !client.includes('SpA') && !client.includes('Ltd')
+        ),
+        detectedCompanies: specificClients.filter(client => 
+          // Filtra solo aziende
+          client.includes('SRL') || client.includes('SpA') || client.includes('Ltd') || 
+          client.match(/^[A-Z]{2,}/)
+        ),
         metadata: {
           duration: note.duration,
           originalAnalysis: note.aiAnalysis,
@@ -538,14 +554,11 @@ class SmartAssistantSecureStorage {
         await this.createGenericTask(secureNote);
       }
       
-      // Rileva clienti specifici e crea cartelle individuali
-      const specificClients = this.detectSpecificClients(
-        note.transcription, 
-        note.aiAnalysis?.entities || {}
-      );
+      // Crea cartelle individuali per i clienti rilevati
+      const allDetectedClients = [...secureNote.detectedClients, ...secureNote.detectedCompanies];
       
-      if (specificClients.length > 0) {
-        await this.createClientSpecificNotes(secureNote, specificClients);
+      if (allDetectedClients.length > 0) {
+        await this.createClientSpecificNotes(secureNote, allDetectedClients);
       }
       
       // Marca come sicura
@@ -612,34 +625,98 @@ class SmartAssistantSecureStorage {
   }
 
   /**
+   * Determina la priorità della nota basata sul contenuto
+   */
+  determinePriority(secureNote) {
+    const text = secureNote.transcription.toLowerCase();
+    
+    // Priorità ALTA per urgenze
+    if (text.includes('urgente') || text.includes('subito') || text.includes('entro oggi') || 
+        text.includes('importante') || text.includes('problema') || text.includes('emergenza')) {
+      return 'alta';
+    }
+    
+    // Priorità ALTA per scadenze temporali precise
+    if (secureNote.timeReferences && secureNote.timeReferences.length > 0) {
+      const hasTimeDeadline = secureNote.timeReferences.some(ref => 
+        ref.includes('entro') || ref.includes('alle') || ref.includes('oggi') || ref.includes('domani')
+      );
+      if (hasTimeDeadline) return 'alta';
+    }
+    
+    // Priorità MEDIA per clienti specifici
+    if (secureNote.clientName || (secureNote.detectedClients && secureNote.detectedClients.length > 0)) {
+      return 'media';
+    }
+    
+    // Priorità BASSA per task generiche
+    if (secureNote.isGenericTask) {
+      return 'bassa';
+    }
+    
+    // Default MEDIA
+    return 'media';
+  }
+
+  /**
    * Prepara dati per sincronizzazione Supabase
    */
   async prepareForSupabaseSync(secureNote) {
     try {
       const syncQueue = this.getSecureItem('supabase_sync_queue') || [];
       
+      // Estrae entità dall'analisi AI originale se disponibile
+      const originalEntities = secureNote.metadata?.originalAnalysis?.entities || {};
+      
+      // Combina entità AI originali con clienti rilevati localmente
+      const personeDetected = [
+        ...(originalEntities.persone || []),
+        ...(secureNote.detectedClients || [])
+      ];
+      
+      const aziendeDetected = [
+        ...(originalEntities.aziende || []),
+        ...(secureNote.detectedCompanies || [])
+      ];
+      
       // Prepara payload per Supabase (adattato al formato note_ai)
       const supabasePayload = {
         testo_originale: secureNote.transcription,
-        persone: secureNote.extractedEntities.persone || [],
-        aziende: secureNote.extractedEntities.aziende || [],
+        persone: [...new Set(personeDetected)], // Rimuove duplicati
+        aziende: [...new Set(aziendeDetected)], // Rimuove duplicati
         categoria: secureNote.category.toLowerCase(),
-        priorita: 'media', // Default, può essere migliorato con analisi
-        azioni: secureNote.keywords || [],
-        date_rilevate: secureNote.extractedEntities.date || {},
+        priorita: this.determinePriority(secureNote), // Priorità dinamica
+        azioni: secureNote.actions || secureNote.keywords || [],
+        date_rilevate: originalEntities.date || secureNote.timeReferences || [],
         timestamp: secureNote.secureTimestamp,
         origine: 'smart_assistant_secure_storage',
         audio_base64: secureNote.audioBase64,
         metadata: {
           source_note_id: secureNote.id,
           confidence: secureNote.confidence,
-          duration: secureNote.metadata.duration,
-          security_level: secureNote.metadata.securityLevel,
+          duration: secureNote.metadata?.duration,
+          security_level: secureNote.metadata?.securityLevel || 'PRIVATE',
           has_audio_backup: !!secureNote.audioBase64,
           original_category: secureNote.category,
-          keywords: secureNote.keywords
+          keywords: secureNote.keywords,
+          is_generic_task: secureNote.isGenericTask,
+          generic_type: secureNote.genericType,
+          client_specific: !!secureNote.clientName,
+          client_name: secureNote.clientName,
+          extracted_patterns: secureNote.extractedEntities
         }
       };
+      
+      // Debug del payload per verificare i dati
+      console.log('🔄 Payload Supabase preparato:', {
+        persone: supabasePayload.persone,
+        aziende: supabasePayload.aziende,
+        categoria: supabasePayload.categoria,
+        priorita: supabasePayload.priorita,
+        azioni: supabasePayload.azioni,
+        date_rilevate: supabasePayload.date_rilevate,
+        metadata_keys: Object.keys(supabasePayload.metadata)
+      });
       
       syncQueue.push(supabasePayload);
       
