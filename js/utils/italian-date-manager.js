@@ -69,14 +69,11 @@ class ItalianDateManager {
         try {
             // Metodo più accurato per ottenere l'orario italiano
             const italianTimeString = now.toLocaleString("it-IT", {timeZone: this.timezone});
-            console.log('🇮🇹 getCurrentDate: String italiano:', italianTimeString);
             
             // Parsing più robusto della stringa italiana
             const italianTime = this.parseItalianDateTime(italianTimeString);
             
             if (italianTime && !isNaN(italianTime.getTime())) {
-                console.log('🇮🇹 getCurrentDate: Data corrente (timezone italiano):', this.formatDate(italianTime));
-                console.log('🇮🇹 getCurrentDate: Orario italiano:', italianTime.toLocaleTimeString('it-IT'));
                 return italianTime;
             } else {
                 throw new Error('Parsing failed');
@@ -110,13 +107,6 @@ class ItalianDateManager {
                 
                 // Crea la data
                 const date = new Date(year, month - 1, day, hour, minute, second);
-                
-                console.log('🇮🇹 parseItalianDateTime:', {
-                    input: dateTimeString,
-                    parsed: { day, month, year, hour, minute, second },
-                    result: date
-                });
-                
                 return date;
             }
             
@@ -131,32 +121,12 @@ class ItalianDateManager {
      * OTTIENI l'orario corrente nel timezone italiano
      */
     getCurrentTime() {
-        try {
-            // Usa lo stesso approccio di getCurrentDate()
-            const italianTime = this.getCurrentDate();
-            
-            // Verifica che l'oggetto Date sia valido
-            if (!italianTime || isNaN(italianTime.getTime())) {
-                throw new Error('Data non valida da getCurrentDate()');
-            }
-            
-            // Formatta l'orario manualmente per evitare problemi con toLocaleTimeString
-            const ore = italianTime.getHours().toString().padStart(2, '0');
-            const minuti = italianTime.getMinutes().toString().padStart(2, '0');
-            const secondi = italianTime.getSeconds().toString().padStart(2, '0');
-            
-            const orario = `${ore}:${minuti}:${secondi}`;
-            
-            console.log('🕐 getCurrentTime: Orario italiano:', orario);
-            return orario;
-        } catch (error) {
-            console.warn('⚠️ Errore getCurrentTime, uso orario locale:', error);
-            const now = new Date();
-            const ore = now.getHours().toString().padStart(2, '0');
-            const minuti = now.getMinutes().toString().padStart(2, '0');
-            const secondi = now.getSeconds().toString().padStart(2, '0');
-            return `${ore}:${minuti}:${secondi}`;
-        }
+        // EVITA LOOP RICORSIVO - usa Date() direttamente 
+        const now = new Date();
+        const ore = now.getHours().toString().padStart(2, '0');
+        const minuti = now.getMinutes().toString().padStart(2, '0');
+        const secondi = now.getSeconds().toString().padStart(2, '0');
+        return `${ore}:${minuti}:${secondi}`;
     }
 
     /**
