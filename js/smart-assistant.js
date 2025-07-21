@@ -138,7 +138,7 @@ class SmartAssistant {
             </div>
             
             <div class="voice-controls">
-              <button id="start-recording-btn" class="voice-btn record-btn" disabled>
+              <button id="start-recording-btn" class="voice-btn record-btn">
                 <i class="fas fa-microphone"></i>
                 <span>Inizia Registrazione</span>
               </button>
@@ -337,6 +337,8 @@ class SmartAssistant {
    * Setup event listeners
    */
   setupEventListeners() {
+    console.log('🎤 setupEventListeners: Inizio configurazione...');
+    
     const startBtn = document.getElementById('start-recording-btn');
     const stopBtn = document.getElementById('stop-recording-btn');
     const transcribeBtn = document.getElementById('transcribe-btn');
@@ -353,35 +355,40 @@ class SmartAssistant {
     const clientSearchInput = document.getElementById('client-search-input');
 
     if (startBtn) {
-      console.log('🎤 Attaching click listener to start button');
+      console.log('🎤 Start button trovato, configurazione...');
       
-      // FORZA l'abilitazione del pulsante immediatamente se non è già abilitato
-      if (startBtn.disabled) {
-        console.log('🔧 Force enabling start button immediately...');
-        startBtn.disabled = false;
-        startBtn.classList.add('ready');
-        startBtn.style.opacity = '1';
-        startBtn.style.cursor = 'pointer';
-        startBtn.style.backgroundColor = '#28a745';
-        startBtn.style.borderColor = '#28a745';
-      }
+      // FORZA stato abilitato immediatamente
+      startBtn.disabled = false;
+      startBtn.style.opacity = '1';
+      startBtn.style.cursor = 'pointer';
+      startBtn.style.pointerEvents = 'auto';
+      startBtn.style.backgroundColor = '#28a745';
+      startBtn.style.borderColor = '#28a745';
+      startBtn.classList.add('ready');
+      startBtn.classList.remove('disabled');
       
-      startBtn.addEventListener('click', (e) => {
+      // Rimuovi listener esistenti se presenti
+      startBtn.removeEventListener('click', this._startRecordingHandler);
+      
+      // Crea handler bound
+      this._startRecordingHandler = (e) => {
         e.preventDefault();
         e.stopPropagation();
         console.log('🎤 Start button clicked!');
-        
-        // Doppio controllo: se il pulsante è ancora disabilitato, abilitalo
-        if (startBtn.disabled) {
-          console.log('🔧 Button was disabled, forcing enable...');
-          startBtn.disabled = false;
-        }
-        
+        this.startRecording();
+      };
+      
+      // Attacca listener
+      startBtn.addEventListener('click', this._startRecordingHandler);
+      
+      // Aggiungi anche touch support per mobile
+      startBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        console.log('📱 Touch start rilevato');
         this.startRecording();
       });
       
-      // Marca come avente listener attaccato
-      startBtn._smartAssistantListenerAttached = true;
+      console.log('✅ Pulsante registrazione abilitato');
     } else {
       console.error('❌ Start recording button not found');
     }
@@ -1388,7 +1395,7 @@ class SmartAssistant {
       const base64Audio = await this.blobToBase64(audioBlob);
       
       // Costruisci URL API
-      const apiUrl = `${this.apiEndpoint}/speech-to-text`;
+      const apiUrl = `${this.apiEndpoint}/speech-to-text-complex`;
       console.log('🌐 Chiamando API:', apiUrl);
       
       // Chiama API con timeout ridotto per iPad
@@ -1609,7 +1616,7 @@ class SmartAssistant {
     
     try {
       // Costruisci URL API
-      const apiUrl = `${this.apiEndpoint}/speech-to-text`;
+      const apiUrl = `${this.apiEndpoint}/speech-to-text-complex`;
       console.log('🌐 Chiamando API trascrizione:', apiUrl);
       
       // Chiama API direttamente con base64
@@ -1881,7 +1888,7 @@ Fornisci ESCLUSIVAMENTE questo JSON (senza markdown, senza spiegazioni):
     };
 
     // Usa sempre l'URL di Replit per le API
-    const apiUrl = `${REPLIT_API_URL}/claude-ai.php`;
+    const apiUrl = window.AI_CONFIG?.apiEndpoint || '/.netlify/functions/claude-ai';
     
     const response = await fetch(apiUrl, {
       method: 'POST',
