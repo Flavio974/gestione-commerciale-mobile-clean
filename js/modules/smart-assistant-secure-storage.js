@@ -188,8 +188,17 @@ class SmartAssistantSecureStorage {
       category: 'GENERALE',
       confidence: 0,
       extractedEntities: {},
-      keywords: []
+      keywords: [],
+      isGenericTask: false,
+      genericType: null,
+      actions: [],
+      timeReferences: []
     };
+
+    // Rileva riferimenti generici e azioni
+    analysis.isGenericTask = this.detectGenericReferences(text);
+    analysis.actions = this.extractActions(text);
+    analysis.timeReferences = this.extractTimeReferences(text);
 
     let maxScore = 0;
     
@@ -238,6 +247,255 @@ class SmartAssistantSecureStorage {
   }
 
   /**
+   * Rileva riferimenti generici come "i miei clienti", "tutti i fornitori"
+   */
+  detectGenericReferences(text) {
+    const genericPatterns = [
+      { pattern: /(i\s+)?miei\s+clienti?/i, type: 'clienti_generici' },
+      { pattern: /(tutti\s+i\s+)?clienti?/i, type: 'clienti_generici' },
+      { pattern: /(i\s+)?miei\s+fornitori?/i, type: 'fornitori_generici' },
+      { pattern: /(tutti\s+i\s+)?fornitori?/i, type: 'fornitori_generici' },
+      { pattern: /fare\s+(gli\s+)?ordini?/i, type: 'ordini_generici' },
+      { pattern: /chiamare\s+(i\s+)?clienti?/i, type: 'clienti_generici' }
+    ];
+
+    for (const {pattern, type} of genericPatterns) {
+      if (pattern.test(text)) {
+        return { isGeneric: true, type };
+      }
+    }
+
+    return { isGeneric: false, type: null };
+  }
+
+  /**
+   * Estrae azioni dal testo
+   */
+  extractActions(text) {
+    const actionPatterns = [
+      /chiamare/i,
+      /telefonare/i, 
+      /contattare/i,
+      /ordinare/i,
+      /fare\s+(gli\s+)?ordini?/i,
+      /inviare/i,
+      /mandare/i,
+      /controllare/i,
+      /verificare/i,
+      /preparare/i
+    ];
+
+    const actions = [];
+    for (const pattern of actionPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        actions.push(match[0]);
+      }
+    }
+
+    return actions;
+  }
+
+  /**
+   * Estrae riferimenti temporali
+   */
+  extractTimeReferences(text) {
+    const timePatterns = [
+      /entro\s+(le\s+)?(\d{1,2}):?(\d{2})?/i,
+      /alle\s+(\d{1,2}):?(\d{2})?/i,
+      /oggi/i,
+      /domani/i,
+      /questa\s+settimana/i,
+      /lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica/i
+    ];
+
+    const timeRefs = [];
+    for (const pattern of timePatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        timeRefs.push(match[0]);
+      }
+    }
+
+    return timeRefs;
+  }
+
+  /**
+   * Crea task generica nella cartella appropriata
+   */
+  async createGenericTask(secureNote) {
+    let targetCategory = 'GENERALE';
+    
+    // Mappa tipi generici alle categorie
+    const typeMapping = {
+      'clienti_generici': 'CLIENTI',
+      'fornitori_generici': 'FORNITORI', 
+      'ordini_generici': 'ORDINI'
+    };
+
+    if (secureNote.genericType && typeMapping[secureNote.genericType]) {
+      targetCategory = typeMapping[secureNote.genericType];
+    }
+
+    // Crea task formattata
+    const taskNote = {
+      ...secureNote,
+      id: `${secureNote.id}_task`,
+      category: targetCategory,
+      taskType: 'GENERIC',
+      taskDescription: this.formatGenericTaskDescription(secureNote),
+      originalNoteId: secureNote.id
+    };
+
+    console.log(`📋 Creando task generica in categoria: ${targetCategory}`);
+    console.log(`📝 Descrizione task: ${taskNote.taskDescription}`);
+
+    // Salva nella cartella target
+    await this.saveToSecureFolder(taskNote);
+    
+    return taskNote;
+  }
+
+  /**
+   * Formatta descrizione per task generica
+   */
+  formatGenericTaskDescription(secureNote) {
+    let description = '';
+    
+    if (secureNote.actions.length > 0) {
+      description += `Azione: ${secureNote.actions.join(', ')} `;
+    }
+    
+    if (secureNote.genericType) {
+      const typeDesc = {
+        'clienti_generici': 'tutti i clienti',
+        'fornitori_generici': 'tutti i fornitori',
+        'ordini_generici': 'gli ordini'
+      };
+      description += typeDesc[secureNote.genericType] || '';
+    }
+    
+    if (secureNote.timeReferences.length > 0) {
+      description += ` - Scadenza: ${secureNote.timeReferences.join(', ')}`;
+    }
+
+    return description || secureNote.transcription;
+  }
+
+  /**
+   * Crea cartelle dinamiche per clienti specifici
+   */
+  async createClientFolder(clientName) {
+    const folderKey = `CLIENTE_${clientName.toUpperCase().replace(/\s+/g, '_')}`;
+    
+    const clientFolder = {
+      name: `Cliente: ${clientName}`,
+      icon: '👤',
+      keywords: [clientName.toLowerCase()],
+      patterns: [new RegExp(clientName.replace(/\s+/g, '\\s+'), 'i')],
+      isClientFolder: true,
+      clientName: clientName,
+      createdAt: new Date().toISOString()
+    };
+
+    // Aggiunge alla struttura categorie
+    this.categories[folderKey] = clientFolder;
+    
+    console.log(`👤 Creata cartella per cliente: ${clientName}`);
+    return folderKey;
+  }
+
+  /**
+   * Rileva nomi specifici di clienti/aziende dal testo
+   */
+  detectSpecificClients(text, entities) {
+    const detectedClients = [];
+    
+    // Cerca persone specifiche dalle entità AI
+    if (entities.persone && entities.persone.length > 0) {
+      detectedClients.push(...entities.persone);
+    }
+    
+    // Cerca aziende specifiche
+    if (entities.aziende && entities.aziende.length > 0) {
+      detectedClients.push(...entities.aziende);
+    }
+
+    // Pattern per nomi propri (maiuscole)
+    const namePatterns = [
+      /\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b/g, // Mario Rossi
+      /\b([A-Z][a-z]+\s+[A-Z]{2,})\b/g,   // Azienda SRL
+      /\b([A-Z]{2,}(?:\s+[A-Z][a-z]+)*)\b/g // ABC Company
+    ];
+
+    for (const pattern of namePatterns) {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        const name = match[1].trim();
+        if (name.length > 2 && !detectedClients.includes(name)) {
+          detectedClients.push(name);
+        }
+      }
+    }
+
+    return detectedClients;
+  }
+
+  /**
+   * Crea note specifiche per ogni cliente rilevato
+   */
+  async createClientSpecificNotes(originalNote, clientNames) {
+    const clientNotes = [];
+    
+    for (const clientName of clientNames) {
+      // Crea cartella cliente se non esiste
+      const clientFolderKey = await this.createClientFolder(clientName);
+      
+      // Crea nota specifica per questo cliente
+      const clientNote = {
+        ...originalNote,
+        id: `${originalNote.id}_client_${clientName.replace(/\s+/g, '_')}`,
+        category: clientFolderKey,
+        clientName: clientName,
+        noteType: 'CLIENT_SPECIFIC',
+        originalNoteId: originalNote.id,
+        clientHistory: {
+          timestamp: new Date().toISOString(),
+          interaction: this.categorizeInteraction(originalNote),
+          content: originalNote.transcription
+        }
+      };
+
+      console.log(`👤 Creando nota per cliente: ${clientName}`);
+      
+      // Salva nella cartella del cliente
+      await this.saveToSecureFolder(clientNote);
+      clientNotes.push(clientNote);
+    }
+
+    return clientNotes;
+  }
+
+  /**
+   * Categorizza il tipo di interazione con il cliente
+   */
+  categorizeInteraction(note) {
+    const text = note.transcription.toLowerCase();
+    
+    if (text.includes('chiamare') || text.includes('telefonare')) {
+      return 'CHIAMATA';
+    } else if (text.includes('ordinare') || text.includes('ordine')) {
+      return 'ORDINE';
+    } else if (text.includes('incontro') || text.includes('appuntamento')) {
+      return 'INCONTRO';
+    } else if (text.includes('problema') || text.includes('reclamo')) {
+      return 'PROBLEMA';
+    } else {
+      return 'GENERICO';
+    }
+  }
+
+  /**
    * Organizza e salva una nota nell'ambiente sicuro
    */
   async organizeAndStoreNote(note) {
@@ -261,6 +519,10 @@ class SmartAssistantSecureStorage {
         extractedEntities: contentAnalysis.extractedEntities,
         keywords: contentAnalysis.keywords,
         audioBase64: note.audioBase64, // Mantiene audio per backup
+        isGenericTask: contentAnalysis.isGenericTask?.isGeneric || false,
+        genericType: contentAnalysis.isGenericTask?.type || null,
+        actions: contentAnalysis.actions || [],
+        timeReferences: contentAnalysis.timeReferences || [],
         metadata: {
           duration: note.duration,
           originalAnalysis: note.aiAnalysis,
@@ -270,6 +532,21 @@ class SmartAssistantSecureStorage {
 
       // Salva nella categoria appropriata
       await this.saveToSecureFolder(secureNote);
+      
+      // Se è un task generico, crea anche una task nella cartella correlata
+      if (secureNote.isGenericTask) {
+        await this.createGenericTask(secureNote);
+      }
+      
+      // Rileva clienti specifici e crea cartelle individuali
+      const specificClients = this.detectSpecificClients(
+        note.transcription, 
+        note.aiAnalysis?.entities || {}
+      );
+      
+      if (specificClients.length > 0) {
+        await this.createClientSpecificNotes(secureNote, specificClients);
+      }
       
       // Marca come sicura
       this.markNoteAsSecured(note.id);
