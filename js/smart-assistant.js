@@ -4251,12 +4251,13 @@ Usa console per dettagli completi.
                     </div>
                   </div>
                   <button class="clear-folder-btn" 
-                          style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 8px; font-size: 12px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s;"
+                          style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 12px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; display: flex; align-items: center; gap: 5px;"
                           onclick="event.stopPropagation(); window.SmartAssistant.clearFolder('${folder.id}', '${folder.name}')"
                           onmouseover="this.style.opacity='1'"
                           onmouseout="this.style.opacity='0.7'"
                           title="Cancella tutte le note di questa cartella">
-                    <i class="fas fa-trash" style="font-size: 10px;"></i>
+                    <i class="fas fa-trash" style="font-size: 12px;"></i>
+                    <span>Svuota</span>
                   </button>
                 </div>
                 
