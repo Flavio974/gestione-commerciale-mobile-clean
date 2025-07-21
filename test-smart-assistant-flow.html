@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Smart Assistant Flow</title>
+    
+    <!-- Carica le dipendenze necessarie -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Smart Assistant Flow</h1>
+    
+    <div class="test-section">
+        <h2>1. Verifica Configurazione</h2>
+        <button onclick="checkConfiguration()">Verifica Config</button>
+        <div id="config-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Supabase Connection</h2>
+        <button onclick="testSupabaseConnection()">Test Connessione</button>
+        <div id="supabase-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Salvataggio Note</h2>
+        <button onclick="testNoteSaving()">Test Salvataggio</button>
+        <div id="save-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test Trascrizione</h2>
+        <button onclick="testTranscription()">Test Trascrizione</button>
+        <div id="transcription-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Test Sincronizzazione</h2>
+        <button onclick="testSync()">Test Sync</button>
+        <div id="sync-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Visualizza Note Salvate</h2>
+        <button onclick="showSavedNotes()">Mostra Note</button>
+        <div id="notes-list"></div>
+    </div>
+
+    <script>
+        // Inizializza Supabase
+        const SUPABASE_URL = 'https://ibuwqihgdkinfmvxqfnq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlidXdxaWhnZGtpbmZtdnhxZm5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMDk4NjEsImV4cCI6MjA2Njc4NTg2MX0.c-zsnXM-eqXnIZQXM9UwXlKhvDDcPsDSwqANZk0uDqY';
+        
+        // Crea client Supabase
+        if (typeof supabase !== 'undefined') {
+            window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Supabase client inizializzato');
+        }
+        
+        // Configura AI endpoint
+        window.AI_CONFIG = {
+            apiEndpoint: '/.netlify/functions/claude-ai'
+        };
+        
+        // Funzioni di utility
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // 1. Verifica configurazione
+        async function checkConfiguration() {
+            try {
+                const config = {
+                    supabaseAvailable: typeof window.supabaseClient !== 'undefined',
+                    smartAssistantAvailable: typeof window.SmartAssistant !== 'undefined',
+                    aiConfigAvailable: typeof window.AI_CONFIG !== 'undefined',
+                    apiEndpoint: window.AI_CONFIG?.apiEndpoint || 'Non configurato'
+                };
+
+                let html = '<h3>Configurazione Sistema:</h3><pre>';
+                html += `Supabase Client: ${config.supabaseAvailable ? '✅' : '❌'}\n`;
+                html += `Smart Assistant: ${config.smartAssistantAvailable ? '✅' : '❌'}\n`;
+                html += `AI Config: ${config.aiConfigAvailable ? '✅' : '❌'}\n`;
+                html += `API Endpoint: ${config.apiEndpoint}\n`;
+                html += '</pre>';
+
+                showStatus('config-status', html, config.supabaseAvailable ? 'success' : 'warning');
+            } catch (error) {
+                showStatus('config-status', `Errore: ${error.message}`, 'error');
+            }
+        }
+
+        // 2. Test connessione Supabase
+        async function testSupabaseConnection() {
+            try {
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client non disponibile');
+                }
+
+                // Test tabella note_ai
+                const { data: noteAi, error: noteAiError } = await window.supabaseClient
+                    .from('note_ai')
+                    .select('count')
+                    .single();
+
+                // Test tabella smart_assistant_secure_notes
+                const { data: secureNotes, error: secureNotesError } = await window.supabaseClient
+                    .from('smart_assistant_secure_notes')
+                    .select('count')
+                    .single();
+
+                let html = '<h3>Stato Tabelle Supabase:</h3><pre>';
+                html += `Tabella note_ai: ${noteAiError ? '❌ ' + noteAiError.message : '✅ Accessibile'}\n`;
+                html += `Tabella smart_assistant_secure_notes: ${secureNotesError ? '❌ ' + secureNotesError.message : '✅ Accessibile'}\n`;
+                html += '</pre>';
+
+                showStatus('supabase-status', html, noteAiError && secureNotesError ? 'error' : 'warning');
+            } catch (error) {
+                showStatus('supabase-status', `Errore: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. Test salvataggio note
+        async function testNoteSaving() {
+            try {
+                const testNote = {
+                    id: 'test_' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    audioUrl: 'blob:test',
+                    audioBase64: 'data:audio/webm;base64,TEST',
+                    transcription: 'Questa è una nota di test per verificare il salvataggio',
+                    size: '1 KB'
+                };
+
+                // Salva in localStorage
+                const existingNotes = JSON.parse(localStorage.getItem('smart_voice_notes') || '[]');
+                existingNotes.unshift(testNote);
+                localStorage.setItem('smart_voice_notes', JSON.stringify(existingNotes));
+
+                showStatus('save-status', `✅ Nota di test salvata con ID: ${testNote.id}`, 'success');
+            } catch (error) {
+                showStatus('save-status', `Errore: ${error.message}`, 'error');
+            }
+        }
+
+        // 4. Test trascrizione
+        async function testTranscription() {
+            try {
+                const testAudioBase64 = 'data:audio/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQRChYECGFOAZwH/////////';
+                
+                const response = await fetch('/.netlify/functions/speech-to-text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ audio: testAudioBase64 })
+                });
+
+                const result = await response.json();
+                
+                let html = '<h3>Risultato Trascrizione:</h3><pre>';
+                html += `Status: ${response.status}\n`;
+                html += `Response: ${JSON.stringify(result, null, 2)}\n`;
+                html += '</pre>';
+
+                showStatus('transcription-status', html, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showStatus('transcription-status', `Errore: ${error.message}`, 'error');
+            }
+        }
+
+        // 5. Test sincronizzazione
+        async function testSync() {
+            try {
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client non disponibile');
+                }
+
+                const testData = {
+                    note_id: 'sync_test_' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    testo_originale: 'Test sincronizzazione Supabase',
+                    categoria: 'generale',
+                    priorita: 'media',
+                    origine: 'test_sync'
+                };
+
+                const { data, error } = await window.supabaseClient
+                    .from('note_ai')
+                    .insert(testData);
+
+                if (error) {
+                    throw error;
+                }
+
+                showStatus('sync-status', `✅ Sincronizzazione riuscita! ID: ${testData.note_id}`, 'success');
+            } catch (error) {
+                showStatus('sync-status', `Errore sincronizzazione: ${error.message}`, 'error');
+            }
+        }
+
+        // 6. Mostra note salvate
+        function showSavedNotes() {
+            try {
+                const notes = JSON.parse(localStorage.getItem('smart_voice_notes') || '[]');
+                
+                if (notes.length === 0) {
+                    showStatus('notes-list', 'Nessuna nota salvata', 'info');
+                    return;
+                }
+
+                let html = '<h3>Note Salvate:</h3>';
+                notes.forEach((note, index) => {
+                    html += `<div class="status info">`;
+                    html += `<strong>Nota ${index + 1}</strong><br>`;
+                    html += `ID: ${note.id}<br>`;
+                    html += `Timestamp: ${new Date(note.timestamp).toLocaleString('it-IT')}<br>`;
+                    html += `Trascrizione: ${note.transcription || 'Non ancora trascritta'}<br>`;
+                    html += `Size: ${note.size}`;
+                    html += `</div>`;
+                });
+
+                document.getElementById('notes-list').innerHTML = html;
+            } catch (error) {
+                showStatus('notes-list', `Errore: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check configurazione all'avvio
+        window.onload = () => {
+            checkConfiguration();
+        };
+    </script>
+</body>
+</html>

@@ -17,12 +17,44 @@ async function forceEnableRecordingButton() {
         // Trova e abilita il pulsante
         const startBtn = document.getElementById('start-recording-btn');
         if (startBtn) {
+            // FORZA abilitazione completa
             startBtn.disabled = false;
-            startBtn.classList.add('ready');
             startBtn.style.opacity = '1';
             startBtn.style.cursor = 'pointer';
+            startBtn.style.pointerEvents = 'auto';
+            startBtn.style.backgroundColor = '#28a745';
+            startBtn.style.borderColor = '#28a745';
+            startBtn.classList.add('ready');
+            startBtn.classList.remove('disabled');
             
-            console.log('✅ Recording button force-enabled');
+            // Fix event listener: rimuovi tutti gli esistenti e riattacca fresco
+            const newBtn = startBtn.cloneNode(true);
+            startBtn.parentNode.replaceChild(newBtn, startBtn);
+            
+            // Riattacca event listener funzionante
+            newBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🎤 RECORDING BUTTON CLICKED!');
+                
+                if (window.SmartAssistant && window.SmartAssistant.startRecording) {
+                    window.SmartAssistant.startRecording();
+                } else {
+                    console.error('❌ SmartAssistant.startRecording non disponibile');
+                }
+            });
+            
+            // Aggiungi anche listener per touch events (mobile)
+            newBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                console.log('📱 TOUCH DETECTED! Avvio registrazione...');
+                
+                if (window.SmartAssistant && window.SmartAssistant.startRecording) {
+                    window.SmartAssistant.startRecording();
+                }
+            });
+            
+            console.log('✅ Recording button force-enabled with fixed event listeners');
             
             // Aggiorna status se presente
             const statusElement = document.querySelector('.recording-status .status-text');

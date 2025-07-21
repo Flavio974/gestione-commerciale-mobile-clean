@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Completo Smart Assistant</title>
+    
+    <!-- Carica tutte le dipendenze necessarie nell'ordine corretto -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/smart-assistant.css">
+    
+    <style>
+        .debug-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-box {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .note-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .transcription-result {
+            background-color: #f0f8ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 Debug Completo Smart Assistant</h1>
+        
+        <!-- Sezione 1: Stato Sistema -->
+        <div class="debug-section">
+            <h2>1. Stato del Sistema</h2>
+            <button onclick="checkSystemStatus()">Verifica Sistema Completo</button>
+            <div id="system-status"></div>
+        </div>
+
+        <!-- Sezione 2: Test Note Vocali -->
+        <div class="debug-section">
+            <h2>2. Test Note Vocali Esistenti</h2>
+            <button onclick="loadAndDisplayNotes()">Carica Note da localStorage</button>
+            <div id="notes-display"></div>
+        </div>
+
+        <!-- Sezione 3: Test Trascrizione Diretta -->
+        <div class="debug-section">
+            <h2>3. Test Trascrizione API</h2>
+            <button onclick="testDirectTranscription()">Test con Audio di Esempio</button>
+            <button onclick="testRealNote()">Test con Nota Reale</button>
+            <div id="transcription-result"></div>
+        </div>
+
+        <!-- Sezione 4: Test Analisi AI -->
+        <div class="debug-section">
+            <h2>4. Test Analisi AI</h2>
+            <textarea id="test-text" rows="4" style="width: 100%;" placeholder="Inserisci testo per test analisi AI">Domani mattina devo ricordarmi di chiamare Mauro del Donac Conad Borgo Sandalmazzo per confermare l'ordine dei vini.</textarea>
+            <br>
+            <button onclick="testAIAnalysis()">Analizza Testo</button>
+            <div id="ai-result"></div>
+        </div>
+
+        <!-- Sezione 5: Test Sincronizzazione Supabase -->
+        <div class="debug-section">
+            <h2>5. Test Sincronizzazione Supabase</h2>
+            <button onclick="testSupabaseSync()">Test Sync Completo</button>
+            <div id="sync-result"></div>
+        </div>
+
+        <!-- Sezione 6: Visualizza Struttura Dati -->
+        <div class="debug-section">
+            <h2>6. Struttura Dati</h2>
+            <button onclick="showDataStructure()">Mostra Struttura Completa</button>
+            <div id="data-structure"></div>
+        </div>
+    </div>
+
+    <!-- Carica dipendenze -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    
+    <script>
+        // Inizializza configurazione
+        const SUPABASE_URL = 'https://ibuwqihgdkinfmvxqfnq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlidXdxaWhnZGtpbmZtdnhxZm5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMDk4NjEsImV4cCI6MjA2Njc4NTg2MX0.c-zsnXM-eqXnIZQXM9UwXlKhvDDcPsDSwqANZk0uDqY';
+        
+        // Inizializza Supabase
+        let supabaseClient = null;
+        if (typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('✅ Supabase client inizializzato nel debug');
+        }
+
+        // Utility functions
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status-box ${type}">${content}</div>`;
+        }
+
+        // 1. Check System Status
+        async function checkSystemStatus() {
+            let html = '<h3>Stato Sistema:</h3><pre>';
+            
+            // Check localStorage
+            const notes = JSON.parse(localStorage.getItem('smart_voice_notes') || '[]');
+            html += `\n📦 Note in localStorage: ${notes.length}`;
+            
+            // Check Supabase
+            html += `\n🔌 Supabase disponibile: ${supabaseClient ? '✅' : '❌'}`;
+            
+            if (supabaseClient) {
+                try {
+                    // Test tabella note_ai
+                    const { count: noteAiCount, error: noteAiError } = await supabaseClient
+                        .from('note_ai')
+                        .select('*', { count: 'exact', head: true });
+                    
+                    html += `\n📊 Tabella note_ai: ${noteAiError ? '❌ ' + noteAiError.message : '✅ ' + noteAiCount + ' record'}`;
+                    
+                    // Test tabella smart_assistant_secure_notes
+                    const { count: secureCount, error: secureError } = await supabaseClient
+                        .from('smart_assistant_secure_notes')
+                        .select('*', { count: 'exact', head: true });
+                    
+                    html += `\n📊 Tabella smart_assistant_secure_notes: ${secureError ? '❌ ' + secureError.message : '✅ ' + secureCount + ' record'}`;
+                } catch (error) {
+                    html += `\n❌ Errore test Supabase: ${error.message}`;
+                }
+            }
+            
+            // Check API endpoints
+            html += `\n\n🌐 Endpoints API:`;
+            html += `\n- Trascrizione: /.netlify/functions/speech-to-text`;
+            html += `\n- AI Analysis: /.netlify/functions/claude-ai`;
+            
+            html += '</pre>';
+            showResult('system-status', html, 'info');
+        }
+
+        // 2. Load and Display Notes
+        function loadAndDisplayNotes() {
+            const notes = JSON.parse(localStorage.getItem('smart_voice_notes') || '[]');
+            
+            if (notes.length === 0) {
+                showResult('notes-display', 'Nessuna nota trovata in localStorage', 'warning');
+                return;
+            }
+
+            let html = `<h3>Note Trovate (${notes.length}):</h3>`;
+            
+            notes.forEach((note, index) => {
+                html += `<div class="note-item">`;
+                html += `<h4>Nota ${index + 1}</h4>`;
+                html += `<strong>ID:</strong> ${note.id}<br>`;
+                html += `<strong>Timestamp:</strong> ${new Date(note.timestamp).toLocaleString('it-IT')}<br>`;
+                html += `<strong>Size:</strong> ${note.size}<br>`;
+                html += `<strong>Trascrizione:</strong> ${note.transcription || '<em>Non trascritta</em>'}<br>`;
+                
+                if (note.transcription) {
+                    html += `<strong>Analisi AI:</strong><br>`;
+                    if (note.aiAnalysis) {
+                        html += `<pre>${JSON.stringify(note.aiAnalysis, null, 2)}</pre>`;
+                    } else {
+                        html += '<em>Non analizzata</em><br>';
+                    }
+                }
+                
+                if (note.audioBase64) {
+                    html += `<br><button onclick="transcribeNote('${note.id}')">Trascrivi Questa Nota</button>`;
+                }
+                
+                html += `</div>`;
+            });
+            
+            document.getElementById('notes-display').innerHTML = html;
+        }
+
+        // 3. Test Direct Transcription
+        async function testDirectTranscription() {
+            showResult('transcription-result', 'Test trascrizione con audio di esempio...', 'info');
+            
+            try {
+                // Audio di test minimo
+                const testAudio = 'data:audio/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQRChYECGFOAZwH/////////';
+                
+                const response = await fetch('/.netlify/functions/speech-to-text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ audio: testAudio })
+                });
+
+                const result = await response.json();
+                
+                let html = '<h3>Risultato Trascrizione Test:</h3><pre>';
+                html += `Status: ${response.status}\n`;
+                html += `Response: ${JSON.stringify(result, null, 2)}`;
+                html += '</pre>';
+                
+                showResult('transcription-result', html, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult('transcription-result', `Errore: ${error.message}`, 'error');
+            }
+        }
+
+        // Test con nota reale
+        async function testRealNote() {
+            const notes = JSON.parse(localStorage.getItem('smart_voice_notes') || '[]');
+            const noteWithAudio = notes.find(n => n.audioBase64 && !n.transcription);
+            
+            if (!noteWithAudio) {
+                showResult('transcription-result', 'Nessuna nota con audio non trascritto trovata', 'warning');
+                return;
+            }
+
+            await transcribeNote(noteWithAudio.id);
+        }
+
+        // Trascrivi una nota specifica
+        async function transcribeNote(noteId) {
+            showResult('transcription-result', `Trascrizione nota ${noteId} in corso...`, 'info');
+            
+            try {
+                const notes = JSON.parse(localStorage.getItem('smart_voice_notes') || '[]');
+                const note = notes.find(n => n.id === noteId);
+                
+                if (!note || !note.audioBase64) {
+                    throw new Error('Nota non trovata o senza audio');
+                }
+
+                const response = await fetch('/.netlify/functions/speech-to-text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ audio: note.audioBase64 })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.text) {
+                    // Aggiorna la nota con la trascrizione
+                    note.transcription = result.text;
+                    const noteIndex = notes.findIndex(n => n.id === noteId);
+                    notes[noteIndex] = note;
+                    localStorage.setItem('smart_voice_notes', JSON.stringify(notes));
+                    
+                    let html = '<h3>✅ Trascrizione Completata:</h3>';
+                    html += `<div class="transcription-result">${result.text}</div>`;
+                    showResult('transcription-result', html, 'success');
+                    
+                    // Ricarica la lista
+                    loadAndDisplayNotes();
+                } else {
+                    throw new Error(result.error || 'Trascrizione fallita');
+                }
+            } catch (error) {
+                showResult('transcription-result', `Errore trascrizione: ${error.message}`, 'error');
+            }
+        }
+
+        // 4. Test AI Analysis
+        async function testAIAnalysis() {
+            const text = document.getElementById('test-text').value;
+            
+            if (!text.trim()) {
+                showResult('ai-result', 'Inserisci del testo da analizzare', 'warning');
+                return;
+            }
+            
+            showResult('ai-result', 'Analisi AI in corso...', 'info');
+            
+            try {
+                const response = await fetch('/.netlify/functions/claude-ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: [{
+                            role: 'user',
+                            content: `Analizza questo testo e estrai: persone menzionate, aziende, azioni da fare, date/scadenze. Testo: "${text}"`
+                        }],
+                        model: 'claude-3-haiku-20240307'
+                    })
+                });
+
+                const result = await response.json();
+                
+                let html = '<h3>Risultato Analisi AI:</h3><pre>';
+                html += `Status: ${response.status}\n`;
+                html += `Response: ${JSON.stringify(result, null, 2)}`;
+                html += '</pre>';
+                
+                showResult('ai-result', html, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult('ai-result', `Errore analisi AI: ${error.message}`, 'error');
+            }
+        }
+
+        // 5. Test Supabase Sync
+        async function testSupabaseSync() {
+            if (!supabaseClient) {
+                showResult('sync-result', 'Supabase non disponibile', 'error');
+                return;
+            }
+            
+            showResult('sync-result', 'Test sincronizzazione in corso...', 'info');
+            
+            try {
+                const testNote = {
+                    note_id: 'test_sync_' + Date.now(),
+                    timestamp: new Date().toISOString(),
+                    testo_originale: 'Test sincronizzazione da debug page',
+                    categoria: 'generale',
+                    priorita: 'media',
+                    persone: ['Test User'],
+                    aziende: ['Test Company'],
+                    azioni: ['test'],
+                    origine: 'debug_test',
+                    metadata: {
+                        test: true,
+                        debug_timestamp: new Date().toISOString()
+                    }
+                };
+
+                const { data, error } = await supabaseClient
+                    .from('note_ai')
+                    .insert(testNote)
+                    .select();
+
+                if (error) {
+                    throw error;
+                }
+
+                let html = '<h3>✅ Sincronizzazione Riuscita:</h3><pre>';
+                html += JSON.stringify(data, null, 2);
+                html += '</pre>';
+                
+                // Verifica lettura
+                const { data: readData, error: readError } = await supabaseClient
+                    .from('note_ai')
+                    .select('*')
+                    .eq('note_id', testNote.note_id);
+                
+                if (!readError && readData.length > 0) {
+                    html += '<h4>✅ Verifica Lettura:</h4><pre>';
+                    html += JSON.stringify(readData[0], null, 2);
+                    html += '</pre>';
+                }
+                
+                showResult('sync-result', html, 'success');
+            } catch (error) {
+                showResult('sync-result', `Errore sync: ${error.message}`, 'error');
+            }
+        }
+
+        // 6. Show Data Structure
+        function showDataStructure() {
+            let html = '<h3>Struttura Dati Completa:</h3>';
+            
+            // localStorage structure
+            html += '<h4>localStorage:</h4><pre>';
+            const localData = {
+                smart_voice_notes: JSON.parse(localStorage.getItem('smart_voice_notes') || '[]'),
+                smart_assistant_secure_notes: JSON.parse(localStorage.getItem('smart_assistant_secure_notes') || '{}')
+            };
+            html += JSON.stringify(localData, null, 2);
+            html += '</pre>';
+            
+            // Expected table structures
+            html += '<h4>Struttura Tabella note_ai:</h4><pre>';
+            const noteAiStructure = {
+                id: 'UUID',
+                testo_originale: 'TEXT',
+                persone: 'TEXT[]',
+                aziende: 'TEXT[]',
+                categoria: 'VARCHAR(50)',
+                priorita: 'VARCHAR(10)',
+                azioni: 'TEXT[]',
+                date_rilevate: 'JSONB',
+                timestamp: 'TIMESTAMPTZ',
+                origine: 'VARCHAR(50)',
+                audio_base64: 'TEXT',
+                metadata: 'JSONB'
+            };
+            html += JSON.stringify(noteAiStructure, null, 2);
+            html += '</pre>';
+            
+            html += '<h4>Struttura Tabella smart_assistant_secure_notes:</h4><pre>';
+            const secureNotesStructure = {
+                id: 'BIGSERIAL',
+                note_id: 'TEXT UNIQUE',
+                timestamp: 'TIMESTAMPTZ',
+                category: 'TEXT',
+                transcription: 'TEXT',
+                confidence: 'DECIMAL(3,2)',
+                extracted_entities: 'JSONB',
+                keywords: 'TEXT[]',
+                metadata: 'JSONB'
+            };
+            html += JSON.stringify(secureNotesStructure, null, 2);
+            html += '</pre>';
+            
+            showResult('data-structure', html, 'info');
+        }
+
+        // Auto-check on load
+        window.onload = () => {
+            checkSystemStatus();
+            loadAndDisplayNotes();
+        };
+    </script>
+</body>
+</html>
