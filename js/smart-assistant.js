@@ -4349,13 +4349,25 @@ Usa console per dettagli completi.
    * 🗑️ CANCELLA SINGOLA NOTA DA CARTELLA SICURA
    */
   deleteSecureNote(noteId, categoryId) {
+    console.log('🗑️ Cancellazione nota:', noteId, 'da categoria:', categoryId);
+    
+    // Ferma il middleware problematico se attivo
+    if (window.robustConnectionManager) {
+      try {
+        window.robustConnectionManager.stop();
+        console.log('🛑 Middleware fermato per cancellazione nota');
+      } catch (e) {
+        console.warn('⚠️ Errore fermando middleware:', e);
+      }
+    }
+    
     if (!window.SmartAssistantSecureStorage) {
       this.showNotification('⚠️ Sistema storage sicuro non disponibile', 'warning');
       return;
     }
 
     // Conferma prima della cancellazione
-    if (!confirm('Vuoi davvero cancellare questa nota?')) {
+    if (!confirm('🗑️ Vuoi davvero cancellare questa nota?\n\nQuesta operazione è irreversibile!')) {
       return;
     }
 
@@ -4478,10 +4490,10 @@ Usa console per dettagli completi.
                         ${Math.round(note.confidence * 100)}% sicurezza
                       </div>
                       <button class="delete-note-btn"
-                              style="background: #dc3545; color: white; border: none; border-radius: 3px; padding: 4px 8px; font-size: 11px; cursor: pointer;"
-                              onclick="window.SmartAssistant.deleteSecureNote('${note.id}', '${categoryId}')"
+                              style="background: #dc3545 !important; color: white !important; border: none !important; border-radius: 4px !important; padding: 6px 10px !important; font-size: 12px !important; cursor: pointer !important; font-weight: 500 !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; min-width: 70px !important; opacity: 1 !important;"
+                              onclick="event.stopPropagation(); window.SmartAssistant.deleteSecureNote('${note.id}', '${categoryId}')"
                               title="Cancella questa nota">
-                        🗑️
+                        🗑️ Elimina
                       </button>
                     </div>
                   </div>
