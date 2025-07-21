@@ -1,4 +1,5 @@
 const FormData = require('form-data');
+const https = require('https');
 
 exports.handler = async (event, context) => {
   // Headers CORS
@@ -61,22 +62,45 @@ exports.handler = async (event, context) => {
     formData.append('model', 'whisper-1');
     formData.append('language', 'it');
 
-    // Chiama OpenAI Whisper
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        ...formData.getHeaders()
-      },
-      body: formData
+    // Chiama OpenAI Whisper usando https nativo
+    const data = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.openai.com',
+        path: '/v1/audio/transcriptions',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          ...formData.getHeaders()
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let responseBody = '';
+        
+        res.on('data', (chunk) => {
+          responseBody += chunk;
+        });
+        
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve(JSON.parse(responseBody));
+            } catch (parseError) {
+              reject(new Error(`JSON parse error: ${parseError.message}`));
+            }
+          } else {
+            reject(new Error(`OpenAI API error (${res.statusCode}): ${responseBody}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        reject(new Error(`Request error: ${error.message}`));
+      });
+
+      // Scrivi il FormData
+      formData.pipe(req);
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API error: ${error}`);
-    }
-
-    const data = await response.json();
 
     return {
       statusCode: 200,
@@ -86,7 +110,7 @@ exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         success: true,
-        text: data.text
+        text: data.text || data.transcript || 'Trascrizione non disponibile'
       })
     };
 
