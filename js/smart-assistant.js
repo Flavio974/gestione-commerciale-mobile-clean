@@ -4254,10 +4254,10 @@ Usa console per dettagli completi.
                     </div>
                   </div>
                   <button class="clear-folder-btn" 
-                          style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 6px 12px; font-size: 13px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; font-weight: 500;"
+                          style="background: #dc3545 !important; color: white !important; border: none !important; border-radius: 4px !important; padding: 8px 16px !important; font-size: 14px !important; cursor: pointer !important; opacity: 1 !important; font-weight: 600 !important; display: inline-block !important; text-align: center !important; min-width: 80px !important;"
                           onclick="event.stopPropagation(); window.SmartAssistant.clearFolder('${folder.id}', '${folder.name.replace(/'/g, "\\'")}')"
                           title="Cancella tutte le note di questa cartella">
-                    🗑️ Svuota
+                    🗑️ SVUOTA
                   </button>
                 </div>
                 
@@ -4307,8 +4307,16 @@ Usa console per dettagli completi.
       console.log(`🔍 DEBUG: Trovati ${clearButtons.length} pulsanti di cancellazione`);
       if (clearButtons.length === 0) {
         console.error('❌ PROBLEMA: Nessun pulsante di cancellazione trovato nel DOM!');
+        // Prova a cercare qualsiasi pulsante
+        const allButtons = modal.querySelectorAll('button');
+        console.log(`🔍 DEBUG: Trovati ${allButtons.length} pulsanti totali nel modal`);
       } else {
         console.log('✅ Pulsanti di cancellazione creati correttamente');
+        // Verifica che siano visibili
+        clearButtons.forEach((btn, index) => {
+          const rect = btn.getBoundingClientRect();
+          console.log(`🔍 Pulsante ${index + 1} - Visibile: ${rect.width > 0 && rect.height > 0}, Posizione: ${rect.top}, ${rect.left}`);
+        });
       }
     }, 100);
   }
