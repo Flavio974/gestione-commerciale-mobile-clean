@@ -1420,7 +1420,7 @@ class SmartAssistant {
         throw new Error(result.error || 'Errore sconosciuto');
       }
 
-      return result.transcription;
+      return result.text;
       
     } catch (error) {
       console.error('❌ Errore API trascrizione:', error);
@@ -1641,7 +1641,7 @@ class SmartAssistant {
         throw new Error(result.error || 'Errore sconosciuto');
       }
 
-      return result.transcription;
+      return result.text;
       
     } catch (error) {
       console.error('❌ Errore API trascrizione base64:', error.message || error);

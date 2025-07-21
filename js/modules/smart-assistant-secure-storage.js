@@ -38,6 +38,18 @@ class SmartAssistantSecureStorage {
           /acquisto\s+da\s+(\w+)/i
         ]
       },
+      ORDINI: {
+        name: 'Ordini',
+        icon: '📋',
+        keywords: ['ordine', 'ordinare', 'chiamare', 'chiamata', 'ordini', 'fare gli ordini'],
+        patterns: [
+          /fare\s+(gli\s+)?ordini/i,
+          /chiamare\s+i?\s?clienti/i,
+          /ordine\s+(\w+)/i,
+          /chiamata\s+a\s+(\w+)/i,
+          /ordinare\s+(.+)/i
+        ]
+      },
       PRODOTTI: {
         name: 'Prodotti',
         icon: '📦',
