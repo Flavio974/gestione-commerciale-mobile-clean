@@ -3,7 +3,55 @@
  * 
  * Integra il filtro intelligente per ridurre i costi API del 95%
  * Mantiene piena compatibilità con il sistema esistente
+ * FIX TIMEZONE: Usa sempre orario italiano Europe/Rome
  */
+
+/**
+ * Gestione Date e Orari Italiani
+ * Fix per problema timezone - sempre Europe/Rome
+ */
+function getItalianDateTime() {
+  const now = new Date();
+  
+  try {
+    // Forza il timezone italiano
+    const italianDate = now.toLocaleDateString('it-IT', { 
+      timeZone: 'Europe/Rome',
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+    
+    const italianTime = now.toLocaleTimeString('it-IT', {
+      timeZone: 'Europe/Rome',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    return {
+      date: italianDate,
+      time: italianTime,
+      full: `${italianDate} alle ${italianTime}`,
+      dayName: now.toLocaleDateString('it-IT', { 
+        timeZone: 'Europe/Rome',
+        weekday: 'long' 
+      })
+    };
+  } catch (error) {
+    console.error('❌ Errore timezone:', error);
+    // Fallback con approssimazione +2 ore
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const italianTime = new Date(utc + (2 * 3600000)); // +2 ore
+    
+    return {
+      date: italianTime.toLocaleDateString('it-IT'),
+      time: italianTime.toLocaleTimeString('it-IT', { hour12: false }),
+      full: `${italianTime.toLocaleDateString('it-IT')} alle ${italianTime.toLocaleTimeString('it-IT', { hour12: false })}`,
+      dayName: italianTime.toLocaleDateString('it-IT', { weekday: 'long' })
+    };
+  }
+}
 
 /**
  * Filtro AI inline per Netlify
@@ -265,7 +313,8 @@ exports.handler = async (event, context) => {
           status: 'ok',
           message: 'Netlify AI Function OTTIMIZZATA attiva',
           features: ['AI Request Filter', 'Payload Optimization', '95% Cost Reduction'],
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          italianTime: getItalianDateTime().full
         })
       };
     }
@@ -347,12 +396,7 @@ exports.handler = async (event, context) => {
             messages: [
               {
                 role: 'user',
-                content: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}\n\n${JSON.stringify(optimizedData)}\n\n${message}`
+                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\n${JSON.stringify(optimizedData)}\n\n${message}`
               }
             ],
             max_completion_tokens: 1000
@@ -365,12 +409,7 @@ exports.handler = async (event, context) => {
             messages: [
               {
                 role: 'system',
-                content: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}\n\n${JSON.stringify(optimizedData)}`
+                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\n${JSON.stringify(optimizedData)}`
               },
               {
                 role: 'user',
@@ -449,12 +488,7 @@ exports.handler = async (event, context) => {
             messages: [
               {
                 role: 'user',
-                content: `DATA CORRENTE: ${new Date().toLocaleDateString('it-IT', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}\n\n${JSON.stringify(optimizedData)}\n\n${message}`
+                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\n${JSON.stringify(optimizedData)}\n\n${message}`
               }
             ]
           })
@@ -497,6 +531,7 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ 
           error: error.message,
           timestamp: new Date().toISOString(),
+          italianTime: getItalianDateTime().full,
           note: 'Errore nella funzione AI ottimizzata'
         })
       };
