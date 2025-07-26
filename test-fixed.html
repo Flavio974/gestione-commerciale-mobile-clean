@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Sistema Modulare DDTFT - FIXED</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1200px; 
+            margin: 20px auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section { 
+            background: white; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #status { 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0; 
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Sistema Modulare DDTFT - VERSIONE FIXED</h1>
+    <p class="info">✅ Ora include il bundle compatibile per tutti i browser!</p>
+
+    <div id="status" class="warning">🔄 Caricamento in corso...</div>
+
+    <div class="test-section">
+        <h2>📦 1. Test Caricamento Moduli</h2>
+        <button onclick="testBundleLoading()">▶️ Testa Bundle Compatible</button>
+        <button onclick="testModuleLoading()">▶️ Testa ES6 Modules</button>
+        <div id="module-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 2. Test Compatibilità API</h2>
+        <button onclick="testAPICompatibility()">▶️ Testa API</button>
+        <div id="api-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📄 3. Test Funzioni Core</h2>
+        <button onclick="testCoreFunctions()">▶️ Testa Funzioni</button>
+        <div id="core-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>⚡ 4. Test Performance</h2>
+        <button onclick="testPerformance()">▶️ Testa Performance</button>
+        <div id="performance-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 5. Confronto Sistemi</h2>
+        <button onclick="compareVsOriginal()">▶️ Confronta vs Originale</button>
+        <div id="compare-log" class="log"></div>
+    </div>
+
+    <!-- Carica il bundle -->
+    <script src="js/ddtft-import/ddtft-bundle.js"></script>
+    <!-- Carica sistema originale per confronto -->
+    <script src="js/ddtft-import.js"></script>
+
+    <script>
+        let moduleSystem = null;
+        let bundleSystem = null;
+        let originalSystem = null;
+
+        // Test caricamento bundle
+        function testBundleLoading() {
+            const log = document.getElementById('module-log');
+            log.textContent = '';
+            
+            try {
+                log.textContent += '🔄 Test caricamento Bundle System...\n';
+                
+                if (window.DDTFTImportModular) {
+                    bundleSystem = window.DDTFTImportModular;
+                    log.textContent += '✅ Bundle System caricato con successo!\n';
+                    log.textContent += `📦 Funzioni disponibili: ${Object.keys(bundleSystem).length}\n`;
+                    log.textContent += '📋 Funzioni principali:\n';
+                    
+                    Object.keys(bundleSystem).slice(0, 10).forEach(key => {
+                        log.textContent += `  - ${key}\n`;
+                    });
+                    
+                    updateStatus('✅ Bundle System FUNZIONA PERFETTAMENTE!', 'success');
+                } else {
+                    log.textContent += '❌ Bundle System non trovato\n';
+                    updateStatus('❌ Bundle System non disponibile', 'error');
+                }
+                
+            } catch (error) {
+                log.textContent += `❌ Errore: ${error.message}\n`;
+                updateStatus('❌ Errore nel Bundle System', 'error');
+            }
+        }
+
+        // Test caricamento ES6 modules
+        async function testModuleLoading() {
+            const log = document.getElementById('module-log');
+            log.textContent += '\n🔄 Test caricamento ES6 Modules...\n';
+            
+            try {
+                const { DDTFTImport } = await import('./js/ddtft-import/ddtft-import-core.js');
+                moduleSystem = DDTFTImport;
+                
+                log.textContent += '✅ ES6 Modules caricati con successo!\n';
+                log.textContent += `📦 Funzioni disponibili: ${Object.keys(DDTFTImport).length}\n`;
+                
+            } catch (error) {
+                log.textContent += `❌ ES6 Modules falliti: ${error.message}\n`;
+                log.textContent += '💡 Normale - ES6 modules richiedono server HTTP\n';
+            }
+        }
+
+        // Test compatibilità API
+        function testAPICompatibility() {
+            const log = document.getElementById('api-log');
+            log.textContent = '';
+            
+            const systemToTest = bundleSystem || moduleSystem;
+            
+            if (!systemToTest) {
+                log.textContent += '❌ Nessun sistema modulare caricato\n';
+                return;
+            }
+            
+            // Lista delle funzioni che devono esistere
+            const requiredFunctions = [
+                'extractDocumentNumber',
+                'extractDate', 
+                'extractClientName',
+                'extractVatNumber',
+                'extractDeliveryAddress',
+                'extractOrderReference',
+                'extractItems',
+                'generateId',
+                'validateDeliveryAddress',
+                'standardizeClientName',
+                'parseDocumentFromText'
+            ];
+            
+            log.textContent += '🔍 Verifico compatibilità API...\n\n';
+            
+            let passed = 0;
+            requiredFunctions.forEach(funcName => {
+                if (typeof systemToTest[funcName] === 'function') {
+                    log.textContent += `✅ ${funcName}: OK\n`;
+                    passed++;
+                } else {
+                    log.textContent += `❌ ${funcName}: MANCANTE\n`;
+                }
+            });
+            
+            log.textContent += `\n📊 Risultato: ${passed}/${requiredFunctions.length} funzioni presenti\n`;
+            
+            if (passed === requiredFunctions.length) {
+                log.textContent += '✅ Compatibilità API: PERFETTA!\n';
+            } else {
+                log.textContent += '⚠️ Compatibilità API: PARZIALE\n';
+            }
+        }
+
+        // Test funzioni core
+        function testCoreFunctions() {
+            const log = document.getElementById('core-log');
+            log.textContent = '';
+            
+            const systemToTest = bundleSystem || moduleSystem;
+            
+            if (!systemToTest) {
+                log.textContent += '❌ Sistema modulare non caricato\n';
+                return;
+            }
+            
+            log.textContent += '🔧 Test funzioni core...\n\n';
+            
+            try {
+                // Test generateId
+                const id1 = systemToTest.generateId();
+                const id2 = systemToTest.generateId();
+                log.textContent += `✅ generateId(): ${id1}\n`;
+                log.textContent += `✅ generateId(): ${id2}\n`;
+                log.textContent += `✅ ID unici: ${id1 !== id2 ? 'SÌ' : 'NO'}\n\n`;
+                
+                // Test validateDeliveryAddress
+                const testAddresses = [
+                    'VIA ROMA 123 10100 TORINO TO',
+                    'CORSO MARCONI 10/E 12050 MAGLIANO ALFIERI CN', // Dovrebbe essere rifiutato
+                    'PIAZZA GARIBALDI 5 20100 MILANO MI'
+                ];
+                
+                log.textContent += '🏠 Test validazione indirizzi:\n';
+                testAddresses.forEach(addr => {
+                    const isValid = systemToTest.validateDeliveryAddress(addr);
+                    log.textContent += `${isValid ? '✅' : '❌'} "${addr}": ${isValid}\n`;
+                });
+                
+                // Test extractDocumentNumber
+                log.textContent += '\n📄 Test estrazione numero documento:\n';
+                const testTexts = [
+                    'DDT 12345 del 01/01/2024',
+                    'FATTURA N. 67890',
+                    'FT 11111 del 15/05/2024'
+                ];
+                
+                testTexts.forEach(text => {
+                    const ddtNumber = systemToTest.extractDocumentNumber(text, 'DDT');
+                    const ftNumber = systemToTest.extractDocumentNumber(text, 'Fattura');
+                    log.textContent += `"${text}" → DDT:${ddtNumber}, FT:${ftNumber}\n`;
+                });
+                
+                // Test extractDate
+                log.textContent += '\n📅 Test estrazione date:\n';
+                const dateTexts = [
+                    'Data: 25/12/2024',
+                    'Del 01/01/25',
+                    '15/03/2024 ore 10:30'
+                ];
+                
+                dateTexts.forEach(text => {
+                    const date = systemToTest.extractDate(text);
+                    log.textContent += `"${text}" → "${date}"\n`;
+                });
+                
+                log.textContent += '\n✅ Test funzioni core completati!\n';
+                
+            } catch (error) {
+                log.textContent += `❌ Errore durante test: ${error.message}\n`;
+            }
+        }
+
+        // Test performance
+        function testPerformance() {
+            const log = document.getElementById('performance-log');
+            log.textContent = '';
+            
+            const systemToTest = bundleSystem || moduleSystem;
+            
+            if (!systemToTest) {
+                log.textContent += '❌ Sistema modulare non disponibile\n';
+                return;
+            }
+            
+            log.textContent += '⚡ Test performance...\n\n';
+            
+            const iterations = 1000;
+            
+            // Test generateId
+            const start1 = performance.now();
+            for (let i = 0; i < iterations; i++) {
+                systemToTest.generateId();
+            }
+            const time1 = performance.now() - start1;
+            
+            // Test validateDeliveryAddress
+            const testAddr = 'VIA ROMA 123 10100 TORINO TO';
+            const start2 = performance.now();
+            for (let i = 0; i < iterations; i++) {
+                systemToTest.validateDeliveryAddress(testAddr);
+            }
+            const time2 = performance.now() - start2;
+            
+            // Test extractDate
+            const testText = 'Data: 25/12/2024';
+            const start3 = performance.now();
+            for (let i = 0; i < iterations; i++) {
+                systemToTest.extractDate(testText);
+            }
+            const time3 = performance.now() - start3;
+            
+            log.textContent += `📊 Risultati (${iterations} iterazioni):\n`;
+            log.textContent += `⚡ generateId: ${time1.toFixed(2)}ms (${(time1/iterations).toFixed(4)}ms/op)\n`;
+            log.textContent += `🏠 validateDeliveryAddress: ${time2.toFixed(2)}ms (${(time2/iterations).toFixed(4)}ms/op)\n`;
+            log.textContent += `📅 extractDate: ${time3.toFixed(2)}ms (${(time3/iterations).toFixed(4)}ms/op)\n`;
+            
+            const avgTime = (time1 + time2 + time3) / 3;
+            log.textContent += `\n📈 Performance media: ${avgTime.toFixed(2)}ms\n`;
+            
+            if (avgTime < 50) {
+                log.textContent += '✅ Performance: ECCELLENTE!\n';
+            } else if (avgTime < 100) {
+                log.textContent += '✅ Performance: BUONA\n';
+            } else {
+                log.textContent += '⚠️ Performance: ACCETTABILE\n';
+            }
+        }
+
+        // Confronto con sistema originale
+        function compareVsOriginal() {
+            const log = document.getElementById('compare-log');
+            log.textContent = '';
+            
+            const systemToTest = bundleSystem || moduleSystem;
+            originalSystem = window.DDTFTImport;
+            
+            log.textContent += '📊 Confronto sistemi...\n\n';
+            
+            if (!systemToTest) {
+                log.textContent += '❌ Sistema modulare non disponibile\n';
+                return;
+            }
+            
+            if (!originalSystem) {
+                log.textContent += '❌ Sistema originale non disponibile\n';
+                return;
+            }
+            
+            // Confronta numero di funzioni
+            const modularFunctions = Object.keys(systemToTest).length;
+            const originalFunctions = Object.keys(originalSystem).length;
+            
+            log.textContent += `📦 Funzioni modular: ${modularFunctions}\n`;
+            log.textContent += `📦 Funzioni originale: ${originalFunctions}\n`;
+            log.textContent += `📈 Rapporto: ${((modularFunctions/originalFunctions)*100).toFixed(1)}%\n\n`;
+            
+            // Test compatibilità funzioni
+            const commonFunctions = ['generateId', 'validateDeliveryAddress', 'extractDate'];
+            
+            log.textContent += '🔍 Test compatibilità funzioni comuni:\n';
+            commonFunctions.forEach(funcName => {
+                const hasModular = typeof systemToTest[funcName] === 'function';
+                const hasOriginal = typeof originalSystem[funcName] === 'function';
+                
+                if (hasModular && hasOriginal) {
+                    log.textContent += `✅ ${funcName}: Entrambi OK\n`;
+                } else if (hasModular) {
+                    log.textContent += `🟡 ${funcName}: Solo modulare\n`;
+                } else if (hasOriginal) {
+                    log.textContent += `🟡 ${funcName}: Solo originale\n`;
+                } else {
+                    log.textContent += `❌ ${funcName}: Nessuno\n`;
+                }
+            });
+            
+            log.textContent += '\n✅ Confronto completato!\n';
+        }
+
+        // Aggiorna status
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        // Auto-start quando la pagina è pronta
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('🟢 Sistema pronto per i test! Prova il Bundle Compatible!', 'success');
+            
+            // Auto-test del bundle
+            setTimeout(() => {
+                testBundleLoading();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

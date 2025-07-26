@@ -2629,59 +2629,58 @@
     // 🚀 CARICAMENTO OTTIMIZZATO - Core modules in parallelo, rimozione moduli non essenziali
     Promise.all([
       // Core essenziali (parallelo per velocità)
-      safeLoadQueue('js/utils/italian-date-manager.js'),
-      safeLoadQueue('js/middleware/vocabulary-manager.js'),
-      safeLoadQueue('config/ai-config.js'),
-      safeLoadQueue('js/ai/openai-ai.js'),
-      safeLoadQueue('js/ai/anthropic-ai.js'),
-      safeLoadQueue('js/ai/ai-assistant.js'),
-      safeLoadQueue('js/ai/ios-tts-fix.js'),
-      safeLoadQueue('js/ai/flavio-ai-assistant.js'),
-      safeLoadQueue('js/ai/supabase-ai-integration.js')
+      safeLoadQueue('/js/utils/italian-date-manager.js'),
+      safeLoadQueue('/js/middleware/vocabulary-manager.js'),
+      safeLoadQueue('/config/ai-config.js'),
+      safeLoadQueue('/js/ai/openai-ai.js'),
+      safeLoadQueue('/js/ai/anthropic-ai.js'),
+      safeLoadQueue('/js/ai/ai-assistant.js'),
+      safeLoadQueue('/js/ai/ios-tts-fix.js'),
+      safeLoadQueue('/js/ai/flavio-ai-assistant.js'),
+      safeLoadQueue('/js/ai/supabase-ai-integration.js')
     ])
     .then(() => {
       // 🔄 CARICAMENTO MIDDLEWARE AI - Sistema di routing intelligente  
       console.log('🔄 Caricamento middleware AI...');
       return safeLoadQueue(
-        'js/ai-request-filter.js',  // NUOVO: Filtro AI per riduzione costi 95%
-        'js/middleware/request-middleware.js',
-        'js/middleware/ai-middleware.js',
-        'js/middleware/robust-connection-manager.js',
-        'js/middleware/middleware-integration.js'
+        '/js/middleware/request-middleware.js',
+        '/js/middleware/ai-middleware.js',
+        '/js/middleware/robust-connection-manager.js',
+        '/js/middleware/middleware-integration.js'
       );
     })
     .then(() => Promise.all([
       // DDTFT modules (parallelo)
       safeLoadQueue(
-        'js/config/ddtft-patterns.js',
-        'js/config/ddtft-mappings.js',
-        'js/utils/ddtft-parsing-utils.js',
-        'js/utils/ddtft-address-utils.js',
-        'js/utils/ddtft-product-utils.js',
-        'js/utils/client-alias-resolver.js',
-        'js/modules/ddtft/document-parser.js',
-        'js/modules/ddtft-pdf-parser.js'
+        '/js/config/ddtft-patterns.js',
+        '/js/config/ddtft-mappings.js',
+        '/js/utils/ddtft-parsing-utils.js',
+        '/js/utils/ddtft-address-utils.js',
+        '/js/utils/ddtft-product-utils.js',
+        '/js/utils/client-alias-resolver.js',
+        '/js/modules/ddtft/document-parser.js',
+        '/js/modules/ddtft-pdf-parser.js'
       ),
       // Supabase e config (parallelo) 
       safeLoad('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js')
         .then(() => safeLoadQueue(
-          'config-modules.js',
-          'config/api-config.js',
-          'config/supabase-config.js',
-          'js/utils.js',
-          'js/app.js',
-          'js/navigation.js',
-          'js/api.js'
+          '/config-modules.js',
+          '/config/api-config.js',
+          '/config/supabase-config.js',
+          '/js/utils.js',
+          '/js/app.js',
+          '/js/navigation.js',
+          '/js/api.js'
         ))
     ]))
     .then(() => {
       // 🚀 CARICAMENTO RAPIDO: Solo moduli critici per interfaccia base
       console.log('⚡ Caricamento moduli critici...');
       return safeLoadQueue(
-        'js/timeline/timeline-config.js',
-        'js/timeline/timeline-core.js',
-        'js/clienti-core.js',
-        'js/worksheet-core.js'
+        '/js/timeline/timeline-config.js',
+        '/js/timeline/timeline-core.js',
+        '/js/clienti-core.js',
+        '/js/worksheet-core.js'
       );
     })
     .then(() => {
@@ -2691,8 +2690,8 @@
     })
     .then(() => safeLoadQueue(
       // Moduli essenziali per funzionalità di base
-      'js/comandi-core.js',
-      'js/comandi-ui.js'
+      '/js/comandi-core.js',
+      '/js/comandi-ui.js'
     ))
     .then(() => {
       console.log('✅ Bootstrap completo - UI pronta!');
@@ -2704,59 +2703,59 @@
         Promise.all([
           // Timeline completo
           safeLoadQueue(
-            'js/timeline/timeline-utils.js',
-            'js/timeline/timeline-rendering.js', 
-            'js/timeline/timeline-events.js',
-            'js/timeline/timeline-controls.js'
+            '/js/timeline/timeline-utils.js',
+            '/js/timeline/timeline-rendering.js', 
+            '/js/timeline/timeline-events.js',
+            '/js/timeline/timeline-controls.js'
           ),
           // Business modules
           safeLoadQueue(
-            'js/clienti-form.js',
-            'js/ordini.js',
-            'js/prodotti.js',
-            'js/percorsi.js'
+            '/js/clienti-form.js',
+            '/js/ordini.js',
+            '/js/prodotti.js',
+            '/js/percorsi.js'
           ),
           // Worksheet completo  
           safeLoadQueue(
-            'js/worksheet-data.js',
-            'js/worksheet-ui.js',
-            'js/worksheet-view.js',
-            'js/worksheet-import.js',
-            'js/worksheet-itinerary.js',
-            'js/worksheet-dragdrop.js'
+            '/js/worksheet-data.js',
+            '/js/worksheet-ui.js',
+            '/js/worksheet-view.js',
+            '/js/worksheet-import.js',
+            '/js/worksheet-itinerary.js',
+            '/js/worksheet-dragdrop.js'
           ),
           // Utils e export
           safeLoadQueue(
-            'js/clienti-table.js',
-            'js/clienti-utils.js', 
-            'js/clienti-import-export.js',
-            'js/modules/ordini-parser.js',
-            'js/modules/ordini-export-core.js'
+            '/js/clienti-table.js',
+            '/js/clienti-utils.js', 
+            '/js/clienti-import-export.js',
+            '/js/modules/ordini-parser.js',
+            '/js/modules/ordini-export-core.js'
           ),
           // DDTFT modules
           safeLoadQueue(
-            'js/ddtft-core.js',
-            'js/ddtft-view.js',
-            'js/ddtft-create.js',
-            'js/ddtft-import/ddtft-bundle.js',  // NUOVO: Bundle modulare ottimizzato
-            'js/ddtft-filters.js',
-            'js/ddtft-utils.js',
-            'js/modules/ddtft-import-export.js',
-            'js/modules/ddtft-export-advanced.js'
+            '/js/ddtft-core.js',
+            '/js/ddtft-view.js',
+            '/js/ddtft-create.js',
+            '/js/ddtft-import.js',
+            '/js/ddtft-filters.js',
+            '/js/ddtft-utils.js',
+            '/js/modules/ddtft-import-export.js',
+            '/js/modules/ddtft-export-advanced.js'
           ),
           // Features extra
           safeLoadQueue(
-            'js/smart-assistant/smart-assistant-bundle.js',  // NUOVO: Bundle modulare ottimizzato
-            'js/modules/smart-assistant-supabase.js',
-            'js/modules/smart-assistant-secure-storage.js',
-            'fix-smart-assistant-voice.js',
-            'js/keep-alive.js'
+            '/js/smart-assistant.js',
+            '/js/modules/smart-assistant-supabase.js',
+            '/js/modules/smart-assistant-secure-storage.js',
+            '/fix-smart-assistant-voice.js',
+            '/js/keep-alive.js'
           ),
           // 🎙️ SISTEMA VOCALE (background loading)
           safeLoadQueue(
-            'js/voice/voice-assistant.js',
-            'js/ai/voice-recognition.js',
-            'js/ai/ai-voice-manager.js'
+            '/js/voice/voice-assistant.js',
+            '/js/ai/voice-recognition.js',
+            '/js/ai/ai-voice-manager.js'
           )
         ]).then(() => {
           console.log('🎉 Caricamento background completato!');

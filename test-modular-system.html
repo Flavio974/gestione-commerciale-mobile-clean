@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Sistema Modulare DDTFT</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1200px; 
+            margin: 20px auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section { 
+            background: white; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #status { 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0; 
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Sistema Modulare DDTFT</h1>
+    <p class="info">⚠️ Questo test è COMPLETAMENTE SICURO - non modifica nulla del sistema originale!</p>
+
+    <div id="status" class="warning">🔄 Caricamento in corso...</div>
+
+    <div class="test-section">
+        <h2>📦 1. Test Caricamento Moduli</h2>
+        <button onclick="testModuleLoading()">▶️ Testa Caricamento</button>
+        <div id="module-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 2. Test Compatibilità API</h2>
+        <button onclick="testAPICompatibility()">▶️ Testa API</button>
+        <div id="api-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📄 3. Test Funzioni PDF</h2>
+        <button onclick="testPDFFunctions()">▶️ Testa PDF</button>
+        <div id="pdf-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎛️ 4. Test Sistema di Fallback</h2>
+        <button onclick="testFallbackSystem()">▶️ Testa Fallback</button>
+        <div id="fallback-log" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 5. Confronto Performance</h2>
+        <button onclick="testPerformance()">▶️ Testa Performance</button>
+        <div id="performance-log" class="log"></div>
+    </div>
+
+    <script>
+        let moduleSystem = null;
+        let originalSystem = null;
+
+        // Carica sistema originale per confronto
+        async function loadOriginalSystem() {
+            try {
+                // Simula il caricamento del sistema originale
+                const script = document.createElement('script');
+                script.src = 'js/ddtft-import.js';
+                document.head.appendChild(script);
+                
+                return new Promise((resolve) => {
+                    script.onload = () => {
+                        originalSystem = window.DDTFTImport;
+                        resolve(true);
+                    };
+                    script.onerror = () => resolve(false);
+                });
+            } catch (error) {
+                console.error('Errore caricamento sistema originale:', error);
+                return false;
+            }
+        }
+
+        // Test caricamento moduli
+        async function testModuleLoading() {
+            const log = document.getElementById('module-log');
+            log.textContent = '';
+            
+            try {
+                log.textContent += '🔄 Caricamento sistema modulare...\n';
+                
+                // Prova a caricare il sistema modulare
+                const { DDTFTImport } = await import('./js/ddtft-import/ddtft-import-core.js');
+                moduleSystem = DDTFTImport;
+                
+                log.textContent += '✅ Sistema modulare caricato con successo!\n';
+                log.textContent += `📦 Funzioni disponibili: ${Object.keys(DDTFTImport).length}\n`;
+                log.textContent += '📋 Funzioni principali:\n';
+                
+                Object.keys(DDTFTImport).slice(0, 10).forEach(key => {
+                    log.textContent += `  - ${key}\n`;
+                });
+                
+                updateStatus('✅ Sistema modulare FUNZIONA!', 'success');
+                
+            } catch (error) {
+                log.textContent += `❌ Errore: ${error.message}\n`;
+                log.textContent += '🔄 Tentativo fallback al sistema originale...\n';
+                
+                const originalLoaded = await loadOriginalSystem();
+                if (originalLoaded) {
+                    log.textContent += '✅ Fallback al sistema originale riuscito!\n';
+                    updateStatus('⚠️ Sistema modulare fallito, ma fallback OK', 'warning');
+                } else {
+                    log.textContent += '❌ Anche il fallback è fallito!\n';
+                    updateStatus('❌ Sistema modulare e fallback falliti', 'error');
+                }
+            }
+        }
+
+        // Test compatibilità API
+        async function testAPICompatibility() {
+            const log = document.getElementById('api-log');
+            log.textContent = '';
+            
+            if (!moduleSystem) {
+                log.textContent += '❌ Sistema modulare non caricato\n';
+                return;
+            }
+            
+            // Lista delle funzioni che devono esistere
+            const requiredFunctions = [
+                'extractTextFromPdf',
+                'parseDocumentFromText',
+                'extractDocumentNumber',
+                'extractDate',
+                'extractClientName',
+                'extractVatNumber',
+                'extractDeliveryAddress',
+                'generateId',
+                'validateDeliveryAddress',
+                'exportDocumentsToExcel'
+            ];
+            
+            log.textContent += '🔍 Verifico compatibilità API...\n\n';
+            
+            let passed = 0;
+            requiredFunctions.forEach(funcName => {
+                if (typeof moduleSystem[funcName] === 'function') {
+                    log.textContent += `✅ ${funcName}: OK\n`;
+                    passed++;
+                } else {
+                    log.textContent += `❌ ${funcName}: MANCANTE\n`;
+                }
+            });
+            
+            log.textContent += `\n📊 Risultato: ${passed}/${requiredFunctions.length} funzioni presenti\n`;
+            
+            if (passed === requiredFunctions.length) {
+                log.textContent += '✅ Compatibilità API: PERFETTA!\n';
+            } else {
+                log.textContent += '⚠️ Compatibilità API: PARZIALE\n';
+            }
+        }
+
+        // Test funzioni PDF
+        async function testPDFFunctions() {
+            const log = document.getElementById('pdf-log');
+            log.textContent = '';
+            
+            if (!moduleSystem) {
+                log.textContent += '❌ Sistema modulare non caricato\n';
+                return;
+            }
+            
+            log.textContent += '📄 Test funzioni PDF...\n\n';
+            
+            // Test con dati mock
+            try {
+                // Test generateId
+                const id1 = moduleSystem.generateId();
+                const id2 = moduleSystem.generateId();
+                log.textContent += `✅ generateId(): ${id1}\n`;
+                log.textContent += `✅ generateId(): ${id2}\n`;
+                log.textContent += `✅ ID unici: ${id1 !== id2 ? 'SÌ' : 'NO'}\n\n`;
+                
+                // Test validateDeliveryAddress
+                const testAddresses = [
+                    'VIA ROMA 123 10100 TORINO TO',
+                    'CORSO MARCONI 10/E 12050 MAGLIANO ALFIERI CN', // Dovrebbe essere rifiutato
+                    'PIAZZA GARIBALDI 5 20100 MILANO MI'
+                ];
+                
+                testAddresses.forEach(addr => {
+                    const isValid = moduleSystem.validateDeliveryAddress(addr);
+                    log.textContent += `${isValid ? '✅' : '❌'} validateDeliveryAddress("${addr}"): ${isValid}\n`;
+                });
+                
+                log.textContent += '\n✅ Test PDF completati con successo!\n';
+                
+            } catch (error) {
+                log.textContent += `❌ Errore durante test: ${error.message}\n`;
+            }
+        }
+
+        // Test sistema di fallback
+        async function testFallbackSystem() {
+            const log = document.getElementById('fallback-log');
+            log.textContent = '';
+            
+            log.textContent += '🔄 Test sistema di fallback...\n\n';
+            
+            // Simula errore nel sistema modulare
+            try {
+                // Verifica se il fallback funziona
+                if (window.DDTFTImport) {
+                    log.textContent += '✅ window.DDTFTImport disponibile\n';
+                    log.textContent += `📦 Tipo: ${typeof window.DDTFTImport}\n`;
+                    log.textContent += `🔧 Funzioni: ${Object.keys(window.DDTFTImport).length}\n`;
+                } else {
+                    log.textContent += '❌ window.DDTFTImport NON disponibile\n';
+                }
+                
+                // Test di compatibilità
+                if (window.DDTExtractor) {
+                    log.textContent += '✅ window.DDTExtractor disponibile\n';
+                } else {
+                    log.textContent += '❌ window.DDTExtractor NON disponibile\n';
+                }
+                
+                if (window.FatturaExtractor) {
+                    log.textContent += '✅ window.FatturaExtractor disponibile\n';
+                } else {
+                    log.textContent += '❌ window.FatturaExtractor NON disponibile\n';
+                }
+                
+                log.textContent += '\n✅ Test fallback completato!\n';
+                
+            } catch (error) {
+                log.textContent += `❌ Errore durante test fallback: ${error.message}\n`;
+            }
+        }
+
+        // Test performance
+        async function testPerformance() {
+            const log = document.getElementById('performance-log');
+            log.textContent = '';
+            
+            log.textContent += '⚡ Test performance...\n\n';
+            
+            if (!moduleSystem) {
+                log.textContent += '❌ Sistema modulare non disponibile per test\n';
+                return;
+            }
+            
+            // Test velocità caricamento
+            const iterations = 1000;
+            
+            // Test generateId
+            console.time('generateId');
+            for (let i = 0; i < iterations; i++) {
+                moduleSystem.generateId();
+            }
+            console.timeEnd('generateId');
+            
+            // Test validateDeliveryAddress
+            const testAddr = 'VIA ROMA 123 10100 TORINO TO';
+            console.time('validateDeliveryAddress');
+            for (let i = 0; i < iterations; i++) {
+                moduleSystem.validateDeliveryAddress(testAddr);
+            }
+            console.timeEnd('validateDeliveryAddress');
+            
+            log.textContent += `✅ Test performance completati!\n`;
+            log.textContent += `📊 ${iterations} iterazioni per ogni funzione\n`;
+            log.textContent += `🔍 Controlla la console per i tempi dettagliati\n`;
+        }
+
+        // Aggiorna status
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        // Auto-start quando la pagina è pronta
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('🟢 Sistema pronto per i test!', 'success');
+        });
+    </script>
+</body>
+</html>

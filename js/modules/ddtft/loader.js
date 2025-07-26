@@ -12,7 +12,8 @@ window.safeLoad = function safeLoad(url) {
   }
 
   // Normalizza percorsi locali e impedisci caching di errori
-  if (!url.startsWith('http') && !url.startsWith('/')) url = '/' + url;
+  // RIMOSSO: Non aggiungere '/' per supportare percorsi relativi
+  // if (!url.startsWith('http') && !url.startsWith('/')) url = '/' + url;
 
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
