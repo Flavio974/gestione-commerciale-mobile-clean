@@ -9,6 +9,7 @@
 /**
  * Gestione Date e Orari Italiani
  * Fix per problema timezone - sempre Europe/Rome
+ * Fix giorni della settimana - calcolo corretto
  */
 function getItalianDateTime() {
   const now = new Date();
@@ -51,6 +52,46 @@ function getItalianDateTime() {
       dayName: italianTime.toLocaleDateString('it-IT', { weekday: 'long' })
     };
   }
+}
+
+/**
+ * Calcola il giorno della settimana per una data specifica
+ * CORRETTO: 14 luglio 2025 = LUNEDÌ (non martedì!)
+ */
+function getWeekdayForDate(day, month, year) {
+  // Crea data nel timezone italiano
+  const date = new Date(year, month - 1, day); // month è 0-based in JS
+  
+  try {
+    const weekday = date.toLocaleDateString('it-IT', { 
+      timeZone: 'Europe/Rome',
+      weekday: 'long' 
+    });
+    return weekday;
+  } catch (error) {
+    // Fallback con calcolo manuale
+    const days = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+    return days[date.getDay()];
+  }
+}
+
+/**
+ * Informazioni precise sui giorni per l'AI
+ * Include esempi di date importanti con giorni corretti
+ */
+function getDateInfo() {
+  const today = getItalianDateTime();
+  
+  return {
+    current: today,
+    examples: {
+      "14 luglio 2025": "lunedì",
+      "26 luglio 2025": "sabato", 
+      "11 luglio 2025": "venerdì",
+      "23 luglio 2025": "mercoledì"
+    },
+    note: "IMPORTANTE: Il 14 luglio 2025 era LUNEDÌ, non martedì! Usa sempre calcoli precisi per i giorni della settimana."
+  };
 }
 
 /**
@@ -396,7 +437,7 @@ exports.handler = async (event, context) => {
             messages: [
               {
                 role: 'user',
-                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\n${JSON.stringify(optimizedData)}\n\n${message}`
+                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\nINFORMAZIONI DATE PRECISE:\n${JSON.stringify(getDateInfo(), null, 2)}\n\nCALCOLI CORRETTI:\n- 14 luglio 2025 = ${getWeekdayForDate(14, 7, 2025)}\n- 26 luglio 2025 = ${getWeekdayForDate(26, 7, 2025)}\n- 11 luglio 2025 = ${getWeekdayForDate(11, 7, 2025)}\n\n${JSON.stringify(optimizedData)}\n\n${message}`
               }
             ],
             max_completion_tokens: 1000
@@ -409,7 +450,7 @@ exports.handler = async (event, context) => {
             messages: [
               {
                 role: 'system',
-                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\n${JSON.stringify(optimizedData)}`
+                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\nINFORMAZIONI DATE PRECISE:\n${JSON.stringify(getDateInfo(), null, 2)}\n\nCALCOLI CORRETTI:\n- 14 luglio 2025 = ${getWeekdayForDate(14, 7, 2025)}\n- 26 luglio 2025 = ${getWeekdayForDate(26, 7, 2025)}\n- 11 luglio 2025 = ${getWeekdayForDate(11, 7, 2025)}\n\n${JSON.stringify(optimizedData)}`
               },
               {
                 role: 'user',
@@ -488,7 +529,7 @@ exports.handler = async (event, context) => {
             messages: [
               {
                 role: 'user',
-                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\n${JSON.stringify(optimizedData)}\n\n${message}`
+                content: `DATA E ORA CORRENTI: ${getItalianDateTime().full} (${getItalianDateTime().dayName})\n\nINFORMAZIONI DATE PRECISE:\n${JSON.stringify(getDateInfo(), null, 2)}\n\nCALCOLI CORRETTI:\n- 14 luglio 2025 = ${getWeekdayForDate(14, 7, 2025)}\n- 26 luglio 2025 = ${getWeekdayForDate(26, 7, 2025)}\n- 11 luglio 2025 = ${getWeekdayForDate(11, 7, 2025)}\n\n${JSON.stringify(optimizedData)}\n\n${message}`
               }
             ]
           })
