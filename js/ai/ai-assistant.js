@@ -30,14 +30,14 @@ window.AIAssistant = (function() {
          * Registra provider AI disponibili
          */
         registerProviders() {
-            // OpenAI GPT
-            if (window.OpenAI) {
-                this.providers.openai = window.OpenAI;
-                // Inizializza automaticamente se non già fatto
-                if (!window.OpenAI.isInitialized) {
-                    window.OpenAI.init();
-                }
-            }
+            // OpenAI GPT - DISABILITATO per evitare doppio AI
+            // if (window.OpenAI) {
+            //     this.providers.openai = window.OpenAI;
+            //     // Inizializza automaticamente se non già fatto
+            //     if (!window.OpenAI.isInitialized) {
+            //         window.OpenAI.init();
+            //     }
+            // }
 
             // Anthropic AI (Claude 4)
             if (window.AnthropicAI) {
