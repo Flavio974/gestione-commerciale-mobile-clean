@@ -367,6 +367,20 @@ if (typeof window !== 'undefined') {
     window.testDateFormats = () => {
         window.italianDateManager.testDateInterpretation();
     };
+    
+    // Funzione helper per calcoli precisi
+    window.calcolaGiorno = (giorno, mese, anno) => {
+        const date = new Date(anno, mese - 1, giorno);
+        const giornoSettimana = date.toLocaleDateString('it-IT', { weekday: 'long' });
+        console.log(`${giorno}/${mese}/${anno} = ${giornoSettimana}`);
+        return giornoSettimana;
+    };
+    
+    // Test automatico per verificare calcoli
+    console.log('🧪 TEST AUTOMATICO GIORNI:');
+    console.log('  14 luglio 2025 =', window.calcolaGiorno(14, 7, 2025));
+    console.log('  26 luglio 2025 =', window.calcolaGiorno(26, 7, 2025));
+    console.log('  11 luglio 2025 =', window.calcolaGiorno(11, 7, 2025));
 }
 
 console.log('🇮🇹 ItalianDateManager caricato - Formato italiano DD/MM/YYYY attivo');

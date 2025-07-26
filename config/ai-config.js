@@ -27,15 +27,19 @@ window.AI_CONFIG = {
 };
 
 // Inizializza automaticamente i provider quando disponibili
+// FIX: Solo Anthropic per evitare doppio AI
 window.addEventListener('load', () => {
     setTimeout(() => {
-        if (window.OpenAI && !window.OpenAI.isInitialized) {
-            console.log('🔧 Auto-inizializzazione OpenAI...');
-            window.OpenAI.init('backend');
-        }
+        // DISABILITATO: OpenAI per evitare conflitto doppio AI
+        // if (window.OpenAI && !window.OpenAI.isInitialized) {
+        //     console.log('🔧 Auto-inizializzazione OpenAI...');
+        //     window.OpenAI.init('backend');
+        // }
+        
         if (window.AnthropicAI && !window.AnthropicAI.isInitialized) {
             console.log('🔧 Auto-inizializzazione Anthropic...');
             window.AnthropicAI.init('backend');
+            console.log('✅ SOLO Anthropic attivo - problema doppio AI risolto');
         }
     }, 1000);
 });
