@@ -30,14 +30,12 @@ window.AIAssistant = (function() {
          * Registra provider AI disponibili
          */
         registerProviders() {
-            // OpenAI GPT - DISABILITATO per evitare doppio AI
-            // if (window.OpenAI) {
-            //     this.providers.openai = window.OpenAI;
-            //     // Inizializza automaticamente se non già fatto
-            //     if (!window.OpenAI.isInitialized) {
-            //         window.OpenAI.init();
-            //     }
-            // }
+            // OpenAI GPT - Registra ma NON inizializza automaticamente
+            if (window.OpenAI) {
+                this.providers.openai = window.OpenAI;
+                // NON inizializza automaticamente per evitare doppio AI
+                console.log('📝 OpenAI registrato (senza auto-init)');
+            }
 
             // Anthropic AI (Claude 4)
             if (window.AnthropicAI) {
@@ -56,6 +54,12 @@ window.AIAssistant = (function() {
          */
         setProvider(providerName) {
             if (this.providers[providerName]) {
+                // Inizializza solo quando viene selezionato
+                if (providerName === 'openai' && !this.providers[providerName].isInitialized) {
+                    console.log('🔧 Inizializzazione OpenAI su richiesta...');
+                    this.providers[providerName].init('backend');
+                }
+                
                 this.currentProvider = this.providers[providerName];
                 console.log(`✅ Provider AI impostato: ${providerName}`);
                 return true;
