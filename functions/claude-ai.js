@@ -289,16 +289,23 @@ class AIRequestFilterNetlify {
   }
 
   getAggregatedPayload(data) {
+    // FIX: I dati arrivano con struttura diversa da SupabaseAI
+    // Supporta sia il formato vecchio che quello nuovo
+    const clientsCount = data?.summary?.totalClients || data?.clients?.length || data?.clienti?.length || 0;
+    const ordersCount = data?.summary?.totalOrders || data?.orders?.length || data?.ordini?.length || 0;
+    const productsCount = data?.summary?.totalProducts || data?.products?.length || data?.prodotti?.length || 0;
+    const viaggiCount = data?.summary?.totalPercorsi || data?.percorsi?.length || data?.viaggi?.length || 0;
+    
     return {
       type: 'summary',
       stats: {
-        clienti: data?.clienti?.length || 0,
-        ordini: data?.ordini?.length || 0,
-        prodotti: data?.prodotti?.length || 0,
-        viaggi: data?.viaggi?.length || 0
+        clienti: clientsCount,
+        ordini: ordersCount,
+        prodotti: productsCount,
+        viaggi: viaggiCount
       },
-      recent_orders: data?.ordini?.slice(0, 5) || [],
-      top_clients: data?.clienti?.slice(0, 3) || []
+      recent_orders: data?.recentOrders?.slice(0, 5) || data?.orders?.slice(0, 5) || data?.ordini?.slice(0, 5) || [],
+      top_clients: data?.clients?.slice(0, 3) || data?.clienti?.slice(0, 3) || []
     };
   }
 
