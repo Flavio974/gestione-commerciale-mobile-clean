@@ -309,6 +309,7 @@ class MiddlewareIntegration {
         
         // Controlla altri possibili punti di integrazione
         this.findAndDecorateAIFunctions();
+        */
     }
 
     /**
@@ -351,6 +352,13 @@ class MiddlewareIntegration {
                             console.log('🔌 ⚠️ Nessun messaggio disponibile, passa all\'AI originale');
                             return originalSendMessage(message, isVoiceInput);
                         }
+                        
+                        // 🔌 DEBUG: Verifica catena di intercettazione
+                        console.log('🔌 [MIDDLEWARE-INTEGRATION] Richiesta ricevuta:', message);
+                        console.log('🔌 Verifico catena di intercettazione:');
+                        console.log('  - VocabularyManager:', !!window.vocabularyManager);
+                        console.log('  - AIMiddleware:', !!window.aiMiddleware);
+                        console.log('  - RobustConnectionManager:', !!window.robustConnectionManager);
                         
                         // ✅ LOGICA INTELLIGENTE: MIDDLEWARE PER DATI, AI PER CREATIVITÀ
                         const providerSelect = document.getElementById('ai-provider-select');
@@ -977,6 +985,7 @@ class MiddlewareIntegration {
             console.error('🔌 ❌ Errore handleDataRequest:', error);
             return null;
         }
+        */
     }
 
     /**
