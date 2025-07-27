@@ -500,7 +500,8 @@ class VocabularyManager {
                 action: "countClients",
                 params: {},
                 description: "Comandi clienti dal vocabolario .txt dell'app",
-                source: "txt"
+                source: "txt",
+                executeLocal: true  // 🚀 NUOVO: Esecuzione locale diretta
             });
         }
 
@@ -512,11 +513,98 @@ class VocabularyManager {
                 action: "countOrders",
                 params: {},
                 description: "Comandi ordini dal vocabolario .txt dell'app",
-                source: "txt"
+                source: "txt",
+                executeLocal: true  // 🚀 NUOVO: Esecuzione locale diretta
             });
         }
 
         return commands;
+    }
+
+    /**
+     * 🚀 NUOVO: Esecutore locale per comandi della scheda Comandi dell'app
+     * Gestisce direttamente i comandi senza coinvolgere AI esterna
+     */
+    async executeLocalCommand(command, userInput) {
+        try {
+            console.log('🏠 ESECUZIONE LOCALE:', command.action, 'per comando dal .txt');
+
+            // Verifica che sia un comando locale
+            if (!command.executeLocal) {
+                throw new Error('Comando non marcato per esecuzione locale');
+            }
+
+            // Ottieni accesso ai dati Supabase
+            const supabaseAI = window.supabaseAI || window.robustConnectionManager?.instances?.supabaseAI;
+            if (!supabaseAI) {
+                throw new Error('SupabaseAI non disponibile per esecuzione locale');
+            }
+
+            switch (command.action) {
+                case 'countClients':
+                    return await this.executeLocalCountClients(supabaseAI);
+                
+                case 'countOrders':
+                    return await this.executeLocalCountOrders(supabaseAI);
+                
+                default:
+                    throw new Error(`Azione locale non implementata: ${command.action}`);
+            }
+
+        } catch (error) {
+            console.error('❌ Errore esecuzione locale:', error);
+            return {
+                success: false,
+                response: `Errore nell'esecuzione locale: ${error.message}`,
+                source: 'local-executor-error'
+            };
+        }
+    }
+
+    /**
+     * Conta clienti direttamente da Supabase (locale)
+     */
+    async executeLocalCountClients(supabaseAI) {
+        try {
+            const allData = await supabaseAI.getAllData();
+            const count = allData.clients ? allData.clients.length : 0;
+            
+            console.log('🏠 ✅ Conteggio locale clienti:', count);
+            
+            return {
+                success: true,
+                response: `Ci sono ${count} clienti nel database`,
+                data: { count, type: 'clienti', source: 'local-execution' }
+            };
+        } catch (error) {
+            throw new Error(`Errore conteggio locale clienti: ${error.message}`);
+        }
+    }
+
+    /**
+     * Conta ordini direttamente da Supabase (locale)
+     */
+    async executeLocalCountOrders(supabaseAI) {
+        try {
+            const allData = await supabaseAI.getAllData();
+            let count = allData.orders ? allData.orders.length : 0;
+            
+            // Fallback ai dati historical se orders è vuoto
+            if (count === 0 && allData.historical) {
+                count = allData.historical.length;
+                console.log('🏠 📊 Usando dati historical per conteggio:', count);
+            }
+            
+            console.log('🏠 ✅ Conteggio locale ordini:', count);
+            
+            return {
+                success: true,
+                response: `Ci sono ${count} ordini nel database`,
+                data: { count, type: 'ordini', source: 'local-execution' }
+            };
+        } catch (error) {
+            throw new Error(`Errore conteggio locale ordini: ${error.message}`);
+        }
     }
 }
 
