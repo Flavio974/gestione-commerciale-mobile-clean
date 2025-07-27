@@ -460,7 +460,6 @@ class RobustConnectionManager {
                             }
                             console.log('🔌 ⚠️ Esecuzione comando vocabolario fallita, continuo al middleware');
                         }
-                        }
                     } catch (error) {
                         console.error('🔌 ❌ Errore nel controllo vocabolario:', error);
                     }
