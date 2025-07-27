@@ -619,6 +619,9 @@ class VocabularyManager {
                 case 'countClients':
                     return await this.executeLocalCountClients(supabaseAI);
                 
+                case 'listClients':
+                    return await this.executeLocalListClients(supabaseAI);
+                
                 case 'countOrders':
                     return await this.executeLocalCountOrders(supabaseAI);
                 
@@ -657,6 +660,52 @@ class VocabularyManager {
             };
         } catch (error) {
             throw new Error(`Errore conteggio locale clienti: ${error.message}`);
+        }
+    }
+
+    /**
+     * Esegue il comando per listare i clienti localmente
+     */
+    async executeLocalListClients(supabaseAI) {
+        try {
+            const allData = await supabaseAI.getAllData();
+            const clientsArray = allData.clients || [];
+            
+            if (clientsArray.length === 0) {
+                return {
+                    success: true,
+                    response: "Non ci sono clienti nel database.",
+                    data: { count: 0, type: 'lista_clienti', source: 'local-execution' }
+                };
+            }
+            
+            // Crea la lista formattata
+            const clientsList = clientsArray
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .slice(0, 50) // Limita a 50 per non sovraccaricare
+                .map(client => `• ${client.name}${client.city ? ` (${client.city})` : ''}`)
+                .join('\n');
+            
+            const totalCount = clientsArray.length;
+            const response = totalCount > 50 
+                ? `Ecco i primi 50 clienti su ${totalCount} totali:\n\n${clientsList}\n\n(Mostrando solo i primi 50)`
+                : `Ecco tutti i ${totalCount} clienti:\n\n${clientsList}`;
+            
+            console.log('🏠 ✅ Lista locale clienti:', totalCount, 'clienti');
+            
+            return {
+                success: true,
+                response: response,
+                data: { 
+                    count: totalCount, 
+                    type: 'lista_clienti', 
+                    source: 'local-execution',
+                    clients: clientsArray.slice(0, 50)
+                }
+            };
+            
+        } catch (error) {
+            throw new Error(`Errore lista locale clienti: ${error.message}`);
         }
     }
 
@@ -1174,6 +1223,35 @@ class VocabularyManager {
                     return {
                         type: 'local_execution',
                         message: `👥 Ci sono ${count} clienti nel database`,
+                        source: `${source.toLowerCase()}_vocab`
+                    };
+                    
+                case 'listClients':
+                    const clientData = await this.getDataSafely();
+                    const clientsArray = clientData.clients || [];
+                    
+                    if (clientsArray.length === 0) {
+                        return {
+                            type: 'local_execution',
+                            message: "Non ci sono clienti nel database.",
+                            source: `${source.toLowerCase()}_vocab`
+                        };
+                    }
+                    
+                    const clientsList = clientsArray
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .slice(0, 50)
+                        .map(client => `• ${client.name}${client.city ? ` (${client.city})` : ''}`)
+                        .join('\n');
+                    
+                    const totalCount = clientsArray.length;
+                    const listMessage = totalCount > 50 
+                        ? `Ecco i primi 50 clienti su ${totalCount} totali:\n\n${clientsList}\n\n(Mostrando solo i primi 50)`
+                        : `Ecco tutti i ${totalCount} clienti:\n\n${clientsList}`;
+                    
+                    return {
+                        type: 'local_execution',
+                        message: listMessage,
                         source: `${source.toLowerCase()}_vocab`
                     };
                     

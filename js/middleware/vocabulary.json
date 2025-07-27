@@ -311,17 +311,6 @@
         "quanti clienti abbiamo nel database",
         "quanti clienti sono nel database",
         "quanti clienti ho nel database",
-        "quali clienti abbiamo",
-        "quali clienti abbiamo nel database",
-        "chi sono i nostri clienti",
-        "clienti presenti nel sistema",
-        "mostrami tutti i clienti",
-        "lista clienti completa",
-        "elenco clienti database",
-        "clienti nel database",
-        "database clienti",
-        "interroga clienti database",
-        "visualizza clienti",
         "numero clienti",
         "numero di clienti",
         "numero clienti database",
@@ -337,6 +326,31 @@
       "action": "countClients",
       "params": {},
       "description": "Conta il numero totale di clienti"
+    },
+    {
+      "id": "list_clients",
+      "patterns": [
+        "quali clienti abbiamo",
+        "quali clienti abbiamo nel database",
+        "chi sono i nostri clienti",
+        "clienti presenti nel sistema",
+        "mostrami tutti i clienti",
+        "lista clienti completa",
+        "elenco clienti database",
+        "clienti nel database",
+        "database clienti",
+        "interroga clienti database",
+        "visualizza clienti",
+        "dammi la lista dei clienti",
+        "elenca tutti i clienti",
+        "mostra elenco clienti",
+        "fammi vedere i clienti",
+        "lista di tutti i clienti",
+        "tutti i clienti che abbiamo"
+      ],
+      "action": "listClients",
+      "params": {},
+      "description": "Mostra l'elenco dei clienti"
     },
     {
       "id": "total_revenue",
@@ -397,7 +411,7 @@
   "settings": {
     "enableDebug": true,
     "cacheTimeout": 300000,
-    "similarityThreshold": 0.8,
+    "similarityThreshold": 0.45,
     "maxPatternLength": 200,
     "autoReload": true,
     "fallbackToAI": true

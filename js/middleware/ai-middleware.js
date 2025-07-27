@@ -155,6 +155,12 @@ class AIMiddleware {
                     console.log('🤖 📊 countClients result:', result);
                     break;
                     
+                case 'listClients':
+                    console.log('🤖 🎯 Executing listClients handler');
+                    result = await this.handleListClients(params, userInput, originalContext);
+                    console.log('🤖 📊 listClients result:', result);
+                    break;
+                    
                 case 'calculateRevenue':
                     result = await this.handleCalculateRevenue(params, userInput, originalContext);
                     break;
@@ -837,6 +843,42 @@ class AIMiddleware {
         } catch (error) {
             console.error('❌ Errore conteggio clienti:', error);
             return "Errore nel conteggio dei clienti.";
+        }
+    }
+
+    /**
+     * Gestisce la lista dei clienti
+     */
+    async handleListClients(params, userInput, originalContext) {
+        try {
+            if (this.debug) {
+                console.log('🤖 📋 LISTA CLIENTI');
+            }
+            
+            const allData = await this.getAllDataSafely();
+            const clientsData = allData.clients || [];
+            
+            if (clientsData.length === 0) {
+                return "Non ci sono clienti nel database.";
+            }
+            
+            // Crea la lista formattata
+            const clientsList = clientsData
+                .sort((a, b) => a.name.localeCompare(b.name)) // Ordina per nome
+                .slice(0, 50) // Limita a 50 per non sovraccaricare
+                .map(client => `• ${client.name}${client.city ? ` (${client.city})` : ''}`)
+                .join('\n');
+            
+            const totalCount = clientsData.length;
+            const response = totalCount > 50 
+                ? `Ecco i primi 50 clienti su ${totalCount} totali:\n\n${clientsList}\n\n(Mostrando solo i primi 50)`
+                : `Ecco tutti i ${totalCount} clienti:\n\n${clientsList}`;
+            
+            return response;
+            
+        } catch (error) {
+            console.error('❌ Errore lista clienti:', error);
+            return "Errore nel recuperare la lista clienti.";
         }
     }
     
