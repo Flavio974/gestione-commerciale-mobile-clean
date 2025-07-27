@@ -297,13 +297,34 @@ class VocabularyManager {
                 }
                 
                 if (score >= this.settings.similarityThreshold && score > bestScore) {
+                    // 🎯 Enhanced parameter extraction for both formats
+                    let extractedParams = {};
+                    
+                    // Try bracket format [PARAM] first (user vocabulary)
+                    const bracketParams = this.extractBracketParameters(originalInput, pattern);
+                    if (Object.keys(bracketParams).length > 0) {
+                        extractedParams = bracketParams;
+                    } else {
+                        // Fallback to brace format {param} (system vocabulary)
+                        extractedParams = this.extractParameters(originalInput, pattern);
+                    }
+                    
                     bestMatch = {
                         command: command,
                         pattern: pattern,
                         score: score,
-                        extractedParams: this.extractParameters(originalInput, pattern)
+                        extractedParams: extractedParams,
+                        isParameterized: Object.keys(extractedParams).length > 0
                     };
                     bestScore = score;
+                    
+                    // 🚀 PRIORITY: If this is a successful parameterized match, it should win
+                    if (score >= 0.9 && Object.keys(extractedParams).length > 0) {
+                        if (this.settings.enableDebug) {
+                            console.log(`🎯 [${source}] 🏆 PARAMETERIZED WINNER:`, pattern, 'params:', extractedParams);
+                        }
+                        return bestMatch; // Immediate return for high-scoring parameterized matches
+                    }
                 }
             }
         }
@@ -387,21 +408,29 @@ class VocabularyManager {
         const normalized1 = this.normalizeText(text1);
         const normalized2 = this.normalizeText(text2);
         
-        // Controllo esatto
+        // 🎯 PRIORITY 1: Check for parameterized pattern matching
+        const parameterizedScore = this.calculateParameterizedScore(normalized1, normalized2);
+        if (parameterizedScore > 0) {
+            if (this.settings.enableDebug) {
+                console.log(`🎯 PARAMETERIZED MATCH: "${normalized1}" vs "${normalized2}" → ${parameterizedScore}`);
+            }
+            return parameterizedScore;
+        }
+        
+        // 🎯 PRIORITY 2: Exact match
         if (normalized1 === normalized2) return 1.0;
         
-        // Controllo se uno contiene l'altro - ma solo se la differenza di lunghezza è ragionevole
+        // 🎯 PRIORITY 3: Contains match with length validation
         const lenDiff = Math.abs(normalized1.length - normalized2.length);
         const maxLen = Math.max(normalized1.length, normalized2.length);
         
-        // Solo se la differenza è meno del 30% della lunghezza totale
         if (lenDiff / maxLen < 0.3) {
             if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
                 return 0.95;
             }
         }
         
-        // Algoritmo di Jaccard per similarità
+        // 🎯 PRIORITY 4: Jaccard similarity for general patterns
         const words1 = new Set(normalized1.split(' '));
         const words2 = new Set(normalized2.split(' '));
         
@@ -409,6 +438,153 @@ class VocabularyManager {
         const union = new Set([...words1, ...words2]);
         
         return intersection.size / union.size;
+    }
+
+    /**
+     * 🎯 NUOVO: Calcola score per pattern parametrizzati con priorità MASSIMA
+     */
+    calculateParameterizedScore(query, pattern) {
+        // Detect parameters in pattern: both [PARAM] and {param} formats
+        const bracketParams = pattern.match(/\[([^\]]+)\]/g) || [];
+        const braceParams = pattern.match(/\{([^}]+)\}/g) || [];
+        
+        if (bracketParams.length === 0 && braceParams.length === 0) {
+            return 0; // No parameters, use standard scoring
+        }
+        
+        if (this.settings.enableDebug) {
+            console.log(`🔍 ANALYZING PARAMETERIZED: "${pattern}" with query "${query}"`);
+            console.log(`   Found bracket params: ${bracketParams.join(', ')}`);
+            console.log(`   Found brace params: ${braceParams.join(', ')}`);
+        }
+        
+        // Try to extract parameters and see if pattern matches
+        let extractedParams = {};
+        let patternScore = 0;
+        
+        // Handle [PARAM] format (user vocabulary)
+        if (bracketParams.length > 0) {
+            patternScore = this.scorePatternWithBrackets(query, pattern, bracketParams);
+            if (patternScore > 0) {
+                extractedParams = this.extractBracketParameters(query, pattern);
+            }
+        }
+        
+        // Handle {param} format (system vocabulary) 
+        if (braceParams.length > 0 && patternScore === 0) {
+            patternScore = this.scorePatternWithBraces(query, pattern, braceParams);
+            if (patternScore > 0) {
+                extractedParams = this.extractParameters(query, pattern);
+            }
+        }
+        
+        if (patternScore > 0 && Object.keys(extractedParams).length > 0) {
+            // MASSIVE BONUS: Successfully extracted parameters = priority match
+            const bonus = 0.9; // Base score of 0.9 for successful parameter extraction
+            const finalScore = Math.min(1.0, patternScore + bonus);
+            
+            if (this.settings.enableDebug) {
+                console.log(`🎯 ✅ PARAMETERIZED SUCCESS: extracted ${JSON.stringify(extractedParams)}, score: ${finalScore}`);
+            }
+            
+            return finalScore;
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Score pattern with [PARAM] format
+     */
+    scorePatternWithBrackets(query, pattern, bracketParams) {
+        // Create regex by replacing [PARAM] with capture groups
+        let regexPattern = pattern;
+        
+        // Escape special regex characters first
+        regexPattern = regexPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        // Replace escaped brackets with capture groups
+        for (const param of bracketParams) {
+            const escapedParam = param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            regexPattern = regexPattern.replace(escapedParam, '(.+?)');
+        }
+        
+        const regex = new RegExp(`^${regexPattern}$`, 'i');
+        const match = query.match(regex);
+        
+        if (match && match.length > 1) {
+            // Check if extracted values look reasonable (not empty, not too long)
+            const extractedValues = match.slice(1);
+            const validExtractions = extractedValues.filter(val => 
+                val && val.trim().length > 0 && val.trim().length < 50
+            );
+            
+            if (validExtractions.length === bracketParams.length) {
+                return 0.95; // High score for successful bracket parameter extraction
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Score pattern with {param} format
+     */
+    scorePatternWithBraces(query, pattern, braceParams) {
+        // Use existing extractParameters logic but just test if it works
+        const extracted = this.extractParameters(query, pattern);
+        
+        if (Object.keys(extracted).length === braceParams.length) {
+            // Verify extracted values are reasonable
+            const values = Object.values(extracted);
+            const validValues = values.filter(val => 
+                val && val.toString().trim().length > 0 && val.toString().trim().length < 50
+            );
+            
+            if (validValues.length === braceParams.length) {
+                return 0.95; // High score for successful brace parameter extraction
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Extract parameters from [PARAM] format patterns
+     */
+    extractBracketParameters(query, pattern) {
+        const params = {};
+        const bracketParams = pattern.match(/\[([^\]]+)\]/g) || [];
+        
+        if (bracketParams.length === 0) return params;
+        
+        let regexPattern = pattern;
+        const paramNames = [];
+        
+        // Escape special regex characters
+        regexPattern = regexPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        // Replace [PARAM] with capture groups and collect param names
+        for (const bracketParam of bracketParams) {
+            const paramName = bracketParam.slice(1, -1).toLowerCase(); // Remove [ and ]
+            paramNames.push(paramName);
+            
+            const escapedParam = bracketParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            regexPattern = regexPattern.replace(escapedParam, '(.+?)');
+        }
+        
+        const regex = new RegExp(`^${regexPattern}$`, 'i');
+        const match = query.match(regex);
+        
+        if (match && match.length > 1) {
+            for (let i = 0; i < paramNames.length; i++) {
+                if (match[i + 1]) {
+                    params[paramNames[i]] = match[i + 1].trim();
+                }
+            }
+        }
+        
+        return params;
     }
 
     /**
