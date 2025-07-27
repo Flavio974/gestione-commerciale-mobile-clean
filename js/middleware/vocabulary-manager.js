@@ -27,6 +27,7 @@ class VocabularyManager {
         this.vocabularyPath = 'js/middleware/vocabulary.json';
         this.txtVocabularyPath = '/comandi/vocabolario_comandi.txt';
         this.vocabulary = null;
+        this.userVocabulary = null; // DEBUG: Added to track user vocabulary
         this.lastModified = null;
         this.cache = new Map();
         this.isLoading = false;
@@ -40,6 +41,8 @@ class VocabularyManager {
         };
         
         console.log('📚 VocabularyManager: Inizializzato');
+        // DEBUG: Track user vocabulary changes
+        this._lastUserVocContent = localStorage.getItem('vocabulary_user');
         this.startWatcher();
     }
 
@@ -91,6 +94,14 @@ class VocabularyManager {
                 console.warn('📚 ⚠️ Errore caricamento .txt, uso solo .json:', error.message);
             }
             
+            // DEBUG: CRITICAL FIX - Load user vocabulary BEFORE building index
+            await this.loadUserVocabulary();
+            if (this.userVocabulary && this.userVocabulary.commands) {
+                console.log('📚 ✅ Integrazione vocabolario utente:', this.userVocabulary.commands.length, 'comandi');
+                console.debug('[VOCAB-MERGE]', this.userVocabulary.commands.length, 'pattern utente aggiunti');
+                newVocabulary.commands = [...newVocabulary.commands, ...this.userVocabulary.commands];
+            }
+            
             // Verifica se il vocabolario è cambiato
             const currentModified = response.headers.get('Last-Modified') || new Date().toISOString();
             const hasChanged = !this.lastModified || currentModified !== this.lastModified;
@@ -139,6 +150,10 @@ class VocabularyManager {
         // Controlla modifiche ogni 2 secondi
         this.watchInterval = setInterval(async () => {
             try {
+                // DEBUG: Check for user vocabulary changes too
+                const currentUserVoc = localStorage.getItem('vocabulary_user');
+                const userVocChanged = currentUserVoc !== this._lastUserVocContent;
+                
                 const response = await fetch(this.vocabularyPath, {
                     method: 'HEAD',
                     headers: {
@@ -147,9 +162,13 @@ class VocabularyManager {
                 });
                 
                 const lastModified = response.headers.get('Last-Modified');
-                if (lastModified && lastModified !== this.lastModified) {
+                if (lastModified && lastModified !== this.lastModified || userVocChanged) {
                     if (this.settings.enableDebug) {
                         console.log('📚 🔄 RILEVATA MODIFICA AL VOCABOLARIO - Ricaricamento automatico');
+                        if (userVocChanged) {
+                            console.debug('[VOCAB-USER] User vocabulary changed, reloading...');
+                            this._lastUserVocContent = currentUserVoc;
+                        }
                     }
                     await this.loadVocabulary(true);
                 }
@@ -212,8 +231,8 @@ class VocabularyManager {
             for (const pattern of command.patterns) {
                 const score = this.calculateSimilarity(normalizedInput, pattern);
                 
-                // 🔍 DEBUG: Log matching per pattern .txt
-                if (command.source === 'txt') {
+                // 🔍 DEBUG: Log matching per pattern .txt e user
+                if (command.source === 'txt' || command.source === 'user') {
                     console.log(`📚 🔍 Pattern "${pattern}" vs "${normalizedInput}" → score: ${score}`);
                 }
                 
@@ -227,8 +246,14 @@ class VocabularyManager {
                     bestScore = score;
                     
                     // 🔍 DEBUG: Log match trovato
-                    if (command.source === 'txt') {
-                        console.log('📚 ✅ MATCH TXT TROVATO:', pattern, 'score:', score);
+                    if (command.source === 'txt' || command.source === 'user') {
+                        console.log('📚 ✅ MATCH TROVATO:', pattern, 'score:', score, 'source:', command.source);
+                    }
+                    
+                    // Se abbiamo un match perfetto, fermiamoci qui
+                    if (score === 1.0) {
+                        console.log('📚 🎯 MATCH PERFETTO - Stop ricerca');
+                        break;
                     }
                 }
             }
@@ -748,6 +773,87 @@ class VocabularyManager {
         message += `⚡ **Vantaggio:** I comandi nel vocabolario vengono eseguiti localmente (velocissimi e gratuiti!)`;
 
         return message;
+    }
+    
+    /**
+     * DEBUG: Load user vocabulary from localStorage
+     */
+    async loadUserVocabulary() {
+        try {
+            const userVocText = localStorage.getItem('vocabulary_user');
+            if (!userVocText) {
+                console.debug('[VOCAB-USER] No user vocabulary in localStorage');
+                return;
+            }
+            
+            console.debug('[VOCAB-USER] Loading user vocabulary from localStorage');
+            const parsedCommands = this.parseUserVocabulary(userVocText);
+            
+            this.userVocabulary = {
+                version: "user-1.0",
+                source: "localStorage",
+                commands: parsedCommands
+            };
+            
+            console.debug('[VOCAB-USER]', this.userVocabulary);
+            
+        } catch (error) {
+            console.error('[VOCAB-USER] Error loading user vocabulary:', error);
+        }
+    }
+    
+    /**
+     * DEBUG: Parse user vocabulary text into commands
+     */
+    parseUserVocabulary(txtContent) {
+        const commands = [];
+        const lines = txtContent.split('\n');
+        let currentCategory = null;
+        let commandIndex = 0;
+        
+        for (const line of lines) {
+            const trimmed = line.trim();
+            
+            if (!trimmed || trimmed.startsWith('#')) {
+                if (trimmed.includes('CATEGORIA:')) {
+                    currentCategory = trimmed.replace(/# CATEGORIA:\s*/, '');
+                }
+                continue;
+            }
+            
+            commandIndex++;
+            const commandId = `user_${currentCategory?.toLowerCase().replace(/\s+/g, '_')}_${commandIndex}`;
+            
+            let action = 'genericAction';
+            let executeLocal = false;
+            
+            // Determine action based on category and content
+            if (currentCategory === 'Gestione Clienti') {
+                if (trimmed.toLowerCase().includes('quanti') || trimmed.toLowerCase().includes('numero')) {
+                    action = 'countClients';
+                    executeLocal = true;
+                }
+            } else if (currentCategory === 'Fatturato e Ordini') {
+                if (trimmed.toLowerCase().includes('quanti') || trimmed.toLowerCase().includes('numero')) {
+                    action = 'countOrders';
+                    executeLocal = true;
+                }
+            }
+            
+            commands.push({
+                id: commandId,
+                patterns: [trimmed],
+                action: action,
+                params: {},
+                description: `Comando utente da categoria ${currentCategory}`,
+                source: "user",
+                category: currentCategory,
+                executeLocal: executeLocal
+            });
+        }
+        
+        console.debug('[VOCAB-USER] Parsed', commands.length, 'commands from user vocabulary');
+        return commands;
     }
 }
 

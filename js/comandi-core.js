@@ -45,7 +45,8 @@ const ComandiModule = {
       let source = '';
       
       // 1. PRIORITÀ: Controlla localStorage (modifiche utente)
-      const savedVocabolario = localStorage.getItem('vocabolario_comandi');
+      // DEBUG: Changed key to vocabulary_user
+      const savedVocabolario = localStorage.getItem('vocabulary_user');
       if (savedVocabolario) {
         text = savedVocabolario;
         source = 'localStorage (modifiche utente)';
@@ -61,7 +62,8 @@ const ComandiModule = {
         console.log('📄 Vocabolario caricato dal file statico');
         
         // Salva automaticamente in localStorage per preservare in futuro
-        localStorage.setItem('vocabolario_comandi', text);
+        // DEBUG: Changed key to vocabulary_user
+        localStorage.setItem('vocabulary_user', text);
         console.log('💾 Vocabolario salvato automaticamente in localStorage');
       }
       
@@ -438,7 +440,9 @@ const ComandiModule = {
     
     try {
       // Per ora salviamo in localStorage (in produzione userai un endpoint API)
-      localStorage.setItem('vocabolario_comandi', editor.value);
+      // DEBUG: Changed key to vocabulary_user and added debug log
+      localStorage.setItem('vocabulary_user', editor.value);
+      console.debug('[COMANDI-SAVE]', { key: 'vocabulary_user', content: editor.value });
       
       // Ricarica il vocabolario parsato
       this.vocabolario = this.parseVocabolario(editor.value);
@@ -518,7 +522,8 @@ const ComandiModule = {
     
     try {
       // Rimuovi dal localStorage
-      localStorage.removeItem('vocabolario_comandi');
+      // DEBUG: Changed key to vocabulary_user
+      localStorage.removeItem('vocabulary_user');
       
       // Ricarica dal file statico
       const response = await fetch('/comandi/vocabolario_comandi.txt');
