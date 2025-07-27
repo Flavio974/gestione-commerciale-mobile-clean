@@ -121,21 +121,9 @@ class MiddlewareIntegration {
             console.log('🔌 Step 3: ✅ AIMiddleware creato');
             
             console.log('🔌 Step 4: Collegamento Supabase...');
-            // Passa il riferimento a Supabase se disponibile
-            if (window.supabaseAI && window.RequestMiddleware) {
-                this.middleware.requestMiddleware = new RequestMiddleware(window.supabaseAI);
-                // Esporta globalmente per debug
-                window.requestMiddleware = this.middleware.requestMiddleware;
-                console.log('🔌 💾 Middleware collegato a Supabase');
-            } else {
-                if (!window.RequestMiddleware) {
-                    console.warn('🔌 ⚠️ RequestMiddleware non disponibile');
-                }
-                if (!window.supabaseAI) {
-                    console.warn('🔌 ⚠️ Supabase non disponibile');
-                }
-                console.warn('🔌 ⚠️ Middleware funziona solo con vocabolario');
-            }
+            // ✅ REQUESTMIDDLEWARE DISABILITATO - Solo VocabularyManager attivo
+            console.log('🔌 💾 RequestMiddleware DISABILITATO - Solo VocabularyManager attivo');
+            console.log('🔌 ✅ Sistema semplificato: VocabularyManager + fallback AI diretto');
             console.log('🔌 Step 4: ✅ Collegamento completato');
             
             console.log('🔌 Step 5: Decorazione funzioni AI...');
@@ -304,6 +292,11 @@ class MiddlewareIntegration {
      * Decora la funzione AI esistente per intercettare le richieste
      */
     decorateAIFunction() {
+        // 🚫 INTERCETTAZIONE DISABILITATA - Solo robust-connection-manager deve intercettare
+        console.log('🚫 MiddlewareIntegration intercettazione DISABILITATA');
+        return;
+        
+        /* CODICE ORIGINALE DISABILITATO:
         // Intercetta FlavioAIAssistant
         this.interceptFlavioAIAssistant();
         
@@ -947,6 +940,11 @@ class MiddlewareIntegration {
      * 🔧 GESTISCE RICHIESTE DI DATI CON MIDDLEWARE
      */
     async handleDataRequest(message) {
+        // 🚫 DISABILITATO - SOLO VOCABULARYMANAGER DEVE GESTIRE LE QUERY
+        console.log('🚫 handleDataRequest DISABILITATO - usa solo VocabularyManager');
+        return null;
+        
+        /* CODICE ORIGINALE DISABILITATO:
         try {
             // Verifica se abbiamo connessione Supabase
             if (!this.supabaseAI) {
@@ -1072,6 +1070,9 @@ async function initializeMiddleware() {
     // Attendi che l'applicazione sia caricata (aumento il delay)
     setTimeout(async () => {
         try {
+            // 🔒 SINGLETON: Uso RobustConnectionManager.getInstance() invece di new
+            console.log('🔌 MiddlewareIntegration: Uso RobustConnectionManager singleton');
+            
             window.middlewareIntegration = new MiddlewareIntegration();
             const success = await window.middlewareIntegration.initialize();
             

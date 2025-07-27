@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fix Classificazione Clienti</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .log { background-color: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 3px; font-family: monospace; }
+        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Fix Classificazione Query Clienti</h1>
+    
+    <div class="test">
+        <h3>Test della fix per: "Quanti clienti ci sono?"</h3>
+        <button onclick="testClientQuery()">🧪 Testa Query Clienti</button>
+        <div id="testResults"></div>
+        <div id="logs"></div>
+    </div>
+
+    <script src="js/ai-request-filter.js"></script>
+    
+    <script>
+        function addLog(message) {
+            const logs = document.getElementById('logs');
+            logs.innerHTML += `<div class="log">${message}</div>`;
+        }
+        
+        function testClientQuery() {
+            addLog('🚀 Iniziando test della fix...');
+            
+            const filter = new AIRequestFilter();
+            
+            // Dati mock per il test
+            const mockData = {
+                clienti: [
+                    { id: 1, nome: "Mario Rossi" },
+                    { id: 2, nome: "Luigi Verdi" },
+                    { id: 3, nome: "Anna Bianchi" }
+                ],
+                ordini: [
+                    { id: 1, cliente_id: 1, totale: 100 },
+                    { id: 2, cliente_id: 2, totale: 200 }
+                ]
+            };
+            
+            // Test query problematica
+            const query = "Quanti clienti ci sono nel database su Supabase?";
+            
+            addLog(`🔍 Test query: "${query}"`);
+            
+            // Analizza la richiesta
+            const analysis = filter.analyzeRequest(query);
+            addLog(`📊 Tipo rilevato: ${analysis.type} (confidence: ${analysis.confidence})`);
+            
+            // Verifica che sia classificata come 'client'
+            if (analysis.type === 'client') {
+                addLog('✅ SUCCESSO: Query classificata correttamente come "client"');
+                
+                // Testa il filtro dati
+                const filteredData = filter.filterDataForRequest(analysis, mockData);
+                addLog(`🎯 Dati filtrati: ${JSON.stringify(filteredData, null, 2)}`);
+                
+                // Verifica la risposta
+                if (filteredData.type === 'client_count' && filteredData.totaleClienti === 3) {
+                    addLog('✅ SUCCESSO: Dati filtrati correttamente per conteggio clienti');
+                    addLog(`✅ Messaggio generato: "${filteredData.message}"`);
+                    
+                    document.getElementById('testResults').innerHTML = 
+                        '<div class="success"><strong>✅ TEST SUPERATO!</strong><br>' +
+                        `La query "${query}" ora viene classificata correttamente come "client" e restituisce il conteggio corretto: ${filteredData.totaleClienti} clienti.</div>`;
+                } else {
+                    addLog('❌ ERRORE: Dati filtrati non corretti');
+                    document.getElementById('testResults').innerHTML = 
+                        '<div class="error"><strong>❌ TEST FALLITO!</strong><br>I dati filtrati non sono corretti.</div>';
+                }
+            } else {
+                addLog(`❌ ERRORE: Query ancora classificata male come "${analysis.type}" invece di "client"`);
+                document.getElementById('testResults').innerHTML = 
+                    '<div class="error"><strong>❌ TEST FALLITO!</strong><br>' +
+                    `La query è ancora classificata male come "${analysis.type}" invece di "client".</div>`;
+            }
+            
+            // Test aggiuntivi
+            addLog('\n🔍 Test query aggiuntive...');
+            const additionalTests = [
+                "Numero di clienti",
+                "Totale clienti nel database", 
+                "Quanti clienti abbiamo?",
+                "Count clienti"
+            ];
+            
+            additionalTests.forEach(testQuery => {
+                const testAnalysis = filter.analyzeRequest(testQuery);
+                const status = testAnalysis.type === 'client' ? '✅' : '❌';
+                addLog(`${status} "${testQuery}" → ${testAnalysis.type}`);
+            });
+        }
+        
+        // Aggiungi override console.log per catturare i log del filtro
+        const originalLog = console.log;
+        console.log = function(...args) {
+            addLog(args.join(' '));
+            originalLog.apply(console, args);
+        };
+    </script>
+</body>
+</html>

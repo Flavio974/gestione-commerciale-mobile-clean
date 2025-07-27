@@ -2644,7 +2644,7 @@
       console.log('🔄 Caricamento middleware AI...');
       return safeLoadQueue(
         'js/ai-request-filter.js',  // NUOVO: Filtro AI per riduzione costi 95%
-        'js/middleware/request-middleware.js',
+        // 'js/middleware/request-middleware.js', ✅ RIMOSSO - Solo VocabularyManager attivo
         'js/middleware/ai-middleware.js',
         'js/middleware/robust-connection-manager.js',
         'js/middleware/middleware-integration.js'
@@ -4101,6 +4101,9 @@
     window.resetVoiceSettings = resetVoiceSettings;
 
   </script>
+
+  <!-- Fix conteggio clienti -->
+  <script src="fix-client-count-final.js"></script>
 
 </body>
 </html>

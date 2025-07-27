@@ -75,7 +75,7 @@
     <!-- Dipendenze -->
     <script src="js/utils/supabase-ai.js"></script>
     <script src="js/utils/italian-date-middleware.js"></script>
-    <script src="js/middleware/request-middleware.js"></script>
+    <!-- <script src="js/middleware/request-middleware.js"></script> ✅ DISABILITATO -->
     <script src="js/middleware/ai-middleware.js"></script>
     <script src="js/middleware/vocabolario-middleware.js"></script>
 
@@ -86,8 +86,12 @@
 
         async function initializeMiddleware() {
             try {
-                // Inizializza i middleware
-                requestMiddleware = new RequestMiddleware();
+                // Inizializza i middleware (usando Singleton se disponibile)
+                if (window.RequestMiddleware.getInstance) {
+                    requestMiddleware = RequestMiddleware.getInstance();
+                } else {
+                    requestMiddleware = new RequestMiddleware();
+                }
                 aiMiddleware = new AIMiddleware();
                 vocabolarioMiddleware = new VocabolarioMiddleware();
 

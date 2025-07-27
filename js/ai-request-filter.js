@@ -34,8 +34,16 @@ class AIRequestFilter {
                 /quanto.*venduto.*([^?]+)/i
             ],
             
-            // Richieste clienti
+            // Richieste clienti - PRIORITÀ ALTA per riconoscere "Quanti clienti"
             client: [
+                // 🚨 PATTERN PRIORITARI per query generiche sui clienti
+                /quanti\s+client/i,  // "Quanti clienti ci sono?"
+                /numero.*client/i,   // "Numero di clienti"
+                /totale.*client/i,   // "Totale clienti"
+                /count.*client/i,    // "Count clienti"
+                /^client.*\?/i,      // "Clienti nel database?"
+                
+                // Pattern esistenti per clienti specifici
                 /cliente\s+([^?]+?).*ordini/i,
                 /ordini.*cliente\s+([^?]+)/i,
                 /([^?]+?).*quanti.*ordini/i,
@@ -90,23 +98,24 @@ class AIRequestFilter {
             };
         }
         
-        // Test richieste prodotti
-        const productMatch = this.detectProductQuery(message);
-        if (productMatch.isProductQuery) {
-            return {
-                type: 'product',
-                params: productMatch,
-                confidence: 0.8,
-                payload: 'specific'
-            };
-        }
-        
-        // Test richieste clienti
+        // 🚨 PRIORITÀ ALTA: Test richieste clienti PRIMA dei prodotti
+        // Questo evita che "quanti clienti" venga catturato da "quanti...venduto"
         const clientMatch = this.detectClientQuery(message);
         if (clientMatch.isClientQuery) {
             return {
                 type: 'client',
                 params: clientMatch,
+                confidence: 0.8,
+                payload: 'specific'
+            };
+        }
+        
+        // Test richieste prodotti DOPO clienti
+        const productMatch = this.detectProductQuery(message);
+        if (productMatch.isProductQuery) {
+            return {
+                type: 'product',
+                params: productMatch,
                 confidence: 0.8,
                 payload: 'specific'
             };
@@ -336,6 +345,22 @@ class AIRequestFilter {
      */
     getClientPayload(params, supabaseData) {
         const clients = supabaseData?.clienti || [];
+        
+        // 🚨 GESTIONE QUERY GENERICHE SUI CLIENTI
+        // Se non c'è un nome cliente specifico, è una query di conteggio
+        if (!params.clientName || params.clientName === undefined) {
+            console.log('🎯 Query generica sui clienti - restituisco conteggio totale');
+            return {
+                type: 'client_count',
+                totaleClienti: clients.length,
+                clienti: clients.slice(0, 10), // Solo i primi 10 per esempio
+                query: 'Conteggio clienti',
+                message: `Ci sono ${clients.length} clienti nel database`,
+                note: "Query generica: numero totale clienti"
+            };
+        }
+        
+        // GESTIONE CLIENTE SPECIFICO
         const specificClient = this.findClient(params.clientName, clients);
         
         if (specificClient) {

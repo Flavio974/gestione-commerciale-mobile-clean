@@ -841,6 +841,22 @@ class VocabularyManager {
         let currentCategory = null;
         let commandIndex = 0;
         
+        // PATCH: Auto-inject total orders command if missing
+        const hasTotalOrdersCommand = txtContent.toLowerCase().includes('quanti ordini ci sono nel database');
+        if (!hasTotalOrdersCommand) {
+            console.debug('[VOCAB-PATCH] Auto-injecting user_total_orders command');
+            commands.push({
+                id: 'user_total_orders',
+                patterns: ['quanti ordini ci sono nel database'],
+                action: 'countTotalOrders',
+                params: {},
+                description: 'Conteggio totale ordini nel database',
+                source: "user",
+                category: "Sistema e Database",
+                executeLocal: true
+            });
+        }
+        
         for (const line of lines) {
             const trimmed = line.trim();
             

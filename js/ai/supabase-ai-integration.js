@@ -180,6 +180,45 @@ class SupabaseAIIntegration {
     }
 
     /**
+     * Ottieni solo il conteggio dei clienti da Supabase
+     */
+    async getClientsCount() {
+        try {
+            console.log('🔢 CLIENTI COUNT: Verifico connessione Supabase...', !!this.supabase);
+            
+            if (!this.supabase) {
+                console.error('❌ CLIENTI COUNT: Supabase client non disponibile');
+                // Fallback su localStorage
+                const localClients = this.getClientsFromStorage();
+                return localClients.length;
+            }
+
+            console.log('🔢 CLIENTI COUNT: Eseguo query count...');
+            const { count, error } = await this.supabase
+                .from('clients')
+                .select('*', { count: 'exact', head: true });
+
+            console.log('🔢 CLIENTI COUNT: Risultato query:', { count, error });
+
+            if (error) {
+                console.error('❌ CLIENTI COUNT: Errore query:', error);
+                // Fallback su localStorage
+                const localClients = this.getClientsFromStorage();
+                return localClients.length;
+            }
+            
+            console.log('✅ CLIENTI COUNT: Totale clienti in Supabase:', count);
+            return count || 0;
+            
+        } catch (error) {
+            console.error('❌ CLIENTI COUNT: Errore generale:', error);
+            // Fallback su localStorage
+            const localClients = this.getClientsFromStorage();
+            return localClients.length;
+        }
+    }
+
+    /**
      * Query ordini da Supabase
      */
     async getOrders() {

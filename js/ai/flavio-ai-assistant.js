@@ -385,6 +385,21 @@ window.FlavioAIAssistant = (function() {
                 
                 console.log('🚀 Tentativo chiamata API:', { message, model, isVoiceInput });
                 
+                // 🔧 FIX CRITICO: Usa dati reali da SupabaseAI invece di timestamp fittizio
+                let supabaseData = { timestamp: new Date().toISOString() }; // Fallback
+                
+                try {
+                    if (window.supabaseAI) {
+                        console.log('✅ Recupero dati reali da SupabaseAI...');
+                        supabaseData = await window.supabaseAI.formatForAI_Simple();
+                        console.log(`📊 Dati recuperati: ${supabaseData.clienti?.length || 0} clienti, ${supabaseData.ordini?.length || 0} ordini`);
+                    } else {
+                        console.warn('⚠️ SupabaseAI non disponibile, uso dati vuoti');
+                    }
+                } catch (error) {
+                    console.error('❌ Errore recupero dati SupabaseAI:', error);
+                }
+
                 const response = await fetch('/.netlify/functions/claude-ai', {
                     method: 'POST',
                     headers: { 
@@ -395,7 +410,7 @@ window.FlavioAIAssistant = (function() {
                         message: message,
                         model: model,
                         isVoiceInput: isVoiceInput,
-                        supabaseData: { timestamp: new Date().toISOString() }
+                        supabaseData: supabaseData
                     })
                 });
 

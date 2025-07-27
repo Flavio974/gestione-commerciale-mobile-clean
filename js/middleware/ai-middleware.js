@@ -163,6 +163,12 @@ class AIMiddleware {
                     result = await this.handleCalculateMonthlyRevenue(params, userInput, originalContext);
                     break;
                     
+                case 'countTotalOrders':
+                    console.log('🤖 🎯 Executing countTotalOrders handler');
+                    result = await this.handleCountTotalOrders(params, userInput, originalContext);
+                    console.log('🤖 📊 countTotalOrders result:', result);
+                    break;
+                    
                 default:
                     // Azione non implementata, fallback
                     if (this.debug) {
@@ -364,6 +370,22 @@ class AIMiddleware {
     extractClientNameFromQuery(query) {
         const queryLower = query.toLowerCase();
         
+        // PATCH: Skip client extraction for global order count queries
+        const globalOrderPatterns = [
+            /quanti ordini ci sono nel database/i,
+            /numero ordini totali/i,
+            /conta ordini/i,
+            /totale ordini/i,
+            /count ordini/i
+        ];
+        
+        for (const globalPattern of globalOrderPatterns) {
+            if (globalPattern.test(query)) {
+                console.log(`🔍 PATCH: Skip client extraction for global query: "${query}"`);
+                return null;
+            }
+        }
+        
         // Pattern per rilevare clienti specifici
         const clientPatterns = [
             /cliente\s+([^?,.]+)/i,
@@ -380,7 +402,7 @@ class AIMiddleware {
                 const clientName = match[1].trim();
                 
                 // Filtra parole comuni che non sono nomi di clienti
-                const commonWords = ['ordini', 'ordine', 'oggi', 'ieri', 'domani', 'fatto', 'ha', 'hanno', 'nel', 'del', 'database', 'sistema'];
+                const commonWords = ['ordini', 'ordine', 'oggi', 'ieri', 'domani', 'fatto', 'ha', 'hanno', 'nel', 'del', 'database', 'sistema', 'ci', 'sono'];
                 if (!commonWords.includes(clientName.toLowerCase())) {
                     console.log(`🔍 Cliente estratto: "${clientName}" da "${query}"`);
                     return clientName;
@@ -926,6 +948,38 @@ class AIMiddleware {
                 clients: [],
                 orders: []
             };
+        }
+    }
+
+    /**
+     * PATCH: Gestisce conteggio TOTALE ordini nel database (globale)
+     */
+    async handleCountTotalOrders(params, userInput, originalContext) {
+        try {
+            if (this.debug) {
+                console.log('🤖 📊 CONTEGGIO ORDINI TOTALI');
+            }
+            
+            // PATCH: Non estrarre clienti per query globali sui totali
+            console.log('🔍 PATCH: Skip client extraction for global total orders query');
+            
+            const allData = await this.getAllDataSafely();
+            const ordini = allData.historicalOrders?.sampleData || [];
+            
+            if (ordini.length === 0) {
+                return "Non ci sono ordini nel database.";
+            }
+            
+            // Conta ordini distinti
+            const ordiniDistinti = new Set(
+                ordini.map(o => o.numero_ordine).filter(n => n && n !== null)
+            );
+            
+            return `Ci sono ${ordiniDistinti.size} ordini nel database.`;
+            
+        } catch (error) {
+            console.error('❌ Errore conteggio ordini totali:', error);
+            return "Errore nel conteggio degli ordini totali.";
         }
     }
 
