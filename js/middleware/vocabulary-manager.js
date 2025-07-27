@@ -262,13 +262,37 @@ class VocabularyManager {
         let bestMatch = null;
         let bestScore = 0;
 
+        // 🔍 PRIMA: Cerca match ESATTI per evitare confusione
         for (const command of vocabulary) {
             if (!command.patterns) continue;
             
             for (const pattern of command.patterns) {
-                const score = this.calculateSimilarity(normalizedInput, pattern);
+                const normalizedPattern = this.normalizeText(pattern);
                 
-                if (this.settings.enableDebug && source === 'USER') {
+                // MATCH ESATTO ha priorità assoluta
+                if (normalizedPattern === normalizedInput) {
+                    if (this.settings.enableDebug) {
+                        console.log(`🎯 [${source}] ✅ EXACT MATCH:`, pattern);
+                    }
+                    return {
+                        command: command,
+                        pattern: pattern,
+                        score: 1.0,
+                        exactMatch: true,
+                        extractedParams: this.extractParameters(originalInput, pattern)
+                    };
+                }
+            }
+        }
+
+        // 🧠 POI: Matching intelligente con keyword validation
+        for (const command of vocabulary) {
+            if (!command.patterns) continue;
+            
+            for (const pattern of command.patterns) {
+                const score = this.calculateSmartScore(normalizedInput, pattern);
+                
+                if (this.settings.enableDebug && source === 'SYSTEM') {
                     console.log(`🎯 [${source}] "${pattern}" vs "${normalizedInput}" → ${score}`);
                 }
                 
@@ -280,19 +304,65 @@ class VocabularyManager {
                         extractedParams: this.extractParameters(originalInput, pattern)
                     };
                     bestScore = score;
-                    
-                    // Match perfetto → stop immediato
-                    if (score === 1.0) {
-                        if (this.settings.enableDebug) {
-                            console.log(`🎯 [${source}] PERFECT MATCH:`, pattern);
-                        }
-                        return bestMatch;
-                    }
                 }
             }
         }
 
         return bestMatch;
+    }
+
+    /**
+     * 🧠 Calcolo score intelligente con validazione keywords
+     */
+    calculateSmartScore(query, pattern) {
+        const normalizedQuery = this.normalizeText(query);
+        const normalizedPattern = this.normalizeText(pattern);
+        
+        const queryWords = normalizedQuery.split(' ').filter(w => w.length > 2);
+        const patternWords = normalizedPattern.split(' ').filter(w => w.length > 2);
+        
+        // 🔑 PAROLE CHIAVE CRITICHE - devono matchare
+        const keyWords = ['ordini', 'clienti', 'prodotti', 'fatturato', 'appuntamenti'];
+        
+        // ❌ PENALIZZAZIONE: Se query contiene keyword diversa dal pattern
+        for (const keyword of keyWords) {
+            const queryHasKeyword = normalizedQuery.includes(keyword);
+            const patternHasKeyword = normalizedPattern.includes(keyword);
+            
+            // Se la query ha una keyword specifica ma il pattern ne ha una diversa, score = 0
+            if (queryHasKeyword && patternWords.some(w => keyWords.includes(w) && w !== keyword)) {
+                if (this.settings.enableDebug) {
+                    console.log(`🚫 KEYWORD MISMATCH: query="${keyword}" vs pattern keywords in ${normalizedPattern}`);
+                }
+                return 0;
+            }
+        }
+        
+        // ✅ BONUS: Se keywords matchano perfettamente
+        let keywordBonus = 0;
+        for (const keyword of keyWords) {
+            if (normalizedQuery.includes(keyword) && normalizedPattern.includes(keyword)) {
+                keywordBonus = 0.3; // 30% bonus per keyword match
+                break;
+            }
+        }
+        
+        // 🔢 Calcola matching delle parole rimanenti
+        let matchingWords = 0;
+        for (const qWord of queryWords) {
+            if (patternWords.some(pWord => pWord.includes(qWord) || qWord.includes(pWord))) {
+                matchingWords++;
+            }
+        }
+        
+        const baseScore = matchingWords / Math.max(queryWords.length, patternWords.length);
+        const finalScore = Math.min(1.0, baseScore + keywordBonus);
+        
+        if (this.settings.enableDebug && finalScore > 0.3) {
+            console.log(`🧠 SMART SCORE: "${normalizedQuery}" vs "${normalizedPattern}" = ${finalScore} (base: ${baseScore}, bonus: ${keywordBonus})`);
+        }
+        
+        return finalScore;
     }
 
     /**
