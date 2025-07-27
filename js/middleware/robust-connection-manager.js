@@ -466,8 +466,41 @@ class RobustConnectionManager {
                     }
                 }
                 
-                // 🔄 VOCABOLARIO NON HA GESTITO - FALLBACK DIRETTO ALL'AI
-                console.log('🔌 🎯 Vocabolario non ha gestito la richiesta, fallback diretto all\'AI');
+                // 🔄 VOCABOLARIO NON HA GESTITO - CONTROLLA SUGGERIMENTI PRIMA DI AI
+                console.log('🔌 🎯 Vocabolario non ha gestito la richiesta, controllo suggerimenti...');
+                
+                // 🚀 NUOVO: Controlla se la query è simile a comandi esistenti
+                if (this.instances.vocabularyManager && this.instances.vocabularyManager.detectSimilarQueries) {
+                    try {
+                        const similarQueries = this.instances.vocabularyManager.detectSimilarQueries(message);
+                        
+                        if (similarQueries) {
+                            console.log('🎯 Query simile ai dati locali rilevata:', similarQueries);
+                            
+                            const educationalMessage = this.instances.vocabularyManager.generateEducationalMessage(message, similarQueries);
+                            
+                            if (educationalMessage) {
+                                console.log('📚 Invio messaggio educativo per aggiornamento vocabolario');
+                                
+                                window.FlavioAIAssistant.addMessage(educationalMessage, 'assistant');
+                                
+                                // 🔊 SINTESI VOCALE per messaggio educativo
+                                if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
+                                    const speechText = `Query sui dati locali rilevata. Per ottenere una risposta precisa, aggiungi il comando suggerito alla scheda Comandi dell'app.`;
+                                    window.FlavioAIAssistant.speakResponse(speechText);
+                                }
+                                
+                                console.log('🛑 STOP - Messaggio educativo inviato, nessun fallback AI');
+                                return;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('❌ Errore controllo suggerimenti:', error);
+                    }
+                }
+                
+                // 🔄 NESSUN SUGGERIMENTO - FALLBACK DIRETTO ALL'AI
+                console.log('🔌 🎯 Nessun suggerimento trovato, fallback diretto all\'AI');
                 
                 // Fallback ad AI normale - ma il messaggio utente è già stato aggiunto
                 // Aggiungi messaggio di caricamento

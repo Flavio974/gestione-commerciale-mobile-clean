@@ -606,6 +606,113 @@ class VocabularyManager {
             throw new Error(`Errore conteggio locale ordini: ${error.message}`);
         }
     }
+
+    /**
+     * 🚀 NUOVO: Rilevamento query simili per suggerimenti vocabolario
+     * Rileva se la query dell'utente è simile ai comandi esistenti
+     */
+    detectSimilarQueries(userQuery) {
+        try {
+            const query = userQuery.toLowerCase().trim();
+            const suggestions = [];
+
+            // Parole chiave che indicano query sui dati locali
+            const localDataKeywords = [
+                'clienti', 'ordini', 'database', 'supabase', 'tabella', 
+                'quanti', 'numero', 'totale', 'count', 'lista', 'elenco'
+            ];
+
+            // Controlla se la query contiene parole chiave locali
+            const hasLocalKeywords = localDataKeywords.some(keyword => 
+                query.includes(keyword)
+            );
+
+            if (!hasLocalKeywords) {
+                return null; // Non è una query sui dati locali
+            }
+
+            // Pattern comuni che suggeriscono query sui dati dell'app
+            const commonPatterns = [
+                {
+                    keywords: ['client', 'database'],
+                    suggestion: 'quanti clienti ci sono nel database',
+                    category: 'Gestione Clienti'
+                },
+                {
+                    keywords: ['ordin', 'database'],
+                    suggestion: 'quanti ordini ci sono nel database', 
+                    category: 'Fatturato e Ordini'
+                },
+                {
+                    keywords: ['client', 'totale'],
+                    suggestion: 'totale clienti database',
+                    category: 'Gestione Clienti'
+                },
+                {
+                    keywords: ['client', 'numero'],
+                    suggestion: 'numero clienti nel database',
+                    category: 'Gestione Clienti'
+                },
+                {
+                    keywords: ['client', 'supabase'],
+                    suggestion: 'quanti clienti abbiamo nella tabella clienti su supabase',
+                    category: 'Gestione Clienti'
+                }
+            ];
+
+            // Trova pattern che corrispondono alla query
+            for (const pattern of commonPatterns) {
+                const matches = pattern.keywords.every(keyword => 
+                    query.includes(keyword)
+                );
+                
+                if (matches) {
+                    suggestions.push({
+                        suggestion: pattern.suggestion,
+                        category: pattern.category,
+                        confidence: 'high'
+                    });
+                }
+            }
+
+            return suggestions.length > 0 ? {
+                hasLocalKeywords: true,
+                suggestions: suggestions,
+                userQuery: userQuery
+            } : null;
+
+        } catch (error) {
+            console.error('❌ Errore rilevamento query simili:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Genera messaggio educativo per l'utente
+     */
+    generateEducationalMessage(userQuery, similarQueries) {
+        if (!similarQueries || !similarQueries.suggestions.length) {
+            return null;
+        }
+
+        const suggestions = similarQueries.suggestions;
+        let message = `🎯 **Query sui dati locali rilevata!**\n\n`;
+        message += `La tua query "${userQuery}" sembra riguardare i dati dell'app, ma non è presente nel vocabolario dei comandi.\n\n`;
+        
+        message += `💡 **Suggerimenti per ottenere una risposta precisa:**\n`;
+        suggestions.forEach((suggestion, index) => {
+            message += `${index + 1}. Aggiungi alla categoria "${suggestion.category}":\n`;
+            message += `   📝 "${suggestion.suggestion}"\n\n`;
+        });
+
+        message += `🔧 **Come procedere:**\n`;
+        message += `1. Vai alla scheda **Comandi**\n`;
+        message += `2. Aggiungi uno dei pattern suggeriti\n`;
+        message += `3. Rilancia la stessa query per ottenere dati precisi da Supabase\n\n`;
+        message += `⚡ **Vantaggio:** I comandi nel vocabolario vengono eseguiti localmente (velocissimi e gratuiti!)`;
+
+        return message;
+    }
 }
 
 // Esporta classe per uso globale
