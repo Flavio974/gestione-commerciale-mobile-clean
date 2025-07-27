@@ -608,6 +608,10 @@ class VocabularyManager {
                 case 'countOrders':
                     return await this.executeLocalCountOrders(supabaseAI);
                 
+                case 'countTotalOrders':
+                    // DEBUG: New action for total orders counting
+                    return await this.executeLocalCountTotalOrders(supabaseAI);
+                
                 default:
                     throw new Error(`Azione locale non implementata: ${command.action}`);
             }
@@ -665,6 +669,32 @@ class VocabularyManager {
             };
         } catch (error) {
             throw new Error(`Errore conteggio locale ordini: ${error.message}`);
+        }
+    }
+
+    /**
+     * DEBUG: Conta TUTTI gli ordini nel database (globale)
+     */
+    async executeLocalCountTotalOrders(supabaseAI) {
+        try {
+            const allData = await supabaseAI.getAllData();
+            let count = allData.orders ? allData.orders.length : 0;
+            
+            // Fallback ai dati historical se orders è vuoto
+            if (count === 0 && allData.historical) {
+                count = allData.historical.length;
+                console.log('🏠 📊 Usando dati historical per conteggio totale:', count);
+            }
+            
+            console.log('🏠 ✅ Conteggio locale ordini totali:', count);
+            
+            return {
+                success: true,
+                response: `📦 Nel database ci sono **${count} ordini**.`,
+                data: { count, type: 'ordini_totali', source: 'local-execution' }
+            };
+        } catch (error) {
+            throw new Error(`Errore conteggio locale ordini totali: ${error.message}`);
         }
     }
 
@@ -836,6 +866,15 @@ class VocabularyManager {
             } else if (currentCategory === 'Fatturato e Ordini') {
                 if (trimmed.toLowerCase().includes('quanti') || trimmed.toLowerCase().includes('numero')) {
                     action = 'countOrders';
+                    executeLocal = true;
+                }
+            } else if (currentCategory === 'Sistema e Database') {
+                // DEBUG: New action for total orders counting
+                if (trimmed.toLowerCase().includes('ordini') && 
+                   (trimmed.toLowerCase().includes('quanti') || 
+                    trimmed.toLowerCase().includes('totale') || 
+                    trimmed.toLowerCase().includes('count'))) {
+                    action = 'countTotalOrders';
                     executeLocal = true;
                 }
             }

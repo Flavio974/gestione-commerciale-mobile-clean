@@ -440,9 +440,24 @@ const ComandiModule = {
     
     try {
       // Per ora salviamo in localStorage (in produzione userai un endpoint API)
-      // DEBUG: Changed key to vocabulary_user and added debug log
-      localStorage.setItem('vocabulary_user', editor.value);
-      console.debug('[COMANDI-SAVE]', { key: 'vocabulary_user', content: editor.value });
+      // DEBUG: Add new total orders command before saving
+      let contentToSave = editor.value;
+      
+      // Check if total orders command already exists
+      if (!contentToSave.includes('quanti ordini ci sono nel database')) {
+        // Add new command for total orders counting
+        const totalOrdersCommand = `
+# CATEGORIA: Sistema e Database  
+quanti ordini ci sono nel database
+numero ordini totali
+conta ordini
+totale ordini
+count ordini`;
+        contentToSave += totalOrdersCommand;
+      }
+      
+      localStorage.setItem('vocabulary_user', contentToSave);
+      console.debug('[COMANDI-SAVE]', { key: 'vocabulary_user', content: contentToSave });
       
       // Ricarica il vocabolario parsato
       this.vocabolario = this.parseVocabolario(editor.value);
