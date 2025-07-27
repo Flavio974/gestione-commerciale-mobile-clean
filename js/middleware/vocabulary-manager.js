@@ -473,13 +473,13 @@ class VocabularyManager {
 
     /**
      * Converte il contenuto .txt in comandi JSON
+     * 🚀 NUOVO APPROCCIO: Crea un comando individuale per ogni pattern
      */
     parseTxtVocabulary(txtContent) {
         const commands = [];
         const lines = txtContent.split('\n');
         let currentCategory = null;
-        let clientPatterns = [];
-        let orderPatterns = [];
+        let patternIndex = 0;
 
         for (const line of lines) {
             const trimmed = line.trim();
@@ -492,46 +492,69 @@ class VocabularyManager {
                 continue;
             }
 
-            // Raccoglie pattern per categoria
+            // 🚀 CREA UN COMANDO INDIVIDUALE PER OGNI PATTERN
+            patternIndex++;
+            const commandId = `txt_${currentCategory?.toLowerCase().replace(/\s+/g, '_')}_${patternIndex}`;
+            
+            // Determina l'azione basata sulla categoria e contenuto
+            let action = 'genericAction';
+            let executeLocal = false;
+            
             if (currentCategory === 'Gestione Clienti') {
-                clientPatterns.push(trimmed);
-                console.log('📚 🔍 Pattern clienti aggiunto:', trimmed);
+                if (trimmed.toLowerCase().includes('quanti') || trimmed.toLowerCase().includes('numero')) {
+                    action = 'countClients';
+                    executeLocal = true;
+                } else {
+                    action = 'getClientInfo';
+                }
             } else if (currentCategory === 'Fatturato e Ordini') {
-                // 🚀 SUPER FIX: Prendi TUTTI i pattern della categoria, non solo quelli con "ordini"
-                orderPatterns.push(trimmed);
-                console.log('📚 🔍 Pattern Fatturato e Ordini aggiunto:', trimmed);
+                if (trimmed.toLowerCase().includes('quanti') || trimmed.toLowerCase().includes('numero')) {
+                    action = 'countOrders';
+                    executeLocal = true;
+                } else if (trimmed.toLowerCase().includes('fatturato')) {
+                    action = 'calculateRevenue';
+                } else {
+                    action = 'getOrderInfo';
+                }
+            } else if (currentCategory === 'Data e Ora') {
+                action = 'getDateInfo';
+            } else if (currentCategory === 'Percorsi e Spostamenti') {
+                action = 'getRouteInfo';
             }
-        }
 
-        // Crea comando per pattern clienti
-        if (clientPatterns.length > 0) {
-            console.log(`📚 ✅ Creato comando clienti con ${clientPatterns.length} pattern:`, clientPatterns);
+            console.log(`📚 ✅ Creato comando individuale: ${commandId} per pattern: "${trimmed}"`);
+            
             commands.push({
-                id: "count_clients_from_txt",
-                patterns: clientPatterns,
-                action: "countClients",
-                params: {},
-                description: "Comandi clienti dal vocabolario .txt dell'app",
+                id: commandId,
+                patterns: [trimmed], // UN SOLO PATTERN per comando
+                action: action,
+                params: this.extractParametersFromPattern(trimmed),
+                description: `Comando da categoria ${currentCategory}`,
                 source: "txt",
-                executeLocal: true  // 🚀 NUOVO: Esecuzione locale diretta
+                category: currentCategory,
+                executeLocal: executeLocal
             });
         }
 
-        // Crea comando per pattern ordini
-        if (orderPatterns.length > 0) {
-            console.log(`📚 ✅ Creato comando ordini con ${orderPatterns.length} pattern:`, orderPatterns);
-            commands.push({
-                id: "count_orders_from_txt",
-                patterns: orderPatterns,
-                action: "countOrders",
-                params: {},
-                description: "Comandi ordini dal vocabolario .txt dell'app",
-                source: "txt",
-                executeLocal: true  // 🚀 NUOVO: Esecuzione locale diretta
-            });
-        }
-
+        console.log(`📚 🎯 TOTALE COMANDI CREATI DAL .TXT: ${commands.length}`);
         return commands;
+    }
+
+    /**
+     * Estrae parametri da un pattern .txt (formato [PARAMETRO])
+     */
+    extractParametersFromPattern(pattern) {
+        const params = {};
+        const matches = pattern.match(/\[([^\]]+)\]/g);
+        
+        if (matches) {
+            matches.forEach(match => {
+                const paramName = match.replace(/[\[\]]/g, '').toLowerCase();
+                params[paramName] = `{${paramName}}`;
+            });
+        }
+        
+        return params;
     }
 
     /**
