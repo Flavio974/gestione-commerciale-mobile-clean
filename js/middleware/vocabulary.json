@@ -408,13 +408,26 @@
         "dimmi il valore dell'ordine di {cliente}",
         "valore dell'ordine di {cliente}",
         "importo dell'ordine di {cliente}",
-        "quanto vale l'ordine di {cliente}"
+        "quanto vale l'ordine di {cliente}",
+        "dimmi il fatturato del cliente {cliente}",
+        "fatturato del cliente {cliente}",
+        "fatturato di {cliente}",
+        "quanto ha fatturato {cliente}",
+        "fatturato cliente {cliente}",
+        "dimmi il fatturato di {cliente}",
+        "quanto fatturato ha fatto {cliente}",
+        "fatturato per il cliente {cliente}",
+        "fatturato per {cliente}",
+        "ricavi del cliente {cliente}",
+        "ricavi di {cliente}",
+        "vendite del cliente {cliente}",
+        "vendite di {cliente}"
       ],
       "action": "calculateRevenue",
       "params": {
         "cliente": "{cliente}"
       },
-      "description": "Calcola il valore dell'ordine per un cliente specifico"
+      "description": "Calcola il fatturato/valore ordini per un cliente specifico"
     }
   ],
   "settings": {

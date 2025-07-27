@@ -887,32 +887,100 @@ class AIMiddleware {
      */
     async handleCalculateRevenue(params, userInput, originalContext) {
         try {
-            if (this.debug) {
-                console.log('🤖 💰 CALCOLO FATTURATO TOTALE');
+            // 🔍 Estrai il nome del cliente dai parametri
+            const clienteName = params?.cliente || originalContext?.extractedParams?.cliente || null;
+            
+            if (clienteName) {
+                if (this.debug) {
+                    console.log('🤖 💰 CALCOLO FATTURATO PER CLIENTE:', clienteName);
+                }
+                
+                // Calcolo fatturato specifico per cliente
+                const allData = await this.getAllDataSafely();
+                const ordini = allData.historicalOrders?.sampleData || [];
+                
+                if (ordini.length === 0) {
+                    return `Non ci sono ordini nel database per calcolare il fatturato di ${clienteName}.`;
+                }
+                
+                // Filtra gli ordini per il cliente specifico
+                const ordiniCliente = ordini.filter(ordine => {
+                    const nomeCliente = (ordine.cliente || ordine.nome_cliente || '').toLowerCase();
+                    const clienteRicerca = clienteName.toLowerCase();
+                    
+                    // Match flessibile: esatto, contenuto, o parole in comune
+                    return nomeCliente.includes(clienteRicerca) || 
+                           clienteRicerca.includes(nomeCliente) ||
+                           nomeCliente === clienteRicerca ||
+                           this.clientNamesMatch(nomeCliente, clienteRicerca);
+                });
+                
+                if (ordiniCliente.length === 0) {
+                    return `Non ho trovato ordini per il cliente "${clienteName}".`;
+                }
+                
+                // Calcola il fatturato totale per questo cliente
+                const fatturato = ordiniCliente.reduce((sum, ordine) => {
+                    return sum + (parseFloat(ordine.importo || ordine.valore_ordine || 0));
+                }, 0);
+                
+                // Conta ordini unici se presente numero_ordine
+                const numeriOrdine = ordiniCliente.map(o => o.numero_ordine).filter(n => n);
+                const ordiniUnici = numeriOrdine.length > 0 ? new Set(numeriOrdine).size : ordiniCliente.length;
+                
+                return `Il fatturato del cliente ${clienteName} è di €${fatturato.toFixed(2)} (${ordiniUnici} ordini)`;
+                
+            } else {
+                if (this.debug) {
+                    console.log('🤖 💰 CALCOLO FATTURATO TOTALE');
+                }
+                
+                // Calcolo fatturato totale (comportamento originale)
+                const allData = await this.getAllDataSafely();
+                const ordini = allData.historicalOrders?.sampleData || [];
+                
+                if (ordini.length === 0) {
+                    return "Non ci sono ordini per calcolare il fatturato.";
+                }
+                
+                const totale = ordini.reduce((sum, ordine) => sum + (parseFloat(ordine.importo || ordine.valore_ordine || 0)), 0);
+                
+                return `Fatturato totale: ${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro`;
             }
-            
-            // RequestMiddleware RIMOSSO - usa solo calcolo diretto
-            
-            // Fallback: calcolo diretto
-            const allData = await this.getAllDataSafely();
-            const ordini = allData.historicalOrders?.sampleData || [];
-            
-            if (ordini.length === 0) {
-                return "Non ci sono ordini per calcolare il fatturato.";
-            }
-            
-            const totale = ordini.reduce((sum, ordine) => sum + (parseFloat(ordine.importo) || 0), 0);
-            
-            return `Fatturato totale: ${totale.toLocaleString('it-IT', {minimumFractionDigits: 2})} euro`;
             
         } catch (error) {
             console.error('❌ Errore calcolo fatturato:', error);
             console.error('❌ Stack trace:', error.stack);
             console.error('❌ Dettagli:', {
-                message: error.message
+                message: error.message,
+                params: params,
+                clienteName: params?.cliente
             });
             return "Errore nel calcolo del fatturato.";
         }
+    }
+    
+    /**
+     * Helper per matching flessibile nomi clienti
+     */
+    clientNamesMatch(name1, name2) {
+        if (!name1 || !name2) return false;
+        
+        const words1 = name1.split(' ').filter(w => w.length > 2);
+        const words2 = name2.split(' ').filter(w => w.length > 2);
+        
+        // Se almeno la metà delle parole matchano, considera un match
+        let matches = 0;
+        for (const word1 of words1) {
+            for (const word2 of words2) {
+                if (word1.includes(word2) || word2.includes(word1)) {
+                    matches++;
+                    break;
+                }
+            }
+        }
+        
+        return matches >= Math.min(words1.length, words2.length) / 2;
     }
     
     /**
