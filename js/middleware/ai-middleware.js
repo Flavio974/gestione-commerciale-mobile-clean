@@ -68,25 +68,7 @@ class AIMiddleware {
                 }
             }
 
-            // STEP 2: Prova con RequestMiddleware se disponibile
-            if (this.requestMiddleware) {
-                if (this.debug) {
-                    console.log('🤖 💾 TENTATIVO REQUEST MIDDLEWARE (Supabase)');
-                }
-                
-                const middlewareResult = await this.requestMiddleware.processRequest(userInput);
-                
-                if (middlewareResult && middlewareResult.handled) {
-                    // Request middleware ha elaborato la richiesta
-                    return {
-                        success: true,
-                        source: 'request_middleware',
-                        response: middlewareResult.response || middlewareResult,
-                        data: middlewareResult.data,
-                        processingTime: Date.now() - startTime
-                    };
-                }
-            }
+            // STEP 2: RequestMiddleware RIMOSSO - Solo VocabularyManager + AI fallback
 
             // STEP 3: Nessun match trovato, usa AI come fallback
             if (this.fallbackToAI) {
@@ -168,7 +150,9 @@ class AIMiddleware {
                     break;
                     
                 case 'countClients':
+                    console.log('🤖 🎯 Executing countClients handler');
                     result = await this.handleCountClients(params, userInput, originalContext);
+                    console.log('🤖 📊 countClients result:', result);
                     break;
                     
                 case 'calculateRevenue':
@@ -189,11 +173,22 @@ class AIMiddleware {
 
             const processingTime = Date.now() - startTime;
             
-            return {
+            const finalResult = {
+                success: true,
                 response: result,
                 data: null,
                 processingTime: processingTime
             };
+            
+            console.log('🤖 🚀 executeLocalAction FINAL RESULT:', {
+                hasResult: !!result,
+                resultType: typeof result,
+                resultValue: result,
+                finalResponse: finalResult.response,
+                success: finalResult.success
+            });
+            
+            return finalResult;
 
         } catch (error) {
             console.error('❌ Errore esecuzione azione locale:', error);
@@ -640,16 +635,8 @@ class AIMiddleware {
             if (clientNameMatch) {
                 console.log('🔍 Cliente rilevato nella query:', clientNameMatch);
                 
-                // Usa RequestMiddleware per conteggio cliente specifico
-                if (this.requestMiddleware) {
-                    const result = await this.requestMiddleware.countOrdini({ 
-                        cliente: clientNameMatch,
-                        righeOrdine: false 
-                    });
-                    if (result && result.success) {
-                        return result.response;
-                    }
-                }
+                // RequestMiddleware RIMOSSO - usa solo dati diretti
+                console.log('🔌 💾 RequestMiddleware DISABILITATO - conteggio diretto');
                 
                 // Fallback: cerca direttamente nei dati
                 const allData = await this.getAllDataSafely();
@@ -679,13 +666,7 @@ class AIMiddleware {
             }
             
             // Se non è specificato un cliente, conta tutti gli ordini
-            // Usa RequestMiddleware se disponibile
-            if (this.requestMiddleware) {
-                const result = await this.requestMiddleware.countOrdini({ righeOrdine: false });
-                if (result && result.success) {
-                    return result.response;
-                }
-            }
+            // RequestMiddleware RIMOSSO - usa solo dati diretti
             
             // Fallback: usa dati diretti
             const allData = await this.getAllDataSafely();
@@ -769,13 +750,67 @@ class AIMiddleware {
             }
             
             const allData = await this.getAllDataSafely();
-            const clienti = allData.clients || [];
             
-            if (clienti.length === 0) {
-                return "Non ci sono clienti nel database.";
+            // FIX: Usa allData.clients come nel RequestMiddleware che funziona
+            const clientsData = allData.clients || [];
+            
+            if (clientsData.length === 0) {
+                return "❌ Nessun cliente presente nel database.";
             }
             
-            return `Ci sono ${clienti.length} clienti nel database.`;
+            // Conta direttamente i clienti disponibili
+            const count = clientsData.length;
+            console.log('✅ AI-MIDDLEWARE: Conteggio via allData.clients:', count);
+            
+            return `Ci sono ${count} clienti nel database`;
+            
+            // CODICE ORIGINALE COMMENTATO - mantiene logica complessa se necessaria
+            /*
+            // Estrai clienti univoci dai dati storici
+            const clientiMap = new Map();
+            historicalData.forEach(row => {
+                const cliente = row.cliente;
+                if (cliente && cliente.trim() !== '') {
+                    if (!clientiMap.has(cliente)) {
+                        clientiMap.set(cliente, {
+                            nome: cliente,
+                            partitaIva: row.partita_iva || '',
+                            indirizzo: row.indirizzo_consegna || '',
+                            ordini: new Set(),
+                            totalAmount: 0
+                        });
+                    }
+                    const clientInfo = clientiMap.get(cliente);
+                    clientInfo.ordini.add(row.numero_ordine);
+                    clientInfo.totalAmount += parseFloat(row.importo) || 0;
+                }
+            });
+            
+            const clientiArray = Array.from(clientiMap.values());
+            
+            if (clientiArray.length === 0) {
+                return "❌ Nessun cliente presente nel database.";
+            }
+            
+            // Ordina per fatturato
+            clientiArray.sort((a, b) => b.totalAmount - a.totalAmount);
+            
+            // Top 3 clienti per fatturato
+            const top3Clienti = clientiArray.slice(0, 3).map(cliente => 
+                `• ${cliente.nome} (${cliente.ordini.size} ordini, €${cliente.totalAmount.toFixed(2)})`
+            );
+            
+            const finalResponse = `👥 Totale clienti: ${clientiArray.length}\n\n📊 Top 3 clienti per fatturato:\n${top3Clienti.join('\n')}\n\n💰 Fatturato totale: €${clientiArray.reduce((sum, c) => sum + c.totalAmount, 0).toFixed(2)}`;
+            
+            console.log('🤖 🚀 handleCountClients FINAL RESPONSE:', finalResponse);
+            console.log('🤖 📊 DETTAGLI RISPOSTA:', {
+                totalClienti: clientiArray.length,
+                response: finalResponse,
+                source: 'handleCountClients VocabularyManager'
+            });
+            
+            return finalResponse;
+            */
             
         } catch (error) {
             console.error('❌ Errore conteggio clienti:', error);
@@ -792,13 +827,7 @@ class AIMiddleware {
                 console.log('🤖 💰 CALCOLO FATTURATO TOTALE');
             }
             
-            // Usa RequestMiddleware se disponibile
-            if (this.requestMiddleware) {
-                const result = await this.requestMiddleware.calculateFatturato({});
-                if (result && result.success) {
-                    return result.response;
-                }
-            }
+            // RequestMiddleware RIMOSSO - usa solo calcolo diretto
             
             // Fallback: calcolo diretto
             const allData = await this.getAllDataSafely();
@@ -816,8 +845,6 @@ class AIMiddleware {
             console.error('❌ Errore calcolo fatturato:', error);
             console.error('❌ Stack trace:', error.stack);
             console.error('❌ Dettagli:', {
-                requestMiddleware: !!this.requestMiddleware,
-                supabaseAI: !!this.requestMiddleware?.supabaseAI,
                 message: error.message
             });
             return "Errore nel calcolo del fatturato.";
@@ -881,8 +908,9 @@ class AIMiddleware {
      */
     async getAllDataSafely() {
         try {
-            if (this.requestMiddleware && this.requestMiddleware.supabaseAI) {
-                return await this.requestMiddleware.supabaseAI.getAllData();
+            // Usa direttamente SupabaseAI se disponibile
+            if (window.supabaseAI && window.supabaseAI.getAllData) {
+                return await window.supabaseAI.getAllData();
             }
             
             // Fallback a dati locali
