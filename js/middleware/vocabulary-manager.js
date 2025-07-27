@@ -204,8 +204,18 @@ class VocabularyManager {
         let bestScore = 0;
 
         for (const command of vocabulary.commands) {
+            // 🔍 DEBUG: Log comandi dal .txt
+            if (command.source === 'txt') {
+                console.log('📚 🔍 Testando comando .txt:', command.id, 'con', command.patterns.length, 'pattern');
+            }
+            
             for (const pattern of command.patterns) {
                 const score = this.calculateSimilarity(normalizedInput, pattern);
+                
+                // 🔍 DEBUG: Log matching per pattern .txt
+                if (command.source === 'txt') {
+                    console.log(`📚 🔍 Pattern "${pattern}" vs "${normalizedInput}" → score: ${score}`);
+                }
                 
                 if (score > bestScore && score >= this.settings.similarityThreshold) {
                     bestMatch = {
@@ -215,6 +225,11 @@ class VocabularyManager {
                         extractedParams: this.extractParameters(userInput, pattern)
                     };
                     bestScore = score;
+                    
+                    // 🔍 DEBUG: Log match trovato
+                    if (command.source === 'txt') {
+                        console.log('📚 ✅ MATCH TXT TROVATO:', pattern, 'score:', score);
+                    }
                 }
             }
         }
@@ -480,20 +495,19 @@ class VocabularyManager {
             // Raccoglie pattern per categoria
             if (currentCategory === 'Gestione Clienti') {
                 clientPatterns.push(trimmed);
+                console.log('📚 🔍 Pattern clienti aggiunto:', trimmed);
             } else if (currentCategory === 'Fatturato e Ordini') {
-                // Filtra solo i pattern che riguardano il conteggio ordini
-                if (trimmed.includes('quanti ordini') || 
-                    trimmed.includes('numero ordini') ||
-                    trimmed.includes('ordini ci sono') ||
-                    trimmed.includes('ordini nel database') ||
-                    trimmed.includes('totale ordini')) {
+                // 🚀 FIX: Prendi TUTTI i pattern che contengono "ordini" - non filtrarli
+                if (trimmed.includes('ordini')) {
                     orderPatterns.push(trimmed);
+                    console.log('📚 🔍 Pattern ordini aggiunto:', trimmed);
                 }
             }
         }
 
         // Crea comando per pattern clienti
         if (clientPatterns.length > 0) {
+            console.log(`📚 ✅ Creato comando clienti con ${clientPatterns.length} pattern:`, clientPatterns);
             commands.push({
                 id: "count_clients_from_txt",
                 patterns: clientPatterns,
@@ -507,6 +521,7 @@ class VocabularyManager {
 
         // Crea comando per pattern ordini
         if (orderPatterns.length > 0) {
+            console.log(`📚 ✅ Creato comando ordini con ${orderPatterns.length} pattern:`, orderPatterns);
             commands.push({
                 id: "count_orders_from_txt",
                 patterns: orderPatterns,
