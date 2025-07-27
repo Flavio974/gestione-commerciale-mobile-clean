@@ -83,18 +83,48 @@ class VocabularyManager {
 
             const newVocabulary = await response.json();
             
-            // 📚 CARICA VOCABOLARIO SISTEMA (.txt dell'app)
+            // 📚 CARICA VOCABOLARIO SISTEMA - SUPPORTA ENTRAMBI I FORMATI
             try {
                 const txtVocabulary = await this.loadTxtVocabulary();
-                if (txtVocabulary && txtVocabulary.commands) {
-                    console.log('📚 ✅ Sistema vocabolary:', txtVocabulary.commands.length, 'comandi');
-                    this.systemVocabulary = [...newVocabulary.commands, ...txtVocabulary.commands];
-                } else {
-                    this.systemVocabulary = newVocabulary.commands || [];
+                
+                // 🔄 NUOVO: Supporta formato categorizzato (v2.0)
+                let systemCommands = [];
+                if (newVocabulary.categories) {
+                    console.log('📚 🆕 Formato categorizzato v2.0 rilevato');
+                    // Estrai tutti i pattern dalle categorie
+                    Object.values(newVocabulary.categories).forEach(category => {
+                        if (category.patterns) {
+                            systemCommands.push(...category.patterns);
+                        }
+                    });
+                    console.log('📚 ✅ Comandi estratti da categorie:', systemCommands.length);
+                } else if (newVocabulary.commands) {
+                    // 🔄 LEGACY: Supporta formato vecchio (v1.x)
+                    console.log('📚 🔄 Formato legacy v1.x rilevato');
+                    systemCommands = newVocabulary.commands;
                 }
+                
+                if (txtVocabulary && txtVocabulary.commands) {
+                    console.log('📚 ✅ Sistema vocabolary txt:', txtVocabulary.commands.length, 'comandi');
+                    this.systemVocabulary = [...systemCommands, ...txtVocabulary.commands];
+                } else {
+                    this.systemVocabulary = systemCommands;
+                }
+                
+                console.log('📚 📊 TOTALE sistema vocabulary:', this.systemVocabulary.length, 'comandi');
             } catch (error) {
                 console.warn('📚 ⚠️ Errore caricamento sistema, uso solo .json:', error.message);
-                this.systemVocabulary = newVocabulary.commands || [];
+                
+                // Fallback per formato categorizzato
+                let fallbackCommands = [];
+                if (newVocabulary.categories) {
+                    Object.values(newVocabulary.categories).forEach(category => {
+                        if (category.patterns) {
+                            fallbackCommands.push(...category.patterns);
+                        }
+                    });
+                }
+                this.systemVocabulary = fallbackCommands;
             }
             
             // 🎯 CARICA VOCABOLARIO UTENTE (PRIORITÀ ASSOLUTA)
@@ -106,8 +136,14 @@ class VocabularyManager {
                 this.userVocabulary = [];
             }
             
-            // 📚 Mantieni compatibilità con codice esistente
-            newVocabulary.commands = [...this.userVocabulary, ...this.systemVocabulary];
+            // 📚 Mantieni compatibilità con codice esistente - COMBINA TUTTI I COMANDI
+            const allCommands = [...this.userVocabulary, ...this.systemVocabulary];
+            newVocabulary.commands = allCommands;
+            
+            console.log('📚 🔗 COMBINAZIONE FINALE:');
+            console.log('   - User commands:', this.userVocabulary.length);
+            console.log('   - System commands:', this.systemVocabulary.length);  
+            console.log('   - TOTAL commands:', allCommands.length);
             
             // Verifica se il vocabolario è cambiato
             const currentModified = response.headers.get('Last-Modified') || new Date().toISOString();
