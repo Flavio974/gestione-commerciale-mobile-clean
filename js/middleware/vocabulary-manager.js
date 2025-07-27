@@ -25,6 +25,7 @@ if (typeof VocabularySync === 'undefined') {
 class VocabularyManager {
     constructor() {
         this.vocabularyPath = 'js/middleware/vocabulary.json';
+        this.txtVocabularyPath = '/comandi/vocabolario_comandi.txt';
         this.vocabulary = null;
         this.lastModified = null;
         this.cache = new Map();
@@ -77,6 +78,18 @@ class VocabularyManager {
             }
 
             const newVocabulary = await response.json();
+            
+            // 🚀 NUOVO: Carica e integra vocabolario .txt dell'app
+            try {
+                const txtVocabulary = await this.loadTxtVocabulary();
+                if (txtVocabulary && txtVocabulary.commands) {
+                    console.log('📚 ✅ Integrazione vocabolario .txt dell\'app:', txtVocabulary.commands.length, 'comandi');
+                    // Integra i comandi dal .txt nel vocabulary JSON
+                    newVocabulary.commands = [...newVocabulary.commands, ...txtVocabulary.commands];
+                }
+            } catch (error) {
+                console.warn('📚 ⚠️ Errore caricamento .txt, uso solo .json:', error.message);
+            }
             
             // Verifica se il vocabolario è cambiato
             const currentModified = response.headers.get('Last-Modified') || new Date().toISOString();
@@ -253,9 +266,15 @@ class VocabularyManager {
         // Controllo esatto
         if (normalized1 === normalized2) return 1.0;
         
-        // Controllo se uno contiene l'altro
-        if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
-            return 0.95;
+        // Controllo se uno contiene l'altro - ma solo se la differenza di lunghezza è ragionevole
+        const lenDiff = Math.abs(normalized1.length - normalized2.length);
+        const maxLen = Math.max(normalized1.length, normalized2.length);
+        
+        // Solo se la differenza è meno del 30% della lunghezza totale
+        if (lenDiff / maxLen < 0.3) {
+            if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
+                return 0.95;
+            }
         }
         
         // Algoritmo di Jaccard per similarità
@@ -406,6 +425,76 @@ class VocabularyManager {
             lastModified: this.lastModified,
             settings: this.settings
         };
+    }
+
+    /**
+     * 🚀 NUOVO: Carica vocabolario .txt dell'app e lo converte in formato JSON
+     */
+    async loadTxtVocabulary() {
+        try {
+            const response = await fetch(this.txtVocabularyPath, {
+                method: 'GET',
+                headers: { 'Cache-Control': 'no-cache' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Errore caricamento .txt: ${response.status}`);
+            }
+
+            const txtContent = await response.text();
+            const commands = this.parseTxtVocabulary(txtContent);
+
+            return {
+                version: "txt-sync-1.0",
+                source: "vocabolario_comandi.txt",
+                commands: commands
+            };
+
+        } catch (error) {
+            console.warn('📚 ⚠️ loadTxtVocabulary fallito:', error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Converte il contenuto .txt in comandi JSON
+     */
+    parseTxtVocabulary(txtContent) {
+        const commands = [];
+        const lines = txtContent.split('\n');
+        let currentCategory = null;
+        let clientPatterns = [];
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            
+            // Ignora linee vuote e commenti
+            if (!trimmed || trimmed.startsWith('#')) {
+                if (trimmed.includes('CATEGORIA:')) {
+                    currentCategory = trimmed.replace(/# CATEGORIA:\s*/, '');
+                }
+                continue;
+            }
+
+            // Se è nella categoria Gestione Clienti, raccoglie i pattern
+            if (currentCategory === 'Gestione Clienti') {
+                clientPatterns.push(trimmed);
+            }
+        }
+
+        // Crea un comando per tutti i pattern clienti
+        if (clientPatterns.length > 0) {
+            commands.push({
+                id: "count_clients_from_txt",
+                patterns: clientPatterns,
+                action: "countClients",
+                params: {},
+                description: "Comandi clienti dal vocabolario .txt dell'app",
+                source: "txt"
+            });
+        }
+
+        return commands;
     }
 }
 
