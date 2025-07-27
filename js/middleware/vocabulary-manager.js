@@ -1077,6 +1077,15 @@ class VocabularyManager {
                     // DEBUG: New action for total orders counting
                     return await this.executeLocalCountTotalOrders(supabaseAI);
                 
+                case 'calculateRevenue':
+                    return await this.executeLocalCalculateRevenue(supabaseAI, userInput);
+                
+                case 'calculateMonthlyRevenue':
+                    return await this.executeLocalCalculateMonthlyRevenue(supabaseAI);
+                
+                case 'calculateAnnualRevenue':
+                    return await this.executeLocalCalculateAnnualRevenue(supabaseAI);
+                
                 default:
                     throw new Error(`Azione locale non implementata: ${command.action}`);
             }
@@ -1430,7 +1439,12 @@ class VocabularyManager {
             
             // FATTURATO
             'fatturato totale': { action: 'universal_query', params: { entity: 'orders', operation: 'sum', field: 'importo' }},
-            'fatturato del mese': { action: 'universal_query', params: { entity: 'orders', operation: 'sum', field: 'importo', filters: { periodo: 'mese' }}},
+            'fatturato del mese': { action: 'calculateMonthlyRevenue', params: {} },
+            'fatturato totale del mese': { action: 'calculateMonthlyRevenue', params: {} },
+            'fatturato dell\'anno': { action: 'calculateAnnualRevenue', params: {} },
+            'fatturato totale dell\'anno': { action: 'calculateAnnualRevenue', params: {} },
+            'dimmi il fatturato del cliente': { action: 'calculateRevenue', params: {} },
+            'fatturato del cliente': { action: 'calculateRevenue', params: {} },
         };
         
         let fixedCount = 0;
@@ -1438,29 +1452,59 @@ class VocabularyManager {
             const pattern = typeof cmd === 'string' ? cmd : cmd.pattern;
             const normalizedPattern = pattern?.toLowerCase().trim();
             
-            // Se il comando non ha action ed è nella mappa, aggiungila
-            if (normalizedPattern && actionMapping[normalizedPattern] && (!cmd.action || typeof cmd === 'string')) {
-                const mapping = actionMapping[normalizedPattern];
+            // Se il comando non ha action, cerca match diretto o pattern parametrizzato
+            if (normalizedPattern && (!cmd.action || typeof cmd === 'string')) {
+                let mapping = null;
                 
-                if (typeof cmd === 'string') {
-                    // Converti da stringa a oggetto
-                    const index = commands.indexOf(cmd);
-                    commands[index] = {
-                        pattern: cmd,
-                        action: mapping.action,
-                        params: mapping.params,
-                        source: 'user_fixed',
-                        autoFixed: true
-                    };
-                } else {
-                    // Aggiungi action a oggetto esistente
-                    cmd.action = mapping.action;
-                    cmd.params = mapping.params;
-                    cmd.autoFixed = true;
+                // 1. Cerca match esatto
+                if (actionMapping[normalizedPattern]) {
+                    mapping = actionMapping[normalizedPattern];
                 }
                 
-                fixedCount++;
-                console.log(`🔧 ✅ Action aggiunta per: "${pattern}" → ${mapping.action}`);
+                // 2. Cerca pattern parametrizzati
+                if (!mapping) {
+                    // Pattern fatturato cliente con parametri
+                    if (normalizedPattern.includes('fatturato') && normalizedPattern.includes('cliente')) {
+                        mapping = { action: 'calculateRevenue', params: {} };
+                    }
+                    // Pattern fatturato annuale
+                    else if (normalizedPattern.includes('fatturato') && normalizedPattern.includes('anno')) {
+                        mapping = { action: 'calculateAnnualRevenue', params: {} };
+                    }
+                    // Pattern fatturato mensile
+                    else if (normalizedPattern.includes('fatturato') && normalizedPattern.includes('mese')) {
+                        mapping = { action: 'calculateMonthlyRevenue', params: {} };
+                    }
+                    // Pattern conteggio ordini
+                    else if ((normalizedPattern.includes('quanti') || normalizedPattern.includes('numero')) && normalizedPattern.includes('ordini')) {
+                        mapping = { action: 'countTotalOrders', params: {} };
+                    }
+                }
+                
+                // 3. Applica mapping se trovato
+                if (mapping) {
+                    if (typeof cmd === 'string') {
+                        // Converti da stringa a oggetto
+                        const index = commands.indexOf(cmd);
+                        commands[index] = {
+                            pattern: cmd,
+                            action: mapping.action,
+                            params: mapping.params,
+                            source: 'user_fixed',
+                            autoFixed: true,
+                            executeLocal: true  // Marca per esecuzione locale
+                        };
+                    } else {
+                        // Aggiungi action a oggetto esistente
+                        cmd.action = mapping.action;
+                        cmd.params = mapping.params;
+                        cmd.autoFixed = true;
+                        cmd.executeLocal = true;
+                    }
+                    
+                    fixedCount++;
+                    console.log(`🔧 ✅ Action aggiunta per: "${pattern}" → ${mapping.action}`);
+                }
             }
         });
         
@@ -1929,6 +1973,142 @@ class VocabularyManager {
         }
     }
     
+    /**
+     * 🏠 LOCALE: Calcola fatturato per cliente specifico
+     */
+    async executeLocalCalculateRevenue(supabaseAI, userInput) {
+        const data = await supabaseAI.getAllData();
+        
+        // Estrai nome cliente dal comando
+        const clienteName = this.extractClientNameFromQuery(userInput);
+        if (!clienteName) {
+            return {
+                success: false,
+                response: "Non riesco a identificare il cliente per il calcolo del fatturato.",
+                source: 'local-revenue-error'
+            };
+        }
+        
+        // Calcola fatturato per il cliente
+        const orders = data.historicalOrders?.sampleData || [];
+        const clientOrders = orders.filter(order => 
+            this.clientNamesMatch(order.cliente, clienteName)
+        );
+        
+        if (clientOrders.length === 0) {
+            return {
+                success: true,
+                response: `Il cliente "${clienteName}" non ha ordini nel database.`,
+                source: 'local-revenue'
+            };
+        }
+        
+        const totalRevenue = clientOrders.reduce((sum, order) => {
+            const importo = parseFloat(order.importo?.toString().replace(/[€.,]/g, '') || 0);
+            return sum + importo;
+        }, 0);
+        
+        return {
+            success: true,
+            response: `Il fatturato del cliente "${clienteName}" è di €${totalRevenue.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${clientOrders.length} ordini.`,
+            source: 'local-revenue'
+        };
+    }
+
+    /**
+     * 🏠 LOCALE: Calcola fatturato mensile
+     */
+    async executeLocalCalculateMonthlyRevenue(supabaseAI) {
+        const data = await supabaseAI.getAllData();
+        const orders = data.historicalOrders?.sampleData || [];
+        
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        
+        const monthlyOrders = orders.filter(order => {
+            const orderDate = new Date(order.data_consegna || order.data);
+            return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+        });
+        
+        const totalRevenue = monthlyOrders.reduce((sum, order) => {
+            const importo = parseFloat(order.importo?.toString().replace(/[€.,]/g, '') || 0);
+            return sum + importo;
+        }, 0);
+        
+        const monthName = currentDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+        
+        return {
+            success: true,
+            response: `Il fatturato di ${monthName} è di €${totalRevenue.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${monthlyOrders.length} ordini.`,
+            source: 'local-revenue'
+        };
+    }
+
+    /**
+     * 🏠 LOCALE: Calcola fatturato annuale
+     */
+    async executeLocalCalculateAnnualRevenue(supabaseAI) {
+        const data = await supabaseAI.getAllData();
+        const orders = data.historicalOrders?.sampleData || [];
+        
+        const currentYear = new Date().getFullYear();
+        
+        const yearlyOrders = orders.filter(order => {
+            const orderDate = new Date(order.data_consegna || order.data);
+            return orderDate.getFullYear() === currentYear;
+        });
+        
+        const totalRevenue = yearlyOrders.reduce((sum, order) => {
+            const importo = parseFloat(order.importo?.toString().replace(/[€.,]/g, '') || 0);
+            return sum + importo;
+        }, 0);
+        
+        return {
+            success: true,
+            response: `Il fatturato dell'anno ${currentYear} è di €${totalRevenue.toLocaleString('it-IT', {minimumFractionDigits: 2})} su ${yearlyOrders.length} ordini.`,
+            source: 'local-revenue'
+        };
+    }
+
+    /**
+     * 🔍 HELPER: Estrai nome cliente dalla query
+     */
+    extractClientNameFromQuery(query) {
+        // Pattern per estrarre il nome del cliente
+        const patterns = [
+            /fatturato.*?cliente\s+(.+?)$/i,
+            /fatturato.*?di\s+(.+?)$/i,
+            /cliente\s+(.+?)$/i
+        ];
+        
+        for (const pattern of patterns) {
+            const match = query.match(pattern);
+            if (match && match[1]) {
+                return match[1].trim().toLowerCase();
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * 🔍 HELPER: Verifica corrispondenza nomi clienti
+     */
+    clientNamesMatch(name1, name2) {
+        if (!name1 || !name2) return false;
+        
+        const normalize = (name) => name.toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        
+        const n1 = normalize(name1);
+        const n2 = normalize(name2);
+        
+        return n1.includes(n2) || n2.includes(n1);
+    }
+
     /**
      * Ottieni dati in modo sicuro
      */
