@@ -1,0 +1,174 @@
+/**
+ * CSS per Dialog Vocabolario Utente
+ */
+
+.vocab-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.vocab-dialog {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: dialogSlideIn 0.3s ease-out;
+}
+
+@keyframes dialogSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.vocab-dialog h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.vocab-dialog p {
+    margin-bottom: 20px;
+    color: #666;
+    line-height: 1.5;
+}
+
+.vocab-dialog label {
+    display: block;
+    margin: 12px 0 4px;
+    font-weight: bold;
+    color: #444;
+    font-size: 0.9em;
+}
+
+.vocab-dialog input,
+.vocab-dialog select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.vocab-dialog input:focus,
+.vocab-dialog select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.vocab-buttons {
+    margin-top: 24px;
+    display: flex;
+    gap: 8px;
+}
+
+.vocab-buttons button {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+    transform: translateY(-1px);
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #117a8b;
+    transform: translateY(-1px);
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+    .vocab-dialog {
+        background: #2a2a2a;
+        color: #e0e0e0;
+    }
+    
+    .vocab-dialog h3 {
+        color: #f0f0f0;
+    }
+    
+    .vocab-dialog p {
+        color: #c0c0c0;
+    }
+    
+    .vocab-dialog label {
+        color: #d0d0d0;
+    }
+    
+    .vocab-dialog input,
+    .vocab-dialog select {
+        background: #3a3a3a;
+        color: #e0e0e0;
+        border-color: #555;
+    }
+    
+    .vocab-dialog input:focus,
+    .vocab-dialog select:focus {
+        border-color: #66b3ff;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .vocab-dialog {
+        margin: 20px;
+        padding: 20px;
+        max-width: none;
+        width: auto;
+    }
+    
+    .vocab-buttons {
+        flex-direction: column;
+    }
+    
+    .vocab-buttons button {
+        margin-bottom: 8px;
+    }
+}

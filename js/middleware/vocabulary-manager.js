@@ -27,7 +27,8 @@ class VocabularyManager {
         this.vocabularyPath = 'js/middleware/vocabulary.json';
         this.txtVocabularyPath = '/comandi/vocabolario_comandi.txt';
         this.vocabulary = null;
-        this.userVocabulary = null; // DEBUG: Added to track user vocabulary
+        this.userVocabulary = []; // 🎯 PRIORITÀ: Array separato per vocabolario utente
+        this.systemVocabulary = []; // 📚 Array separato per vocabolario sistema
         this.lastModified = null;
         this.cache = new Map();
         this.isLoading = false;
@@ -35,12 +36,12 @@ class VocabularyManager {
         this.settings = {
             enableDebug: true,
             cacheTimeout: 300000, // 5 minuti
-            similarityThreshold: 0.8,
+            similarityThreshold: 0.30, // 🔧 Abbassata a 0.30 come richiesto
             autoReload: true,
             fallbackToAI: true
         };
         
-        console.log('📚 VocabularyManager: Inizializzato');
+        console.log('📚 VocabularyManager: Inizializzato con pipeline priorità');
         // DEBUG: Track user vocabulary changes
         this._lastUserVocContent = localStorage.getItem('vocabulary_user');
         this.startWatcher();
@@ -82,25 +83,31 @@ class VocabularyManager {
 
             const newVocabulary = await response.json();
             
-            // 🚀 NUOVO: Carica e integra vocabolario .txt dell'app
+            // 📚 CARICA VOCABOLARIO SISTEMA (.txt dell'app)
             try {
                 const txtVocabulary = await this.loadTxtVocabulary();
                 if (txtVocabulary && txtVocabulary.commands) {
-                    console.log('📚 ✅ Integrazione vocabolario .txt dell\'app:', txtVocabulary.commands.length, 'comandi');
-                    // Integra i comandi dal .txt nel vocabulary JSON
-                    newVocabulary.commands = [...newVocabulary.commands, ...txtVocabulary.commands];
+                    console.log('📚 ✅ Sistema vocabolary:', txtVocabulary.commands.length, 'comandi');
+                    this.systemVocabulary = [...newVocabulary.commands, ...txtVocabulary.commands];
+                } else {
+                    this.systemVocabulary = newVocabulary.commands || [];
                 }
             } catch (error) {
-                console.warn('📚 ⚠️ Errore caricamento .txt, uso solo .json:', error.message);
+                console.warn('📚 ⚠️ Errore caricamento sistema, uso solo .json:', error.message);
+                this.systemVocabulary = newVocabulary.commands || [];
             }
             
-            // DEBUG: CRITICAL FIX - Load user vocabulary BEFORE building index
+            // 🎯 CARICA VOCABOLARIO UTENTE (PRIORITÀ ASSOLUTA)
             await this.loadUserVocabulary();
-            if (this.userVocabulary && this.userVocabulary.commands) {
-                console.log('📚 ✅ Integrazione vocabolario utente:', this.userVocabulary.commands.length, 'comandi');
-                console.debug('[VOCAB-MERGE]', this.userVocabulary.commands.length, 'pattern utente aggiunti');
-                newVocabulary.commands = [...newVocabulary.commands, ...this.userVocabulary.commands];
+            if (this.userVocabulary && this.userVocabulary.length > 0) {
+                console.log('🎯 ✅ User vocabulary caricato:', this.userVocabulary.length, 'comandi');
+            } else {
+                console.log('🎯 📋 User vocabulary vuoto - sarà creato al bisogno');
+                this.userVocabulary = [];
             }
+            
+            // 📚 Mantieni compatibilità con codice esistente
+            newVocabulary.commands = [...this.userVocabulary, ...this.systemVocabulary];
             
             // Verifica se il vocabolario è cambiato
             const currentModified = response.headers.get('Last-Modified') || new Date().toISOString();
@@ -192,89 +199,96 @@ class VocabularyManager {
     }
 
     /**
-     * FUNZIONE CRITICA: Trova corrispondenza nel vocabolario
-     * Usa algoritmi di similarity per variazioni linguistiche
+     * 🎯 PIPELINE PRIORITÀ: utente → sistema → fallback
+     * ORDINE RIGIDO NON NEGOZIABILE
      */
     async findMatch(userInput) {
-        // SEMPRE ricarica il vocabolario prima di cercare
-        const vocabulary = await this.loadVocabulary();
+        // Carica entrambi i vocabolari
+        await this.loadVocabulary();
         
-        if (!vocabulary || !vocabulary.commands) {
-            console.log('📚 Vocabolario non disponibile');
-            return null;
-        }
-
         const normalizedInput = this.normalizeText(userInput);
         const cacheKey = normalizedInput;
         
-        // Controlla cache (ma solo se non è scaduta)
+        // Controlla cache
         if (this.cache.has(cacheKey)) {
             const cached = this.cache.get(cacheKey);
             if (Date.now() - cached.timestamp < this.settings.cacheTimeout) {
                 if (this.settings.enableDebug) {
-                    console.log('📚 💾 CACHE HIT:', cached.result?.id || 'no-match');
+                    console.log('📚 💾 CACHE HIT:', cached.result?.command?.id || 'no-match');
                 }
                 return cached.result;
             }
         }
 
-        // Cerca nel vocabolario
+        // 🥇 STEP 1: PRIORITÀ ASSOLUTA - Vocabolario UTENTE
+        const userMatch = this.findInVocabulary(normalizedInput, userInput, this.userVocabulary, 'USER');
+        if (userMatch) {
+            this.cache.set(cacheKey, { result: userMatch, timestamp: Date.now() });
+            if (this.settings.enableDebug) {
+                console.log('🎯 USER VOCAB MATCH:', userMatch.command.id);
+            }
+            return userMatch;
+        }
+
+        // 🥈 STEP 2: Vocabolario SISTEMA
+        const systemMatch = this.findInVocabulary(normalizedInput, userInput, this.systemVocabulary, 'SYSTEM');
+        if (systemMatch) {
+            this.cache.set(cacheKey, { result: systemMatch, timestamp: Date.now() });
+            if (this.settings.enableDebug) {
+                console.log('⚙️ SYSTEM VOCAB MATCH:', systemMatch.command.id);
+            }
+            return systemMatch;
+        }
+
+        // 🥉 STEP 3: Nessun match
+        this.cache.set(cacheKey, { result: null, timestamp: Date.now() });
+        
+        if (this.settings.enableDebug) {
+            console.log('📚 ❌ NESSUN MATCH TROVATO per:', userInput);
+            
+            // 🤔 Check se sembra richiesta interna
+            if (this.looksLikeInternalRequest(userInput)) {
+                console.log('🔍 Query sembra interna - suggerisco aggiunta al vocabolario');
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Cerca match in un vocabolario specifico
+     */
+    findInVocabulary(normalizedInput, originalInput, vocabulary, source) {
         let bestMatch = null;
         let bestScore = 0;
 
-        for (const command of vocabulary.commands) {
-            // 🔍 DEBUG: Log comandi dal .txt
-            if (command.source === 'txt') {
-                console.log('📚 🔍 Testando comando .txt:', command.id, 'con', command.patterns.length, 'pattern');
-            }
+        for (const command of vocabulary) {
+            if (!command.patterns) continue;
             
             for (const pattern of command.patterns) {
                 const score = this.calculateSimilarity(normalizedInput, pattern);
                 
-                // 🔍 DEBUG: Log matching per pattern .txt e user
-                if (command.source === 'txt' || command.source === 'user') {
-                    console.log(`📚 🔍 Pattern "${pattern}" vs "${normalizedInput}" → score: ${score}`);
+                if (this.settings.enableDebug && source === 'USER') {
+                    console.log(`🎯 [${source}] "${pattern}" vs "${normalizedInput}" → ${score}`);
                 }
                 
-                if (score > bestScore && score >= this.settings.similarityThreshold) {
+                if (score >= this.settings.similarityThreshold && score > bestScore) {
                     bestMatch = {
                         command: command,
                         pattern: pattern,
                         score: score,
-                        extractedParams: this.extractParameters(userInput, pattern)
+                        extractedParams: this.extractParameters(originalInput, pattern)
                     };
                     bestScore = score;
                     
-                    // 🔍 DEBUG: Log match trovato
-                    if (command.source === 'txt' || command.source === 'user') {
-                        console.log('📚 ✅ MATCH TROVATO:', pattern, 'score:', score, 'source:', command.source);
-                    }
-                    
-                    // Se abbiamo un match perfetto, fermiamoci qui
+                    // Match perfetto → stop immediato
                     if (score === 1.0) {
-                        console.log('📚 🎯 MATCH PERFETTO - Stop ricerca');
-                        break;
+                        if (this.settings.enableDebug) {
+                            console.log(`🎯 [${source}] PERFECT MATCH:`, pattern);
+                        }
+                        return bestMatch;
                     }
                 }
-            }
-        }
-
-        // Salva in cache
-        this.cache.set(cacheKey, {
-            result: bestMatch,
-            timestamp: Date.now()
-        });
-
-        if (this.settings.enableDebug) {
-            if (bestMatch) {
-                console.log('📚 ✅ MATCH TROVATO:', {
-                    command: bestMatch.command.id,
-                    pattern: bestMatch.pattern,
-                    score: bestMatch.score,
-                    params: bestMatch.extractedParams
-                });
-            } else {
-                console.log('📚 ❌ NESSUN MATCH TROVATO per:', userInput);
             }
         }
 
@@ -452,18 +466,18 @@ class VocabularyManager {
     }
 
     /**
-     * Statistiche del vocabolario
+     * Statistiche del vocabolario (aggiornate per pipeline)
      */
     getStats() {
-        if (!this.vocabulary) return null;
-        
         return {
-            version: this.vocabulary.version,
-            totalCommands: this.vocabulary.commands.length,
-            totalPatterns: this.vocabulary.commands.reduce((sum, cmd) => sum + cmd.patterns.length, 0),
+            userCommands: this.userVocabulary.length,
+            systemCommands: this.systemVocabulary.length,
+            totalCommands: this.userVocabulary.length + this.systemVocabulary.length,
             cacheSize: this.cache.size,
             lastModified: this.lastModified,
-            settings: this.settings
+            settings: this.settings,
+            pipeline: 'user → system → ai',
+            version: this.vocabulary?.version || 'pipeline-enhanced'
         };
     }
 
@@ -806,29 +820,44 @@ class VocabularyManager {
     }
     
     /**
-     * DEBUG: Load user vocabulary from localStorage
+     * 🎯 CARICA VOCABOLARIO UTENTE (formato nuovo: array di oggetti)
      */
     async loadUserVocabulary() {
         try {
-            const userVocText = localStorage.getItem('vocabulary_user');
-            if (!userVocText) {
-                console.debug('[VOCAB-USER] No user vocabulary in localStorage');
+            // Prima prova formato nuovo (array di comandi)
+            const newFormat = localStorage.getItem('user_vocabulary_v2');
+            if (newFormat) {
+                this.userVocabulary = JSON.parse(newFormat);
+                console.debug('[VOCAB-USER] Formato v2 caricato:', this.userVocabulary.length);
                 return;
             }
             
-            console.debug('[VOCAB-USER] Loading user vocabulary from localStorage');
+            // Fallback: converti formato vecchio
+            const userVocText = localStorage.getItem('vocabulary_user');
+            if (!userVocText) {
+                console.debug('[VOCAB-USER] Nessun vocabolario utente');
+                this.userVocabulary = [];
+                return;
+            }
+            
+            console.debug('[VOCAB-USER] Conversione da formato vecchio...');
             const parsedCommands = this.parseUserVocabulary(userVocText);
             
-            this.userVocabulary = {
-                version: "user-1.0",
-                source: "localStorage",
-                commands: parsedCommands
-            };
+            // Converti in formato nuovo
+            this.userVocabulary = parsedCommands.map(cmd => ({
+                title: cmd.description || cmd.id,
+                pattern: cmd.patterns[0], // Prendi primo pattern
+                action: cmd.action,
+                source: 'user'
+            }));
             
-            console.debug('[VOCAB-USER]', this.userVocabulary);
+            // Salva in formato nuovo
+            localStorage.setItem('user_vocabulary_v2', JSON.stringify(this.userVocabulary));
+            console.debug('[VOCAB-USER] Convertito e salvato:', this.userVocabulary.length);
             
         } catch (error) {
-            console.error('[VOCAB-USER] Error loading user vocabulary:', error);
+            console.error('[VOCAB-USER] Errore caricamento:', error);
+            this.userVocabulary = [];
         }
     }
     
@@ -909,6 +938,329 @@ class VocabularyManager {
         
         console.debug('[VOCAB-USER] Parsed', commands.length, 'commands from user vocabulary');
         return commands;
+    }
+
+    /**
+     * 🤔 RILEVA RICHIESTE INTERNE che potrebbero essere aggiunte al vocabolario
+     */
+    looksLikeInternalRequest(query) {
+        const internalKeywords = [
+            // Dati e database
+            'clienti', 'ordini', 'prodotti', 'fatturato', 'vendite',
+            'database', 'tabella', 'supabase', 'dati', 'storico',
+            
+            // Operazioni conteggio/query
+            'quanti', 'quanto', 'conta', 'numero', 'totale', 'count',
+            'lista', 'elenco', 'mostra', 'visualizza', 'elenca',
+            'cerca', 'trova', 'filtra', 'controlla',
+            
+            // Gestione aziendale
+            'appuntamento', 'appuntamenti', 'agenda', 'calendario',
+            'percorso', 'percorsi', 'viaggio', 'spostamento', 'distanza',
+            'backup', 'esporta', 'importa', 'sincronizza',
+            
+            // Analisi business
+            'report', 'analisi', 'confronta', 'statistica', 'performance'
+        ];
+
+        const queryLower = query.toLowerCase();
+        const hasKeywords = internalKeywords.some(keyword => queryLower.includes(keyword));
+        
+        // Pattern aggiuntivi per richieste strutturate
+        const structuredPatterns = [
+            /quanti .+ (ci sono|abbiamo|nel)/i,
+            /(mostra|visualizza|elenca) .+ (di|del|per)/i,
+            /(qual è|dimmi) .+ (di|del|per)/i
+        ];
+        
+        const hasStructure = structuredPatterns.some(pattern => pattern.test(query));
+        
+        if (this.settings.enableDebug && (hasKeywords || hasStructure)) {
+            console.log('🤔 Query interna rilevata:', { hasKeywords, hasStructure, query });
+        }
+        
+        return hasKeywords || hasStructure;
+    }
+
+    /**
+     * 📝 PROMPT per aggiungere pattern al vocabolario utente
+     */
+    async promptAddToUserVocab(userInput) {
+        return new Promise((resolve) => {
+            // Crea dialog modale
+            const dialog = document.createElement('div');
+            dialog.className = 'vocab-dialog-overlay';
+            dialog.innerHTML = `
+                <div class="vocab-dialog">
+                    <h3>🎯 Aggiungi al vocabolario personale</h3>
+                    <p>Questa query sembra richiedere dati interni. Vuoi aggiungerla al tuo vocabolario per risposte più veloci?</p>
+                    
+                    <label>Pattern (puoi modificarlo):</label>
+                    <input type="text" id="vocab-pattern" value="${userInput}" />
+                    
+                    <label>Titolo comando:</label>
+                    <input type="text" id="vocab-title" placeholder="es. Conteggio clienti totali" />
+                    
+                    <label>Azione:</label>
+                    <select id="vocab-action">
+                        <option value="countClients">Conta clienti</option>
+                        <option value="countOrders">Conta ordini</option>
+                        <option value="countTotalOrders">Conta ordini totali</option>
+                        <option value="listClients">Lista clienti</option>
+                        <option value="listOrders">Lista ordini</option>
+                        <option value="getCurrentDate">Data attuale</option>
+                        <option value="getCurrentTime">Ora attuale</option>
+                        <option value="customAction">Azione personalizzata</option>
+                    </select>
+                    
+                    <div class="vocab-buttons">
+                        <button id="vocab-save" class="btn-primary">💾 Salva</button>
+                        <button id="vocab-cancel" class="btn-secondary">❌ Annulla</button>
+                        <button id="vocab-ai" class="btn-info">🤖 Usa AI</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(dialog);
+
+            // Event handlers
+            document.getElementById('vocab-save').onclick = async () => {
+                const pattern = document.getElementById('vocab-pattern').value.trim();
+                const title = document.getElementById('vocab-title').value.trim() || pattern;
+                const action = document.getElementById('vocab-action').value;
+
+                if (pattern) {
+                    await this.addToUserVocabulary({ title, pattern, action });
+                    document.body.removeChild(dialog);
+                    resolve({ 
+                        type: 'vocab_added', 
+                        message: `✅ Pattern "${title}" aggiunto al vocabolario personale`,
+                        source: 'vocabulary_manager'
+                    });
+                }
+            };
+
+            document.getElementById('vocab-cancel').onclick = () => {
+                document.body.removeChild(dialog);
+                resolve({ 
+                    type: 'cancelled', 
+                    message: '❌ Operazione annullata',
+                    source: 'vocabulary_manager'
+                });
+            };
+
+            document.getElementById('vocab-ai').onclick = () => {
+                document.body.removeChild(dialog);
+                resolve({
+                    type: 'fallback_ai',
+                    message: '🤖 Inoltro ad AI...',
+                    originalQuery: userInput,
+                    source: 'vocabulary_manager'
+                });
+            };
+        });
+    }
+
+    /**
+     * 💾 SALVA nel vocabolario utente
+     */
+    async addToUserVocabulary(command) {
+        // Aggiungi in testa per priorità massima
+        this.userVocabulary.unshift({
+            title: command.title,
+            pattern: command.pattern,
+            action: command.action,
+            source: 'user',
+            dateAdded: new Date().toISOString()
+        });
+
+        try {
+            // Salva formato nuovo
+            localStorage.setItem('user_vocabulary_v2', JSON.stringify(this.userVocabulary));
+            console.log('✅ Salvato in localStorage:', command.title);
+            
+            // TODO: Implementare salvataggio Supabase se disponibile
+            if (window.supabaseClient) {
+                console.log('💾 TODO: Implementare sync Supabase');
+            }
+            
+        } catch (error) {
+            console.error('❌ Errore salvataggio:', error);
+        }
+    }
+
+    /**
+     * 🎯 PIPELINE PRINCIPALE: Entry point per nuova pipeline
+     */
+    async processQuery(userInput) {
+        try {
+            console.log('🎯 Pipeline avviata per:', userInput);
+            
+            // Carica entrambi i vocabolari
+            await this.loadVocabulary();
+            
+            // 🥇 STEP 1: PRIORITÀ ASSOLUTA - Vocabolario UTENTE
+            if (this.userVocabulary.length > 0) {
+                const userMatch = this.findCommandInArray(userInput, this.userVocabulary);
+                if (userMatch) {
+                    console.log('🎯 USER MATCH:', userMatch.title);
+                    return await this.executeCommand(userMatch, userInput, 'USER');
+                }
+            }
+            
+            // 🥈 STEP 2: Vocabolario SISTEMA
+            const systemMatch = await this.findMatch(userInput);
+            if (systemMatch) {
+                console.log('⚙️ SYSTEM MATCH:', systemMatch.command.id);
+                return await this.executeSystemCommand(systemMatch, userInput);
+            }
+            
+            // 🥉 STEP 3: Nessun match - Controlla se è richiesta interna
+            if (this.looksLikeInternalRequest(userInput)) {
+                console.log('🤔 Richiesta interna rilevata');
+                return await this.promptAddToUserVocab(userInput);
+            }
+            
+            // 🤖 STEP 4: Fallback AI
+            console.log('🤖 Nessun match - fallback AI');
+            return {
+                type: 'fallback_ai',
+                message: '🤖 Elaborazione con AI...',
+                originalQuery: userInput,
+                source: 'vocabulary_pipeline'
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore pipeline:', error);
+            return {
+                type: 'error',
+                message: `❌ Errore pipeline: ${error.message}`,
+                source: 'vocabulary_pipeline'
+            };
+        }
+    }
+    
+    /**
+     * Cerca comando nel formato nuovo
+     */
+    findCommandInArray(query, commandArray) {
+        const normalizedQuery = this.normalizeText(query);
+        let bestMatch = null;
+        let bestScore = 0;
+        
+        for (const cmd of commandArray) {
+            const score = this.calculateSimilarity(normalizedQuery, cmd.pattern);
+            if (score >= this.settings.similarityThreshold && score > bestScore) {
+                bestMatch = cmd;
+                bestScore = score;
+                if (score === 1.0) break;
+            }
+        }
+        
+        return bestMatch;
+    }
+    
+    /**
+     * Esegui comando utente
+     */
+    async executeCommand(command, userInput, source) {
+        try {
+            console.log(`🚀 [${source}] Executing:`, command.action);
+            
+            switch (command.action) {
+                case 'countClients':
+                    const data = await this.getDataSafely();
+                    const count = data.clients?.length || 0;
+                    return {
+                        type: 'local_execution',
+                        message: `👥 Ci sono ${count} clienti nel database`,
+                        source: `${source.toLowerCase()}_vocab`
+                    };
+                    
+                case 'countOrders':
+                case 'countTotalOrders':
+                    const orderData = await this.getDataSafely();
+                    const orderCount = orderData.orders?.length || orderData.historicalOrders?.sampleData?.length || 0;
+                    return {
+                        type: 'local_execution',
+                        message: `📦 Ci sono ${orderCount} ordini nel database`,
+                        source: `${source.toLowerCase()}_vocab`
+                    };
+                    
+                case 'getCurrentDate':
+                    return {
+                        type: 'local_execution',
+                        message: `📅 Oggi è ${new Date().toLocaleDateString('it-IT')}`,
+                        source: `${source.toLowerCase()}_vocab`
+                    };
+                    
+                case 'getCurrentTime':
+                    return {
+                        type: 'local_execution',
+                        message: `🕐 Sono le ${new Date().toLocaleTimeString('it-IT')}`,
+                        source: `${source.toLowerCase()}_vocab`
+                    };
+                    
+                default:
+                    return {
+                        type: 'error',
+                        message: `❌ Azione '${command.action}' non implementata`,
+                        source: `${source.toLowerCase()}_vocab`
+                    };
+            }
+            
+        } catch (error) {
+            console.error('❌ Errore esecuzione:', error);
+            return {
+                type: 'error',
+                message: `❌ Errore: ${error.message}`,
+                source: `${source.toLowerCase()}_vocab`
+            };
+        }
+    }
+    
+    /**
+     * Esegui comando sistema
+     */
+    async executeSystemCommand(vocabularyMatch, userInput) {
+        try {
+            if (window.aiMiddleware?.executeLocalAction) {
+                const result = await window.aiMiddleware.executeLocalAction(vocabularyMatch, userInput);
+                return {
+                    type: 'local_execution',
+                    message: result.response || result,
+                    source: 'system_vocab_ai'
+                };
+            }
+            
+            return {
+                type: 'error',
+                message: '❌ AI Middleware non disponibile',
+                source: 'system_vocab'
+            };
+            
+        } catch (error) {
+            console.error('❌ Errore sistema:', error);
+            return {
+                type: 'error',
+                message: `❌ Errore sistema: ${error.message}`,
+                source: 'system_vocab'
+            };
+        }
+    }
+    
+    /**
+     * Ottieni dati in modo sicuro
+     */
+    async getDataSafely() {
+        try {
+            if (window.supabaseAI?.getAllData) {
+                return await window.supabaseAI.getAllData();
+            }
+        } catch (error) {
+            console.warn('⚠️ Data access error:', error);
+        }
+        return { clients: [], orders: [], historicalOrders: { sampleData: [] } };
     }
 }
 
