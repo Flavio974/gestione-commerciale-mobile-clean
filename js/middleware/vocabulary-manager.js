@@ -497,11 +497,9 @@ class VocabularyManager {
                 clientPatterns.push(trimmed);
                 console.log('📚 🔍 Pattern clienti aggiunto:', trimmed);
             } else if (currentCategory === 'Fatturato e Ordini') {
-                // 🚀 FIX: Prendi TUTTI i pattern che contengono "ordini" - non filtrarli
-                if (trimmed.includes('ordini')) {
-                    orderPatterns.push(trimmed);
-                    console.log('📚 🔍 Pattern ordini aggiunto:', trimmed);
-                }
+                // 🚀 SUPER FIX: Prendi TUTTI i pattern della categoria, non solo quelli con "ordini"
+                orderPatterns.push(trimmed);
+                console.log('📚 🔍 Pattern Fatturato e Ordini aggiunto:', trimmed);
             }
         }
 
