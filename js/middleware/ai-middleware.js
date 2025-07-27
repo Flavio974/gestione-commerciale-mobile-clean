@@ -734,8 +734,12 @@ class AIMiddleware {
      */
     async handleListOrders(params, userInput, originalContext) {
         try {
+            // 🔍 Determina se è richiesta per cliente specifico o lista generale
+            const clienteName = this.extractClientName(params, userInput, originalContext);
+            
             if (this.debug) {
-                console.log('🤖 📋 LISTA ORDINI');
+                console.log('🤖 📋 LISTA ORDINI', clienteName ? `per cliente: ${clienteName}` : '(tutti)');
+                console.log('🤖 📊 Params ricevuti:', params);
             }
             
             const allData = await this.getAllDataSafely();
@@ -745,9 +749,26 @@ class AIMiddleware {
                 return "Non ci sono ordini nel database.";
             }
             
+            // 🎯 Filtra per cliente se specificato
+            let ordiniFiltrati = ordini;
+            if (clienteName) {
+                ordiniFiltrati = ordini.filter(ordine => {
+                    if (!ordine.cliente) return false;
+                    return this.clientNamesMatch(ordine.cliente.toLowerCase(), clienteName.toLowerCase());
+                });
+                
+                if (this.debug) {
+                    console.log(`🔍 Ordini filtrati per "${clienteName}":`, ordiniFiltrati.length, 'trovati');
+                }
+                
+                if (ordiniFiltrati.length === 0) {
+                    return `❌ Nessun ordine trovato per il cliente "${clienteName}".`;
+                }
+            }
+            
             // Raggruppa per numero ordine
             const ordiniRaggruppati = {};
-            ordini.forEach(ordine => {
+            ordiniFiltrati.forEach(ordine => {
                 if (!ordiniRaggruppati[ordine.numero_ordine]) {
                     ordiniRaggruppati[ordine.numero_ordine] = {
                         numero: ordine.numero_ordine,
@@ -764,9 +785,16 @@ class AIMiddleware {
             // Crea lista ordinata
             const listaOrdini = Object.values(ordiniRaggruppati)
                 .sort((a, b) => new Date(b.data) - new Date(a.data))
-                .slice(0, 10); // Primi 10 ordini
+                .slice(0, clienteName ? 20 : 10); // Più ordini per cliente specifico
             
-            let risposta = "📋 **Ultimi 10 ordini:**\\n\\n";
+            // 📝 Genera risposta personalizzata
+            let risposta;
+            if (clienteName) {
+                risposta = `📋 **Ordini di ${clienteName}** (${listaOrdini.length} ordini):\\n\\n`;
+            } else {
+                risposta = "📋 **Ultimi 10 ordini:**\\n\\n";
+            }
+            
             listaOrdini.forEach(ordine => {
                 risposta += `• **${ordine.numero}** - ${ordine.cliente}\\n`;
                 risposta += `  Data: ${new Date(ordine.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })} | Importo: €${ordine.importo.toFixed(2)} | Righe: ${ordine.righe}\\n\\n`;

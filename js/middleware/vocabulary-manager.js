@@ -962,7 +962,7 @@ class VocabularyManager {
                 } else if (trimmed.toLowerCase().includes('fatturato')) {
                     action = 'calculateRevenue';
                 } else {
-                    action = 'getOrderInfo';
+                    action = 'listOrders';
                 }
             } else if (currentCategory === 'Data e Ora') {
                 action = 'getDateInfo';
