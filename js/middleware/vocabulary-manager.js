@@ -464,6 +464,7 @@ class VocabularyManager {
         const lines = txtContent.split('\n');
         let currentCategory = null;
         let clientPatterns = [];
+        let orderPatterns = [];
 
         for (const line of lines) {
             const trimmed = line.trim();
@@ -476,13 +477,22 @@ class VocabularyManager {
                 continue;
             }
 
-            // Se è nella categoria Gestione Clienti, raccoglie i pattern
+            // Raccoglie pattern per categoria
             if (currentCategory === 'Gestione Clienti') {
                 clientPatterns.push(trimmed);
+            } else if (currentCategory === 'Fatturato e Ordini') {
+                // Filtra solo i pattern che riguardano il conteggio ordini
+                if (trimmed.includes('quanti ordini') || 
+                    trimmed.includes('numero ordini') ||
+                    trimmed.includes('ordini ci sono') ||
+                    trimmed.includes('ordini nel database') ||
+                    trimmed.includes('totale ordini')) {
+                    orderPatterns.push(trimmed);
+                }
             }
         }
 
-        // Crea un comando per tutti i pattern clienti
+        // Crea comando per pattern clienti
         if (clientPatterns.length > 0) {
             commands.push({
                 id: "count_clients_from_txt",
@@ -490,6 +500,18 @@ class VocabularyManager {
                 action: "countClients",
                 params: {},
                 description: "Comandi clienti dal vocabolario .txt dell'app",
+                source: "txt"
+            });
+        }
+
+        // Crea comando per pattern ordini
+        if (orderPatterns.length > 0) {
+            commands.push({
+                id: "count_orders_from_txt",
+                patterns: orderPatterns,
+                action: "countOrders",
+                params: {},
+                description: "Comandi ordini dal vocabolario .txt dell'app",
                 source: "txt"
             });
         }

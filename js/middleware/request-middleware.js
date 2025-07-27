@@ -211,6 +211,12 @@ class RequestMiddleware {
                 const allData = await this.supabaseAI.getAllData();
                 count = allData.orders ? allData.orders.length : 0;
                 console.log('✅ MIDDLEWARE: Conteggio via getAllData():', count);
+                
+                // 🚀 FALLBACK: Se orders è 0, prova historical data
+                if (count === 0 && allData.historical) {
+                    count = allData.historical.length;
+                    console.log('✅ MIDDLEWARE: Fallback conteggio via historical:', count);
+                }
             }
             else {
                 throw new Error('Nessun metodo per recuperare gli ordini disponibile');
