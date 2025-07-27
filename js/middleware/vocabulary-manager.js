@@ -588,7 +588,8 @@ class VocabularyManager {
     }
 
     /**
-     * Estrae parametri dinamici dal pattern
+     * Estrae parametri dinamici dal pattern con logica flessibile
+     * 🚀 FIX: Ora funziona anche con variazioni semantiche
      */
     extractParameters(input, pattern) {
         const params = {};
@@ -607,6 +608,51 @@ class VocabularyManager {
             return params;
         }
         
+        if (this.settings.enableDebug) {
+            console.log('🔍 EXTRACT PARAMS: input="' + input + '", pattern="' + pattern + '"');
+            console.log('🔍 PLACEHOLDERS:', placeholders);
+        }
+        
+        // 🚀 STRATEGIA 1: Prova match esatto prima
+        const exactParams = this.extractParametersExact(input, pattern, placeholders);
+        if (Object.keys(exactParams).length > 0) {
+            if (this.settings.enableDebug) {
+                console.log('✅ EXACT MATCH SUCCESS:', exactParams);
+            }
+            return exactParams;
+        }
+        
+        // 🚀 STRATEGIA 2: Match flessibile per variazioni semantiche
+        const flexibleParams = this.extractParametersFlexible(input, pattern, placeholders);
+        if (Object.keys(flexibleParams).length > 0) {
+            if (this.settings.enableDebug) {
+                console.log('✅ FLEXIBLE MATCH SUCCESS:', flexibleParams);
+            }
+            return flexibleParams;
+        }
+        
+        // 🚀 STRATEGIA 3: Keyword-based extraction
+        const keywordParams = this.extractParametersKeywordBased(input, pattern, placeholders);
+        if (Object.keys(keywordParams).length > 0) {
+            if (this.settings.enableDebug) {
+                console.log('✅ KEYWORD-BASED SUCCESS:', keywordParams);
+            }
+            return keywordParams;
+        }
+        
+        if (this.settings.enableDebug) {
+            console.log('❌ ALL EXTRACTION STRATEGIES FAILED');
+        }
+        
+        return params;
+    }
+    
+    /**
+     * 🎯 STRATEGIA 1: Estrazione esatta (metodo originale)
+     */
+    extractParametersExact(input, pattern, placeholders) {
+        const params = {};
+        
         // Crea pattern regex sostituendo ogni placeholder con un gruppo di cattura
         let regexPattern = pattern;
         
@@ -615,8 +661,6 @@ class VocabularyManager {
         
         // Sostituisci i placeholder escaped con gruppi di cattura
         for (let i = 0; i < placeholders.length; i++) {
-            // 🐛 FIX: Use (.+?) correctly with word boundaries for better extraction  
-            // The issue was (.+?) being too lazy - we need proper pattern matching
             const isLastPlaceholder = (i === placeholders.length - 1);
             const afterPlaceholder = pattern.substring(pattern.indexOf(`{${placeholders[i]}}`) + `{${placeholders[i]}}`.length);
             const isAtEnd = afterPlaceholder.trim().length === 0;
@@ -654,6 +698,102 @@ class VocabularyManager {
                     value = this.convertWordsToNumbers(value);
                     
                     params[placeholders[i]] = value;
+                }
+            }
+        }
+        
+        return params;
+    }
+    
+    /**
+     * 🚀 STRATEGIA 2: Estrazione flessibile per variazioni semantiche
+     */
+    extractParametersFlexible(input, pattern, placeholders) {
+        const params = {};
+        
+        // Verifica se c'è abbastanza similarità semantica
+        const inputWords = this.normalizeText(input).split(' ');
+        const patternWords = this.normalizeText(pattern).split(' ').filter(w => !w.includes('{'));
+        
+        const commonWords = inputWords.filter(word => 
+            patternWords.some(pWord => pWord.includes(word) || word.includes(pWord))
+        );
+        
+        // Se ci sono abbastanza parole comuni (almeno 60% del pattern)
+        if (commonWords.length >= Math.ceil(patternWords.length * 0.6)) {
+            // Crea pattern flessibile sostituendo parole variabili con wildcards
+            let flexiblePattern = pattern;
+            
+            // Identifica parole che potrebbero variare (verbi, sostantivi specifici)
+            const variableWords = ['fatturato', 'venduto', 'guadagno', 'ricavo', 'incasso'];
+            
+            for (const varWord of variableWords) {
+                flexiblePattern = flexiblePattern.replace(new RegExp(`\\b${varWord}\\b`, 'gi'), '\\w+');
+            }
+            
+            // Sostituisci placeholder con gruppi cattura
+            let regexPattern = flexiblePattern;
+            regexPattern = regexPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            
+            for (const placeholder of placeholders) {
+                regexPattern = regexPattern.replace(`\\{${placeholder}\\}`, '([\\w\\s]+?)');
+            }
+            
+            // Rendi l'ultimo gruppo non-greedy se alla fine
+            regexPattern = regexPattern.replace(/\(\[\\w\\s\]\+\?\)$/, '([\\w\\s]+)');
+            
+            const regex = new RegExp(regexPattern, 'i');
+            const result = regex.exec(input);
+            
+            if (result) {
+                for (let i = 0; i < placeholders.length; i++) {
+                    if (result[i + 1]) {
+                        params[placeholders[i]] = result[i + 1].trim();
+                    }
+                }
+            }
+        }
+        
+        return params;
+    }
+    
+    /**
+     * 🚀 STRATEGIA 3: Estrazione basata su parole chiave
+     */
+    extractParametersKeywordBased(input, pattern, placeholders) {
+        const params = {};
+        
+        // Per ogni placeholder, cerca pattern specifici nell'input
+        for (const placeholder of placeholders) {
+            if (placeholder === 'cliente') {
+                // Cerca "cliente" + valore dopo
+                const clienteMatch = input.match(/\bcliente\s+([a-zA-ZàèìòùÀÈÌÒÙ\s]+?)(?:\s*$|\s+(?:di|del|per|con|[.?!]))/i);
+                if (clienteMatch && clienteMatch[1]) {
+                    params.cliente = clienteMatch[1].trim();
+                    continue;
+                }
+                
+                // Cerca pattern alternativi "di {cliente}"
+                const diClienteMatch = input.match(/\bdi\s+([a-zA-ZàèìòùÀÈÌÒÙ\s]+?)(?:\s*$|\s*[.?!])/i);
+                if (diClienteMatch && diClienteMatch[1]) {
+                    params.cliente = diClienteMatch[1].trim();
+                    continue;
+                }
+            }
+            
+            if (placeholder === 'prodotto') {
+                // Cerca "prodotto" + valore dopo
+                const prodottoMatch = input.match(/\bprodotto\s+([a-zA-ZàèìòùÀÈÌÒÙ\s]+?)(?:\s*$|\s+(?:di|del|per|con|[.?!]))/i);
+                if (prodottoMatch && prodottoMatch[1]) {
+                    params.prodotto = prodottoMatch[1].trim();
+                }
+            }
+            
+            if (placeholder === 'data') {
+                // Cerca pattern data
+                const dataMatch = input.match(/\b(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}|\d{1,2}\s+\w+\s+\d{2,4})/i);
+                if (dataMatch && dataMatch[1]) {
+                    params.data = dataMatch[1].trim();
                 }
             }
         }
