@@ -1094,7 +1094,17 @@ class AIMiddlewareOptimized {
     }
 }
 
-// Esporta classe per uso globale
+// Esporta classe per uso globale con entrambi i nomi per compatibilità
 window.AIMiddlewareOptimized = AIMiddlewareOptimized;
+window.AIMiddleware = AIMiddlewareOptimized; // ← FIX: Esponi con nome che il sistema cerca
 
-console.log('🚀 AIMiddlewareOptimized pronto per l\'uso!');
+// Crea istanza globale
+try {
+    window.aiMiddleware = new AIMiddlewareOptimized();
+    console.log('✅ AIMiddleware caricato e inizializzato:', window.aiMiddleware);
+    console.log('✅ Versione:', window.aiMiddleware.version);
+} catch (error) {
+    console.error('❌ Errore inizializzazione AIMiddleware:', error);
+}
+
+console.log('🚀 AIMiddleware pronto per l\'uso!');

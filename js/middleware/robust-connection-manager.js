@@ -233,11 +233,16 @@ class RobustConnectionManager {
     }
 
     /**
-     * Connette AI Middleware
+     * Connette AI Middleware con timeout e graceful degradation
      */
     async connectAIMiddleware() {
         return new Promise((resolve, reject) => {
+            let attemptCount = 0;
+            const maxAttempts = 60; // Max 30 seconds (60 * 500ms)
+            
             const attempt = () => {
+                attemptCount++;
+                
                 if (window.AIMiddleware) {
                     console.log('🔌 🤖 Connessione AI Middleware: Classe trovata');
                     
@@ -251,8 +256,18 @@ class RobustConnectionManager {
                     
                     console.log('🔌 ✅ AIMiddleware connesso');
                     resolve();
+                } else if (attemptCount >= maxAttempts) {
+                    console.warn('🔌 ⚠️ Timeout connessione AIMiddleware dopo', maxAttempts, 'tentativi');
+                    console.log('🔌 🔄 Sistema continua senza AIMiddleware (degraded mode)');
+                    console.log('🔌 🔍 Debug - AIMiddleware disponibile:', !!window.AIMiddleware);
+                    
+                    // Graceful degradation - continua senza AIMiddleware
+                    this.instances.aiMiddleware = null;
+                    this.connections.aiMiddleware = false;
+                    
+                    resolve(); // Risolve comunque per permettere al sistema di continuare
                 } else {
-                    console.log('🔌 ⏳ Attendo AIMiddleware...');
+                    console.log(`🔌 ⏳ Attendo AIMiddleware... (${attemptCount}/${maxAttempts})`);
                     setTimeout(attempt, 500);
                 }
             };
@@ -268,16 +283,18 @@ class RobustConnectionManager {
     async finalizeIntegration() {
         console.log('🔌 🔗 Finalizzazione integrazione middleware');
         
-        // Collega il vocabulary manager all'AI middleware
+        // Collega il vocabulary manager all'AI middleware (se disponibile)
         if (this.instances.aiMiddleware && this.instances.vocabularyManager) {
             this.instances.aiMiddleware.vocabularyManager = this.instances.vocabularyManager;
             console.log('🔌 🔗 AIMiddleware collegato a VocabularyManager');
+        } else if (!this.instances.aiMiddleware && this.instances.vocabularyManager) {
+            console.log('🔌 ⚠️ AIMiddleware non disponibile - VocabularyManager funziona in modalità autonoma');
         }
         
         // Intercetta le funzioni AI per usare i middleware
         this.interceptAIFunctions();
         
-        console.log('🔌 ✅ Integrazione finalizzata');
+        console.log('🔌 ✅ Integrazione finalizzata (degraded mode se AIMiddleware non disponibile)');
     }
 
     /**
@@ -410,7 +427,7 @@ class RobustConnectionManager {
                             window.FlavioAIAssistant.addMessage('📚 Eseguendo comando dal vocabolario...', 'assistant', true);
                             
                             try {
-                                // Usa AIMiddleware per eseguire il comando
+                                // Usa AIMiddleware per eseguire il comando (se disponibile)
                                 if (this.instances.aiMiddleware && this.instances.aiMiddleware.executeLocalAction) {
                                     const result = await this.instances.aiMiddleware.executeLocalAction(vocabularyMatch, message, null);
                                     console.log('🔌 ✅ Risultato comando vocabolario:', result);
@@ -448,17 +465,53 @@ class RobustConnectionManager {
                                         
                                         return; // STOP - comando eseguito con successo
                                     }
+                                } else {
+                                    console.warn('🔌 ⚠️ AIMiddleware non disponibile per comando vocabolario');
+                                    console.log('🔌 🔄 Fallback: Uso VocabularyManager diretto per comando:', vocabularyMatch.command.id);
+                                    
+                                    // Fallback diretto al VocabularyManager
+                                    if (this.instances.vocabularyManager && this.instances.vocabularyManager.executeDirectCommand) {
+                                        const result = await this.instances.vocabularyManager.executeDirectCommand(vocabularyMatch, message);
+                                        if (result && result.response) {
+                                            // Rimuovi messaggio di caricamento
+                                            const messagesContainer = document.getElementById('ai-messages');
+                                            if (messagesContainer && messagesContainer.lastElementChild) {
+                                                messagesContainer.removeChild(messagesContainer.lastElementChild);
+                                            }
+                                            
+                                            window.FlavioAIAssistant.addMessage(result.response, 'assistant');
+                                            
+                                            if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
+                                                window.FlavioAIAssistant.speakResponse(result.response);
+                                            }
+                                            
+                                            console.log('🔌 ✅ Comando eseguito via VocabularyManager diretto');
+                                            return;
+                                        }
+                                    }
                                 }
                             } catch (error) {
                                 console.error('🔌 ❌ Errore esecuzione comando vocabolario:', error);
                             }
                             
-                            // Se l'esecuzione fallisce, pulisci e continua al middleware
+                            // Se l'esecuzione fallisce, pulisci e mostra messaggio informativo
                             const messagesContainer = document.getElementById('ai-messages');
                             if (messagesContainer && messagesContainer.lastElementChild) {
                                 messagesContainer.removeChild(messagesContainer.lastElementChild);
                             }
-                            console.log('🔌 ⚠️ Esecuzione comando vocabolario fallita, continuo al middleware');
+                            
+                            // Informa l'utente che il comando è riconosciuto ma non può essere eseguito
+                            const commandName = vocabularyMatch.command?.description || vocabularyMatch.command?.id || 'comando';
+                            const degradedMessage = `⚠️ Ho riconosciuto il comando "${commandName}" ma il sistema di elaborazione non è al momento disponibile. Il sistema funziona in modalità limitata.`;
+                            
+                            window.FlavioAIAssistant.addMessage(degradedMessage, 'assistant');
+                            
+                            if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
+                                window.FlavioAIAssistant.speakResponse('Comando riconosciuto ma sistema di elaborazione non disponibile');
+                            }
+                            
+                            console.log('🔌 ⚠️ Esecuzione comando vocabolario fallita - messaggio informativo inviato');
+                            return; // Stop qui per evitare fallback all'AI
                         }
                     } catch (error) {
                         console.error('🔌 ❌ Errore nel controllo vocabolario:', error);
