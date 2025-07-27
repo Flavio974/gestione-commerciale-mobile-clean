@@ -1,0 +1,441 @@
+{
+  "version": "1.0.1",
+  "lastUpdated": "2025-07-14T22:40:00Z",
+  "commands": [
+    {
+      "id": "orders_yesterday",
+      "patterns": [
+        "mostrami gli ordini di ieri",
+        "quali ordini ho fatto ieri",
+        "ordini di ieri",
+        "fammi vedere gli ordini di ieri",
+        "dimmi gli ordini di ieri",
+        "che ordini ho avuto ieri",
+        "ordini fatti ieri"
+      ],
+      "action": "getOrdersByDate",
+      "params": {
+        "date": "yesterday"
+      },
+      "description": "Mostra gli ordini del giorno precedente"
+    },
+    {
+      "id": "orders_today",
+      "patterns": [
+        "mostrami gli ordini di oggi",
+        "quali ordini ho fatto oggi",
+        "ordini di oggi",
+        "fammi vedere gli ordini di oggi",
+        "dimmi gli ordini di oggi",
+        "che ordini ho avuto oggi",
+        "ordini fatti oggi"
+      ],
+      "action": "getOrdersByDate",
+      "params": {
+        "date": "today"
+      },
+      "description": "Mostra gli ordini di oggi"
+    },
+    {
+      "id": "orders_tomorrow",
+      "patterns": [
+        "mostrami gli ordini di domani",
+        "quali ordini ho per domani",
+        "ordini di domani",
+        "fammi vedere gli ordini di domani",
+        "dimmi gli ordini di domani",
+        "che ordini ho domani",
+        "ordini programmati per domani"
+      ],
+      "action": "getOrdersByDate",
+      "params": {
+        "date": "tomorrow"
+      },
+      "description": "Mostra gli ordini programmati per domani"
+    },
+    {
+      "id": "client_orders",
+      "patterns": [
+        "mostrami gli ordini di {cliente}",
+        "quali ordini ha fatto {cliente}",
+        "ordini del cliente {cliente}",
+        "fammi vedere gli ordini di {cliente}",
+        "che ordini ha {cliente}",
+        "ordini per {cliente}"
+      ],
+      "action": "getOrdersByClient",
+      "params": {
+        "client": "{cliente}"
+      },
+      "description": "Mostra gli ordini di un cliente specifico"
+    },
+    {
+      "id": "date_tomorrow",
+      "patterns": [
+        "che data avremo domani",
+        "che giorno è domani",
+        "domani che data sarà",
+        "dimmi la data di domani",
+        "che data sarà domani",
+        "domani che giorno sarà"
+      ],
+      "action": "getDateInfo",
+      "params": {
+        "date": "tomorrow"
+      },
+      "description": "Restituisce la data di domani"
+    },
+    {
+      "id": "date_day_after_tomorrow",
+      "patterns": [
+        "che data avremo dopodomani",
+        "che data ci sarà dopodomani",
+        "che data sarà dopodomani",
+        "dopodomani che data sarà",
+        "che data avremo dopo domani",
+        "che data ci sarà dopo domani",
+        "dimmi la data di dopodomani"
+      ],
+      "action": "getDateInfo",
+      "params": {
+        "date": "dayAfterTomorrow"
+      },
+      "description": "Restituisce la data di dopodomani"
+    },
+    {
+      "id": "date_today",
+      "patterns": [
+        "che data è oggi",
+        "che giorno è oggi",
+        "oggi che data è",
+        "dimmi la data di oggi",
+        "che data abbiamo oggi",
+        "oggi che giorno è"
+      ],
+      "action": "getDateInfo",
+      "params": {
+        "date": "today"
+      },
+      "description": "Restituisce la data di oggi"
+    },
+    {
+      "id": "date_yesterday",
+      "patterns": [
+        "che data era ieri",
+        "che giorno era ieri",
+        "ieri che data era",
+        "dimmi la data di ieri",
+        "che data abbiamo avuto ieri",
+        "ieri che giorno era"
+      ],
+      "action": "getDateInfo",
+      "params": {
+        "date": "yesterday"
+      },
+      "description": "Restituisce la data di ieri"
+    },
+    {
+      "id": "date_days_ago",
+      "patterns": [
+        "che data era {days} giorni fa",
+        "che data c'era {days} giorni fa",
+        "la data di {days} giorni fa",
+        "{days} giorni fa che data era",
+        "dimmi la data di {days} giorni fa",
+        "che giorno era {days} giorni fa"
+      ],
+      "action": "getDateInfo",
+      "params": {
+        "date": "daysAgo",
+        "days": "{days}"
+      },
+      "description": "Restituisce la data di X giorni fa"
+    },
+    {
+      "id": "date_days_from_now",
+      "patterns": [
+        "che data sarà tra {days} giorni",
+        "che data ci sarà tra {days} giorni",
+        "la data di tra {days} giorni",
+        "tra {days} giorni che data sarà",
+        "dimmi la data di tra {days} giorni",
+        "che giorno sarà tra {days} giorni"
+      ],
+      "action": "getDateInfo",
+      "params": {
+        "date": "daysFromNow",
+        "days": "{days}"
+      },
+      "description": "Restituisce la data di tra X giorni"
+    },
+    {
+      "id": "schedule_reminder_minutes",
+      "patterns": [
+        "ricordami di {task} tra {time} minuti",
+        "ricordami {task} tra {time} minuti",
+        "promemoria {task} tra {time} minuti",
+        "imposta promemoria {task} tra {time} minuti"
+      ],
+      "action": "scheduleReminder",
+      "params": {
+        "task": "{task}",
+        "delayMinutes": "{time}"
+      },
+      "description": "Programma un promemoria tra X minuti"
+    },
+    {
+      "id": "schedule_reminder_hours",
+      "patterns": [
+        "ricordami di {task} tra {time} ore",
+        "ricordami {task} tra {time} ore",
+        "promemoria {task} tra {time} ore",
+        "imposta promemoria {task} tra un'ora"
+      ],
+      "action": "scheduleReminder",
+      "params": {
+        "task": "{task}",
+        "time": "{time} ore"
+      },
+      "description": "Programma un promemoria tra X ore"
+    },
+    {
+      "id": "schedule_reminder_tomorrow",
+      "patterns": [
+        "ricordami di {task} domani",
+        "ricordami {task} domani",
+        "promemoria per domani {task}",
+        "imposta promemoria {task} domani"
+      ],
+      "action": "scheduleReminder",
+      "params": {
+        "task": "{task}",
+        "when": "domani"
+      },
+      "description": "Programma un promemoria per domani"
+    },
+    {
+      "id": "create_appointment_today",
+      "patterns": [
+        "appuntamento con {cliente} oggi alle {ora}",
+        "prenota appuntamento {cliente} oggi ore {ora}",
+        "inserisci appuntamento con {cliente} oggi alle {ora}",
+        "crea appuntamento per {cliente} oggi"
+      ],
+      "action": "createAppointment",
+      "params": {
+        "cliente": "{cliente}",
+        "data": "oggi",
+        "ora": "{ora}",
+        "durata": "60"
+      },
+      "description": "Crea appuntamento per oggi"
+    },
+    {
+      "id": "create_appointment_tomorrow",
+      "patterns": [
+        "appuntamento con {cliente} domani alle {ora}",
+        "prenota appuntamento {cliente} domani ore {ora}",
+        "inserisci appuntamento con {cliente} domani alle {ora}",
+        "crea appuntamento per {cliente} domani"
+      ],
+      "action": "createAppointment",
+      "params": {
+        "cliente": "{cliente}",
+        "data": "domani",
+        "ora": "{ora}",
+        "durata": "60"
+      },
+      "description": "Crea appuntamento per domani"
+    },
+    {
+      "id": "create_appointment_date",
+      "patterns": [
+        "appuntamento con {cliente} il {data} alle {ora}",
+        "prenota appuntamento {cliente} {data} ore {ora}",
+        "inserisci appuntamento con {cliente} per il {data}",
+        "crea appuntamento {cliente} {data}"
+      ],
+      "action": "createAppointment",
+      "params": {
+        "cliente": "{cliente}",
+        "data": "{data}",
+        "ora": "{ora}",
+        "durata": "60"
+      },
+      "description": "Crea appuntamento per data specifica"
+    },
+    {
+      "id": "count_orders",
+      "patterns": [
+        "quanti ordini ci sono",
+        "quanti ordini ho",
+        "quanti ordini ci sono nel database",
+        "quanti ordini ci sono nel database su supabase",
+        "quanti ordini abbiamo nel database",
+        "quanti ordini sono nel database",
+        "quanti ordini ho nel database",
+        "numero ordini",
+        "numero di ordini",
+        "numero ordini database",
+        "numero ordini nel database",
+        "conteggio ordini",
+        "conteggio ordini database",
+        "totale ordini",
+        "ordini totali",
+        "quanti ordini in totale",
+        "quanti ordini ho in totale",
+        "dimmi quanti ordini ci sono",
+        "dimmi quanti ordini ci sono nel database",
+        "fammi sapere quanti ordini ho"
+      ],
+      "action": "countOrders",
+      "params": {},
+      "description": "Conta il numero totale di ordini"
+    },
+    {
+      "id": "list_orders",
+      "patterns": [
+        "mostrami tutti gli ordini",
+        "elenco ordini",
+        "lista ordini",
+        "tutti gli ordini",
+        "ordini clienti",
+        "ordini dei clienti",
+        "visualizza ordini",
+        "fammi vedere gli ordini",
+        "dimmi gli ordini"
+      ],
+      "action": "listOrders",
+      "params": {},
+      "description": "Mostra l'elenco degli ordini"
+    },
+    {
+      "id": "count_clients",
+      "patterns": [
+        "quanti clienti ho",
+        "quanti clienti ci sono",
+        "quanti clienti ci sono nel database",
+        "quanti clienti ci sono nel database su supabase",
+        "quanti clienti abbiamo nella tabella clienti su supabase",
+        "quanti clienti abbiamo nel database",
+        "quanti clienti sono nel database",
+        "quanti clienti ho nel database",
+        "numero clienti",
+        "numero di clienti",
+        "numero clienti database",
+        "numero clienti nel database",
+        "conteggio clienti",
+        "conteggio clienti database",
+        "totale clienti",
+        "clienti totali",
+        "quanti clienti in totale",
+        "dimmi quanti clienti ho",
+        "dimmi quanti clienti ci sono nel database"
+      ],
+      "action": "countClients",
+      "params": {},
+      "description": "Conta il numero totale di clienti"
+    },
+    {
+      "id": "list_clients",
+      "patterns": [
+        "quali clienti abbiamo",
+        "quali clienti abbiamo nel database",
+        "chi sono i nostri clienti",
+        "clienti presenti nel sistema",
+        "mostrami tutti i clienti",
+        "lista clienti completa",
+        "elenco clienti database",
+        "clienti nel database",
+        "database clienti",
+        "interroga clienti database",
+        "visualizza clienti",
+        "dammi la lista dei clienti",
+        "elenca tutti i clienti",
+        "mostra elenco clienti",
+        "fammi vedere i clienti",
+        "lista di tutti i clienti",
+        "tutti i clienti che abbiamo"
+      ],
+      "action": "listClients",
+      "params": {},
+      "description": "Mostra l'elenco dei clienti"
+    },
+    {
+      "id": "total_revenue",
+      "patterns": [
+        "fatturato totale",
+        "fatturato complessivo",
+        "ricavi totali",
+        "incassi totali",
+        "vendite totali",
+        "quanto ho fatturato",
+        "quanto ho venduto",
+        "fatturato generale",
+        "totale fatturato",
+        "somma fatturato"
+      ],
+      "action": "calculateRevenue",
+      "params": {},
+      "description": "Calcola il fatturato totale"
+    },
+    {
+      "id": "monthly_revenue",
+      "patterns": [
+        "fatturato del mese",
+        "fatturato mensile",
+        "fatturato di {mese}",
+        "fatturato del mese di {mese}",
+        "ricavi del mese",
+        "vendite del mese",
+        "quanto ho fatturato questo mese",
+        "fatturato mese corrente"
+      ],
+      "action": "calculateMonthlyRevenue",
+      "params": {
+        "mese": "{mese}"
+      },
+      "description": "Calcola il fatturato mensile"
+    },
+    {
+      "id": "order_value_by_client",
+      "patterns": [
+        "dimmi il valore dell'ordine del cliente {cliente}",
+        "valore dell'ordine del cliente {cliente}",
+        "importo dell'ordine del cliente {cliente}",
+        "quanto vale l'ordine del cliente {cliente}",
+        "valore ordine {cliente}",
+        "dimmi il valore dell'ordine di {cliente}",
+        "valore dell'ordine di {cliente}",
+        "importo dell'ordine di {cliente}",
+        "quanto vale l'ordine di {cliente}",
+        "dimmi il fatturato del cliente {cliente}",
+        "fatturato del cliente {cliente}",
+        "fatturato di {cliente}",
+        "quanto ha fatturato {cliente}",
+        "fatturato cliente {cliente}",
+        "dimmi il fatturato di {cliente}",
+        "quanto fatturato ha fatto {cliente}",
+        "fatturato per il cliente {cliente}",
+        "fatturato per {cliente}",
+        "ricavi del cliente {cliente}",
+        "ricavi di {cliente}",
+        "vendite del cliente {cliente}",
+        "vendite di {cliente}"
+      ],
+      "action": "calculateRevenue",
+      "params": {
+        "cliente": "{cliente}"
+      },
+      "description": "Calcola il fatturato/valore ordini per un cliente specifico"
+    }
+  ],
+  "settings": {
+    "enableDebug": true,
+    "cacheTimeout": 300000,
+    "similarityThreshold": 0.45,
+    "maxPatternLength": 200,
+    "autoReload": true,
+    "fallbackToAI": true
+  }
+}
