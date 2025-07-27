@@ -45,6 +45,9 @@ class VocabularyManager {
         // DEBUG: Track user vocabulary changes
         this._lastUserVocContent = localStorage.getItem('vocabulary_user');
         this.startWatcher();
+        
+        // 🔧 AUTO-FIX: Verifica stato middleware all'avvio
+        this.checkMiddlewareHealth();
     }
 
     /**
@@ -1322,11 +1325,54 @@ class VocabularyManager {
             const newFormat = localStorage.getItem('user_vocabulary_v2');
             if (newFormat) {
                 this.userVocabulary = JSON.parse(newFormat);
+                
+                // 🔧 AUTO-FIX: Controlla se alcuni comandi necessitano riparazione
+                const needsFix = this.userVocabulary.some(cmd => 
+                    !cmd.action || (typeof cmd.action === 'string' && !cmd.params)
+                );
+                
+                if (needsFix) {
+                    console.debug('[VOCAB-USER] Auto-fix necessario per formato v2');
+                    this.userVocabulary = this.autoFixUserCommands(this.userVocabulary);
+                    localStorage.setItem('user_vocabulary_v2', JSON.stringify(this.userVocabulary));
+                }
+                
                 console.debug('[VOCAB-USER] Formato v2 caricato:', this.userVocabulary.length);
                 return;
             }
             
-            // Fallback: converti formato vecchio
+            // Fallback 1: formato categorizzato (user-vocabulary)
+            const categorizedFormat = localStorage.getItem('user-vocabulary');
+            if (categorizedFormat) {
+                console.debug('[VOCAB-USER] Formato categorizzato rilevato');
+                const categories = JSON.parse(categorizedFormat);
+                let allCommands = [];
+                
+                // Estrai comandi da tutte le categorie
+                Object.entries(categories).forEach(([categoryName, commands]) => {
+                    if (Array.isArray(commands)) {
+                        commands.forEach(cmd => {
+                            allCommands.push({
+                                pattern: typeof cmd === 'string' ? cmd : cmd.pattern || cmd,
+                                action: (typeof cmd === 'object' && cmd.action) ? cmd.action : null,
+                                params: (typeof cmd === 'object' && cmd.params) ? cmd.params : {},
+                                source: 'user_category',
+                                category: categoryName
+                            });
+                        });
+                    }
+                });
+                
+                // 🔧 AUTO-FIX: Ripara comandi senza action
+                this.userVocabulary = this.autoFixUserCommands(allCommands);
+                
+                // Salva in formato nuovo
+                localStorage.setItem('user_vocabulary_v2', JSON.stringify(this.userVocabulary));
+                console.debug('[VOCAB-USER] Convertito da formato categorizzato:', this.userVocabulary.length);
+                return;
+            }
+            
+            // Fallback 2: converti formato vecchio (vocabulary_user)
             const userVocText = localStorage.getItem('vocabulary_user');
             if (!userVocText) {
                 console.debug('[VOCAB-USER] Nessun vocabolario utente');
@@ -1337,12 +1383,17 @@ class VocabularyManager {
             console.debug('[VOCAB-USER] Conversione da formato vecchio...');
             const parsedCommands = this.parseUserVocabulary(userVocText);
             
+            // 🔧 AUTO-FIX: Ripara comandi senza action
+            const fixedCommands = this.autoFixUserCommands(parsedCommands);
+            
             // Converti in formato nuovo
-            this.userVocabulary = parsedCommands.map(cmd => ({
+            this.userVocabulary = fixedCommands.map(cmd => ({
                 title: cmd.description || cmd.id,
                 pattern: cmd.patterns[0], // Prendi primo pattern
                 action: cmd.action,
-                source: 'user'
+                params: cmd.params,
+                source: 'user',
+                autoFixed: cmd.autoFixed || false
             }));
             
             // Salva in formato nuovo
@@ -1355,6 +1406,112 @@ class VocabularyManager {
         }
     }
     
+    /**
+     * 🔧 AUTO-FIX: Aggiunge azioni mancanti ai comandi utente
+     */
+    autoFixUserCommands(commands) {
+        console.log('🔧 AUTO-FIX: Riparazione comandi utente...');
+        
+        // Mappa pattern → azione per comandi comuni
+        const actionMapping = {
+            // CLIENTI
+            'quali clienti abbiamo': { action: 'universal_query', params: { entity: 'clients', operation: 'list' }},
+            'numero clienti nel database': { action: 'universal_query', params: { entity: 'clients', operation: 'count' }},
+            'quanti clienti ci sono nel database': { action: 'universal_query', params: { entity: 'clients', operation: 'count' }},
+            'quanti clienti ho': { action: 'universal_query', params: { entity: 'clients', operation: 'count' }},
+            'lista clienti': { action: 'universal_query', params: { entity: 'clients', operation: 'list' }},
+            'elenco clienti': { action: 'universal_query', params: { entity: 'clients', operation: 'list' }},
+            
+            // ORDINI
+            'quanti ordini ci sono nel database': { action: 'universal_query', params: { entity: 'orders', operation: 'count' }},
+            'numero ordini': { action: 'universal_query', params: { entity: 'orders', operation: 'count' }},
+            'lista ordini': { action: 'universal_query', params: { entity: 'orders', operation: 'list' }},
+            'elenco ordini': { action: 'universal_query', params: { entity: 'orders', operation: 'list' }},
+            
+            // FATTURATO
+            'fatturato totale': { action: 'universal_query', params: { entity: 'orders', operation: 'sum', field: 'importo' }},
+            'fatturato del mese': { action: 'universal_query', params: { entity: 'orders', operation: 'sum', field: 'importo', filters: { periodo: 'mese' }}},
+        };
+        
+        let fixedCount = 0;
+        commands.forEach(cmd => {
+            const pattern = typeof cmd === 'string' ? cmd : cmd.pattern;
+            const normalizedPattern = pattern?.toLowerCase().trim();
+            
+            // Se il comando non ha action ed è nella mappa, aggiungila
+            if (normalizedPattern && actionMapping[normalizedPattern] && (!cmd.action || typeof cmd === 'string')) {
+                const mapping = actionMapping[normalizedPattern];
+                
+                if (typeof cmd === 'string') {
+                    // Converti da stringa a oggetto
+                    const index = commands.indexOf(cmd);
+                    commands[index] = {
+                        pattern: cmd,
+                        action: mapping.action,
+                        params: mapping.params,
+                        source: 'user_fixed',
+                        autoFixed: true
+                    };
+                } else {
+                    // Aggiungi action a oggetto esistente
+                    cmd.action = mapping.action;
+                    cmd.params = mapping.params;
+                    cmd.autoFixed = true;
+                }
+                
+                fixedCount++;
+                console.log(`🔧 ✅ Action aggiunta per: "${pattern}" → ${mapping.action}`);
+            }
+        });
+        
+        console.log(`🔧 📊 AUTO-FIX completato: ${fixedCount} comandi riparati`);
+        return commands;
+    }
+
+    /**
+     * 🔧 MIDDLEWARE HEALTH CHECK: Verifica e ripara stato middleware
+     */
+    checkMiddlewareHealth() {
+        console.log('🔧 🏥 MIDDLEWARE HEALTH CHECK...');
+        
+        const components = {
+            supabase: !!window.supabaseAI,
+            vocabularyManager: !!window.vocabularyManager,
+            aiMiddleware: !!window.aiMiddleware,
+            aiMiddlewareClass: !!window.AIMiddleware,
+            robustConnection: !!window.robustConnectionManager
+        };
+        
+        console.log('🔧 📊 Componenti disponibili:', components);
+        
+        // Fix middleware se disponibile ma non istanziato
+        if (components.aiMiddlewareClass && !components.aiMiddleware) {
+            console.log('🔧 🔄 Ricreazione istanza aiMiddleware...');
+            try {
+                window.aiMiddleware = new window.AIMiddleware();
+                console.log('🔧 ✅ aiMiddleware ricreato');
+            } catch (error) {
+                console.error('🔧 ❌ Errore ricreazione aiMiddleware:', error);
+            }
+        }
+        
+        // Verifica metodi critici
+        if (window.aiMiddleware) {
+            const criticalMethods = ['executeLocalAction', 'handleUniversalQuery', 'getAllDataSafely'];
+            const missingMethods = criticalMethods.filter(method => 
+                typeof window.aiMiddleware[method] !== 'function'
+            );
+            
+            if (missingMethods.length > 0) {
+                console.warn('🔧 ⚠️ Metodi mancanti in aiMiddleware:', missingMethods);
+            } else {
+                console.log('🔧 ✅ Tutti i metodi critici disponibili');
+            }
+        }
+        
+        return components;
+    }
+
     /**
      * DEBUG: Parse user vocabulary text into commands
      */

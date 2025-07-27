@@ -29,12 +29,16 @@ async function testVocabularyFix() {
         console.log("   - User commands:", vm.userVocabulary?.length || 0);
         console.log("   - Total commands:", vm.vocabulary?.commands?.length || 0);
         
-        // 5. Test specifici comandi dal nuovo formato
+        // 5. Test specifici comandi dal nuovo formato E comandi utente problematici
         const testCommands = [
             "quanti clienti",
             "fatturato del mese", 
             "mostrami ordini di ieri",
-            "lista clienti"
+            "lista clienti",
+            // Comandi specifici che prima fallivano
+            "quali clienti abbiamo",
+            "numero clienti nel database",
+            "quanti clienti ci sono nel database"
         ];
         
         console.log("🧪 TEST MATCHING COMANDI:");
@@ -51,7 +55,36 @@ async function testVocabularyFix() {
             }
         }
         
-        // 6. Verifica formato comandi estratti
+        // 6. Test esecuzione completa per comandi critici
+        console.log("🧪 TEST ESECUZIONE COMPLETA:");
+        const criticalCommands = ["quali clienti abbiamo", "numero clienti nel database"];
+        
+        for (const cmd of criticalCommands) {
+            try {
+                const match = await vm.findMatch(cmd);
+                if (match && match.command && match.command.action) {
+                    console.log(`📝 Testando esecuzione: "${cmd}"`);
+                    
+                    // Controlla se aiMiddleware è disponibile
+                    if (window.aiMiddleware && window.aiMiddleware.executeLocalAction) {
+                        try {
+                            const result = await window.aiMiddleware.executeLocalAction(match.command, cmd, null);
+                            console.log(`✅ ESECUZIONE OK: "${cmd}" → ${result?.slice(0, 50)}...`);
+                        } catch (execError) {
+                            console.error(`❌ ERRORE ESECUZIONE: "${cmd}" →`, execError.message);
+                        }
+                    } else {
+                        console.warn(`⚠️ aiMiddleware non disponibile per: "${cmd}"`);
+                    }
+                } else {
+                    console.log(`❌ Match non valido per: "${cmd}"`);
+                }
+            } catch (error) {
+                console.error(`❌ Errore test esecuzione: "${cmd}" →`, error.message);
+            }
+        }
+        
+        // 7. Verifica formato comandi estratti
         if (vm.systemVocabulary?.length > 0) {
             console.log("🔍 ESEMPIO COMANDO ESTRATTO:");
             const sample = vm.systemVocabulary[0];
@@ -59,6 +92,19 @@ async function testVocabularyFix() {
             console.log("   - Pattern:", sample.pattern);
             console.log("   - Action:", sample.action);
             console.log("   - Params:", JSON.stringify(sample.params));
+        }
+        
+        // 8. Verifica auto-fix sui comandi utente
+        if (vm.userVocabulary?.length > 0) {
+            console.log("🔧 COMANDI UTENTE AUTO-FIXED:");
+            const autoFixed = vm.userVocabulary.filter(cmd => cmd.autoFixed);
+            console.log(`   - Totale comandi utente: ${vm.userVocabulary.length}`);
+            console.log(`   - Comandi auto-riparati: ${autoFixed.length}`);
+            if (autoFixed.length > 0) {
+                autoFixed.forEach(cmd => {
+                    console.log(`     ✅ "${cmd.pattern}" → ${cmd.action}`);
+                });
+            }
         }
         
         return true;
