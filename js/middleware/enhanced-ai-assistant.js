@@ -43,8 +43,9 @@ class EnhancedAIAssistant {
                 if (this.originalAssistant && this.originalAssistant.supabaseAI) {
                     console.log('✅ FlavioAIAssistant originale pronto');
                     
-                    // Inizializza middleware
-                    this.middleware = new RequestMiddleware(this.originalAssistant.supabaseAI);
+                    // Inizializza middleware - RequestMiddleware DISABILITATO
+                    console.log('🔌 💾 RequestMiddleware DISABILITATO in EnhancedAIAssistant');
+                    this.middleware = null; // RequestMiddleware rimosso
                     
                     // Inizializza ImprovedVocabolarioMiddleware se disponibile, altrimenti VocabolarioMiddleware
                     if (typeof ImprovedVocabolarioMiddleware !== 'undefined') {
@@ -165,6 +166,48 @@ class EnhancedAIAssistant {
                 return;
             }
             
+            // 🚨 FIX URGENTE: Intercetta query sui clienti prima che vadano all'AI
+            const isClientCountQuery = message.toLowerCase().includes('quanti client') || 
+                                     message.toLowerCase().includes('numero client') ||
+                                     message.toLowerCase().includes('clienti ci sono') ||
+                                     message.toLowerCase().includes('totale client') ||
+                                     message.toLowerCase().includes('count client');
+            
+            if (isClientCountQuery) {
+                console.log('👥 ENHANCED: INTERCETTAZIONE CLIENTI ASSOLUTA!');
+                
+                let response;
+                try {
+                    if (window.supabaseAI && typeof window.supabaseAI.getClientsCount === 'function') {
+                        const clientCount = await window.supabaseAI.getClientsCount();
+                        response = `Ci sono ${clientCount} clienti nel database.`;
+                        console.log('✅ CLIENTI: Conteggio diretto:', clientCount);
+                    } else if (window.supabaseAI && window.supabaseAI.data && window.supabaseAI.data.clients) {
+                        const clientCount = window.supabaseAI.data.clients.length;
+                        response = `Ci sono ${clientCount} clienti nel database.`;
+                        console.log('✅ CLIENTI: Conteggio da data.clients:', clientCount);
+                    } else {
+                        response = 'Non riesco a recuperare il numero di clienti al momento. Verifica la connessione al database.';
+                        console.log('❌ CLIENTI: Impossibile recuperare conteggio');
+                    }
+                } catch (error) {
+                    console.error('❌ CLIENTI: Errore nel conteggio:', error);
+                    response = 'Si è verificato un errore nel recuperare il numero di clienti.';
+                }
+                
+                // Aggiungi direttamente alla chat
+                this.originalAssistant.messages.push({ role: 'user', content: message });
+                this.originalAssistant.messages.push({ role: 'assistant', content: response });
+                this.originalAssistant.updateChat();
+                
+                // Pulisci input
+                const input = document.getElementById('aiInput');
+                if (input) input.value = '';
+                
+                console.log('✅ CLIENTI: Risposta diretta:', response);
+                return;
+            }
+            
             // Aggiungi messaggio utente alla chat
             this.originalAssistant.messages.push({ role: 'user', content: messageWithDate });
             this.originalAssistant.updateChat();
@@ -173,8 +216,8 @@ class EnhancedAIAssistant {
             // Mostra thinking indicator
             this.originalAssistant.showThinking();
             
-            // VOCABOLARIO MIDDLEWARE INTEGRATION POINT - DISABILITATO TEMPORANEAMENTE PER DEBUG
-            if (false && this.middlewareEnabled) {
+            // VOCABOLARIO MIDDLEWARE INTEGRATION POINT - RIABILITATO PER FIX CLIENTI/ORDINI
+            if (this.middlewareEnabled) {
                 console.log('📋 ENHANCED: Tentativo elaborazione con VocabolarioMiddleware...');
                 
                 const middlewareResult = await this.vocabolarioMiddleware.processWithVocabulario(messageWithDate);

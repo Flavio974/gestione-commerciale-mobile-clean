@@ -224,7 +224,9 @@ class VocabolarioMiddleware {
             'Sistema e Database': this.determineSistemaType(pattern)
         };
         
-        return mapping[category] || 'unknown';
+        const result = mapping[category] || 'unknown';
+        console.log(`📋 MAPPING: categoria="${category}" → tipo="${result}" (pattern: "${pattern}")`);
+        return result;
     }
     
     /**
@@ -262,9 +264,11 @@ class VocabolarioMiddleware {
             return 'data';
         }
         
+        // FIX: Non classificare "quanti" automaticamente come ordini
+        // Controlla prima se è specificamente sui clienti
         if (patternLower.includes('ordini') || 
-            patternLower.includes('quanti') || 
-            patternLower.includes('numero')) {
+            (patternLower.includes('quanti') && patternLower.includes('ordini')) || 
+            (patternLower.includes('numero') && patternLower.includes('ordini'))) {
             return 'ordini';
         }
         
@@ -277,8 +281,13 @@ class VocabolarioMiddleware {
     determineClientiType(pattern) {
         const patternLower = pattern.toLowerCase();
         
-        // Riconoscimento query database clienti
-        if (patternLower.includes('elenco clienti database') ||
+        // FIX: Riconosci "quanti clienti" come query sui clienti
+        if (patternLower.includes('quanti clienti') ||
+            patternLower.includes('numero clienti') ||
+            patternLower.includes('totale clienti') ||
+            patternLower.includes('count clienti') ||
+            patternLower.includes('clienti ci sono') ||
+            patternLower.includes('elenco clienti database') ||
             patternLower.includes('clienti nel database') ||
             patternLower.includes('mostrami tutti i clienti') ||
             patternLower.includes('lista clienti completa') ||
@@ -584,19 +593,12 @@ class VocabolarioMiddleware {
                 }
             }
             
-            // Se è una richiesta sugli ordini con cliente specifico,
-            // usa il RequestMiddleware direttamente con parametri
-            if (needsOrders && clientName) {
-                console.log('📋 VOCABOLARIO: Delegando al RequestMiddleware con cliente specifico:', clientName);
-                
-                // Simula una richiesta di ordini per il cliente specifico
-                const simulatedRequest = `ordini cliente ${clientName}`;
-                return await this.requestMiddleware.processRequest(simulatedRequest);
-            }
+            // RequestMiddleware DISABILITATO - usa VocabularyManager direttamente
+            console.log('🔌 💾 RequestMiddleware DISABILITATO in VocabolarioMiddleware');
+            console.log('🔌 ✅ Usa solo VocabularyManager per gestire comandi');
             
-            // Fallback al middleware originale
-            console.log('🔄 VOCABOLARIO: Fallback al RequestMiddleware standard');
-            return await this.requestMiddleware.processRequest(userInput);
+            // Fallback: ritorna null per far gestire ad AI normale
+            return null;
             
         } catch (error) {
             console.error('❌ VOCABOLARIO: Errore processamento richiesta senza match:', error);

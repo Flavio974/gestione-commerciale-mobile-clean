@@ -114,6 +114,11 @@ note cliente [CLIENTE]
 aggiungi nota a [CLIENTE]: [NOTA]
 clienti zona [ZONA]
 clienti non visitati da [GIORNI] giorni
+quanti clienti ci sono nel database
+quanti clienti abbiamo
+numero clienti nel database
+totale clienti database
+count clienti
 elenco clienti database
 clienti nel database
 mostrami tutti i clienti
