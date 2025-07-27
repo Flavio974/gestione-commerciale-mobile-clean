@@ -136,17 +136,30 @@ class RequestMiddleware {
             // Prova diversi metodi per ottenere il conteggio
             let count = 0;
             
+            // Metodo 1: getClientsCount() diretto
             if (typeof this.supabaseAI.getClientsCount === 'function') {
                 count = await this.supabaseAI.getClientsCount();
                 console.log('✅ MIDDLEWARE: Conteggio via getClientsCount():', count);
-            } else if (this.supabaseAI.data && this.supabaseAI.data.clients) {
-                count = this.supabaseAI.data.clients.length;
-                console.log('✅ MIDDLEWARE: Conteggio via data.clients:', count);
-            } else {
-                // Fallback: ottieni i dati e conta
-                const clientsData = await this.supabaseAI.getClientsData();
-                count = clientsData.clients ? clientsData.clients.length : 0;
-                console.log('✅ MIDDLEWARE: Conteggio via getClientsData():', count);
+            } 
+            // Metodo 2: cache data
+            else if (this.supabaseAI.cache && this.supabaseAI.cache.clients) {
+                count = this.supabaseAI.cache.clients.length;
+                console.log('✅ MIDDLEWARE: Conteggio via cache.clients:', count);
+            }
+            // Metodo 3: getClients() e conta
+            else if (typeof this.supabaseAI.getClients === 'function') {
+                const clients = await this.supabaseAI.getClients();
+                count = clients ? clients.length : 0;
+                console.log('✅ MIDDLEWARE: Conteggio via getClients():', count);
+            }
+            // Metodo 4: getAllData() e conta
+            else if (typeof this.supabaseAI.getAllData === 'function') {
+                const allData = await this.supabaseAI.getAllData();
+                count = allData.clients ? allData.clients.length : 0;
+                console.log('✅ MIDDLEWARE: Conteggio via getAllData():', count);
+            }
+            else {
+                throw new Error('Nessun metodo per recuperare i clienti disponibile');
             }
             
             return {
@@ -182,17 +195,26 @@ class RequestMiddleware {
             
             let count = 0;
             
-            if (typeof this.supabaseAI.getOrdersCount === 'function') {
-                count = await this.supabaseAI.getOrdersCount();
-            } else if (this.supabaseAI.data && this.supabaseAI.data.orders) {
-                count = this.supabaseAI.data.orders.length;
-            } else {
-                // Fallback
-                const ordersData = await this.supabaseAI.getOrdersData();
-                count = ordersData.orders ? ordersData.orders.length : 0;
+            // Metodo 1: cache data
+            if (this.supabaseAI.cache && this.supabaseAI.cache.orders) {
+                count = this.supabaseAI.cache.orders.length;
+                console.log('✅ MIDDLEWARE: Conteggio via cache.orders:', count);
             }
-            
-            console.log('✅ MIDDLEWARE: Conteggio ordini:', count);
+            // Metodo 2: getOrders() e conta
+            else if (typeof this.supabaseAI.getOrders === 'function') {
+                const orders = await this.supabaseAI.getOrders();
+                count = orders ? orders.length : 0;
+                console.log('✅ MIDDLEWARE: Conteggio via getOrders():', count);
+            }
+            // Metodo 3: getAllData() e conta
+            else if (typeof this.supabaseAI.getAllData === 'function') {
+                const allData = await this.supabaseAI.getAllData();
+                count = allData.orders ? allData.orders.length : 0;
+                console.log('✅ MIDDLEWARE: Conteggio via getAllData():', count);
+            }
+            else {
+                throw new Error('Nessun metodo per recuperare gli ordini disponibile');
+            }
             
             return {
                 success: true,
