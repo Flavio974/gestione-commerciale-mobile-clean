@@ -164,7 +164,7 @@ class RequestMiddleware {
             
             return {
                 success: true,
-                text: `Ci sono ${count} clienti nel database`,
+                response: `Ci sono ${count} clienti nel database`,
                 data: {
                     count: count,
                     type: 'clienti',
@@ -177,7 +177,7 @@ class RequestMiddleware {
             return {
                 success: false,
                 error: error.message,
-                text: 'Errore nel recuperare il numero di clienti'
+                response: 'Errore nel recuperare il numero di clienti'
             };
         }
     }
@@ -218,7 +218,7 @@ class RequestMiddleware {
             
             return {
                 success: true,
-                text: `Ci sono ${count} ordini nel database`,
+                response: `Ci sono ${count} ordini nel database`,
                 data: {
                     count: count,
                     type: 'ordini',
@@ -231,7 +231,7 @@ class RequestMiddleware {
             return {
                 success: false,
                 error: error.message,
-                text: 'Errore nel recuperare il numero di ordini'
+                response: 'Errore nel recuperare il numero di ordini'
             };
         }
     }
