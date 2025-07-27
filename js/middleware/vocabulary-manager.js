@@ -615,7 +615,30 @@ class VocabularyManager {
         
         // Sostituisci i placeholder escaped con gruppi di cattura
         for (let i = 0; i < placeholders.length; i++) {
-            regexPattern = regexPattern.replace(`\\{${placeholders[i]}\\}`, '(.+?)');
+            // 🐛 FIX: Use (.+?) correctly with word boundaries for better extraction  
+            // The issue was (.+?) being too lazy - we need proper pattern matching
+            const isLastPlaceholder = (i === placeholders.length - 1);
+            const afterPlaceholder = pattern.substring(pattern.indexOf(`{${placeholders[i]}}`) + `{${placeholders[i]}}`.length);
+            const isAtEnd = afterPlaceholder.trim().length === 0;
+            
+            let capturePattern;
+            if (isAtEnd || isLastPlaceholder) {
+                // For parameters at the end, capture everything remaining
+                capturePattern = '(.+)';
+            } else {
+                // For parameters in the middle, use non-greedy match until next word
+                const nextWords = afterPlaceholder.trim().split(' ').filter(w => w.length > 0);
+                if (nextWords.length > 0) {
+                    // Look ahead to next significant word (already escaped pattern)
+                    const nextWord = nextWords[0];
+                    const escapedNextWord = nextWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    capturePattern = `(.+?)(?=\\s+${escapedNextWord})`;
+                } else {
+                    capturePattern = '(.+?)';
+                }
+            }
+            
+            regexPattern = regexPattern.replace(`\\{${placeholders[i]}\\}`, capturePattern);
         }
         
         const regex = new RegExp(regexPattern, 'i');

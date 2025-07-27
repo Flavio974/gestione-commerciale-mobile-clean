@@ -107,7 +107,19 @@ class AIMiddleware {
     async executeLocalAction(vocabularyMatch, userInput, originalContext) {
         const startTime = Date.now();
         const command = vocabularyMatch.command;
+        
+        // 🔧 FIX: extractedParams must take priority over command.params placeholders
+        // command.params contains placeholders like {cliente: "{cliente}"}
+        // vocabularyMatch.extractedParams contains actual values like {cliente: "Essemme"}
         const params = { ...command.params, ...vocabularyMatch.extractedParams };
+        
+        // 🐛 DEBUG: Log parameter merging to identify truncation
+        if (this.debug) {
+            console.log('🔍 PARAMETER MERGE DEBUG:');
+            console.log('  command.params:', command.params);
+            console.log('  extractedParams:', vocabularyMatch.extractedParams);
+            console.log('  merged params:', params);
+        }
         
         if (this.debug) {
             console.log('🤖 ⚡ ESECUZIONE LOCALE:', {
@@ -887,8 +899,45 @@ class AIMiddleware {
      */
     async handleCalculateRevenue(params, userInput, originalContext) {
         try {
-            // 🔍 Estrai il nome del cliente dai parametri
-            const clienteName = params?.cliente || originalContext?.extractedParams?.cliente || null;
+            // 🔍 DEBUG: Log all parameter sources to identify truncation
+            if (this.debug) {
+                console.log('🔍 CLIENT PARAMETER DEBUG:');
+                console.log('  params:', params);
+                console.log('  params.cliente:', params?.cliente);
+                console.log('  originalContext?.extractedParams:', originalContext?.extractedParams);
+                console.log('  originalContext?.extractedParams?.cliente:', originalContext?.extractedParams?.cliente);
+            }
+            
+            // 🔍 Estrai il nome del cliente dai parametri (con priorità corretta)
+            let clienteName = null;
+            
+            // Priority 1: Use extractedParams (actual extracted values)
+            if (originalContext?.extractedParams?.cliente) {
+                clienteName = originalContext.extractedParams.cliente;
+                if (this.debug) console.log('🎯 Using extractedParams.cliente:', clienteName);
+            }
+            // Priority 2: Use merged params.cliente
+            else if (params?.cliente && params.cliente !== '{cliente}') {
+                clienteName = params.cliente;
+                if (this.debug) console.log('🎯 Using params.cliente:', clienteName);
+            }
+            
+            // 🐛 SAFETY CHECK: Ensure we have the full parameter value
+            if (clienteName && clienteName.length === 1) {
+                console.warn('⚠️ DETECTED TRUNCATED PARAMETER:', clienteName);
+                console.warn('⚠️ This suggests a parameter extraction bug!');
+                // Try to find the full value in other sources
+                if (this.debug) {
+                    console.log('🔍 Searching for full client name in userInput:', userInput);
+                    // Basic extraction as fallback
+                    const fallbackMatch = userInput.match(/cliente\s+([^?\.,]+)/i) || 
+                                        userInput.match(/fatturato.*?(\w+)/i);
+                    if (fallbackMatch && fallbackMatch[1] && fallbackMatch[1].length > 1) {
+                        console.log('🔧 FALLBACK extraction found:', fallbackMatch[1]);
+                        clienteName = fallbackMatch[1].trim();
+                    }
+                }
+            }
             
             if (clienteName) {
                 if (this.debug) {
