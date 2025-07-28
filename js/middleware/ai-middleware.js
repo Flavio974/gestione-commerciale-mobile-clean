@@ -912,6 +912,15 @@ class AIMiddlewareOptimized {
             }
         }
         
+        // Formato AAAA/GG/MM (formato database specifico)
+        const aaaggmm = dateString.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+        if (aaaggmm) {
+            date = new Date(aaaggmm[1], aaaggmm[3] - 1, aaaggmm[2]); // Anno, Mese-1, Giorno
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+        
         return null;
     }
 
@@ -952,11 +961,21 @@ class AIMiddlewareOptimized {
                     cliente: ordine.cliente,
                     data: ordine.data,
                     importo: 0,
-                    righe: 0
+                    righe: 0,
+                    prodotti: [] // Aggiungi array per i prodotti
                 };
             }
             ordiniRaggruppati[ordine.numero_ordine].importo += ordine.importo || 0;
             ordiniRaggruppati[ordine.numero_ordine].righe++;
+            
+            // Aggiungi prodotto se esiste
+            if (ordine.prodotto) {
+                ordiniRaggruppati[ordine.numero_ordine].prodotti.push({
+                    nome: ordine.prodotto,
+                    quantita: ordine.quantita || 1,
+                    importo: ordine.importo || 0
+                });
+            }
         });
         
         // Ordina per data (più recenti prima)
@@ -982,7 +1001,19 @@ class AIMiddlewareOptimized {
         listaOrdini.forEach(ordine => {
             message += `• **${ordine.numero}** - ${ordine.cliente}\\n`;
             const dataFormattata = this.formatDateSafely(ordine.data);
-            message += `  Data: ${dataFormattata} | Importo: €${ordine.importo.toFixed(2)} | Righe: ${ordine.righe}\\n\\n`;
+            message += `  Data: ${dataFormattata} | Importo: €${ordine.importo.toFixed(2)} | Prodotti: ${ordine.righe}\\n`;
+            
+            // Mostra i primi 3 prodotti se disponibili
+            if (ordine.prodotti && ordine.prodotti.length > 0) {
+                const prodottiDaMostrare = ordine.prodotti.slice(0, 3);
+                prodottiDaMostrare.forEach(prodotto => {
+                    message += `    - ${prodotto.nome} (${prodotto.quantita}) - €${prodotto.importo.toFixed(2)}\\n`;
+                });
+                if (ordine.prodotti.length > 3) {
+                    message += `    ... e altri ${ordine.prodotti.length - 3} prodotti\\n`;
+                }
+            }
+            message += '\\n';
         });
         
         return this.createResult(listaOrdini, message, { 
