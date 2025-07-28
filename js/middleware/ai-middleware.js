@@ -105,12 +105,9 @@ class AIMiddlewareOptimized {
                     break;
                     
                 case 'getOrderProducts':
-                    result = await this.handleUniversalQuery({
-                        entity: 'orders',
-                        operation: 'details',
-                        filters: {cliente: this.extractClientName(params, originalMessage, originalContext)},
-                        output: 'products'
-                    }, originalMessage, originalContext);
+                    const clienteProducts = this.extractClientName(params, originalMessage, originalContext);
+                    const ordiniProducts = await this.queryOrders('list', clienteProducts ? {cliente: clienteProducts} : {});
+                    result = await this.formatOrdersDetails(ordiniProducts.data, clienteProducts ? {cliente: clienteProducts} : {});
                     break;
                     
                 case 'getDeliveryDate':
@@ -936,8 +933,17 @@ class AIMiddlewareOptimized {
         
         // Se tutti i tentativi falliscono, ritorna la stringa originale
         if (this.debug) {
-            console.warn('🗓️ Formato data non riconosciuto:', dateString);
+            console.warn('🗓️ Formato data non riconosciuto:', dateString, 'tipo:', typeof dateString);
         }
+        
+        // Prova a gestire anche formati con ore/timestamp
+        if (typeof dateString === 'string' && dateString.includes('T')) {
+            const isoDate = new Date(dateString);
+            if (!isNaN(isoDate.getTime())) {
+                return isoDate.toLocaleDateString('it-IT');
+            }
+        }
+        
         return dateString || 'Data non valida';
     }
 
@@ -1001,19 +1007,7 @@ class AIMiddlewareOptimized {
         listaOrdini.forEach(ordine => {
             message += `• **${ordine.numero}** - ${ordine.cliente}\\n`;
             const dataFormattata = this.formatDateSafely(ordine.data);
-            message += `  Data: ${dataFormattata} | Importo: €${ordine.importo.toFixed(2)} | Prodotti: ${ordine.righe}\\n`;
-            
-            // Mostra i primi 3 prodotti se disponibili
-            if (ordine.prodotti && ordine.prodotti.length > 0) {
-                const prodottiDaMostrare = ordine.prodotti.slice(0, 3);
-                prodottiDaMostrare.forEach(prodotto => {
-                    message += `    - ${prodotto.nome} (${prodotto.quantita}) - €${prodotto.importo.toFixed(2)}\\n`;
-                });
-                if (ordine.prodotti.length > 3) {
-                    message += `    ... e altri ${ordine.prodotti.length - 3} prodotti\\n`;
-                }
-            }
-            message += '\\n';
+            message += `  Data: ${dataFormattata} | Importo: €${ordine.importo.toFixed(2)} | Prodotti: ${ordine.righe}\\n\\n`;
         });
         
         return this.createResult(listaOrdini, message, { 
@@ -1317,8 +1311,72 @@ class AIMiddlewareOptimized {
     // ==================== PLACEHOLDER METODI DA IMPLEMENTARE ====================
 
     async formatOrdersDetails(ordini, filters) {
-        // TODO: Implementare vista dettagliata ordini
-        return this.formatOrdersList(ordini, filters);
+        if (ordini.length === 0) {
+            const filterDesc = filters.cliente ? ` per ${filters.cliente}` : '';
+            return this.createResult([], `❌ Nessun ordine trovato${filterDesc}.`, { count: 0 });
+        }
+        
+        // Raggruppa per numero ordine (come formatOrdersList)
+        const ordiniRaggruppati = {};
+        ordini.forEach(ordine => {
+            if (!ordiniRaggruppati[ordine.numero_ordine]) {
+                ordiniRaggruppati[ordine.numero_ordine] = {
+                    numero: ordine.numero_ordine,
+                    cliente: ordine.cliente,
+                    data: ordine.data,
+                    importo: 0,
+                    righe: 0,
+                    prodotti: []
+                };
+            }
+            ordiniRaggruppati[ordine.numero_ordine].importo += ordine.importo || 0;
+            ordiniRaggruppati[ordine.numero_ordine].righe++;
+            
+            if (ordine.prodotto) {
+                ordiniRaggruppati[ordine.numero_ordine].prodotti.push({
+                    nome: ordine.prodotto,
+                    quantita: ordine.quantita || 1,
+                    importo: ordine.importo || 0
+                });
+            }
+        });
+        
+        const listaOrdini = Object.values(ordiniRaggruppati)
+            .sort((a, b) => {
+                const dateA = this.parseDateSafely(a.data);
+                const dateB = this.parseDateSafely(b.data);
+                if (!dateA && !dateB) return 0;
+                if (!dateA) return 1;
+                if (!dateB) return -1;
+                return dateB - dateA;
+            })
+            .slice(0, filters.cliente ? 20 : 10);
+        
+        let message;
+        if (filters.cliente) {
+            message = `🛍️ **Prodotti ordinati da ${filters.cliente}**:\\n\\n`;
+        } else {
+            message = `🛍️ **Dettaglio prodotti ordini:**\\n\\n`;
+        }
+        
+        listaOrdini.forEach(ordine => {
+            message += `• **${ordine.numero}** - ${ordine.cliente}\\n`;
+            const dataFormattata = this.formatDateSafely(ordine.data);
+            message += `  Data: ${dataFormattata} | Importo: €${ordine.importo.toFixed(2)}\\n`;
+            
+            // Mostra TUTTI i prodotti per la vista dettagliata
+            if (ordine.prodotti && ordine.prodotti.length > 0) {
+                ordine.prodotti.forEach(prodotto => {
+                    message += `    - ${prodotto.nome} (${prodotto.quantita}) - €${prodotto.importo.toFixed(2)}\\n`;
+                });
+            }
+            message += '\\n';
+        });
+        
+        return this.createResult(listaOrdini, message, { 
+            count: listaOrdini.length,
+            totalValue: listaOrdini.reduce((sum, ord) => sum + ord.importo, 0)
+        });
     }
 
     async formatClientsDetails(clienti) {
