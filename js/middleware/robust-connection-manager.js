@@ -429,7 +429,7 @@ class RobustConnectionManager {
                             try {
                                 // Usa AIMiddleware per eseguire il comando (se disponibile)
                                 if (this.instances.aiMiddleware && this.instances.aiMiddleware.executeLocalAction) {
-                                    const result = await this.instances.aiMiddleware.executeLocalAction(vocabularyMatch, message, null);
+                                    const result = await this.instances.aiMiddleware.executeLocalAction(vocabularyMatch.command, message, vocabularyMatch);
                                     console.log('🔌 ✅ Risultato comando vocabolario:', result);
                                     console.log('🔌 🔍 DEBUG result details:', {
                                         hasResult: !!result,
@@ -687,8 +687,8 @@ class RobustConnectionManager {
      */
     testSupabaseConnection() {
         return !!(this.instances.supabaseAI && 
-                 this.instances.supabaseAI.processRequest && 
-                 typeof this.instances.supabaseAI.processRequest === 'function');
+                 this.instances.supabaseAI.getAllData && 
+                 typeof this.instances.supabaseAI.getAllData === 'function');
     }
 
     /**
@@ -696,8 +696,8 @@ class RobustConnectionManager {
      */
     testVocabularyConnection() {
         return !!(this.instances.vocabularyManager && 
-                 this.instances.vocabularyManager.processCommand && 
-                 typeof this.instances.vocabularyManager.processCommand === 'function');
+                 this.instances.vocabularyManager.findMatch && 
+                 typeof this.instances.vocabularyManager.findMatch === 'function');
     }
 
     /**
@@ -705,8 +705,8 @@ class RobustConnectionManager {
      */
     testAIMiddlewareConnection() {
         return !!(this.instances.aiMiddleware && 
-                 this.instances.aiMiddleware.processMessage && 
-                 typeof this.instances.aiMiddleware.processMessage === 'function');
+                 this.instances.aiMiddleware.executeLocalAction && 
+                 typeof this.instances.aiMiddleware.executeLocalAction === 'function');
     }
 
 

@@ -137,7 +137,7 @@ class MiddlewareIntegration {
             
             if (this.debug) {
                 console.log('🔌 ✅ MIDDLEWARE ATTIVATO');
-                console.log('🔌 📊 Statistiche middleware:', this.middleware.getStats());
+                // console.log('🔌 📊 Statistiche middleware:', this.middleware.getStats());
             }
             
             return true;
