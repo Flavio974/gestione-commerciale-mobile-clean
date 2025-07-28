@@ -931,6 +931,8 @@ class AIMiddlewareOptimized {
         console.log('🗓️ DEBUG formatDateSafely - dateString === undefined:', dateString === undefined);
         console.log('🗓️ DEBUG formatDateSafely - String(dateString):', String(dateString));
         console.log('🗓️ DEBUG formatDateSafely - JSON.stringify:', JSON.stringify(dateString));
+        console.log('🗓️ DEBUG formatDateSafely - typeof check:', typeof dateString === 'object');
+        console.log('🗓️ DEBUG formatDateSafely - constructor:', dateString?.constructor?.name);
         
         // NUOVO: Gestione oggetti che contengono undefined
         if (typeof dateString === 'object' && dateString !== null) {
