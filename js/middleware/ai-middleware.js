@@ -925,39 +925,46 @@ class AIMiddlewareOptimized {
      * 📅 Formatta data in modo sicuro, gestendo diversi formati
      */
     formatDateSafely(dateString) {
+        // DEBUG: Log sempre per capire cosa succede
+        console.log('🗓️ DEBUG formatDateSafely INIZIO - input:', dateString, 'tipo:', typeof dateString);
+        
         // Gestione valori null/undefined - controllo più rigoroso
         if (dateString === null || dateString === undefined || dateString === '') {
-            if (this.debug) {
-                console.log('🗓️ DEBUG formatDateSafely input:', dateString, 'tipo:', typeof dateString);
-            }
+            console.log('🗓️ DEBUG formatDateSafely - Valore null/undefined/vuoto rilevato');
             return 'Data non disponibile';
         }
         
         const date = this.parseDateSafely(dateString);
+        console.log('🗓️ DEBUG formatDateSafely - parseDateSafely result:', date);
         
         if (date) {
-            return date.toLocaleDateString('it-IT');
+            const formatted = date.toLocaleDateString('it-IT');
+            console.log('🗓️ DEBUG formatDateSafely - formatted:', formatted);
+            return formatted;
         }
         
         // Se tutti i tentativi falliscono, ritorna la stringa originale
-        if (this.debug) {
-            console.warn('🗓️ Formato data non riconosciuto:', dateString, 'tipo:', typeof dateString);
-        }
+        console.warn('🗓️ DEBUG formatDateSafely - Formato data non riconosciuto:', dateString, 'tipo:', typeof dateString);
         
         // Prova a gestire anche formati con ore/timestamp
         if (typeof dateString === 'string' && dateString.includes('T')) {
             const isoDate = new Date(dateString);
             if (!isNaN(isoDate.getTime())) {
-                return isoDate.toLocaleDateString('it-IT');
+                const formatted = isoDate.toLocaleDateString('it-IT');
+                console.log('🗓️ DEBUG formatDateSafely - ISO formatted:', formatted);
+                return formatted;
             }
         }
         
         // Controllo finale - se è ancora undefined/null
         if (dateString === null || dateString === undefined) {
+            console.log('🗓️ DEBUG formatDateSafely - Controllo finale null/undefined');
             return 'Data non disponibile';
         }
         
-        return String(dateString) || 'Data non disponibile';
+        const fallback = String(dateString) || 'Data non disponibile';
+        console.log('🗓️ DEBUG formatDateSafely - FALLBACK FINALE:', fallback);
+        return fallback;
     }
 
     // ==================== FORMATTER OUTPUT ====================
@@ -1019,6 +1026,13 @@ class AIMiddlewareOptimized {
         
         listaOrdini.forEach(ordine => {
             message += `• **${ordine.numero}** - ${ordine.cliente}\\n`;
+            
+            // DEBUG: Log del campo data prima di formattarlo
+            if (this.debug) {
+                console.log('🔍 DEBUG ordine.data RAW:', ordine.data, 'tipo:', typeof ordine.data);
+                console.log('🔍 DEBUG ordine completo:', JSON.stringify(ordine, null, 2));
+            }
+            
             const dataFormattata = this.formatDateSafely(ordine.data);
             message += `  Data: ${dataFormattata} | Importo: €${ordine.importo.toFixed(2)} | Prodotti: ${ordine.righe}\\n\\n`;
         });
