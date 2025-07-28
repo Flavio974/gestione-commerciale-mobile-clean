@@ -928,6 +928,18 @@ class AIMiddlewareOptimized {
         // DEBUG: Log sempre per capire cosa succede
         console.log('🗓️ DEBUG formatDateSafely INIZIO - input:', dateString, 'tipo:', typeof dateString);
         
+        // NUOVO: Gestione oggetti che contengono undefined
+        if (typeof dateString === 'object' && dateString !== null) {
+            console.log('🗓️ DEBUG formatDateSafely - Object rilevato, contenuto:', dateString);
+            // Se è un oggetto vuoto o contiene undefined, trattalo come non disponibile
+            if (Object.keys(dateString).length === 0 || 
+                dateString.valueOf() === undefined || 
+                String(dateString) === 'undefined') {
+                console.log('🗓️ DEBUG formatDateSafely - Object vuoto o undefined');
+                return 'Data non disponibile';
+            }
+        }
+        
         // Gestione valori null/undefined - controllo più rigoroso
         if (dateString === null || dateString === undefined || dateString === '') {
             console.log('🗓️ DEBUG formatDateSafely - Valore null/undefined/vuoto rilevato');
@@ -956,9 +968,9 @@ class AIMiddlewareOptimized {
             }
         }
         
-        // Controllo finale - se è ancora undefined/null
-        if (dateString === null || dateString === undefined) {
-            console.log('🗓️ DEBUG formatDateSafely - Controllo finale null/undefined');
+        // Controllo finale - se è ancora undefined/null o oggetto problematico
+        if (dateString === null || dateString === undefined || String(dateString) === 'undefined') {
+            console.log('🗓️ DEBUG formatDateSafely - Controllo finale null/undefined/object-undefined');
             return 'Data non disponibile';
         }
         
