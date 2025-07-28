@@ -925,15 +925,13 @@ class AIMiddlewareOptimized {
      * 📅 Formatta data in modo sicuro, gestendo diversi formati
      */
     formatDateSafely(dateString) {
-        // DEBUG: Log sempre il valore della data per debug
-        console.log('🗓️ DEBUG formatDateSafely input:', {
-            value: dateString,
-            type: typeof dateString,
-            length: dateString?.length,
-            isNull: dateString === null,
-            isUndefined: dateString === undefined,
-            isEmpty: dateString === ''
-        });
+        // Gestione valori null/undefined - controllo più rigoroso
+        if (dateString === null || dateString === undefined || dateString === '') {
+            if (this.debug) {
+                console.log('🗓️ DEBUG formatDateSafely input:', dateString, 'tipo:', typeof dateString);
+            }
+            return 'Data non disponibile';
+        }
         
         const date = this.parseDateSafely(dateString);
         
@@ -942,7 +940,9 @@ class AIMiddlewareOptimized {
         }
         
         // Se tutti i tentativi falliscono, ritorna la stringa originale
-        console.warn('🗓️ Formato data non riconosciuto:', dateString, 'tipo:', typeof dateString);
+        if (this.debug) {
+            console.warn('🗓️ Formato data non riconosciuto:', dateString, 'tipo:', typeof dateString);
+        }
         
         // Prova a gestire anche formati con ore/timestamp
         if (typeof dateString === 'string' && dateString.includes('T')) {
@@ -952,7 +952,12 @@ class AIMiddlewareOptimized {
             }
         }
         
-        return dateString || 'Data non valida';
+        // Controllo finale - se è ancora undefined/null
+        if (dateString === null || dateString === undefined) {
+            return 'Data non disponibile';
+        }
+        
+        return String(dateString) || 'Data non disponibile';
     }
 
     // ==================== FORMATTER OUTPUT ====================
