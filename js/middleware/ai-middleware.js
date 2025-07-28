@@ -100,6 +100,10 @@ class AIMiddlewareOptimized {
                     result = await this.handleSystemInfo({type: 'dayofweek'}, originalMessage, originalContext);
                     break;
                     
+                case 'getFutureDate':
+                    result = await this.handleSystemInfo({type: 'future'}, originalMessage, originalContext);
+                    break;
+                    
                 case 'scheduleReminder':
                 case 'createAppointment':
                     result = await this.handleLegacyAction(command.action, params, originalMessage, originalContext);
@@ -288,6 +292,8 @@ class AIMiddlewareOptimized {
                 return this.getDateTimeInfo(format);
             case 'historical':
                 return this.getHistoricalDateInfo(userInput, format);
+            case 'future':
+                return this.getFutureDateInfo(userInput, format);
             case 'dayofweek':
                 return this.getDayOfWeekInfo(format);
             case 'version':
@@ -949,7 +955,8 @@ class AIMiddlewareOptimized {
         if (format === 'italian') {
             const oraFormattata = ora.toLocaleTimeString('it-IT', {
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                second: '2-digit'
             });
             return `🕒 Sono le ${oraFormattata}`;
         } else {
@@ -972,7 +979,8 @@ class AIMiddlewareOptimized {
             };
             const oraOptions = {
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                second: '2-digit'
             };
             
             const dataFormattata = now.toLocaleDateString('it-IT', dataOptions);
@@ -1032,6 +1040,43 @@ class AIMiddlewareOptimized {
         } else {
             const dayOfWeek = oggi.toLocaleDateString('en-US', { weekday: 'long' });
             return `📅 Today is ${dayOfWeek}`;
+        }
+    }
+
+    /**
+     * 📅⏭️ Informazioni data futura (tra X giorni)
+     */
+    getFutureDateInfo(userInput, format = 'italian') {
+        // Estrai il numero di giorni dal messaggio utente
+        const giorniMatch = userInput.match(/tra\s+(\d+)\s+giorni?/i) || 
+                           userInput.match(/(\d+)\s+giorni?\s+(?:nel\s+)?futuro/i);
+        
+        if (!giorniMatch) {
+            return '❌ Non riesco a capire tra quanti giorni. Usa il formato: "tra X giorni"';
+        }
+        
+        const giorniAvanti = parseInt(giorniMatch[1]);
+        
+        if (isNaN(giorniAvanti) || giorniAvanti < 0) {
+            return '❌ Numero di giorni non valido';
+        }
+        
+        // Calcola la data futura
+        const dataFutura = new Date();
+        dataFutura.setDate(dataFutura.getDate() + giorniAvanti);
+        
+        if (format === 'italian') {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            const dataFormattata = dataFutura.toLocaleDateString('it-IT', options);
+            
+            return `📅 Tra ${giorniAvanti} giorni sarà ${dataFormattata}`;
+        } else {
+            return `📅 In ${giorniAvanti} days it will be ${dataFutura.toDateString()}`;
         }
     }
 

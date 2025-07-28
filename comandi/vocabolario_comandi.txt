@@ -82,6 +82,11 @@ la data di [GIORNI] giorni fa
 [GIORNI] giorni fa che data era
 dimmi la data di [GIORNI] giorni fa
 che giorno era [GIORNI] giorni fa
+che data sarà tra [GIORNI] giorni
+tra [GIORNI] giorni che data sarà
+che giorno sarà tra [GIORNI] giorni
+dimmi la data di tra [GIORNI] giorni
+la data tra [GIORNI] giorni
 
 # CATEGORIA: Analisi e Report
 consegne previste [PERIODO]

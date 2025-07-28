@@ -1004,13 +1004,18 @@ class VocabularyManager {
                     action = 'listOrders';
                 }
             } else if (currentCategory === 'Data e Ora') {
-                // Controlla se è una query per date storiche
+                // Controlla se è una query per date storiche o future
                 const isHistoricalQuery = trimmed.toLowerCase().includes('giorni fa') || 
                                         trimmed.toLowerCase().includes('era') ||
                                         trimmed.toLowerCase().includes('c\'era');
+                const isFutureQuery = trimmed.toLowerCase().includes('tra') ||
+                                     trimmed.toLowerCase().includes('sarà') ||
+                                     trimmed.toLowerCase().includes('over');
                 
                 if (isHistoricalQuery) {
                     action = 'getHistoricalDate';
+                } else if (isFutureQuery) {
+                    action = 'getFutureDate';
                 } else {
                     // Controlla se richiede sia data che ora
                     const hasTimeWords = trimmed.toLowerCase().includes('ore') || 
