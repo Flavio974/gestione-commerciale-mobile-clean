@@ -122,6 +122,15 @@ class AIMiddlewareOptimized {
                     }, originalMessage, originalContext);
                     break;
                     
+                case 'countOrders':
+                    const clienteCountOrders = this.extractClientName(params, originalMessage, originalContext);
+                    result = await this.handleUniversalQuery({
+                        entity: 'orders',
+                        operation: 'count',
+                        filters: clienteCountOrders ? {cliente: clienteCountOrders} : {}
+                    }, originalMessage, originalContext);
+                    break;
+                    
                 case 'scheduleReminder':
                 case 'createAppointment':
                     result = await this.handleLegacyAction(command.action, params, originalMessage, originalContext);
@@ -574,6 +583,14 @@ class AIMiddlewareOptimized {
             if (diClienteMatch && diClienteMatch[1]) {
                 const clienteName = diClienteMatch[1].trim();
                 if (this.debug) console.log('🎯 Extracted alternative pattern:', clienteName);
+                return clienteName;
+            }
+            
+            // Pattern per "ha fatto [CLIENTE]"
+            const haFattoMatch = userInput.match(/\bha\s+fatto\s+([a-zA-ZàèìòùÀÈÌÒÙ\s]+?)(?:\s*$|\s*[.?!])/i);
+            if (haFattoMatch && haFattoMatch[1]) {
+                const clienteName = haFattoMatch[1].trim();
+                if (this.debug) console.log('🎯 Extracted "ha fatto" pattern:', clienteName);
                 return clienteName;
             }
         }
