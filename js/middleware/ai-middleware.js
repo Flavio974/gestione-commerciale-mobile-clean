@@ -931,12 +931,33 @@ class AIMiddlewareOptimized {
         // NUOVO: Gestione oggetti che contengono undefined
         if (typeof dateString === 'object' && dateString !== null) {
             console.log('🗓️ DEBUG formatDateSafely - Object rilevato, contenuto:', dateString);
-            // Se è un oggetto vuoto o contiene undefined, trattalo come non disponibile
-            if (Object.keys(dateString).length === 0 || 
-                dateString.valueOf() === undefined || 
-                String(dateString) === 'undefined') {
-                console.log('🗓️ DEBUG formatDateSafely - Object vuoto o undefined');
-                return 'Data non disponibile';
+            console.log('🗓️ DEBUG formatDateSafely - Object keys:', Object.keys(dateString));
+            console.log('🗓️ DEBUG formatDateSafely - Object values:', Object.values(dateString));
+            console.log('🗓️ DEBUG formatDateSafely - Object JSON:', JSON.stringify(dateString));
+            console.log('🗓️ DEBUG formatDateSafely - Object toString():', dateString.toString());
+            console.log('🗓️ DEBUG formatDateSafely - Object valueOf():', dateString.valueOf());
+            
+            // TEMPORANEO: Non trattare come non disponibile, proviamo a estrarre il valore
+            // if (Object.keys(dateString).length === 0 || 
+            //     dateString.valueOf() === undefined || 
+            //     String(dateString) === 'undefined') {
+            //     console.log('🗓️ DEBUG formatDateSafely - Object vuoto o undefined');
+            //     return 'Data non disponibile';
+            // }
+            
+            // Prova a estrarre un valore dall'oggetto
+            const keys = Object.keys(dateString);
+            if (keys.length > 0) {
+                const firstValue = dateString[keys[0]];
+                console.log('🗓️ DEBUG formatDateSafely - Prima proprietà dell\'oggetto:', keys[0], '=', firstValue);
+                // Prova a parsare il primo valore come data
+                if (firstValue && typeof firstValue === 'string') {
+                    const attemptDate = this.parseDateSafely(firstValue);
+                    if (attemptDate) {
+                        console.log('🗓️ DEBUG formatDateSafely - Parsed da object property:', attemptDate);
+                        return attemptDate.toLocaleDateString('it-IT');
+                    }
+                }
             }
         }
         
