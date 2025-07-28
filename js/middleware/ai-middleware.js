@@ -882,6 +882,56 @@ class AIMiddlewareOptimized {
                date1.getFullYear() === date2.getFullYear();
     }
 
+    /**
+     * 📅 Parsa data in modo sicuro, ritorna oggetto Date o null
+     */
+    parseDateSafely(dateString) {
+        if (!dateString) return null;
+        
+        // Formato ISO standard
+        let date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+            return date;
+        }
+        
+        // Formato DD/MM/YYYY
+        const ddmmyyyy = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (ddmmyyyy) {
+            date = new Date(ddmmyyyy[3], ddmmyyyy[2] - 1, ddmmyyyy[1]);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+        
+        // Formato YYYY-MM-DD
+        const yyyymmdd = dateString.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (yyyymmdd) {
+            date = new Date(yyyymmdd[1], yyyymmdd[2] - 1, yyyymmdd[3]);
+            if (!isNaN(date.getTime())) {
+                return date;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * 📅 Formatta data in modo sicuro, gestendo diversi formati
+     */
+    formatDateSafely(dateString) {
+        const date = this.parseDateSafely(dateString);
+        
+        if (date) {
+            return date.toLocaleDateString('it-IT');
+        }
+        
+        // Se tutti i tentativi falliscono, ritorna la stringa originale
+        if (this.debug) {
+            console.warn('🗓️ Formato data non riconosciuto:', dateString);
+        }
+        return dateString || 'Data non valida';
+    }
+
     // ==================== FORMATTER OUTPUT ====================
 
     /**
@@ -911,7 +961,14 @@ class AIMiddlewareOptimized {
         
         // Ordina per data (più recenti prima)
         const listaOrdini = Object.values(ordiniRaggruppati)
-            .sort((a, b) => new Date(b.data) - new Date(a.data))
+            .sort((a, b) => {
+                const dateA = this.parseDateSafely(a.data);
+                const dateB = this.parseDateSafely(b.data);
+                if (!dateA && !dateB) return 0;
+                if (!dateA) return 1;
+                if (!dateB) return -1;
+                return dateB - dateA;
+            })
             .slice(0, filters.cliente ? 20 : 10);
         
         // Genera messaggio
@@ -924,7 +981,8 @@ class AIMiddlewareOptimized {
         
         listaOrdini.forEach(ordine => {
             message += `• **${ordine.numero}** - ${ordine.cliente}\\n`;
-            message += `  Data: ${new Date(ordine.data).toLocaleDateString('it-IT')} | Importo: €${ordine.importo.toFixed(2)} | Righe: ${ordine.righe}\\n\\n`;
+            const dataFormattata = this.formatDateSafely(ordine.data);
+            message += `  Data: ${dataFormattata} | Importo: €${ordine.importo.toFixed(2)} | Righe: ${ordine.righe}\\n\\n`;
         });
         
         return this.createResult(listaOrdini, message, { 
