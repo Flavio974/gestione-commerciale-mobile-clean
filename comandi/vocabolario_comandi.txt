@@ -64,6 +64,8 @@ che giorno è
 data di oggi
 oggi è
 dimmi la data
+in che data siamo
+che data siamo
 data e ora
 ora e data
 forniscimi data e ora attuale
