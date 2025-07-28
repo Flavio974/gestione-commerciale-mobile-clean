@@ -84,6 +84,10 @@ class AIMiddlewareOptimized {
                     result = await this.handleSystemInfo({type: 'date'}, originalMessage, originalContext);
                     break;
                     
+                case 'getTimeInfo':
+                    result = await this.handleSystemInfo({type: 'time'}, originalMessage, originalContext);
+                    break;
+                    
                 case 'scheduleReminder':
                 case 'createAppointment':
                     result = await this.handleLegacyAction(command.action, params, originalMessage, originalContext);
