@@ -1016,16 +1016,21 @@ class VocabularyManager {
                     const hasTimeWords = trimmed.toLowerCase().includes('ore') || 
                                        trimmed.toLowerCase().includes('ora') ||
                                        trimmed.toLowerCase().includes('orario');
-                    const hasDateWords = trimmed.toLowerCase().includes('giorno') || 
-                                       trimmed.toLowerCase().includes('data') ||
-                                       trimmed.toLowerCase().includes('oggi');
+                    const hasDateWords = trimmed.toLowerCase().includes('data') ||
+                                       trimmed.toLowerCase().includes('siamo');
+                    const hasDayWords = trimmed.toLowerCase().includes('giorno') ||
+                                      trimmed.toLowerCase().includes('oggi è');
                     
-                    if (hasTimeWords && hasDateWords) {
+                    if (hasTimeWords && (hasDateWords || hasDayWords)) {
                         action = 'getDateTimeInfo'; // Comando combinato
                     } else if (hasTimeWords) {
                         action = 'getTimeInfo';
+                    } else if (hasDateWords) {
+                        action = 'getDateInfo'; // Data completa (28 luglio 2025)
+                    } else if (hasDayWords) {
+                        action = 'getDayOfWeek'; // Solo giorno settimana (lunedì)
                     } else {
-                        action = 'getDateInfo';
+                        action = 'getDateInfo'; // Default per altri casi
                     }
                 }
             } else if (currentCategory === 'Percorsi e Spostamenti') {

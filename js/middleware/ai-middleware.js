@@ -96,6 +96,10 @@ class AIMiddlewareOptimized {
                     result = await this.handleSystemInfo({type: 'historical'}, originalMessage, originalContext);
                     break;
                     
+                case 'getDayOfWeek':
+                    result = await this.handleSystemInfo({type: 'dayofweek'}, originalMessage, originalContext);
+                    break;
+                    
                 case 'scheduleReminder':
                 case 'createAppointment':
                     result = await this.handleLegacyAction(command.action, params, originalMessage, originalContext);
@@ -284,6 +288,8 @@ class AIMiddlewareOptimized {
                 return this.getDateTimeInfo(format);
             case 'historical':
                 return this.getHistoricalDateInfo(userInput, format);
+            case 'dayofweek':
+                return this.getDayOfWeekInfo(format);
             case 'version':
                 return this.getVersionInfo();
             case 'status':
@@ -1011,6 +1017,21 @@ class AIMiddlewareOptimized {
             return `📅 ${giorniIndietro} giorni fa era ${dataFormattata}`;
         } else {
             return `📅 ${giorniIndietro} days ago was ${dataStorica.toDateString()}`;
+        }
+    }
+
+    /**
+     * 📅 Solo giorno della settimana
+     */
+    getDayOfWeekInfo(format = 'italian') {
+        const oggi = new Date();
+        
+        if (format === 'italian') {
+            const giornoSettimana = oggi.toLocaleDateString('it-IT', { weekday: 'long' });
+            return `📅 Oggi è ${giornoSettimana}`;
+        } else {
+            const dayOfWeek = oggi.toLocaleDateString('en-US', { weekday: 'long' });
+            return `📅 Today is ${dayOfWeek}`;
         }
     }
 
