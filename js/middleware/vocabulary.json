@@ -86,6 +86,36 @@
           },
           "description": "Pattern alternativo per ordini cliente",
           "examples": ["ordini del cliente Marotta", "fammi vedere ordini del cliente ABC"]
+        },
+        {
+          "id": "order_date_by_client",
+          "pattern": "dimmi la data dell'ordine del cliente [CLIENTE]",
+          "action": "getOrderDate",
+          "params": {
+            "cliente": "[CLIENTE]"
+          },
+          "description": "Recupera la data dell'ultimo ordine di un cliente",
+          "examples": ["dimmi la data dell'ordine del cliente Essemme", "qual è la data dell'ordine di Marotta", "data ordine cliente La Mandria"]
+        },
+        {
+          "id": "order_date_by_client_alt1",
+          "pattern": "qual è la data dell'ordine del cliente [CLIENTE]",
+          "action": "getOrderDate",
+          "params": {
+            "cliente": "[CLIENTE]"
+          },
+          "description": "Pattern alternativo per data ordine",
+          "examples": ["qual è la data dell'ordine del cliente Essemme"]
+        },
+        {
+          "id": "order_date_by_client_alt2",
+          "pattern": "data ordine cliente [CLIENTE]",
+          "action": "getOrderDate",
+          "params": {
+            "cliente": "[CLIENTE]"
+          },
+          "description": "Pattern breve per data ordine",
+          "examples": ["data ordine cliente Essemme", "data ordine cliente Marotta"]
         }
       ]
     },
@@ -314,6 +344,22 @@
           },
           "description": "Mostra lo stato del sistema",
           "examples": ["come va il sistema", "sistema operativo"]
+        },
+        {
+          "id": "historical_date_v2",
+          "pattern": "giorni fa che data era",
+          "action": "getHistoricalDate",
+          "params": {},
+          "description": "Calcola una data storica X giorni fa",
+          "examples": ["5 giorni fa che data era", "10 giorni fa che giorno era", "3 giorni fa che data"]
+        },
+        {
+          "id": "future_date_v2",
+          "pattern": "tra giorni che giorno sarà",
+          "action": "getFutureDate", 
+          "params": {},
+          "description": "Calcola una data futura tra X giorni",
+          "examples": ["tra 3 giorni che giorno sarà", "tra 5 giorni che data sarà", "tra 1 giorno che giorno è"]
         }
       ]
     },
@@ -405,15 +451,18 @@
       "universal_action", 
       "system_info",
       "generate_report",
-      "help"
+      "help",
+      "getOrderDate",
+      "getHistoricalDate",
+      "getFutureDate"
     ]
   },
   "statistics": {
-    "total_patterns": 25,
+    "total_patterns": 27,
     "categories": 8,
     "legacy_patterns_migrated": 15,
-    "new_patterns_added": 10,
+    "new_patterns_added": 12,
     "actions_reduced_from": 12,
-    "actions_reduced_to": 5
+    "actions_reduced_to": 7
   }
 }
