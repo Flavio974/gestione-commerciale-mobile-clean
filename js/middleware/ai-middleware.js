@@ -104,6 +104,24 @@ class AIMiddlewareOptimized {
                     result = await this.handleSystemInfo({type: 'future'}, originalMessage, originalContext);
                     break;
                     
+                case 'getOrderProducts':
+                    result = await this.handleUniversalQuery({
+                        entity: 'orders',
+                        operation: 'details',
+                        filters: {cliente: this.extractClientName(params, originalMessage, originalContext)},
+                        output: 'products'
+                    }, originalMessage, originalContext);
+                    break;
+                    
+                case 'getDeliveryDate':
+                    result = await this.handleUniversalQuery({
+                        entity: 'orders',
+                        operation: 'details',
+                        filters: {cliente: this.extractClientName(params, originalMessage, originalContext)},
+                        output: 'delivery'
+                    }, originalMessage, originalContext);
+                    break;
+                    
                 case 'scheduleReminder':
                 case 'createAppointment':
                     result = await this.handleLegacyAction(command.action, params, originalMessage, originalContext);

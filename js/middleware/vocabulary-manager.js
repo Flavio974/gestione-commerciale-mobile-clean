@@ -995,11 +995,27 @@ class VocabularyManager {
                     action = 'getClientInfo';
                 }
             } else if (currentCategory === 'Fatturato e Ordini') {
+                // Controlla query specifiche per prodotti
+                const isProductQuery = trimmed.toLowerCase().includes('prodotti') || 
+                                     trimmed.toLowerCase().includes('composto') ||
+                                     trimmed.toLowerCase().includes('cosa ha ordinato') ||
+                                     trimmed.toLowerCase().includes('composizione') ||
+                                     trimmed.toLowerCase().includes('dettaglio prodotti');
+                
+                // Controlla query per date di consegna
+                const isDeliveryQuery = trimmed.toLowerCase().includes('consegna') ||
+                                      trimmed.toLowerCase().includes('consegnato') ||
+                                      trimmed.toLowerCase().includes('pdf');
+                
                 if (trimmed.toLowerCase().includes('quanti') || trimmed.toLowerCase().includes('numero')) {
                     action = 'countOrders';
                     executeLocal = true;
                 } else if (trimmed.toLowerCase().includes('fatturato')) {
                     action = 'calculateRevenue';
+                } else if (isProductQuery) {
+                    action = 'getOrderProducts';
+                } else if (isDeliveryQuery) {
+                    action = 'getDeliveryDate';
                 } else {
                     action = 'listOrders';
                 }
