@@ -925,6 +925,16 @@ class AIMiddlewareOptimized {
      * 📅 Formatta data in modo sicuro, gestendo diversi formati
      */
     formatDateSafely(dateString) {
+        // DEBUG: Log sempre il valore della data per debug
+        console.log('🗓️ DEBUG formatDateSafely input:', {
+            value: dateString,
+            type: typeof dateString,
+            length: dateString?.length,
+            isNull: dateString === null,
+            isUndefined: dateString === undefined,
+            isEmpty: dateString === ''
+        });
+        
         const date = this.parseDateSafely(dateString);
         
         if (date) {
@@ -932,9 +942,7 @@ class AIMiddlewareOptimized {
         }
         
         // Se tutti i tentativi falliscono, ritorna la stringa originale
-        if (this.debug) {
-            console.warn('🗓️ Formato data non riconosciuto:', dateString, 'tipo:', typeof dateString);
-        }
+        console.warn('🗓️ Formato data non riconosciuto:', dateString, 'tipo:', typeof dateString);
         
         // Prova a gestire anche formati con ore/timestamp
         if (typeof dateString === 'string' && dateString.includes('T')) {
