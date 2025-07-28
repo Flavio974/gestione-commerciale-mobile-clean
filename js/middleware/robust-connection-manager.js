@@ -439,7 +439,7 @@ class RobustConnectionManager {
                                         fullResult: result
                                     });
                                     
-                                    if (result && result.response) {
+                                    if (result && (result.message || result.data)) {
                                         // Rimuovi messaggio di caricamento
                                         const messagesContainer = document.getElementById('ai-messages');
                                         if (messagesContainer && messagesContainer.lastElementChild) {
@@ -447,12 +447,13 @@ class RobustConnectionManager {
                                         }
                                         
                                         // Aggiungi risposta del vocabolario
-                                        window.FlavioAIAssistant.addMessage(result.response, 'assistant');
+                                        const responseText = result.message || result.data;
+                                        window.FlavioAIAssistant.addMessage(responseText, 'assistant');
                                         
                                         // 🔊 SINTESI VOCALE se è input vocale
                                         if (isVoiceInput && window.FlavioAIAssistant.speakResponse) {
                                             console.log('🔊 Attivazione sintesi vocale per risposta vocabolario');
-                                            window.FlavioAIAssistant.speakResponse(result.response);
+                                            window.FlavioAIAssistant.speakResponse(responseText);
                                         }
                                         
                                         console.log('🔌 🚀 COMANDO VOCABOLARIO ESEGUITO CON SUCCESSO - BLOCCO FLUSSO');
