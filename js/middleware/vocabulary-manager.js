@@ -1004,20 +1004,29 @@ class VocabularyManager {
                     action = 'listOrders';
                 }
             } else if (currentCategory === 'Data e Ora') {
-                // Controlla se richiede sia data che ora
-                const hasTimeWords = trimmed.toLowerCase().includes('ore') || 
-                                   trimmed.toLowerCase().includes('ora') ||
-                                   trimmed.toLowerCase().includes('orario');
-                const hasDateWords = trimmed.toLowerCase().includes('giorno') || 
-                                   trimmed.toLowerCase().includes('data') ||
-                                   trimmed.toLowerCase().includes('oggi');
+                // Controlla se è una query per date storiche
+                const isHistoricalQuery = trimmed.toLowerCase().includes('giorni fa') || 
+                                        trimmed.toLowerCase().includes('era') ||
+                                        trimmed.toLowerCase().includes('c\'era');
                 
-                if (hasTimeWords && hasDateWords) {
-                    action = 'getDateTimeInfo'; // Comando combinato
-                } else if (hasTimeWords) {
-                    action = 'getTimeInfo';
+                if (isHistoricalQuery) {
+                    action = 'getHistoricalDate';
                 } else {
-                    action = 'getDateInfo';
+                    // Controlla se richiede sia data che ora
+                    const hasTimeWords = trimmed.toLowerCase().includes('ore') || 
+                                       trimmed.toLowerCase().includes('ora') ||
+                                       trimmed.toLowerCase().includes('orario');
+                    const hasDateWords = trimmed.toLowerCase().includes('giorno') || 
+                                       trimmed.toLowerCase().includes('data') ||
+                                       trimmed.toLowerCase().includes('oggi');
+                    
+                    if (hasTimeWords && hasDateWords) {
+                        action = 'getDateTimeInfo'; // Comando combinato
+                    } else if (hasTimeWords) {
+                        action = 'getTimeInfo';
+                    } else {
+                        action = 'getDateInfo';
+                    }
                 }
             } else if (currentCategory === 'Percorsi e Spostamenti') {
                 action = 'getRouteInfo';

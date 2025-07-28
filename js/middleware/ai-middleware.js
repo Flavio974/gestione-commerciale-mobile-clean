@@ -92,6 +92,10 @@ class AIMiddlewareOptimized {
                     result = await this.handleSystemInfo({type: 'datetime'}, originalMessage, originalContext);
                     break;
                     
+                case 'getHistoricalDate':
+                    result = await this.handleSystemInfo({type: 'historical'}, originalMessage, originalContext);
+                    break;
+                    
                 case 'scheduleReminder':
                 case 'createAppointment':
                     result = await this.handleLegacyAction(command.action, params, originalMessage, originalContext);
@@ -278,6 +282,8 @@ class AIMiddlewareOptimized {
                 return this.getTimeInfo(format);
             case 'datetime':
                 return this.getDateTimeInfo(format);
+            case 'historical':
+                return this.getHistoricalDateInfo(userInput, format);
             case 'version':
                 return this.getVersionInfo();
             case 'status':
@@ -969,6 +975,42 @@ class AIMiddlewareOptimized {
             return `📅 Oggi è ${dataFormattata}\n🕒 Sono le ${oraFormattata}`;
         } else {
             return `📅 Today is ${now.toDateString()}\n🕒 It's ${now.toLocaleTimeString()}`;
+        }
+    }
+
+    /**
+     * 📅⏰ Informazioni data storica (X giorni fa)
+     */
+    getHistoricalDateInfo(userInput, format = 'italian') {
+        // Estrai il numero di giorni dal messaggio utente
+        const giorniMatch = userInput.match(/(\d+)\s+giorni?\s+fa/i);
+        
+        if (!giorniMatch) {
+            return '❌ Non riesco a capire quanti giorni fa. Usa il formato: "X giorni fa"';
+        }
+        
+        const giorniIndietro = parseInt(giorniMatch[1]);
+        
+        if (isNaN(giorniIndietro) || giorniIndietro < 0) {
+            return '❌ Numero di giorni non valido';
+        }
+        
+        // Calcola la data storica
+        const dataStorica = new Date();
+        dataStorica.setDate(dataStorica.getDate() - giorniIndietro);
+        
+        if (format === 'italian') {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            const dataFormattata = dataStorica.toLocaleDateString('it-IT', options);
+            
+            return `📅 ${giorniIndietro} giorni fa era ${dataFormattata}`;
+        } else {
+            return `📅 ${giorniIndietro} days ago was ${dataStorica.toDateString()}`;
         }
     }
 
