@@ -88,6 +88,10 @@ class AIMiddlewareOptimized {
                     result = await this.handleSystemInfo({type: 'time'}, originalMessage, originalContext);
                     break;
                     
+                case 'getDateTimeInfo':
+                    result = await this.handleSystemInfo({type: 'datetime'}, originalMessage, originalContext);
+                    break;
+                    
                 case 'scheduleReminder':
                 case 'createAppointment':
                     result = await this.handleLegacyAction(command.action, params, originalMessage, originalContext);
@@ -272,6 +276,8 @@ class AIMiddlewareOptimized {
                 return this.getDateInfo(format);
             case 'time':
                 return this.getTimeInfo(format);
+            case 'datetime':
+                return this.getDateTimeInfo(format);
             case 'version':
                 return this.getVersionInfo();
             case 'status':
@@ -936,6 +942,33 @@ class AIMiddlewareOptimized {
             return `🕒 Sono le ${oraFormattata}`;
         } else {
             return `🕒 It's ${ora.toLocaleTimeString()}`;
+        }
+    }
+
+    /**
+     * 📅🕒 Informazioni data e ora combinate
+     */
+    getDateTimeInfo(format = 'italian') {
+        const now = new Date();
+        
+        if (format === 'italian') {
+            const dataOptions = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            const oraOptions = {
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            
+            const dataFormattata = now.toLocaleDateString('it-IT', dataOptions);
+            const oraFormattata = now.toLocaleTimeString('it-IT', oraOptions);
+            
+            return `📅 Oggi è ${dataFormattata}\n🕒 Sono le ${oraFormattata}`;
+        } else {
+            return `📅 Today is ${now.toDateString()}\n🕒 It's ${now.toLocaleTimeString()}`;
         }
     }
 

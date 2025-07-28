@@ -1004,10 +1004,17 @@ class VocabularyManager {
                     action = 'listOrders';
                 }
             } else if (currentCategory === 'Data e Ora') {
-                // Distingui tra comandi per l'ora e comandi per la data
-                if (trimmed.toLowerCase().includes('ore') || 
-                    trimmed.toLowerCase().includes('ora') ||
-                    trimmed.toLowerCase().includes('orario')) {
+                // Controlla se richiede sia data che ora
+                const hasTimeWords = trimmed.toLowerCase().includes('ore') || 
+                                   trimmed.toLowerCase().includes('ora') ||
+                                   trimmed.toLowerCase().includes('orario');
+                const hasDateWords = trimmed.toLowerCase().includes('giorno') || 
+                                   trimmed.toLowerCase().includes('data') ||
+                                   trimmed.toLowerCase().includes('oggi');
+                
+                if (hasTimeWords && hasDateWords) {
+                    action = 'getDateTimeInfo'; // Comando combinato
+                } else if (hasTimeWords) {
                     action = 'getTimeInfo';
                 } else {
                     action = 'getDateInfo';
