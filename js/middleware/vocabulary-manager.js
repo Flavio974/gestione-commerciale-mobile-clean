@@ -1004,7 +1004,14 @@ class VocabularyManager {
                     action = 'listOrders';
                 }
             } else if (currentCategory === 'Data e Ora') {
-                action = 'getDateInfo';
+                // Distingui tra comandi per l'ora e comandi per la data
+                if (trimmed.toLowerCase().includes('ore') || 
+                    trimmed.toLowerCase().includes('ora') ||
+                    trimmed.toLowerCase().includes('orario')) {
+                    action = 'getTimeInfo';
+                } else {
+                    action = 'getDateInfo';
+                }
             } else if (currentCategory === 'Percorsi e Spostamenti') {
                 action = 'getRouteInfo';
             }
