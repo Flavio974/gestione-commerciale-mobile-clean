@@ -194,8 +194,15 @@ class VocabularyRepository {
       const stored = localStorage.getItem(VOCABULARY_CONFIG.PATHS.USER_STORAGE_KEY);
       if (!stored) return [];
       
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed : [];
+      // Check if it's JSON or plain text
+      try {
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (jsonError) {
+        // Not JSON, probably plain text from comandi-core
+        // Parse it as TXT format
+        return this.parseTxtCommands(stored);
+      }
       
     } catch (error) {
       VocabularyLogger.log('error', 'Failed to load user commands', error);
@@ -241,18 +248,42 @@ class VocabularyRepository {
   parseTxtCommands(text) {
     const commands = [];
     const lines = text.split('\n');
+    let currentCategory = 'Generale';
     
     lines.forEach((line, index) => {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) return;
+      if (!trimmed) return;
       
-      const parts = trimmed.split('|').map(p => p.trim());
-      if (parts.length >= 3) {
+      // Check if it's a category header
+      if (trimmed.startsWith('# CATEGORIA:')) {
+        currentCategory = trimmed.replace('# CATEGORIA:', '').trim();
+        return;
+      }
+      
+      // Skip comments
+      if (trimmed.startsWith('#')) return;
+      
+      // Check if line contains pipe separator (old format)
+      if (trimmed.includes('|')) {
+        const parts = trimmed.split('|').map(p => p.trim());
+        if (parts.length >= 3) {
+          commands.push({
+            id: `txt_${index}`,
+            pattern: parts[0],
+            action: parts[1],
+            description: parts[2],
+            category: currentCategory,
+            source: 'txt'
+          });
+        }
+      } else {
+        // Simple text format (just the pattern)
         commands.push({
           id: `txt_${index}`,
-          pattern: parts[0],
-          action: parts[1],
-          description: parts[2],
+          pattern: trimmed,
+          action: 'ai_query', // Default action for simple patterns
+          description: trimmed,
+          category: currentCategory,
           source: 'txt'
         });
       }
