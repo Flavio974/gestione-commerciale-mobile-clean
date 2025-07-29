@@ -1298,51 +1298,50 @@ class SupabaseAIIntegration {
                 return true;
             }
 
-            console.log('🔄 SYNC: Sincronizzazione percorsi completata');
-            return true;
-        } catch (error) {
-            console.error('❌ SYNC: Errore sincronizzazione percorsi:', error);
-            return false;
-        }
+            console.log('🔄 SYNC: Sincron
+/**
+ * Integrazione Supabase per AI Assistant
+ * Gestisce query dati e fallback offline
+ * 🚀 OTTIMIZZATO: Retry logic e timeout aumentato per connessione robusta
+ */
+
+// Import API configuration per mapping tabelle
+// Nota: In ambiente web si assume che API_CONFIG sia disponibile globalmente
+
+// 🔧 CONFIGURAZIONE CONNESSIONE SUPABASE
+const SUPABASE_CONNECTION_CONFIG = {
+    TIMEOUT_MS: 10000,        // ✅ Aumentato da 2000 a 10000ms
+    RETRY_ATTEMPTS: 3,        // ✅ Tentativi di connessione
+    RETRY_DELAY: 2000,        // ✅ Delay tra retry
+    FALLBACK_WARNING: true    // ✅ Avvisa ma non fallback immediato
+};
+
+// 🗂️ CONFIGURAZIONE TABELLE SUPABASE
+const SUPABASE_TABLES = {
+    ORDERS: 'archivio_ordini_venduto',
+    CLIENTS: 'clients',
+    DOCUMENTS: 'documents',
+    TIMELINE_EVENTS: 'timeline_events',
+    PERCORSI: 'percorsi'
+};
+
+class SupabaseAIIntegration {
+    constructor() {
+        console.log('🔍 INIT: Inizializzazione SupabaseAIIntegration...');
+        this.supabase = window.supabase;
+        console.log('🔍 INIT: Supabase client:', !!this.supabase);
+        this.cache = {
+            clients: null,
+            orders: null,
+            documents: null,
+            timeline: null,
+            lastUpdate: null
+        };
+        this.cacheTimeout = 5 * 60 * 1000; // 5 minuti
+        this.offlineMode = false;
+        this.connectionRetries = 0; // ✅ Traccia tentativi connessione
     }
 
     /**
-     * Pulisci nomi prodotti da caratteri corrotti dal PDF
+     * 🚀 OTTIMIZZATO: Verifica Supabase con retry logic
      */
-    cleanProductName(name) {
-        if (\!name || typeof name \!== 'string') return name;
-        
-        return name
-            // Rimuovi caratteri di controllo
-            .replace(/[ -]/g, '')
-            // Fix per pattern "XXXD' XXX" dove D' è separata
-            .replace(/([A-Z]+)D'([A-Z]+)/g, '\D\'\')
-            // Fix per parole concatenate comuni (pattern specifici)
-            .replace(/([A-Z]+)COME/g, '\ COME')
-            .replace(/([A-Z]+)CON/g, '\ CON')
-            .replace(/([A-Z]+)CARNE/g, '\ CARNE')
-            .replace(/([A-Z]+)POLLO/g, '\ POLLO')
-            .replace(/([A-Z]+)PESCE/g, '\ PESCE')
-            // Pulisce spazi multipli
-            .replace(/\s+/g, ' ')
-            .trim();
-    }
-}
-
-// CORREZIONE: testOrderCountFinal deve creare un'istanza della classe
-window.testOrderCountFinal = async function() {
-  console.log('📊 === TEST GLOBAL COUNT ORDINI ===');
-  try {
-    // IMPORTANTE: Crea un'istanza della classe per usare il metodo
-    const supabaseAI = new SupabaseAIIntegration();
-    const cnt = await supabaseAI.countOrdersFromDatabase();
-    console.log('✅ testOrderCountFinal: trovati ' + cnt + ' ordini in tabella "orders"');
-    return cnt;
-  } catch (err) {
-    console.error('❌ testOrderCountFinal FALLITO:', err);
-    return 0;
-  }
-};
-
-// Esporta classe per uso globale
-window.SupabaseAIIntegration = SupabaseAIIntegration;

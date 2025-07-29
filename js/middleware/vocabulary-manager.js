@@ -1251,7 +1251,7 @@ class VocabularyManager {
             console.log('📊 Avvio conteggio ordini UNICI ottimizzato...');
             
             // Usa la funzione di conteggio ordini UNICI (11 invece di 102)
-            const count = await supabaseAI.countOrdersFromDb();
+            const count = await supabaseAI.countOrdersFromDatabase();
             
             if (count > 0) {
                 console.log(`✅ CONTEGGIO ORDINI UNICI RIUSCITO: ${count} ordini`);
