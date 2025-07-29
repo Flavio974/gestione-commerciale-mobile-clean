@@ -1310,19 +1310,19 @@ class SupabaseAIIntegration {
      * Pulisci nomi prodotti da caratteri corrotti dal PDF
      */
     cleanProductName(name) {
-        if (\!name || typeof name \!== 'string') return name;
+        if (!name || typeof name !== 'string') return name;
         
         return name
             // Rimuovi caratteri di controllo
             .replace(/[ -]/g, '')
             // Fix per pattern "XXXD' XXX" dove D' è separata
-            .replace(/([A-Z]+)D'([A-Z]+)/g, '\D\'\')
+            .replace(/([A-Z]+)D'([A-Z]+)/g, ' D')
             // Fix per parole concatenate comuni (pattern specifici)
-            .replace(/([A-Z]+)COME/g, '\ COME')
-            .replace(/([A-Z]+)CON/g, '\ CON')
-            .replace(/([A-Z]+)CARNE/g, '\ CARNE')
-            .replace(/([A-Z]+)POLLO/g, '\ POLLO')
-            .replace(/([A-Z]+)PESCE/g, '\ PESCE')
+            .replace(/([A-Z]+)COME/g, ' COME')
+            .replace(/([A-Z]+)CON/g, ' CON')
+            .replace(/([A-Z]+)CARNE/g, ' CARNE')
+            .replace(/([A-Z]+)POLLO/g, ' POLLO')
+            .replace(/([A-Z]+)PESCE/g, ' PESCE')
             // Pulisce spazi multipli
             .replace(/\s+/g, ' ')
             .trim();
