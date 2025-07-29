@@ -1,468 +1,1053 @@
 {
-  "version": "2.0.0",
-  "lastUpdated": "2025-07-27T14:00:00Z",
-  "description": "Vocabolario ottimizzato con 5 azioni generiche e parametri standardizzati",
-  "settings": {
-    "enableDebug": true,
-    "similarityThreshold": 0.30,
-    "autoReload": true,
-    "fallbackToAI": true
-  },
+  "version": "2.0",
+  "lastUpdated": "2024-12-28",
+  "totalCommands": 130,
   "categories": {
-    "ordini_per_data": {
-      "description": "Ordini filtrati per data specifica",
-      "patterns": [
+    "fatturato_ordini": {
+      "name": "Fatturato e Ordini",
+      "commands": [
         {
-          "id": "orders_yesterday_v2",
-          "pattern": "mostrami gli ordini di ieri",
+          "id": "cmd_fatturato_1",
+          "pattern": "dimmi il fatturato del cliente [CLIENTE]",
           "action": "universal_query",
           "params": {
             "entity": "orders",
-            "operation": "list",
-            "filters": {
-              "periodo": "ieri"
-            }
-          },
-          "description": "Elenca tutti gli ordini del giorno precedente",
-          "examples": ["mostrami gli ordini di ieri", "ordini di ieri", "che ordini ho fatto ieri"]
+            "operation": "sum",
+            "field": "importo",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
         },
         {
-          "id": "orders_today_v2", 
-          "pattern": "mostrami gli ordini di oggi",
+          "id": "cmd_fatturato_2",
+          "pattern": "qual è il fatturato del cliente [CLIENTE]",
           "action": "universal_query",
           "params": {
             "entity": "orders",
-            "operation": "list",
-            "filters": {
-              "periodo": "oggi"
-            }
-          },
-          "description": "Elenca tutti gli ordini di oggi",
-          "examples": ["ordini di oggi", "fammi vedere gli ordini di oggi", "che ordini ho avuto oggi"]
+            "operation": "sum",
+            "field": "importo",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
         },
         {
-          "id": "orders_tomorrow_v2",
-          "pattern": "mostrami gli ordini di domani", 
+          "id": "cmd_fatturato_3",
+          "pattern": "mostrami il fatturato di [CLIENTE]",
           "action": "universal_query",
           "params": {
             "entity": "orders",
-            "operation": "list",
-            "filters": {
-              "periodo": "domani"
-            }
-          },
-          "description": "Elenca tutti gli ordini programmati per domani",
-          "examples": ["ordini di domani", "ordini programmati per domani"]
-        }
-      ]
-    },
-    "ordini_per_cliente": {
-      "description": "Ordini filtrati per cliente specifico",
-      "patterns": [
-        {
-          "id": "orders_by_client_v2",
-          "pattern": "mostrami ordini di [CLIENTE]",
-          "action": "universal_query", 
-          "params": {
-            "entity": "orders",
-            "operation": "list",
-            "filters": {
-              "cliente": "[CLIENTE]"
-            }
-          },
-          "description": "Elenca tutti gli ordini di un cliente specifico",
-          "examples": ["mostrami ordini di Mario Rossi", "ordini del cliente La Mandria", "lista ordini di Essemme"]
+            "operation": "sum",
+            "field": "importo",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
         },
         {
-          "id": "orders_client_alternative_v2",
+          "id": "cmd_fatturato_4",
+          "pattern": "forniscimi il fatturato del cliente [CLIENTE]",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "sum",
+            "field": "importo",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
+        },
+        {
+          "id": "cmd_fatturato_5",
+          "pattern": "fatturato [CLIENTE]",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "sum",
+            "field": "importo",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
+        },
+        {
+          "id": "cmd_ordini_1",
           "pattern": "ordini del cliente [CLIENTE]",
           "action": "universal_query",
           "params": {
-            "entity": "orders", 
+            "entity": "orders",
             "operation": "list",
-            "filters": {
-              "cliente": "[CLIENTE]"
-            }
-          },
-          "description": "Pattern alternativo per ordini cliente",
-          "examples": ["ordini del cliente Marotta", "fammi vedere ordini del cliente ABC"]
+            "filters": { "cliente": "[CLIENTE]" }
+          }
         },
         {
-          "id": "order_date_by_client",
-          "pattern": "dimmi la data dell'ordine del cliente [CLIENTE]",
-          "action": "getOrderDate",
-          "params": {
-            "cliente": "[CLIENTE]"
-          },
-          "description": "Recupera la data dell'ultimo ordine di un cliente",
-          "examples": ["dimmi la data dell'ordine del cliente Essemme", "qual è la data dell'ordine di Marotta", "data ordine cliente La Mandria"]
-        },
-        {
-          "id": "order_date_by_client_alt1",
-          "pattern": "qual è la data dell'ordine del cliente [CLIENTE]",
-          "action": "getOrderDate",
-          "params": {
-            "cliente": "[CLIENTE]"
-          },
-          "description": "Pattern alternativo per data ordine",
-          "examples": ["qual è la data dell'ordine del cliente Essemme"]
-        },
-        {
-          "id": "order_date_by_client_alt2",
-          "pattern": "data ordine cliente [CLIENTE]",
-          "action": "getOrderDate",
-          "params": {
-            "cliente": "[CLIENTE]"
-          },
-          "description": "Pattern breve per data ordine",
-          "examples": ["data ordine cliente Essemme", "data ordine cliente Marotta"]
-        }
-      ]
-    },
-    "conteggi": {
-      "description": "Conteggio di ordini, clienti e altre entità",
-      "patterns": [
-        {
-          "id": "count_orders_v2",
-          "pattern": "quanti ordini",
+          "id": "cmd_ordini_2",
+          "pattern": "mostrami ordini di [CLIENTE]",
           "action": "universal_query",
           "params": {
             "entity": "orders",
-            "operation": "count"
-          },
-          "description": "Conta il numero totale di ordini",
-          "examples": ["quanti ordini ho fatto", "numero di ordini", "conta gli ordini"]
+            "operation": "list",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
         },
         {
-          "id": "count_orders_client_v2", 
+          "id": "cmd_ordini_3",
+          "pattern": "ordini ultimi [GIORNI] giorni",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "list",
+            "filters": { "giorni": "[GIORNI]" }
+          }
+        },
+        {
+          "id": "cmd_ordini_4",
           "pattern": "quanti ordini ha fatto [CLIENTE]",
           "action": "universal_query",
           "params": {
             "entity": "orders",
-            "operation": "count", 
-            "filters": {
-              "cliente": "[CLIENTE]"
-            }
-          },
-          "description": "Conta ordini di un cliente specifico",
-          "examples": ["quanti ordini ha fatto Mario Rossi", "numero ordini di La Mandria"]
+            "operation": "count",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
         },
         {
-          "id": "count_clients_v2",
-          "pattern": "quanti clienti",
+          "id": "cmd_fatturato_mese",
+          "pattern": "fatturato totale del mese",
           "action": "universal_query",
           "params": {
-            "entity": "clients",
+            "entity": "orders",
+            "operation": "sum",
+            "field": "importo",
+            "filters": { "periodo": "mese" }
+          }
+        },
+        {
+          "id": "cmd_fatturato_anno",
+          "pattern": "fatturato totale dell'anno",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "sum",
+            "field": "importo",
+            "filters": { "periodo": "anno" }
+          }
+        },
+        {
+          "id": "cmd_prodotti_1",
+          "pattern": "da quali prodotti è composto l'ordine del cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_2",
+          "pattern": "composizione ordine cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_3",
+          "pattern": "prodotti nell'ordine del cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_4",
+          "pattern": "cosa ha ordinato il cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_5",
+          "pattern": "dettaglio prodotti ordine cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_storico_1",
+          "pattern": "storico ordini del cliente: [CLIENTE]",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "list",
+            "filters": { "cliente": "[CLIENTE]" },
+            "output": "detailed"
+          }
+        },
+        {
+          "id": "cmd_storico_2",
+          "pattern": "consulta lo storico degli ordini del cliente: [CLIENTE]",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "list",
+            "filters": { "cliente": "[CLIENTE]" },
+            "output": "detailed"
+          }
+        },
+        {
+          "id": "cmd_prodotti_6",
+          "pattern": "i prodotti dell'ordine del cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_7",
+          "pattern": "prodotti del cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_8",
+          "pattern": "prodotti ordinati da [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_9",
+          "pattern": "elenco prodotti cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_10",
+          "pattern": "lista prodotti cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_11",
+          "pattern": "elencami i prodotti del cliente: [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_prodotti_12",
+          "pattern": "mostrami i prodotti ordinati da [CLIENTE]",
+          "action": "getOrderProducts",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_consegna_1",
+          "pattern": "data di consegna ordine [NUMERO_ORDINE]",
+          "action": "getDeliveryDate",
+          "params": { "numeroOrdine": "[NUMERO_ORDINE]" }
+        },
+        {
+          "id": "cmd_consegna_2",
+          "pattern": "quando viene consegnato l'ordine [NUMERO_ORDINE]",
+          "action": "getDeliveryDate",
+          "params": { "numeroOrdine": "[NUMERO_ORDINE]" }
+        },
+        {
+          "id": "cmd_consegna_3",
+          "pattern": "data consegna per [CLIENTE]",
+          "action": "getDeliveryDate",
+          "params": { "cliente": "[CLIENTE]" }
+        },
+        {
+          "id": "cmd_consegna_4",
+          "pattern": "ordini con data di consegna [DATA]",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "list",
+            "filters": { "dataConsegna": "[DATA]" }
+          }
+        },
+        {
+          "id": "cmd_consegna_5",
+          "pattern": "verifica data consegna ordine [NUMERO_ORDINE]",
+          "action": "getDeliveryDate",
+          "params": { "numeroOrdine": "[NUMERO_ORDINE]" }
+        },
+        {
+          "id": "cmd_pdf_1",
+          "pattern": "estrai data consegna da PDF ordine",
+          "action": "extractDeliveryFromPDF"
+        },
+        {
+          "id": "cmd_pdf_2",
+          "pattern": "processa ordini PDF per data consegna",
+          "action": "processOrdersPDF"
+        },
+        {
+          "id": "cmd_count_ordini",
+          "pattern": "Quanti ordini ci sono nel database",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
             "operation": "count"
-          },
-          "description": "Conta il numero totale di clienti", 
-          "examples": ["quanti clienti ho", "numero clienti", "conta i clienti"]
+          }
         }
       ]
     },
-    "fatturato_e_ricavi": {
-      "description": "Calcolo fatturato e ricavi per clienti e periodi",
-      "patterns": [
+    "percorsi_spostamenti": {
+      "name": "Percorsi e Spostamenti",
+      "commands": [
         {
-          "id": "revenue_by_client_v2",
-          "pattern": "fatturato di [CLIENTE]",
-          "action": "universal_query",
+          "id": "cmd_percorso_1",
+          "pattern": "quanto tempo da [CLIENTE_A] a [CLIENTE_B]",
+          "action": "calculateRoute",
           "params": {
-            "entity": "orders",
-            "operation": "sum",
-            "field": "importo",
-            "filters": {
-              "cliente": "[CLIENTE]"
-            }
-          },
-          "description": "Calcola il fatturato totale di un cliente",
-          "examples": ["fatturato di Mario Rossi", "quanto ha speso La Mandria", "ricavo di Essemme"]
+            "from": "[CLIENTE_A]",
+            "to": "[CLIENTE_B]",
+            "output": "duration"
+          }
         },
         {
-          "id": "revenue_alternative_v2",
-          "pattern": "quanto ha speso [CLIENTE]",
-          "action": "universal_query", 
+          "id": "cmd_percorso_2",
+          "pattern": "tempo di percorrenza da [CLIENTE_A] a [CLIENTE_B]",
+          "action": "calculateRoute",
           "params": {
-            "entity": "orders",
-            "operation": "sum",
-            "field": "importo",
-            "filters": {
-              "cliente": "[CLIENTE]"
-            }
-          },
-          "description": "Pattern alternativo per fatturato cliente",
-          "examples": ["quanto ha speso Marotta", "totale speso da ABC"]
+            "from": "[CLIENTE_A]",
+            "to": "[CLIENTE_B]",
+            "output": "duration"
+          }
         },
         {
-          "id": "revenue_sold_v2",
-          "pattern": "dimmi il venduto del cliente [CLIENTE]",
-          "action": "universal_query",
+          "id": "cmd_percorso_3",
+          "pattern": "distanza tra [CLIENTE_A] e [CLIENTE_B]",
+          "action": "calculateRoute",
           "params": {
-            "entity": "orders", 
-            "operation": "sum",
-            "field": "importo",
-            "filters": {
-              "cliente": "[CLIENTE]"
-            }
-          },
-          "description": "Venduto totale di un cliente",
-          "examples": ["dimmi il venduto del cliente Rossi", "venduto di La Mandria"]
+            "from": "[CLIENTE_A]",
+            "to": "[CLIENTE_B]",
+            "output": "distance"
+          }
         },
         {
-          "id": "monthly_revenue_v2",
-          "pattern": "fatturato del mese",
-          "action": "universal_query",
+          "id": "cmd_percorso_4",
+          "pattern": "quanto ci metto da [CLIENTE_A] a [CLIENTE_B]",
+          "action": "calculateRoute",
           "params": {
-            "entity": "orders",
-            "operation": "sum", 
-            "field": "importo",
-            "filters": {
-              "periodo": "mese"
-            }
-          },
-          "description": "Fatturato totale del mese corrente",
-          "examples": ["fatturato di questo mese", "ricavi mensili", "venduto questo mese"]
+            "from": "[CLIENTE_A]",
+            "to": "[CLIENTE_B]",
+            "output": "duration"
+          }
+        },
+        {
+          "id": "cmd_percorso_5",
+          "pattern": "percorso più veloce per [CLIENTE]",
+          "action": "calculateRoute",
+          "params": {
+            "to": "[CLIENTE]",
+            "optimize": "fastest"
+          }
+        },
+        {
+          "id": "cmd_percorso_6",
+          "pattern": "mostrami il percorso per [CLIENTE]",
+          "action": "calculateRoute",
+          "params": {
+            "to": "[CLIENTE]",
+            "output": "full"
+          }
+        },
+        {
+          "id": "cmd_ottimizza_1",
+          "pattern": "ottimizza percorsi del [GIORNO]",
+          "action": "optimizeRoute",
+          "params": { "giorno": "[GIORNO]" }
+        },
+        {
+          "id": "cmd_ottimizza_2",
+          "pattern": "crea percorso per domani",
+          "action": "optimizeRoute",
+          "params": { "giorno": "domani" }
         }
       ]
     },
-    "liste_e_visualizzazioni": {
-      "description": "Liste di ordini, clienti e visualizzazioni dati",
-      "patterns": [
+    "timeline_appuntamenti": {
+      "name": "Timeline e Appuntamenti",
+      "commands": [
         {
-          "id": "list_orders_v2",
-          "pattern": "lista ordini",
+          "id": "cmd_app_1",
+          "pattern": "quando ho l'appuntamento con [CLIENTE]",
           "action": "universal_query",
           "params": {
-            "entity": "orders",
-            "operation": "list"
-          },
-          "description": "Elenca gli ultimi ordini",
-          "examples": ["mostra ordini", "fammi vedere gli ordini", "elenco ordini"]
+            "entity": "appointments",
+            "operation": "list",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
         },
         {
-          "id": "list_clients_v2",
-          "pattern": "lista clienti",
-          "action": "universal_query", 
+          "id": "cmd_app_2",
+          "pattern": "mostrami appuntamento [CLIENTE]",
+          "action": "universal_query",
           "params": {
-            "entity": "clients",
-            "operation": "list"
-          },
-          "description": "Elenca tutti i clienti",
-          "examples": ["mostra clienti", "elenco clienti", "tutti i clienti"]
-        }
-      ]
-    },
-    "appuntamenti_e_promemoria": {
-      "description": "Gestione appuntamenti e promemoria",
-      "patterns": [
+            "entity": "appointments",
+            "operation": "list",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
+        },
         {
-          "id": "create_appointment_v2",
-          "pattern": "crea appuntamento con [CLIENTE]",
+          "id": "cmd_app_3",
+          "pattern": "appuntamento con [CLIENTE] quando è",
+          "action": "universal_query",
+          "params": {
+            "entity": "appointments",
+            "operation": "list",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
+        },
+        {
+          "id": "cmd_app_create_1",
+          "pattern": "inserisci appuntamento con [CLIENTE] il [DATA] alle [ORA]",
           "action": "universal_action",
           "params": {
             "entity": "appointments",
             "operation": "create",
             "data": {
-              "cliente": "[CLIENTE]"
+              "cliente": "[CLIENTE]",
+              "data": "[DATA]",
+              "ora": "[ORA]"
             }
-          },
-          "description": "Crea un nuovo appuntamento con un cliente",
-          "examples": ["crea appuntamento con Mario Rossi", "appuntamento con La Mandria"]
+          }
         },
         {
-          "id": "create_appointment_date_v2",
-          "pattern": "appuntamento con [CLIENTE] il [DATA]",
+          "id": "cmd_app_create_2",
+          "pattern": "aggiungi appuntamento [CLIENTE] [DATA] [ORA]",
           "action": "universal_action",
           "params": {
-            "entity": "appointments", 
+            "entity": "appointments",
             "operation": "create",
             "data": {
               "cliente": "[CLIENTE]",
-              "data": "[DATA]"
+              "data": "[DATA]",
+              "ora": "[ORA]"
             }
-          },
-          "description": "Crea appuntamento con data specifica",
-          "examples": ["appuntamento con Rossi il 15 marzo", "fissa appuntamento con ABC domani"]
+          }
         },
         {
-          "id": "schedule_reminder_v2",
-          "pattern": "promemoria tra [TEMPO]",
+          "id": "cmd_app_delete",
+          "pattern": "cancella appuntamento con [CLIENTE]",
           "action": "universal_action",
           "params": {
-            "entity": "reminders",
-            "operation": "create", 
+            "entity": "appointments",
+            "operation": "delete",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
+        },
+        {
+          "id": "cmd_app_update",
+          "pattern": "sposta appuntamento di [CLIENTE] a [DATA] [ORA]",
+          "action": "universal_action",
+          "params": {
+            "entity": "appointments",
+            "operation": "update",
+            "filters": { "cliente": "[CLIENTE]" },
             "data": {
-              "tempo": "[TEMPO]"
+              "data": "[DATA]",
+              "ora": "[ORA]"
             }
-          },
-          "description": "Programma un promemoria",
-          "examples": ["promemoria tra 30 minuti", "ricordami tra 2 ore"]
+          }
+        },
+        {
+          "id": "cmd_app_next",
+          "pattern": "prossimo appuntamento",
+          "action": "universal_query",
+          "params": {
+            "entity": "appointments",
+            "operation": "list",
+            "filters": { "next": true }
+          }
+        },
+        {
+          "id": "cmd_app_oggi",
+          "pattern": "appuntamenti di oggi",
+          "action": "universal_query",
+          "params": {
+            "entity": "appointments",
+            "operation": "list",
+            "filters": { "periodo": "oggi" }
+          }
+        },
+        {
+          "id": "cmd_app_domani",
+          "pattern": "appuntamenti di domani",
+          "action": "universal_query",
+          "params": {
+            "entity": "appointments",
+            "operation": "list",
+            "filters": { "periodo": "domani" }
+          }
+        },
+        {
+          "id": "cmd_app_settimana",
+          "pattern": "appuntamenti della settimana",
+          "action": "universal_query",
+          "params": {
+            "entity": "appointments",
+            "operation": "list",
+            "filters": { "periodo": "settimana" }
+          }
         }
       ]
     },
-    "informazioni_sistema": {
-      "description": "Informazioni di sistema, data, ora",
-      "patterns": [
+    "data_ora": {
+      "name": "Data e Ora",
+      "commands": [
         {
-          "id": "current_date_v2",
-          "pattern": "che giorno è oggi",
-          "action": "system_info",
-          "params": {
-            "type": "date",
-            "format": "italian"
-          },
-          "description": "Mostra la data corrente",
-          "examples": ["che giorno è", "dimmi la data", "data di oggi"]
+          "id": "cmd_ora_1",
+          "pattern": "che ore sono",
+          "action": "getTimeInfo"
         },
         {
-          "id": "current_time_v2",
+          "id": "cmd_ora_2",
           "pattern": "che ora è",
-          "action": "system_info",
-          "params": {
-            "type": "time", 
-            "format": "italian"
-          },
-          "description": "Mostra l'ora corrente",
-          "examples": ["dimmi l'ora", "ora attuale"]
+          "action": "getTimeInfo"
         },
         {
-          "id": "system_version_v2",
-          "pattern": "versione sistema",
-          "action": "system_info",
-          "params": {
-            "type": "version"
-          },
-          "description": "Mostra informazioni sulla versione",
-          "examples": ["info versione", "che versione è"]
+          "id": "cmd_ora_3",
+          "pattern": "dimmi l'ora",
+          "action": "getTimeInfo"
         },
         {
-          "id": "system_status_v2", 
-          "pattern": "stato sistema",
-          "action": "system_info",
-          "params": {
-            "type": "status"
-          },
-          "description": "Mostra lo stato del sistema",
-          "examples": ["come va il sistema", "sistema operativo"]
+          "id": "cmd_ora_4",
+          "pattern": "ora attuale",
+          "action": "getTimeInfo"
         },
         {
-          "id": "historical_date_v2",
-          "pattern": "giorni fa che data era",
+          "id": "cmd_data_1",
+          "pattern": "che giorno è",
+          "action": "getDateInfo"
+        },
+        {
+          "id": "cmd_data_2",
+          "pattern": "data di oggi",
+          "action": "getDateInfo"
+        },
+        {
+          "id": "cmd_data_3",
+          "pattern": "oggi è",
+          "action": "getDateInfo"
+        },
+        {
+          "id": "cmd_data_4",
+          "pattern": "dimmi la data",
+          "action": "getDateInfo"
+        },
+        {
+          "id": "cmd_data_ora_1",
+          "pattern": "data e ora",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_2",
+          "pattern": "ora e data",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_3",
+          "pattern": "forniscimi data e ora attuale",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_4",
+          "pattern": "dammi data e ora precise",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_5",
+          "pattern": "che giorno è oggi e che ore sono",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_6",
+          "pattern": "che giorno è e che ore sono",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_7",
+          "pattern": "dimmi che giorno è e che ore sono",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_8",
+          "pattern": "che giorno è oggi e dimmi l'ora",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_9",
+          "pattern": "voglio sapere che giorno è oggi e che ore sono",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_10",
+          "pattern": "che ore sono e che giorno è",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_11",
+          "pattern": "che ora è e che giorno è",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_data_ora_12",
+          "pattern": "dimmi l'ora e che giorno è",
+          "action": "getDateTimeInfo"
+        },
+        {
+          "id": "cmd_storico_data_1",
+          "pattern": "che data era [GIORNI] giorni fa",
           "action": "getHistoricalDate",
-          "params": {},
-          "description": "Calcola una data storica X giorni fa",
-          "examples": ["5 giorni fa che data era", "10 giorni fa che giorno era", "3 giorni fa che data"]
+          "params": { "giorni": "[GIORNI]" }
         },
         {
-          "id": "future_date_v2",
-          "pattern": "tra giorni che giorno sarà",
-          "action": "getFutureDate", 
-          "params": {},
-          "description": "Calcola una data futura tra X giorni",
-          "examples": ["tra 3 giorni che giorno sarà", "tra 5 giorni che data sarà", "tra 1 giorno che giorno è"]
+          "id": "cmd_storico_data_2",
+          "pattern": "che data c'era [GIORNI] giorni fa",
+          "action": "getHistoricalDate",
+          "params": { "giorni": "[GIORNI]" }
+        },
+        {
+          "id": "cmd_storico_data_3",
+          "pattern": "la data di [GIORNI] giorni fa",
+          "action": "getHistoricalDate",
+          "params": { "giorni": "[GIORNI]" }
+        },
+        {
+          "id": "cmd_storico_data_4",
+          "pattern": "[GIORNI] giorni fa che data era",
+          "action": "getHistoricalDate",
+          "params": { "giorni": "[GIORNI]" }
+        },
+        {
+          "id": "cmd_storico_data_5",
+          "pattern": "dimmi la data di [GIORNI] giorni fa",
+          "action": "getHistoricalDate",
+          "params": { "giorni": "[GIORNI]" }
+        },
+        {
+          "id": "cmd_storico_data_6",
+          "pattern": "che giorno era [GIORNI] giorni fa",
+          "action": "getHistoricalDate",
+          "params": { "giorni": "[GIORNI]" }
+        },
+        {
+          "id": "cmd_giorno_settimana",
+          "pattern": "dimmi il giorno della settimana nella data di oggi",
+          "action": "getDayOfWeek"
         }
       ]
     },
-    "aiuto_e_documentazione": {
-      "description": "Comandi di aiuto e documentazione",
-      "patterns": [
+    "analisi_report": {
+      "name": "Analisi e Report",
+      "commands": [
         {
-          "id": "help_general_v2",
-          "pattern": "aiuto",
-          "action": "help",
+          "id": "cmd_report_1",
+          "pattern": "consegne previste [PERIODO]",
+          "action": "generate_report",
           "params": {
-            "topic": "general"
-          },
-          "description": "Mostra aiuto generale",
-          "examples": ["help", "come funziona", "cosa posso fare"]
+            "type": "consegne",
+            "periodo": "[PERIODO]"
+          }
         },
         {
-          "id": "help_commands_v2",
-          "pattern": "aiuto comandi", 
-          "action": "help",
+          "id": "cmd_report_2",
+          "pattern": "stato ordini [CLIENTE]",
+          "action": "generate_report",
           "params": {
-            "topic": "comandi"
-          },
-          "description": "Lista completa dei comandi",
-          "examples": ["lista comandi", "che comandi ci sono"]
+            "type": "stato_ordini",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
         },
         {
-          "id": "help_examples_v2",
-          "pattern": "aiuto esempi",
-          "action": "help",
+          "id": "cmd_report_3",
+          "pattern": "report vendite [PERIODO]",
+          "action": "generate_report",
           "params": {
-            "topic": "esempi"
-          },
-          "description": "Esempi di utilizzo",
-          "examples": ["mostra esempi", "come si usa"]
+            "type": "vendite",
+            "periodo": "[PERIODO]"
+          }
+        },
+        {
+          "id": "cmd_report_4",
+          "pattern": "prodotti più venduti",
+          "action": "generate_report",
+          "params": {
+            "type": "top_products"
+          }
+        },
+        {
+          "id": "cmd_report_5",
+          "pattern": "clienti migliori",
+          "action": "generate_report",
+          "params": {
+            "type": "top_clients"
+          }
+        },
+        {
+          "id": "cmd_report_6",
+          "pattern": "fatturato per categoria",
+          "action": "generate_report",
+          "params": {
+            "type": "fatturato_categoria"
+          }
+        },
+        {
+          "id": "cmd_report_7",
+          "pattern": "analisi vendite [PRODOTTO]",
+          "action": "generate_report",
+          "params": {
+            "type": "analisi_prodotto",
+            "prodotto": "[PRODOTTO]"
+          }
+        },
+        {
+          "id": "cmd_report_8",
+          "pattern": "confronta vendite [PERIODO_A] vs [PERIODO_B]",
+          "action": "generate_report",
+          "params": {
+            "type": "confronto_vendite",
+            "periodo1": "[PERIODO_A]",
+            "periodo2": "[PERIODO_B]"
+          }
         }
       ]
     },
-    "report_avanzati": {
-      "description": "Report e analisi avanzate (future estensioni)",
-      "patterns": [
+    "sistema_database": {
+      "name": "Sistema e Database",
+      "commands": [
         {
-          "id": "monthly_report_v2",
-          "pattern": "report mensile",
-          "action": "generate_report",
-          "params": {
-            "type": "fatturato_mensile",
-            "periodo": "mese",
-            "format": "summary"
-          },
-          "description": "Genera report fatturato mensile",
-          "examples": ["report del mese", "analisi mensile"]
+          "id": "cmd_sync_1",
+          "pattern": "sincronizza dati con Supabase",
+          "action": "syncDatabase",
+          "params": { "target": "supabase" }
         },
         {
-          "id": "client_report_v2",
-          "pattern": "report cliente [CLIENTE]",
-          "action": "generate_report",
+          "id": "cmd_sync_2",
+          "pattern": "esporta ordini su Supabase",
+          "action": "syncDatabase",
           "params": {
-            "type": "ordini_cliente",
-            "filters": {
-              "cliente": "[CLIENTE]"
-            },
-            "format": "detailed"
-          },
-          "description": "Report completo su un cliente",
-          "examples": ["report cliente Mario Rossi", "analisi cliente La Mandria"]
+            "target": "supabase",
+            "entity": "orders"
+          }
+        },
+        {
+          "id": "cmd_db_1",
+          "pattern": "controlla connessione database",
+          "action": "checkDatabaseConnection"
+        },
+        {
+          "id": "cmd_db_2",
+          "pattern": "stato sincronizzazione",
+          "action": "getSyncStatus"
+        },
+        {
+          "id": "cmd_cache_1",
+          "pattern": "pulisci cache localStorage",
+          "action": "clearCache",
+          "params": { "target": "localStorage" }
+        },
+        {
+          "id": "cmd_db_3",
+          "pattern": "elimina dati tabella [NOME_TABELLA]",
+          "action": "clearTable",
+          "params": { "table": "[NOME_TABELLA]" }
+        },
+        {
+          "id": "cmd_backup_1",
+          "pattern": "backup dati locali",
+          "action": "createBackup"
+        },
+        {
+          "id": "cmd_backup_2",
+          "pattern": "ripristina backup",
+          "action": "restoreBackup"
+        },
+        {
+          "id": "cmd_test_1",
+          "pattern": "test parser PDF ordini",
+          "action": "testPDFParser"
+        },
+        {
+          "id": "cmd_test_2",
+          "pattern": "valida estrazione data consegna",
+          "action": "validateDeliveryExtraction"
+        },
+        {
+          "id": "cmd_count_ordini_db",
+          "pattern": "quanti ordini ci sono nel database",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_count_ordini_2",
+          "pattern": "numero ordini totali",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_count_ordini_3",
+          "pattern": "conta ordini",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_count_ordini_4",
+          "pattern": "totale ordini",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_count_ordini_5",
+          "pattern": "count ordini",
+          "action": "universal_query",
+          "params": {
+            "entity": "orders",
+            "operation": "count"
+          }
+        }
+      ]
+    },
+    "gestione_clienti": {
+      "name": "Gestione Clienti",
+      "commands": [
+        {
+          "id": "cmd_cliente_add",
+          "pattern": "aggiungi nuovo cliente",
+          "action": "universal_action",
+          "params": {
+            "entity": "clients",
+            "operation": "create"
+          }
+        },
+        {
+          "id": "cmd_cliente_edit",
+          "pattern": "modifica cliente [CLIENTE]",
+          "action": "universal_action",
+          "params": {
+            "entity": "clients",
+            "operation": "update",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
+        },
+        {
+          "id": "cmd_cliente_info",
+          "pattern": "informazioni cliente [CLIENTE]",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "details",
+            "filters": { "cliente": "[CLIENTE]" }
+          }
+        },
+        {
+          "id": "cmd_cliente_storico",
+          "pattern": "storico cliente [CLIENTE]",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "details",
+            "filters": { "cliente": "[CLIENTE]" },
+            "includeHistory": true
+          }
+        },
+        {
+          "id": "cmd_cliente_note",
+          "pattern": "note cliente [CLIENTE]",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "details",
+            "filters": { "cliente": "[CLIENTE]" },
+            "onlyNotes": true
+          }
+        },
+        {
+          "id": "cmd_cliente_add_note",
+          "pattern": "aggiungi nota a [CLIENTE]: [NOTA]",
+          "action": "universal_action",
+          "params": {
+            "entity": "clients",
+            "operation": "addNote",
+            "filters": { "cliente": "[CLIENTE]" },
+            "data": { "nota": "[NOTA]" }
+          }
+        },
+        {
+          "id": "cmd_cliente_zona",
+          "pattern": "clienti zona [ZONA]",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list",
+            "filters": { "zona": "[ZONA]" }
+          }
+        },
+        {
+          "id": "cmd_cliente_non_visitati",
+          "pattern": "clienti non visitati da [GIORNI] giorni",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list",
+            "filters": { "nonVisitatiDa": "[GIORNI]" }
+          }
+        },
+        {
+          "id": "cmd_count_clienti_1",
+          "pattern": "quanti clienti ci sono nel database",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_count_clienti_2",
+          "pattern": "quanti clienti abbiamo",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_count_clienti_3",
+          "pattern": "numero clienti nel database",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_count_clienti_4",
+          "pattern": "totale clienti database",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_count_clienti_5",
+          "pattern": "count clienti",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "count"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_1",
+          "pattern": "elenco clienti database",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_2",
+          "pattern": "clienti nel database",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_3",
+          "pattern": "mostrami tutti i clienti",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_4",
+          "pattern": "lista clienti completa",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_5",
+          "pattern": "quali clienti abbiamo",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_6",
+          "pattern": "chi sono i nostri clienti",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_7",
+          "pattern": "clienti presenti nel sistema",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_8",
+          "pattern": "database clienti",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_9",
+          "pattern": "interroga clienti database",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_list_clienti_10",
+          "pattern": "visualizza clienti",
+          "action": "universal_query",
+          "params": {
+            "entity": "clients",
+            "operation": "list"
+          }
+        },
+        {
+          "id": "cmd_clienti_ordini_1",
+          "pattern": "gli ordini nel database a che clienti appartengono",
+          "action": "getOrdersGroupedByClient"
+        },
+        {
+          "id": "cmd_clienti_ordini_2",
+          "pattern": "ordini database che clienti",
+          "action": "getOrdersGroupedByClient"
+        },
+        {
+          "id": "cmd_clienti_ordini_3",
+          "pattern": "a che clienti appartengono gli ordini",
+          "action": "getOrdersGroupedByClient"
+        },
+        {
+          "id": "cmd_clienti_ordini_4",
+          "pattern": "ordini tabella clienti appartengono",
+          "action": "getOrdersGroupedByClient"
+        },
+        {
+          "id": "cmd_clienti_ordini_5",
+          "pattern": "che clienti hanno ordini nel database",
+          "action": "getOrdersGroupedByClient"
         }
       ]
     }
-  },
-  "migration": {
-    "note": "Questo vocabolario è compatibile con le azioni legacy tramite mapping automatico",
-    "legacy_actions_supported": [
-      "getOrdersByDate", 
-      "getOrdersByClient",
-      "listOrders",
-      "countOrders", 
-      "listClients",
-      "countClients",
-      "calculateRevenue",
-      "calculateMonthlyRevenue",
-      "countTotalOrders",
-      "getDateInfo",
-      "scheduleReminder",
-      "createAppointment"
-    ],
-    "new_actions": [
-      "universal_query",
-      "universal_action", 
-      "system_info",
-      "generate_report",
-      "help",
-      "getOrderDate",
-      "getHistoricalDate",
-      "getFutureDate"
-    ]
-  },
-  "statistics": {
-    "total_patterns": 27,
-    "categories": 8,
-    "legacy_patterns_migrated": 15,
-    "new_patterns_added": 12,
-    "actions_reduced_from": 12,
-    "actions_reduced_to": 7
   }
 }

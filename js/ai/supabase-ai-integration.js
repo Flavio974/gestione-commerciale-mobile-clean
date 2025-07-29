@@ -373,22 +373,43 @@ class SupabaseAIIntegration {
                 throw new Error('Supabase client non disponibile');
             }
             
-            // Step 2: nuovo codice: usa supabase-js e il mapping ENTITY_TABLE_MAP
-            const { error: headError, count } = await supabase
-                .from(ENTITY_TABLE_MAP.orders)        // = 'archivio_ordini_venduto'
-                .select('*', { head: true, count: 'exact' });
+            // Step 2: Prima aggiungi un log per vedere i campi disponibili (per debug)
+            console.log('[SupabaseAI] Verifico struttura dati...');
+            const testData = await supabase
+                .from(ENTITY_TABLE_MAP.orders)
+                .select('*')
+                .limit(1);
             
-            if (headError) {
-                console.error('[SupabaseAI] Errore conteggio ordini:', headError);
-                throw headError;
+            if (testData.data?.[0]) {
+                console.log('[SupabaseAI] Campi disponibili:', Object.keys(testData.data[0]));
             }
             
-            console.log(`[SupabaseAI] Totale ordini dal DB: ${count}`);
+            // Step 3: Query per recuperare tutti i numero_ordine
+            console.log('[SupabaseAI] Recupero numero_ordine per conteggio unici...');
+            const { data, error } = await supabase
+                .from(ENTITY_TABLE_MAP.orders)
+                .select('numero_ordine')
+                .not('numero_ordine', 'is', null);
+
+            if (error) {
+                console.error('[SupabaseAI] Errore conteggio ordini:', error);
+                throw error;
+            }
+
+            // Step 4: Conta gli ordini unici usando Set (come già fatto altrove nel codice)
+            const ordiniUnici = new Set(data.map(row => row.numero_ordine));
+            const uniqueOrdersCount = ordiniUnici.size;
+            const totalRowsCount = data.length;
+
+            console.log(`[SupabaseAI] Totale ordini unici: ${uniqueOrdersCount} (da ${totalRowsCount} righe)`);
+            
             return {
-                count: count || 0,
+                count: uniqueOrdersCount,
+                totalRows: totalRowsCount,
                 source: 'database',
                 success: true,
-                table: ENTITY_TABLE_MAP.orders
+                table: ENTITY_TABLE_MAP.orders,
+                note: `${uniqueOrdersCount} ordini unici da ${totalRowsCount} righe totali`
             };
             
         } catch (error) {
