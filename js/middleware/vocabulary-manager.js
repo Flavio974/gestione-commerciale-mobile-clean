@@ -222,7 +222,10 @@ class VocabularyRepository {
     // Support v2.0 categorized format
     if (data.categories) {
       Object.values(data.categories).forEach(category => {
-        if (category.patterns) {
+        // Support both 'commands' and 'patterns' keys for compatibility
+        if (category.commands) {
+          commands.push(...category.commands);
+        } else if (category.patterns) {
           commands.push(...category.patterns);
         }
       });
