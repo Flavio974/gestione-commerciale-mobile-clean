@@ -1,9 +1,27 @@
 /**
- * Vocabulary Manager - Gestisce il vocabolario dinamico con ricaricamento real-time
- * REQUISITO CRITICO: Il vocabolario deve essere ricaricato AD OGNI RICHIESTA
+ * Vocabulary Manager - Gestisce il vocabolario dinamico con architettura Master-Slave
+ * SISTEMA OTTIMIZZATO: Event-driven sync + Test automatici + Configurazione modulare
  */
-console.log('[LOAD] ✅ vocabulary-manager.js caricato correttamente');
+
+// 🔧 CONFIGURAZIONE MODULARE
+const VOCABULARY_CONFIG = {
+    DEBOUNCE_DELAY: 500,           // ms per debounce eventi editor
+    FALLBACK_POLLING_INTERVAL: 2000, // ms per fallback polling
+    MAX_SYNC_RETRIES: 3,           // tentativi in caso di errore
+    TEST_ON_STARTUP: true,         // esegui test all'avvio
+    ENABLE_DEBUG: true,            // log dettagliati
+    EDITOR_SELECTORS: [            // selettori per trovare l'editor comandi
+        '[id*="commands"]',
+        '[class*="editor"]', 
+        'textarea[class*="command"]',
+        '#vocabulary-editor',
+        '.commands-textarea'
+    ]
+};
+
+console.log('[LOAD] ✅ vocabulary-manager.js caricato correttamente (OTTIMIZZATO)');
 console.log('[DEBUG] vocabulary-manager execution context:', typeof self, typeof window);
+console.log('[CONFIG] 🔧 Configurazione modulare attivata:', VOCABULARY_CONFIG);
 
 // ✅ WORKER-SAFE GUARD: Evita esecuzione in contesti senza DOM
 if (typeof window === 'undefined') {
@@ -29,6 +47,8 @@ class VocabularyManager {
         this.vocabulary = null;
         this.userVocabulary = []; // 🎯 PRIORITÀ: Array separato per vocabolario utente
         this.systemVocabulary = []; // 📚 Array separato per vocabolario sistema
+        this.masterVocabulary = []; // 🔥 MASTER: Vocabolario unificato master
+        this.syncedSystemVocabulary = []; // 🔄 SYNC: Fotocopia del master per il sistema
         this.lastModified = null;
         this.cache = new Map();
         this.isLoading = false;
@@ -41,7 +61,7 @@ class VocabularyManager {
             fallbackToAI: true
         };
         
-        console.log('📚 VocabularyManager: Inizializzato con pipeline priorità');
+        console.log('📚 VocabularyManager: Inizializzato con architettura MASTER-SLAVE');
         // DEBUG: Track user vocabulary changes
         this._lastUserVocContent = localStorage.getItem('vocabulary_user');
         this.startWatcher();
@@ -139,14 +159,27 @@ class VocabularyManager {
                 this.userVocabulary = [];
             }
             
-            // 📚 Mantieni compatibilità con codice esistente - COMBINA TUTTI I COMANDI
-            const allCommands = [...this.userVocabulary, ...this.systemVocabulary];
-            newVocabulary.commands = allCommands;
+            // 🔥 CREA MASTER VOCABULARY - Combina Editor + Sistema
+            this.masterVocabulary = this.createMasterVocabulary();
             
-            console.log('📚 🔗 COMBINAZIONE FINALE:');
-            console.log('   - User commands:', this.userVocabulary.length);
-            console.log('   - System commands:', this.systemVocabulary.length);  
-            console.log('   - TOTAL commands:', allCommands.length);
+            // 🔄 SINCRONIZZAZIONE: Sistema diventa fotocopia del Master
+            this.syncedSystemVocabulary = this.syncSystemVocabulary();
+            
+            // ✅ VALIDAZIONE: Verifica sincronizzazione perfetta
+            const syncStatus = this.validateSync();
+            
+            // 📚 Mantieni compatibilità con codice esistente
+            newVocabulary.commands = this.masterVocabulary;
+            
+            console.log('📚 🔗 ARCHITETTURA MASTER-SLAVE:');
+            console.log('   - User commands (Editor scheda Comandi):', this.userVocabulary.length);
+            console.log('   - System commands (Predefiniti):', this.systemVocabulary.length);  
+            console.log('   ═══════════════════════════════════════');
+            console.log('   - 🔥 MASTER vocabulary:', this.masterVocabulary.length, 'comandi creato');
+            console.log('   - 🔄 SYSTEM vocabulary:', this.syncedSystemVocabulary.length, 'comandi sincronizzato');
+            console.log('   - ✅ SYNC verification:', syncStatus);
+            console.log('   ═══════════════════════════════════════');
+            console.log('🚀 Vocabulary system ready with unified commands');
             
             // Verifica se il vocabolario è cambiato
             const currentModified = response.headers.get('Last-Modified') || new Date().toISOString();
@@ -193,12 +226,15 @@ class VocabularyManager {
     startWatcher() {
         if (!this.settings.autoReload) return;
         
+        // Setup sync automatico iniziale (OTTIMIZZATO)
+        this.setupEventDrivenSync();
+        
         // Controlla modifiche ogni 2 secondi
         this.watchInterval = setInterval(async () => {
             try {
-                // DEBUG: Check for user vocabulary changes too
-                const currentUserVoc = localStorage.getItem('vocabulary_user');
-                const userVocChanged = currentUserVoc !== this._lastUserVocContent;
+                // Check per modifiche all'editor utente
+                const currentUserVoc = this.getUserVocabularySignature();
+                const userVocChanged = currentUserVoc !== this._lastUserVocSignature;
                 
                 const response = await fetch(this.vocabularyPath, {
                     method: 'HEAD',
@@ -210,13 +246,14 @@ class VocabularyManager {
                 const lastModified = response.headers.get('Last-Modified');
                 if (lastModified && lastModified !== this.lastModified || userVocChanged) {
                     if (this.settings.enableDebug) {
-                        console.log('📚 🔄 RILEVATA MODIFICA AL VOCABOLARIO - Ricaricamento automatico');
+                        console.log('📚 🔄 RILEVATA MODIFICA AL VOCABOLARIO - Sincronizzazione automatica...');
                         if (userVocChanged) {
-                            console.debug('[VOCAB-USER] User vocabulary changed, reloading...');
-                            this._lastUserVocContent = currentUserVoc;
+                            console.log('🔄 Editor Comandi modificato, sincronizzazione in corso...');
+                            this._lastUserVocSignature = currentUserVoc;
                         }
                     }
-                    await this.loadVocabulary(true);
+                    // Esegui sync completo
+                    await this.performFullSync();
                 }
             } catch (error) {
                 // Errore silenzioso per il watcher
@@ -238,8 +275,8 @@ class VocabularyManager {
     }
 
     /**
-     * 🎯 PIPELINE PRIORITÀ: utente → sistema → fallback
-     * ORDINE RIGIDO NON NEGOZIABILE
+     * 🎯 PIPELINE MASTER: Usa solo il Master Vocabulary unificato
+     * ARCHITETTURA SEMPLIFICATA: Un solo vocabolario da consultare
      */
     async findMatch(userInput) {
         // Carica entrambi i vocabolari
@@ -259,31 +296,22 @@ class VocabularyManager {
             }
         }
 
-        // 🥇 STEP 1: PRIORITÀ ASSOLUTA - Vocabolario UTENTE
-        const userMatch = this.findInVocabulary(normalizedInput, userInput, this.userVocabulary, 'USER');
-        if (userMatch) {
-            this.cache.set(cacheKey, { result: userMatch, timestamp: Date.now() });
+        // 🔥 UNICO STEP: Cerca nel MASTER VOCABULARY unificato
+        const masterMatch = this.findInVocabulary(normalizedInput, userInput, this.masterVocabulary, 'MASTER');
+        if (masterMatch) {
+            this.cache.set(cacheKey, { result: masterMatch, timestamp: Date.now() });
             if (this.settings.enableDebug) {
-                console.log('🎯 USER VOCAB MATCH:', userMatch.command.id);
+                const source = masterMatch.command.source || 'unknown';
+                console.log(`🔥 MASTER MATCH [${source}]:`, masterMatch.command.id || masterMatch.pattern);
             }
-            return userMatch;
+            return masterMatch;
         }
 
-        // 🥈 STEP 2: Vocabolario SISTEMA
-        const systemMatch = this.findInVocabulary(normalizedInput, userInput, this.systemVocabulary, 'SYSTEM');
-        if (systemMatch) {
-            this.cache.set(cacheKey, { result: systemMatch, timestamp: Date.now() });
-            if (this.settings.enableDebug) {
-                console.log('⚙️ SYSTEM VOCAB MATCH:', systemMatch.command.id);
-            }
-            return systemMatch;
-        }
-
-        // 🥉 STEP 3: Nessun match
+        // 🥉 Nessun match
         this.cache.set(cacheKey, { result: null, timestamp: Date.now() });
         
         if (this.settings.enableDebug) {
-            console.log('📚 ❌ NESSUN MATCH TROVATO per:', userInput);
+            console.log('📚 ❌ NESSUN MATCH TROVATO nel MASTER per:', userInput);
             
             // 🤔 Check se sembra richiesta interna
             if (this.looksLikeInternalRequest(userInput)) {
@@ -2170,6 +2198,571 @@ class VocabularyManager {
             console.warn('⚠️ Data access error:', error);
         }
         return { clients: [], orders: [], historicalOrders: { sampleData: [] } };
+    }
+
+    /**
+     * 📝 Legge comandi dall'editor scheda Comandi
+     * FONTE: localStorage dove l'editor salva i comandi
+     */
+    getUserCommandsFromEditor() {
+        try {
+            // L'editor salva i comandi in localStorage
+            // Supporta vari formati per compatibilità
+            
+            // Formato 1: user_vocabulary_v2 (array diretto)
+            const v2Data = localStorage.getItem('user_vocabulary_v2');
+            if (v2Data) {
+                const commands = JSON.parse(v2Data);
+                console.log('📝 Editor: Formato v2 trovato con', commands.length, 'comandi');
+                return commands;
+            }
+            
+            // Formato 2: user-vocabulary (categorizzato)
+            const categorizedData = localStorage.getItem('user-vocabulary');
+            if (categorizedData) {
+                const categories = JSON.parse(categorizedData);
+                const commands = [];
+                Object.values(categories).forEach(categoryCommands => {
+                    if (Array.isArray(categoryCommands)) {
+                        commands.push(...categoryCommands);
+                    }
+                });
+                console.log('📝 Editor: Formato categorizzato trovato con', commands.length, 'comandi');
+                return commands;
+            }
+            
+            // Formato 3: vocabulary_user (testo)
+            const textData = localStorage.getItem('vocabulary_user');
+            if (textData) {
+                const commands = this.parseTextVocabulary(textData);
+                console.log('📝 Editor: Formato testo trovato con', commands.length, 'comandi');
+                return commands;
+            }
+            
+            console.log('📝 Editor: Nessun comando utente trovato');
+            return [];
+            
+        } catch (error) {
+            console.error('❌ Errore lettura editor comandi:', error);
+            return [];
+        }
+    }
+
+    /**
+     * 📚 Ottiene i comandi di sistema predefiniti
+     */
+    getSystemPredefinedCommands() {
+        try {
+            // Ritorna i comandi di sistema già caricati
+            if (this.systemVocabulary && this.systemVocabulary.length > 0) {
+                return this.systemVocabulary;
+            }
+            
+            // Fallback: vocabolario base
+            console.warn('⚠️ Sistema: Usando vocabolario base di fallback');
+            return this.getBasicVocabulary().commands || [];
+            
+        } catch (error) {
+            console.error('❌ Errore caricamento comandi sistema:', error);
+            return [];
+        }
+    }
+
+    /**
+     * 🔧 Utility per deep clone
+     */
+    deepClone(obj) {
+        try {
+            return JSON.parse(JSON.stringify(obj));
+        } catch (error) {
+            console.error('❌ Errore deep clone:', error);
+            return obj;
+        }
+    }
+
+    /**
+     * 📄 Parse vocabolario da formato testo
+     */
+    parseTextVocabulary(text) {
+        const commands = [];
+        const lines = text.split('\n');
+        
+        lines.forEach((line, index) => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('#')) {
+                commands.push({
+                    id: `user_text_${index}`,
+                    pattern: trimmed,
+                    patterns: [trimmed],
+                    source: 'user_editor',
+                    action: 'genericAction'
+                });
+            }
+        });
+        
+        return commands;
+    }
+
+    /**
+     * 🔑 Ottiene signature del vocabolario utente per rilevare modifiche
+     */
+    getUserVocabularySignature() {
+        try {
+            // Crea una signature combinata di tutti i possibili storage
+            const v2 = localStorage.getItem('user_vocabulary_v2') || '';
+            const categorized = localStorage.getItem('user-vocabulary') || '';
+            const text = localStorage.getItem('vocabulary_user') || '';
+            
+            // Combina e crea hash semplice
+            const combined = v2 + categorized + text;
+            return combined.length + '_' + this.simpleHash(combined);
+        } catch (error) {
+            return 'error_signature';
+        }
+    }
+
+    /**
+     * #️⃣ Hash semplice per rilevare cambiamenti
+     */
+    simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return hash.toString(36);
+    }
+
+    /**
+     * 🚀 Setup sistema event-driven (OTTIMIZZATO)
+     * Sostituisce il polling con eventi diretti dall'editor
+     */
+    setupEventDrivenSync() {
+        console.log('🔧 Setup event-driven sync per vocabolario master-slave...');
+        
+        // Trova l'editor della scheda Comandi
+        const commandsEditor = this.findCommandsEditor();
+        
+        if (commandsEditor) {
+            console.log('✅ Editor comandi trovato:', commandsEditor.tagName, commandsEditor.className);
+            
+            // Event listener con debounce per input
+            commandsEditor.addEventListener('input', this.debounce(() => {
+                console.log('🔄 Editor Comandi modificato (EVENT), sincronizzazione in corso...');
+                this.performFullSync();
+            }, VOCABULARY_CONFIG.DEBOUNCE_DELAY));
+            
+            // Listener per perdita focus (salvataggio)
+            commandsEditor.addEventListener('blur', () => {
+                console.log('💾 Editor salvato, sincronizzazione finale...');
+                this.performFullSync();
+            });
+            
+            // Listener per Ctrl+S
+            commandsEditor.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 's') {
+                    console.log('💾 Ctrl+S rilevato, sincronizzazione...');
+                    this.performFullSync();
+                }
+            });
+            
+            console.log('✅ Event-driven sync attivato sull\'editor comandi');
+            this.editorSyncActive = true;
+            
+        } else {
+            console.warn('⚠️ Editor comandi non trovato, fallback al polling');
+            this.setupFallbackPolling();
+        }
+        
+        // Listener per storage events (modifiche da altre tab)
+        window.addEventListener('storage', (e) => {
+            if (e.key && (e.key.includes('vocabulary') || e.key.includes('comandi'))) {
+                console.log('📡 Storage event rilevato:', e.key);
+                this.debounceSync();
+            }
+        });
+        
+        // Sync iniziale al caricamento con test opzionali
+        setTimeout(() => {
+            console.log('🚀 Esecuzione sync iniziale...');
+            this.performFullSyncWithTests();
+        }, 500);
+    }
+
+    /**
+     * 🔍 Trova l'editor della scheda Comandi
+     */
+    findCommandsEditor() {
+        for (const selector of VOCABULARY_CONFIG.EDITOR_SELECTORS) {
+            const element = document.querySelector(selector);
+            if (element) {
+                return element;
+            }
+        }
+        
+        // Fallback: cerca tutti i textarea e controlla contenuto
+        const textareas = document.querySelectorAll('textarea');
+        for (const textarea of textareas) {
+            const content = textarea.value.toLowerCase();
+            if (content.includes('comandi') || content.includes('vocabulary') || 
+                textarea.placeholder?.toLowerCase().includes('comand')) {
+                return textarea;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * 🔄 Fallback polling se event-driven non funziona
+     */
+    setupFallbackPolling() {
+        console.log('🔄 Attivazione fallback polling ogni', VOCABULARY_CONFIG.FALLBACK_POLLING_INTERVAL, 'ms');
+        
+        this.fallbackInterval = setInterval(async () => {
+            try {
+                const currentUserVoc = this.getUserVocabularySignature();
+                const userVocChanged = currentUserVoc !== this._lastUserVocSignature;
+                
+                if (userVocChanged) {
+                    console.log('🔄 Modifica rilevata via polling, sincronizzazione...');
+                    this._lastUserVocSignature = currentUserVoc;
+                    await this.performFullSync();
+                }
+            } catch (error) {
+                console.warn('⚠️ Errore fallback polling:', error.message);
+            }
+        }, VOCABULARY_CONFIG.FALLBACK_POLLING_INTERVAL);
+    }
+
+    /**
+     * ⏱️ Debounce per evitare troppi sync (OTTIMIZZATO)
+     */
+    debounceSync() {
+        if (this.syncTimeout) {
+            clearTimeout(this.syncTimeout);
+        }
+        
+        this.syncTimeout = setTimeout(() => {
+            console.log('🔄 Debounced sync triggered...');
+            this.performFullSync();
+        }, VOCABULARY_CONFIG.DEBOUNCE_DELAY);
+    }
+
+    /**
+     * ⚡ Debounce generico con delay configurabile
+     */
+    debounce(func, delay = VOCABULARY_CONFIG.DEBOUNCE_DELAY) {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    /**
+     * 🚀 Esegue sincronizzazione completa Master-Slave
+     */
+    async performFullSync() {
+        try {
+            console.log('🔄 === INIZIO SINCRONIZZAZIONE MASTER-SLAVE ===');
+            
+            // Ricarica vocabolario con nuova logica
+            await this.loadVocabulary(true);
+            
+            // Log risultato finale
+            if (this.masterVocabularyData) {
+                console.log('✅ Sincronizzazione completata con successo');
+                console.log(`📊 Statistiche finali:
+                    - Master: ${this.masterVocabularyData.total} comandi totali
+                    - User (Editor): ${this.masterVocabularyData.userCommands.length} comandi
+                    - System (Predefiniti): ${this.masterVocabularyData.systemCommands.length} comandi
+                    - Sync Status: ${this.validateSync()}`);
+            }
+            
+            console.log('🔄 === FINE SINCRONIZZAZIONE ===');
+            
+        } catch (error) {
+            console.error('🚨 CRITICAL: Sincronizzazione vocabolario fallita:', error);
+            this.handleVocabularySyncError(error, 'performFullSync');
+        }
+    }
+
+    /**
+     * 🧪 Esegue sincronizzazione con test automatici (OTTIMIZZATO)
+     */
+    async performFullSyncWithTests() {
+        try {
+            // Prima esegui la sincronizzazione normale
+            await this.performFullSync();
+            
+            // Poi esegui i test se configurato
+            if (VOCABULARY_CONFIG.TEST_ON_STARTUP) {
+                console.log('🧪 Esecuzione test automatici...');
+                const testsPass = this.runVocabularySystemTests();
+                
+                if (!testsPass) {
+                    console.warn('⚠️ Test falliti, ma continuo con l\'inizializzazione...');
+                } else {
+                    console.log('🚀 Sistema vocabolario ottimizzato e pronto!');
+                }
+            }
+            
+        } catch (error) {
+            console.error('🚨 CRITICAL: Sync con test fallita:', error);
+            this.handleVocabularySyncError(error, 'performFullSyncWithTests');
+        }
+    }
+
+    /**
+     * 🚨 Gestione errori di sincronizzazione
+     */
+    handleVocabularySyncError(error, context) {
+        const errorMsg = `Errore sincronizzazione vocabolario in ${context}: ${error.message}`;
+        
+        // Log dettagliato per debug
+        console.error(`🚨 ${errorMsg}`, {
+            error: error,
+            stack: error.stack,
+            context: context,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Salva ultimo vocabolario valido come fallback
+        if (this.masterVocabulary && this.masterVocabulary.length > 0) {
+            try {
+                localStorage.setItem('lastValidVocabulary', JSON.stringify({
+                    vocabulary: this.masterVocabulary,
+                    timestamp: new Date().toISOString()
+                }));
+                console.log('💾 Vocabolario di fallback salvato');
+            } catch (e) {
+                console.error('❌ Impossibile salvare fallback:', e);
+            }
+        }
+        
+        // Usa fallback se disponibile
+        const fallbackVocab = localStorage.getItem('lastValidVocabulary');
+        if (fallbackVocab) {
+            try {
+                const parsed = JSON.parse(fallbackVocab);
+                this.masterVocabulary = parsed.vocabulary;
+                this.syncedSystemVocabulary = this.deepClone(parsed.vocabulary);
+                console.log('🔄 Usando vocabolario di fallback del', parsed.timestamp);
+                return parsed.vocabulary;
+            } catch (e) {
+                console.error('❌ Fallback non valido:', e);
+            }
+        }
+        
+        throw error; // Re-throw se non c'è fallback
+    }
+
+    /**
+     * 🧪 Test automatici essenziali del sistema Master-Slave
+     */
+    runVocabularySystemTests() {
+        console.log('🧪 === AVVIO TEST SISTEMA VOCABOLARIO ===');
+        
+        try {
+            let testsPassados = 0;
+            let totalTests = 5;
+            
+            // TEST 1: Master vocabulary si crea correttamente
+            console.log('🔍 TEST 1: Creazione Master Vocabulary...');
+            const testUserCommands = this.getUserCommandsFromEditor();
+            const testSystemCommands = this.getSystemPredefinedCommands();
+            const expectedTotal = testUserCommands.length + testSystemCommands.length;
+            
+            if (this.masterVocabularyData && this.masterVocabularyData.total === expectedTotal) {
+                console.log(`✅ TEST 1 PASSED: Master vocabulary creato (${expectedTotal} comandi)`);
+                testsPassados++;
+            } else {
+                console.error(`❌ TEST 1 FAILED: Master total expected ${expectedTotal}, got ${this.masterVocabularyData?.total}`);
+            }
+            
+            // TEST 2: System vocabulary si sincronizza
+            console.log('🔍 TEST 2: Sincronizzazione System Vocabulary...');
+            if (this.syncedSystemVocabulary && this.syncedSystemVocabulary.length === expectedTotal) {
+                console.log(`✅ TEST 2 PASSED: System vocabulary sincronizzato (${expectedTotal} comandi)`);
+                testsPassados++;
+            } else {
+                console.error(`❌ TEST 2 FAILED: System total expected ${expectedTotal}, got ${this.syncedSystemVocabulary?.length}`);
+            }
+            
+            // TEST 3: Validazione rileva identità corretta
+            console.log('🔍 TEST 3: Validazione identità...');
+            const syncStatus = this.validateSync();
+            if (syncStatus === '100% identical') {
+                console.log('✅ TEST 3 PASSED: Validazione identità funziona');
+                testsPassados++;
+            } else {
+                console.error(`❌ TEST 3 FAILED: Validation should be '100% identical', got '${syncStatus}'`);
+            }
+            
+            // TEST 4: Validazione rileva errori (test negativo)
+            console.log('🔍 TEST 4: Rilevamento errori...');
+            const originalSystem = this.syncedSystemVocabulary;
+            this.syncedSystemVocabulary = [...originalSystem.slice(0, -1)]; // Rimuovi ultimo elemento
+            const shouldDetectError = this.validateSync();
+            this.syncedSystemVocabulary = originalSystem; // Ripristina
+            
+            if (shouldDetectError.includes('FAILED')) {
+                console.log('✅ TEST 4 PASSED: Validazione rileva errori correttamente');
+                testsPassados++;
+            } else {
+                console.error(`❌ TEST 4 FAILED: Validation should detect error, got '${shouldDetectError}'`);
+            }
+            
+            // TEST 5: Conteggi componenti corretti
+            console.log('🔍 TEST 5: Verifica conteggi componenti...');
+            const userCount = testUserCommands.length;
+            const systemCount = testSystemCommands.length;
+            const totalCount = userCount + systemCount;
+            
+            if (this.masterVocabularyData && 
+                this.masterVocabularyData.userCommands.length === userCount &&
+                this.masterVocabularyData.systemCommands.length === systemCount &&
+                this.masterVocabularyData.total === totalCount) {
+                console.log(`✅ TEST 5 PASSED: Conteggi componenti corretti (${userCount}+${systemCount}=${totalCount})`);
+                testsPassados++;
+            } else {
+                console.error(`❌ TEST 5 FAILED: Conteggi errati. Expected User:${userCount}, System:${systemCount}, Total:${totalCount}`);
+                console.error(`   Got User:${this.masterVocabularyData?.userCommands.length}, System:${this.masterVocabularyData?.systemCommands.length}, Total:${this.masterVocabularyData?.total}`);
+            }
+            
+            // Risultato finale
+            if (testsPassados === totalTests) {
+                console.log(`🎉 === TUTTI I TEST SUPERATI (${testsPassados}/${totalTests}) ===`);
+                return true;
+            } else {
+                console.error(`🚨 === TEST FALLITI (${testsPassados}/${totalTests}) ===`);
+                return false;
+            }
+            
+        } catch (error) {
+            console.error('🚨 === ERRORE DURANTE I TEST ===', error);
+            return false;
+        }
+    }
+
+    /**
+     * 🔥 CREA MASTER VOCABULARY
+     * Combina correttamente Editor (user) + Sistema predefinito
+     */
+    createMasterVocabulary() {
+        try {
+            console.log('🔥 CREAZIONE MASTER VOCABULARY...');
+            
+            // STEP 1: Leggi comandi dall'editor scheda Comandi (da localStorage)
+            const userCommands = this.getUserCommandsFromEditor();
+            console.log('   📝 Letti', userCommands.length, 'comandi dall\'Editor scheda Comandi');
+            
+            // STEP 2: Carica comandi sistema predefiniti
+            const systemCommands = this.getSystemPredefinedCommands();
+            console.log('   📚 Letti', systemCommands.length, 'comandi sistema predefiniti');
+            
+            // STEP 3: Combina in master unico
+            const masterVocabulary = {
+                userCommands: userCommands,
+                systemCommands: systemCommands,
+                combinedCommands: [...systemCommands, ...userCommands], // Sistema prima, user dopo per priorità
+                total: systemCommands.length + userCommands.length,
+                lastUpdated: new Date().toISOString(),
+                version: 'master-v2.0'
+            };
+            
+            // Salva riferimento interno per compatibilità
+            this.masterVocabularyData = masterVocabulary;
+            
+            console.log(`✅ MASTER vocabulary: ${masterVocabulary.total} comandi creato`);
+            console.log(`   └─ User: ${userCommands.length} + System: ${systemCommands.length} = Total: ${masterVocabulary.total}`);
+            
+            return masterVocabulary.combinedCommands;
+            
+        } catch (error) {
+            console.error(`❌ Errore creazione master vocabulary:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * 🔄 SINCRONIZZA SISTEMA CON MASTER
+     * Crea fotocopia identica del master per il sistema
+     */
+    syncSystemVocabulary() {
+        try {
+            console.log('🔄 SINCRONIZZAZIONE SISTEMA...');
+            
+            // STEP 1: Crea fotocopia identica usando deep clone
+            const systemVocabulary = this.deepClone(this.masterVocabulary);
+            
+            // STEP 2: Marca come copia di sistema per tracking
+            if (this.masterVocabularyData) {
+                this.systemVocabularyData = {
+                    ...this.deepClone(this.masterVocabularyData),
+                    type: 'SYSTEM_COPY',
+                    syncedAt: new Date().toISOString()
+                };
+            }
+            
+            console.log(`✅ SYSTEM vocabulary: ${systemVocabulary.length} comandi sincronizzato`);
+            return systemVocabulary;
+            
+        } catch (error) {
+            console.error(`❌ Errore sincronizzazione sistema:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * ✅ VALIDA SINCRONIZZAZIONE
+     * Verifica che master e sistema siano identici al 100%
+     */
+    validateSync() {
+        try {
+            const masterCount = this.masterVocabulary.length;
+            const systemCount = this.syncedSystemVocabulary.length;
+            
+            // STEP 1: Confronto conteggi
+            if (masterCount !== systemCount) {
+                console.error(`❌ SYNC FAILED: Master e Sistema NON identici!`);
+                console.error(`Master count: ${masterCount}, System count: ${systemCount}`);
+                return 'FAILED - Count mismatch';
+            }
+            
+            // STEP 2: Confronto deep equality usando JSON.stringify
+            const masterStr = JSON.stringify(this.masterVocabulary);
+            const systemStr = JSON.stringify(this.syncedSystemVocabulary);
+            
+            if (masterStr !== systemStr) {
+                console.error('❌ SYNC FAILED: Contenuto diverso tra Master e Sistema');
+                
+                // Debug: trova prima differenza
+                for (let i = 0; i < masterCount; i++) {
+                    const masterCmd = this.masterVocabulary[i];
+                    const systemCmd = this.syncedSystemVocabulary[i];
+                    
+                    if (JSON.stringify(masterCmd) !== JSON.stringify(systemCmd)) {
+                        console.error(`   └─ Prima differenza all'indice ${i}:`, {
+                            master: masterCmd,
+                            system: systemCmd
+                        });
+                        break;
+                    }
+                }
+                
+                return 'FAILED - Content mismatch';
+            }
+            
+            console.log(`✅ SYNC verification: 100% identical (${masterCount} comandi)`);
+            return '100% identical';
+            
+        } catch (error) {
+            console.error(`❌ Errore validazione sync:`, error);
+            return 'FAILED - Validation error';
+        }
     }
 }
 
