@@ -353,6 +353,45 @@ class SupabaseAIIntegration {
     }
 
     /**
+     * CODICE TEMPORANEO PER IDENTIFICARE I CAMPI
+     */
+    async inspectOrdersTable() {
+        console.log('🧪 === ISPEZIONE STRUTTURA TABELLA ORDERS ===');
+        try {
+            const supabase = await this.connectToSupabase();
+            if (!supabase) {
+                throw new Error('Supabase client non disponibile');
+            }
+
+            const { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .limit(3);
+            
+            if (error) {
+                console.error('❌ Errore ispezione tabella:', error);
+                return;
+            }
+            
+            if (data && data.length > 0) {
+                console.log('=== STRUTTURA TABELLA ORDERS ===');
+                console.log('Campi disponibili:', Object.keys(data[0]));
+                console.log('Primi 3 record:', data);
+                
+                // Cerca campi che potrebbero contenere il numero ordine
+                const possibleOrderFields = Object.keys(data[0]).filter(key => 
+                    key.toLowerCase().includes('ordine') || 
+                    key.toLowerCase().includes('order') || 
+                    key.toLowerCase().includes('numero')
+                );
+                console.log('Possibili campi numero ordine:', possibleOrderFields);
+            }
+        } catch (error) {
+            console.error('❌ Errore ispezione tabella:', error);
+        }
+    }
+
+    /**
      * 🚀 OTTIMIZZATO: Conteggio ordini dal database con mapping ENTITY_TABLE_MAP
      */
     async countOrdersFromDatabase() {
@@ -361,7 +400,7 @@ class SupabaseAIIntegration {
             
             // Verifica che API_CONFIG sia disponibile
             const ENTITY_TABLE_MAP = window.API_CONFIG?.ENTITY_TABLE_MAP || {
-                orders: 'archivio_ordini_venduto'
+                orders: 'orders'
             };
             
             console.log('[SupabaseAI] Mapping tabella ordini:', ENTITY_TABLE_MAP.orders);
@@ -403,6 +442,11 @@ class SupabaseAIIntegration {
 
             console.log(`[SupabaseAI] Totale ordini unici: ${uniqueOrdersCount} (da ${totalRowsCount} righe)`);
             
+            console.log(`✅ CONTEGGIO COMPLETATO:`);
+            console.log(`   - Ordini UNICI: ${uniqueOrdersCount}`);
+            console.log(`   - Righe totali: ${totalRowsCount}`);
+            console.log(`   - Media prodotti per ordine: ${(totalRowsCount/uniqueOrdersCount).toFixed(1)}`);
+            
             return {
                 count: uniqueOrdersCount,
                 totalRows: totalRowsCount,
@@ -420,6 +464,33 @@ class SupabaseAIIntegration {
                 success: false,
                 error: error.message
             };
+        }
+    }
+
+    /**
+     * 🚀 CONTEGGIO ORDINI UNICI - Funzione semplificata per compatibilità
+     */
+    async countOrdersFromDb() {
+        console.log('📊 === AVVIO CONTEGGIO ORDINI UNICI ===');
+        
+        try {
+            const result = await this.countOrdersFromDatabase();
+            
+            if (result.success) {
+                console.log(`✅ CONTEGGIO COMPLETATO:`);
+                console.log(`   - Ordini UNICI: ${result.count}`);
+                console.log(`   - Righe totali: ${result.totalRows}`);
+                console.log(`   - Media prodotti per ordine: ${(result.totalRows/result.count).toFixed(1)}`);
+                
+                return result.count; // Ritorna solo il numero per compatibilità
+            } else {
+                console.error('❌ Errore nel conteggio ordini:', result.error);
+                return 0;
+            }
+            
+        } catch (error) {
+            console.error('❌ Errore nel conteggio ordini:', error);
+            return 0;
         }
     }
 
@@ -1444,6 +1515,37 @@ class SupabaseAIIntegration {
             .trim();
     }
 }
+
+// Helper per test rapidi in console
+window.testOrderCount = async function() {
+    console.log('🧪 TEST CONTEGGIO ORDINI...');
+    try {
+        const supabaseAI = new SupabaseAIIntegration();
+        const count = await supabaseAI.countOrdersFromDb();
+        console.log(`✅ Test completato: ${count} ordini unici nel database`);
+        return count;
+    } catch (error) {
+        console.error('❌ Test fallito:', error);
+        return 0;
+    }
+};
+
+// Helper per ispezionare la struttura della tabella
+window.inspectOrdersTable = async function() {
+    console.log('🧪 ISPEZIONE TABELLA ORDERS...');
+    try {
+        const supabaseAI = new SupabaseAIIntegration();
+        await supabaseAI.inspectOrdersTable();
+    } catch (error) {
+        console.error('❌ Ispezione fallita:', error);
+    }
+};
+
+// Esponi le funzioni di conteggio globalmente per debug
+window.countOrdersFromDb = async function() {
+    const supabaseAI = new SupabaseAIIntegration();
+    return await supabaseAI.countOrdersFromDb();
+};
 
 // Esporta classe per uso globale
 window.SupabaseAIIntegration = SupabaseAIIntegration;

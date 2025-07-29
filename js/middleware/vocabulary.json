@@ -1046,6 +1046,13 @@
           "id": "cmd_clienti_ordini_5",
           "pattern": "che clienti hanno ordini nel database",
           "action": "getOrdersGroupedByClient"
+        },
+        {
+          "id": "count_orders_database",
+          "pattern": "quanti ordini ci sono nel database",
+          "action": "countOrdersFromDb",
+          "category": "Sistema e Database",
+          "description": "Conta il numero di ordini unici nel database"
         }
       ]
     }

@@ -106,7 +106,7 @@ const API_CONFIG = {
   
   // Mapping entità-tabella per database Supabase
   ENTITY_TABLE_MAP: {
-    orders: 'archivio_ordini_venduto',
+    orders: 'orders',  // Tabella rinominata in Supabase
     clients: 'clients',
     products: 'products', 
     routes: 'percorsi',
