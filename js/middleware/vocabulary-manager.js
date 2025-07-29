@@ -1248,27 +1248,20 @@ class VocabularyManager {
      */
     async executeLocalCountOrders(supabaseAI) {
         try {
-            console.log('📊 Avvio conteggio ordini ottimizzato...');
+            console.log('📊 Avvio conteggio ordini UNICI ottimizzato...');
             
-            // Usa la nuova funzione di conteggio ottimizzata
-            const result = await supabaseAI.countOrdersFromDatabase();
+            // Usa la funzione di conteggio ordini UNICI (11 invece di 102)
+            const count = await supabaseAI.countOrdersFromDb();
             
-            if (result.success) {
-                console.log(`✅ CONTEGGIO DATABASE RIUSCITO: ${result.count} ordini`);
+            if (count > 0) {
+                console.log(`✅ CONTEGGIO ORDINI UNICI RIUSCITO: ${count} ordini`);
                 return {
                     success: true,
-                    response: `Nel database ci sono **${result.count} ordini** (fonte: database)`,
-                    data: { count: result.count, type: 'ordini', source: 'database-optimized' }
-                };
-            } else if (result.warning) {
-                console.warn(`⚠️ FALLBACK ATTIVATO: ${result.warning}`);
-                return {
-                    success: true,
-                    response: `Nel database ci sono **${result.count} ordini** (fonte: dati locali - ${result.warning})`,
-                    data: { count: result.count, type: 'ordini', source: 'fallback-local', warning: result.warning }
+                    response: `Nel database ci sono **${count} ordini** (fonte: database)`,
+                    data: { count: count, type: 'ordini', source: 'database-unique-count' }
                 };
             } else {
-                throw new Error(result.error || 'Conteggio fallito');
+                throw new Error('Conteggio ordini unici fallito - risultato 0');
             }
             
         } catch (error) {
