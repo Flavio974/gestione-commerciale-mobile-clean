@@ -2631,14 +2631,14 @@
     Promise.all([
       // Core essenziali (parallelo per velocità)
       safeLoadQueue('js/utils/italian-date-manager.js'),
-      safeLoadQueue('js/middleware/vocabulary-manager.js'),
+      safeLoadQueue('js/middleware/vocabulary-manager.js?v=' + Date.now()),
       safeLoadQueue('config/ai-config.js'),
       safeLoadQueue('js/ai/openai-ai.js'), // Riabilitato con controllo inizializzazione
       safeLoadQueue('js/ai/anthropic-ai.js'),
       safeLoadQueue('js/ai/ai-assistant.js'),
       safeLoadQueue('js/ai/ios-tts-fix.js'),
       safeLoadQueue('js/ai/flavio-ai-assistant.js'),
-      safeLoadQueue('js/ai/supabase-ai-integration.js')
+      safeLoadQueue('js/ai/supabase-ai-integration.js?v=' + Date.now())
     ])
     .then(() => {
       // 🔄 CARICAMENTO MIDDLEWARE AI - Sistema di routing intelligente  
@@ -2648,7 +2648,7 @@
         // 'js/middleware/request-middleware.js', ✅ RIMOSSO - Solo VocabularyManager attivo
         'js/middleware/ai-middleware.js',
 <script src="js/middleware/vocabulary-auto-sync.js"></script>,
-        'js/middleware/robust-connection-manager.js',
+        'js/middleware/robust-connection-manager.js?v=' + Date.now(),
         'js/middleware/middleware-integration.js'
       );
     })
