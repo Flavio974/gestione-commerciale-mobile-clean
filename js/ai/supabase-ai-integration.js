@@ -17,7 +17,7 @@ const SUPABASE_CONNECTION_CONFIG = {
 
 // 🗂️ CONFIGURAZIONE TABELLE SUPABASE
 const SUPABASE_TABLES = {
-    ORDERS: 'archivio_ordini_venduto',
+    ORDERS: 'orders',
     CLIENTS: 'clients',
     DOCUMENTS: 'documents',
     TIMELINE_EVENTS: 'timeline_events',
@@ -187,7 +187,7 @@ class SupabaseAIIntegration {
                 this.getDocuments(),
                 this.getTimelineEvents(),
                 this.getPercorsi(),
-                this.getHistoricalOrders(), // Aggiungiamo la query per archivio_ordini_venduto
+                this.getHistoricalOrders(), // Aggiungiamo la query per orders
                 this.getProducts() // Aggiungiamo query prodotti
             ]);
 
@@ -317,7 +317,7 @@ class SupabaseAIIntegration {
     }
 
     /**
-     * Query ordini da Supabase (archivio_ordini_venduto)
+     * Query ordini da Supabase (orders)
      */
     async getOrders() {
         try {
@@ -328,7 +328,7 @@ class SupabaseAIIntegration {
                 return window.ordersData || [];
             }
 
-            console.log('🔍 ORDINI: Eseguo query archivio_ordini_venduto...');
+            console.log('🔍 ORDINI: Eseguo query orders...');
             const { data, error } = await this.supabase
                 .from(SUPABASE_TABLES.ORDERS)
                 .select('*')
@@ -364,7 +364,7 @@ class SupabaseAIIntegration {
             }
 
             const { data, error } = await supabase
-                .from('orders')
+                .from(SUPABASE_TABLES.ORDERS)
                 .select('*')
                 .limit(3);
             
@@ -691,7 +691,7 @@ class SupabaseAIIntegration {
     }
 
     /**
-     * Query dati storici ordini da archivio_ordini_venduto
+     * Query dati storici ordini da orders
      */
     async getHistoricalOrders() {
         try {
@@ -702,7 +702,7 @@ class SupabaseAIIntegration {
                 return [];
             }
 
-            console.log('📊 HISTORICAL: Eseguo query archivio_ordini_venduto...');
+            console.log('📊 HISTORICAL: Eseguo query orders...');
             
             // Prima conta totale record
             const { count, error: countError } = await this.supabase
@@ -1220,7 +1220,7 @@ class SupabaseAIIntegration {
                     // Lista semplice di TUTTI i prodotti nell'ordine - NESSUN LIMITE
                     tuttiiProdotti: order.prodotti || []
                 })) || [],
-                summary: `Database archivio_ordini_venduto contiene ${data.historicalOrders.totalRecords} record`
+                summary: `Database orders contiene ${data.historicalOrders.totalRecords} record`
             } : {
                 totalRecords: 0,
                 error: 'Dati storici non disponibili'
@@ -1273,7 +1273,7 @@ class SupabaseAIIntegration {
                     topOrdini: data.historicalOrders.statistics.topOrdini || []
                 },
                 lastUpdate: data.historicalOrders.lastUpdate,
-                summary: `Database archivio_ordini_venduto contiene ${data.historicalOrders.totalRecords} record con ${data.historicalOrders.statistics.numeroOrdini || 0} ordini analizzati`
+                summary: `Database orders contiene ${data.historicalOrders.totalRecords} record con ${data.historicalOrders.statistics.numeroOrdini || 0} ordini analizzati`
             } : {
                 totalRecords: 0,
                 statistics: {},
@@ -1305,44 +1305,7 @@ class SupabaseAIIntegration {
             return false;
         }
     }
-
-    /**
-     * Pulisci nomi prodotti da caratteri corrotti dal PDF
-     */
-    cleanProductName(name) {
-        if (!name || typeof name !== 'string') return name;
-        
-        return name
-            // Rimuovi caratteri di controllo
-            .replace(/[ -]/g, '')
-            // Fix per pattern "XXXD' XXX" dove D' è separata
-            .replace(/([A-Z]+)D'([A-Z]+)/g, ' D')
-            // Fix per parole concatenate comuni (pattern specifici)
-            .replace(/([A-Z]+)COME/g, ' COME')
-            .replace(/([A-Z]+)CON/g, ' CON')
-            .replace(/([A-Z]+)CARNE/g, ' CARNE')
-            .replace(/([A-Z]+)POLLO/g, ' POLLO')
-            .replace(/([A-Z]+)PESCE/g, ' PESCE')
-            // Pulisce spazi multipli
-            .replace(/\s+/g, ' ')
-            .trim();
-    }
 }
-
-// CORREZIONE: testOrderCountFinal deve creare un'istanza della classe
-window.testOrderCountFinal = async function() {
-  console.log('📊 === TEST GLOBAL COUNT ORDINI ===');
-  try {
-    // IMPORTANTE: Crea un'istanza della classe per usare il metodo
-    const supabaseAI = new SupabaseAIIntegration();
-    const cnt = await supabaseAI.countOrdersFromDatabase();
-    console.log('✅ testOrderCountFinal: trovati ' + cnt + ' ordini in tabella "orders"');
-    return cnt;
-  } catch (err) {
-    console.error('❌ testOrderCountFinal FALLITO:', err);
-    return 0;
-  }
-};
 
 // Esporta classe per uso globale
 window.SupabaseAIIntegration = SupabaseAIIntegration;

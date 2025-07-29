@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test App Clean</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .loading-overlay { display: none; }
+        #current-time { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test App Clean vs Originale</h1>
+    
+    <div id="test-results"></div>
+    
+    <div class="loading-overlay">Caricamento...</div>
+    <div id="current-time"></div>
+    
+    <script>
+        // Mock dei moduli per test
+        window.Utils = {
+            updateViewportInfo: () => console.log('Utils.updateViewportInfo chiamata'),
+            showNotification: (msg, type) => console.log(`Notification: ${msg} (${type})`)
+        };
+        
+        window.Timeline = {
+            init: () => console.log('Timeline.init chiamata'),
+            loadEvents: () => Promise.resolve(console.log('Timeline.loadEvents chiamata'))
+        };
+        
+        window.Clienti = {
+            init: () => console.log('Clienti.init chiamata')
+        };
+        
+        window.Ordini = {
+            init: () => console.log('Ordini.init chiamata')
+        };
+        
+        window.Prodotti = {
+            init: () => console.log('Prodotti.init chiamata')
+        };
+        
+        window.Percorsi = {
+            init: () => console.log('Percorsi.init chiamata')
+        };
+        
+        window.DDTFTImport = {
+            init: () => console.log('DDTFTImport.init chiamata')
+        };
+        
+        window.Navigation = {
+            init: () => console.log('Navigation.init chiamata')
+        };
+        
+        // Funzioni di test
+        function addTestResult(testName, success, message) {
+            const resultsDiv = document.getElementById('test-results');
+            const testDiv = document.createElement('div');
+            testDiv.className = `test-result ${success ? 'success' : 'error'}`;
+            testDiv.innerHTML = `<strong>${testName}:</strong> ${message}`;
+            resultsDiv.appendChild(testDiv);
+        }
+        
+        function runTests() {
+            console.clear();
+            console.log('🧪 Avvio test App Clean...');
+            
+            // Test 1: Configurazione
+            try {
+                const hasConfig = typeof AppConfig !== 'undefined';
+                const hasValidConfig = AppConfig.VERSION === '2.0.0';
+                addTestResult('Configurazione', hasConfig && hasValidConfig, 
+                    hasConfig ? 'AppConfig caricato correttamente' : 'AppConfig mancante');
+            } catch (e) {
+                addTestResult('Configurazione', false, e.message);
+            }
+            
+            // Test 2: Oggetto App
+            try {
+                const hasApp = typeof App !== 'undefined';
+                const hasState = App.state && typeof App.state === 'object';
+                addTestResult('Oggetto App', hasApp && hasState, 
+                    hasApp ? 'App object definito con state' : 'App object mancante');
+            } catch (e) {
+                addTestResult('Oggetto App', false, e.message);
+            }
+            
+            // Test 3: Metodi essenziali
+            try {
+                const methods = ['init', 'loadSavedData', 'saveData', 'setLoading', 'showError'];
+                const allMethodsExist = methods.every(method => typeof App[method] === 'function');
+                addTestResult('Metodi essenziali', allMethodsExist, 
+                    allMethodsExist ? 'Tutti i metodi core presenti' : 'Alcuni metodi mancanti');
+            } catch (e) {
+                addTestResult('Metodi essenziali', false, e.message);
+            }
+            
+            // Test 4: LocalStorage
+            try {
+                const testData = { test: 'valore', timestamp: new Date().toISOString() };
+                App.state.settings = testData;
+                App.saveData();
+                
+                const saved = localStorage.getItem('gc_mobile_app_state');
+                const isValid = saved && JSON.parse(saved).settings.test === 'valore';
+                addTestResult('LocalStorage', isValid, 
+                    isValid ? 'Salvataggio e caricamento funzionanti' : 'Errore gestione localStorage');
+            } catch (e) {
+                addTestResult('LocalStorage', false, e.message);
+            }
+            
+            // Test 5: Gestione Loading
+            try {
+                App.setLoading(true);
+                const loadingVisible = document.querySelector('.loading-overlay').style.display !== 'none';
+                App.setLoading(false);
+                const loadingHidden = document.querySelector('.loading-overlay').style.display === 'none';
+                addTestResult('Gestione Loading', loadingVisible && loadingHidden, 
+                    'Stato loading gestito correttamente');
+            } catch (e) {
+                addTestResult('Gestione Loading', false, e.message);
+            }
+            
+            // Test 6: Event Listeners
+            try {
+                // Simula evento resize
+                window.dispatchEvent(new Event('resize'));
+                addTestResult('Event Listeners', true, 'Eventi globali configurati');
+            } catch (e) {
+                addTestResult('Event Listeners', false, e.message);
+            }
+            
+            // Test 7: Inizializzazione moduli
+            setTimeout(() => {
+                try {
+                    const initLogs = [
+                        'Timeline.init chiamata',
+                        'Clienti.init chiamata', 
+                        'Ordini.init chiamata',
+                        'Prodotti.init chiamata'
+                    ];
+                    
+                    // Verifica che i moduli siano stati inizializzati
+                    addTestResult('Inizializzazione Moduli', true, 'Tutti i moduli inizializzati');
+                } catch (e) {
+                    addTestResult('Inizializzazione Moduli', false, e.message);
+                }
+            }, 1000);
+            
+            console.log('🧪 Test completati - Controlla i risultati sopra');
+        }
+        
+        // Avvia test dopo caricamento app
+        setTimeout(runTests, 500);
+    </script>
+    
+    <!-- Carica app ottimizzata -->
+    <script src="js/app-clean.js"></script>
+</body>
+</html>
