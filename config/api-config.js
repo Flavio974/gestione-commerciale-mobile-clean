@@ -104,6 +104,16 @@ const API_CONFIG = {
     BACKOFF_MULTIPLIER: 2
   },
   
+  // Mapping entità-tabella per database Supabase
+  ENTITY_TABLE_MAP: {
+    orders: 'archivio_ordini_venduto',
+    clients: 'clients',
+    products: 'products', 
+    routes: 'percorsi',
+    documents: 'documents',
+    timeline_events: 'timeline_events'
+  },
+  
   // Gestione errori
   ERROR_MESSAGES: {
     NETWORK_ERROR: 'Errore di rete. Verifica la connessione.',
@@ -162,3 +172,6 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
 
 // Freeze dell'oggetto per evitare modifiche accidentali
 Object.freeze(API_CONFIG);
+
+// Esporta API_CONFIG globalmente per uso in browser
+window.API_CONFIG = API_CONFIG;

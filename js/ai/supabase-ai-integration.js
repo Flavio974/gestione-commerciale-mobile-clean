@@ -4,6 +4,9 @@
  * 🚀 OTTIMIZZATO: Retry logic e timeout aumentato per connessione robusta
  */
 
+// Import API configuration per mapping tabelle
+// Nota: In ambiente web si assume che API_CONFIG sia disponibile globalmente
+
 // 🔧 CONFIGURAZIONE CONNESSIONE SUPABASE
 const SUPABASE_CONNECTION_CONFIG = {
     TIMEOUT_MS: 10000,        // ✅ Aumentato da 2000 a 10000ms
@@ -350,69 +353,51 @@ class SupabaseAIIntegration {
     }
 
     /**
-     * 🚀 NUOVO: Conteggio ordini ottimizzato con database reale
+     * 🚀 OTTIMIZZATO: Conteggio ordini dal database con mapping ENTITY_TABLE_MAP
      */
     async countOrdersFromDatabase() {
         try {
-            console.log('📊 === AVVIO CONTEGGIO ORDINI DAL DATABASE ===');
+            console.log('[SupabaseAI] === AVVIO CONTEGGIO ORDINI DAL DATABASE ===');
+            
+            // Verifica che API_CONFIG sia disponibile
+            const ENTITY_TABLE_MAP = window.API_CONFIG?.ENTITY_TABLE_MAP || {
+                orders: 'archivio_ordini_venduto'
+            };
+            
+            console.log('[SupabaseAI] Mapping tabella ordini:', ENTITY_TABLE_MAP.orders);
             
             // Step 1: Connetti a Supabase con retry
             const supabase = await this.connectToSupabase();
             
-            if (supabase) {
-                console.log('🔄 Conteggio diretto dal database...');
-                
-                // Step 2: Query reale al database per conteggio
-                const { data, error, count } = await supabase
-                    .from(SUPABASE_TABLES.ORDERS)
-                    .select('*', { count: 'exact', head: true });
-                
-                if (error) {
-                    throw new Error(`Query error: ${error.message}`);
-                }
-                
-                console.log(`✅ CONTEGGIO REALE ORDINI: ${count}`);
-                return { 
-                    count: count || 0, 
-                    source: 'database',
-                    success: true 
-                };
-            } else {
-                // Step 3: Fallback ai dati getAllData se database non raggiungibile
-                console.warn('⚠️ Database non raggiungibile, uso getAllData...');
-                const allData = await this.getAllData();
-                
-                let orderCount = 0;
-                
-                // Conta ordini da varie fonti
-                if (allData.orders && allData.orders.length > 0) {
-                    orderCount = allData.orders.length;
-                    console.log(`📦 Conteggio da orders: ${orderCount}`);
-                } else if (allData.historicalOrders && allData.historicalOrders.sampleData) {
-                    orderCount = allData.historicalOrders.sampleData.length;
-                    console.log(`📦 Conteggio da historicalOrders: ${orderCount}`);
-                } else {
-                    // Ultimo fallback: localStorage
-                    const localOrders = JSON.parse(localStorage.getItem('ordini') || '[]');
-                    orderCount = localOrders.length;
-                    console.log(`📦 Conteggio da localStorage: ${orderCount}`);
-                }
-                
-                return { 
-                    count: orderCount, 
-                    source: 'fallback_data',
-                    success: false,
-                    warning: 'Database non disponibile, usando dati locali'
-                };
+            if (!supabase) {
+                throw new Error('Supabase client non disponibile');
             }
             
+            // Step 2: nuovo codice: usa supabase-js e il mapping ENTITY_TABLE_MAP
+            const { error: headError, count } = await supabase
+                .from(ENTITY_TABLE_MAP.orders)        // = 'archivio_ordini_venduto'
+                .select('*', { head: true, count: 'exact' });
+            
+            if (headError) {
+                console.error('[SupabaseAI] Errore conteggio ordini:', headError);
+                throw headError;
+            }
+            
+            console.log(`[SupabaseAI] Totale ordini dal DB: ${count}`);
+            return {
+                count: count || 0,
+                source: 'database',
+                success: true,
+                table: ENTITY_TABLE_MAP.orders
+            };
+            
         } catch (error) {
-            console.error('❌ Errore conteggio ordini:', error);
-            return { 
-                count: 0, 
+            console.error('[SupabaseAI] Errore conteggio ordini:', error);
+            return {
+                count: 0,
                 source: 'error',
                 success: false,
-                error: error.message 
+                error: error.message
             };
         }
     }
