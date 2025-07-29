@@ -468,25 +468,76 @@ class SupabaseAIIntegration {
     }
 
     /**
-     * 🚀 CONTEGGIO ORDINI UNICI - Funzione semplificata per compatibilità
+     * 🚀 CONTEGGIO ORDINI UNICI - Versione migliorata con debug
      */
     async countOrdersFromDb() {
-        console.log('📊 === AVVIO CONTEGGIO ORDINI UNICI ===');
+        console.log('📊 === AVVIO CONTEGGIO ORDINI UNICI (DEBUG) ===');
         
         try {
-            const result = await this.countOrdersFromDatabase();
+            // Usa il mapping tabella
+            const ENTITY_TABLE_MAP = window.API_CONFIG?.ENTITY_TABLE_MAP || {
+                orders: 'orders'
+            };
             
-            if (result.success) {
-                console.log(`✅ CONTEGGIO COMPLETATO:`);
-                console.log(`   - Ordini UNICI: ${result.count}`);
-                console.log(`   - Righe totali: ${result.totalRows}`);
-                console.log(`   - Media prodotti per ordine: ${(result.totalRows/result.count).toFixed(1)}`);
-                
-                return result.count; // Ritorna solo il numero per compatibilità
-            } else {
-                console.error('❌ Errore nel conteggio ordini:', result.error);
-                return 0;
+            const supabase = await this.connectToSupabase();
+            if (!supabase) {
+                throw new Error('Supabase client non disponibile');
             }
+            
+            // Prima verifica che campi esistono
+            console.log('🔍 Verifico struttura tabella...');
+            const testQuery = await supabase
+                .from(ENTITY_TABLE_MAP.orders)
+                .select('*')
+                .limit(2);
+            
+            if (testQuery.error) {
+                console.error('❌ Errore accesso tabella:', testQuery.error);
+                throw testQuery.error;
+            }
+            
+            if (testQuery.data && testQuery.data.length > 0) {
+                const availableFields = Object.keys(testQuery.data[0]);
+                console.log('📋 Campi disponibili:', availableFields);
+                
+                // Cerca il campo numero ordine
+                const possibleOrderFields = availableFields.filter(field => 
+                    field.toLowerCase().includes('ordine') || 
+                    field.toLowerCase().includes('order') || 
+                    field.toLowerCase().includes('numero') ||
+                    field === 'id'
+                );
+                console.log('🎯 Possibili campi numero ordine:', possibleOrderFields);
+            }
+            
+            // Prova con numero_ordine
+            console.log('🔍 Recupero tutti i record con numero_ordine...');
+            const { data, error } = await supabase
+                .from(ENTITY_TABLE_MAP.orders)
+                .select('numero_ordine')
+                .not('numero_ordine', 'is', null);
+            
+            if (error) {
+                console.error('❌ Errore query numero_ordine:', error);
+                throw error;
+            }
+            
+            console.log(`📊 Dati recuperati: ${data.length} righe`);
+            console.log('🔍 Primi 5 valori numero_ordine:', data.slice(0, 5).map(r => r.numero_ordine));
+            
+            // Conta gli ordini unici
+            const ordiniUnici = new Set(data.map(row => row.numero_ordine));
+            const uniqueOrdersCount = ordiniUnici.size;
+            const totalRowsCount = data.length;
+            
+            console.log('🎯 Valori unici numero_ordine:', Array.from(ordiniUnici).slice(0, 10));
+            
+            console.log(`✅ CONTEGGIO FINALE:`);
+            console.log(`   - Ordini UNICI: ${uniqueOrdersCount}`);
+            console.log(`   - Righe totali: ${totalRowsCount}`);
+            console.log(`   - Media prodotti per ordine: ${(totalRowsCount/uniqueOrdersCount).toFixed(1)}`);
+            
+            return uniqueOrdersCount;
             
         } catch (error) {
             console.error('❌ Errore nel conteggio ordini:', error);
