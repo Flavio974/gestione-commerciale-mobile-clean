@@ -1244,54 +1244,114 @@ class VocabularyManager {
     }
 
     /**
-     * Conta ordini direttamente da Supabase (locale)
+     * 🚀 OTTIMIZZATO: Conta ordini con connessione database robusta
      */
     async executeLocalCountOrders(supabaseAI) {
         try {
-            const allData = await supabaseAI.getAllData();
-            let count = allData.orders ? allData.orders.length : 0;
+            console.log('📊 Avvio conteggio ordini ottimizzato...');
             
-            // Fallback ai dati historical se orders è vuoto
-            if (count === 0 && allData.historical) {
-                count = allData.historical.length;
-                console.log('🏠 📊 Usando dati historical per conteggio:', count);
+            // Usa la nuova funzione di conteggio ottimizzata
+            const result = await supabaseAI.countOrdersFromDatabase();
+            
+            if (result.success) {
+                console.log(`✅ CONTEGGIO DATABASE RIUSCITO: ${result.count} ordini`);
+                return {
+                    success: true,
+                    response: `Nel database ci sono **${result.count} ordini** (fonte: database)`,
+                    data: { count: result.count, type: 'ordini', source: 'database-optimized' }
+                };
+            } else if (result.warning) {
+                console.warn(`⚠️ FALLBACK ATTIVATO: ${result.warning}`);
+                return {
+                    success: true,
+                    response: `Nel database ci sono **${result.count} ordini** (fonte: dati locali - ${result.warning})`,
+                    data: { count: result.count, type: 'ordini', source: 'fallback-local', warning: result.warning }
+                };
+            } else {
+                throw new Error(result.error || 'Conteggio fallito');
             }
             
-            console.log('🏠 ✅ Conteggio locale ordini:', count);
-            
-            return {
-                success: true,
-                response: `Ci sono ${count} ordini nel database`,
-                data: { count, type: 'ordini', source: 'local-execution' }
-            };
         } catch (error) {
-            throw new Error(`Errore conteggio locale ordini: ${error.message}`);
+            console.error('❌ Errore conteggio ordini ottimizzato:', error);
+            
+            // Fallback di emergenza ai dati getAllData
+            console.log('🔄 Tentativo fallback di emergenza...');
+            try {
+                const allData = await supabaseAI.getAllData();
+                let count = allData.orders ? allData.orders.length : 0;
+                
+                // Fallback ai dati historical se orders è vuoto
+                if (count === 0 && allData.historical) {
+                    count = allData.historical.length;
+                    console.log('🏠 📊 Usando dati historical per conteggio:', count);
+                }
+                
+                console.log('🏠 ⚠️ Conteggio di emergenza:', count);
+                
+                return {
+                    success: true,
+                    response: `Nel database ci sono circa ${count} ordini (conteggio di emergenza)`,
+                    data: { count, type: 'ordini', source: 'emergency-fallback' }
+                };
+            } catch (fallbackError) {
+                throw new Error(`Errore conteggio ordini: ${error.message} | Fallback: ${fallbackError.message}`);
+            }
         }
     }
 
     /**
-     * DEBUG: Conta TUTTI gli ordini nel database (globale)
+     * 🚀 OTTIMIZZATO: Conta TUTTI gli ordini nel database con connessione robusta
      */
     async executeLocalCountTotalOrders(supabaseAI) {
         try {
-            const allData = await supabaseAI.getAllData();
-            let count = allData.orders ? allData.orders.length : 0;
+            console.log('📊 Avvio conteggio ordini totali ottimizzato...');
             
-            // Fallback ai dati historical se orders è vuoto
-            if (count === 0 && allData.historical) {
-                count = allData.historical.length;
-                console.log('🏠 📊 Usando dati historical per conteggio totale:', count);
+            // Usa la nuova funzione di conteggio ottimizzata
+            const result = await supabaseAI.countOrdersFromDatabase();
+            
+            if (result.success) {
+                console.log(`✅ CONTEGGIO TOTALE DATABASE RIUSCITO: ${result.count} ordini`);
+                return {
+                    success: true,
+                    response: `📦 Nel database ci sono **${result.count} ordini totali** (fonte: database).`,
+                    data: { count: result.count, type: 'ordini_totali', source: 'database-optimized' }
+                };
+            } else if (result.warning) {
+                console.warn(`⚠️ FALLBACK TOTALI ATTIVATO: ${result.warning}`);
+                return {
+                    success: true,
+                    response: `📦 Nel database ci sono **${result.count} ordini totali** (fonte: dati locali).`,
+                    data: { count: result.count, type: 'ordini_totali', source: 'fallback-local', warning: result.warning }
+                };
+            } else {
+                throw new Error(result.error || 'Conteggio totale fallito');
             }
             
-            console.log('🏠 ✅ Conteggio locale ordini totali:', count);
-            
-            return {
-                success: true,
-                response: `📦 Nel database ci sono **${count} ordini**.`,
-                data: { count, type: 'ordini_totali', source: 'local-execution' }
-            };
         } catch (error) {
-            throw new Error(`Errore conteggio locale ordini totali: ${error.message}`);
+            console.error('❌ Errore conteggio ordini totali ottimizzato:', error);
+            
+            // Fallback di emergenza ai dati getAllData
+            console.log('🔄 Tentativo fallback di emergenza per totali...');
+            try {
+                const allData = await supabaseAI.getAllData();
+                let count = allData.orders ? allData.orders.length : 0;
+                
+                // Fallback ai dati historical se orders è vuoto
+                if (count === 0 && allData.historical) {
+                    count = allData.historical.length;
+                    console.log('🏠 📊 Usando dati historical per conteggio totale:', count);
+                }
+                
+                console.log('🏠 ⚠️ Conteggio totale di emergenza:', count);
+                
+                return {
+                    success: true,
+                    response: `📦 Nel database ci sono circa **${count} ordini totali** (conteggio di emergenza).`,
+                    data: { count, type: 'ordini_totali', source: 'emergency-fallback' }
+                };
+            } catch (fallbackError) {
+                throw new Error(`Errore conteggio ordini totali: ${error.message} | Fallback: ${fallbackError.message}`);
+            }
         }
     }
 

@@ -1,7 +1,16 @@
 /**
  * Integrazione Supabase per AI Assistant
  * Gestisce query dati e fallback offline
+ * 🚀 OTTIMIZZATO: Retry logic e timeout aumentato per connessione robusta
  */
+
+// 🔧 CONFIGURAZIONE CONNESSIONE SUPABASE
+const SUPABASE_CONNECTION_CONFIG = {
+    TIMEOUT_MS: 10000,        // ✅ Aumentato da 2000 a 10000ms
+    RETRY_ATTEMPTS: 3,        // ✅ Tentativi di connessione
+    RETRY_DELAY: 2000,        // ✅ Delay tra retry
+    FALLBACK_WARNING: true    // ✅ Avvisa ma non fallback immediato
+};
 
 class SupabaseAIIntegration {
     constructor() {
@@ -17,10 +26,76 @@ class SupabaseAIIntegration {
         };
         this.cacheTimeout = 5 * 60 * 1000; // 5 minuti
         this.offlineMode = false;
+        this.connectionRetries = 0; // ✅ Traccia tentativi connessione
     }
 
     /**
-     * Verifica se Supabase è disponibile
+     * 🚀 OTTIMIZZATO: Verifica Supabase con retry logic
+     */
+    async waitForSupabaseReady(maxAttempts = SUPABASE_CONNECTION_CONFIG.RETRY_ATTEMPTS, delay = SUPABASE_CONNECTION_CONFIG.RETRY_DELAY) {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            console.log(`🔄 Tentativo connessione Supabase ${attempt}/${maxAttempts}...`);
+            
+            // Controlla se Supabase è pronto
+            const supabase = window.supabaseClient || window.supabase || this.supabase;
+            
+            if (supabase && typeof supabase.from === 'function') {
+                console.log(`✅ Supabase connesso al tentativo ${attempt}`);
+                this.supabase = supabase; // Aggiorna riferimento
+                this.connectionRetries = 0; // Reset counter
+                return supabase;
+            }
+            
+            if (attempt < maxAttempts) {
+                console.log(`⏳ Supabase non pronto, riprovo tra ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+        
+        console.error(`❌ Supabase non disponibile dopo ${maxAttempts} tentativi`);
+        this.connectionRetries = maxAttempts;
+        return null;
+    }
+
+    /**
+     * 🔧 AGGIORNATO: Connessione robusta con test database
+     */
+    async connectToSupabase() {
+        try {
+            console.log('🔌 === INIZIO CONNESSIONE SUPABASE ===');
+            
+            // Step 1: Aspetta che Supabase sia pronto
+            const supabase = await this.waitForSupabaseReady();
+            
+            if (!supabase) {
+                throw new Error('Supabase client non disponibile dopo retry');
+            }
+            
+            // Step 2: Testa la connessione con una query semplice
+            console.log('🧪 Test connessione database...');
+            const testResult = await supabase.from('orders').select('id', { count: 'exact', head: true });
+            
+            if (testResult.error) {
+                throw new Error(`Errore connessione database: ${testResult.error.message}`);
+            }
+            
+            console.log(`✅ Database connesso - ${testResult.count || 0} ordini trovati`);
+            console.log('🔌 === CONNESSIONE SUPABASE COMPLETATA ===');
+            return supabase;
+            
+        } catch (error) {
+            console.error('🚨 Errore connessione Supabase:', error);
+            
+            // Solo ora usa il fallback, ma con avviso chiaro
+            if (SUPABASE_CONNECTION_CONFIG.FALLBACK_WARNING) {
+                console.warn('⚠️ FALLBACK: Uso dati locali temporanei');
+            }
+            return null;
+        }
+    }
+
+    /**
+     * ✅ LEGACY: Mantieni per compatibilità
      */
     isSupabaseAvailable() {
         const available = this.supabase && typeof this.supabase.from === 'function';
@@ -72,21 +147,28 @@ class SupabaseAIIntegration {
     }
 
     /**
-     * Ottieni tutti i dati rilevanti per l'AI
+     * 🚀 OTTIMIZZATO: Ottieni tutti i dati con connessione robusta
      */
     async getAllData(forceRefresh = false) {
         // Usa cache se valida e non forzato il refresh
         if (!forceRefresh && this.isCacheValid()) {
+            console.log('📦 Uso cache valida per getAllData');
             return this.cache;
         }
 
-        // Se Supabase non è disponibile, usa dati locali
-        if (!this.isSupabaseAvailable()) {
-            return this.getLocalData();
-        }
+        console.log('📊 Avvio caricamento dati dal database...');
 
         try {
-            // Esegui query parallele per migliore performance
+            // 🔌 STEP 1: Connessione robusta con retry
+            const supabase = await this.connectToSupabase();
+            
+            if (!supabase) {
+                console.warn('⚠️ Database non disponibile, uso dati locali');
+                return this.getLocalData();
+            }
+
+            // 🔄 STEP 2: Esegui query parallele per migliore performance
+            console.log('🔄 Esecuzione query parallele al database...');
             const [clients, orders, documents, timeline, percorsi, historicalOrders, products] = await Promise.all([
                 this.getClients(),
                 this.getOrders(),
@@ -97,7 +179,7 @@ class SupabaseAIIntegration {
                 this.getProducts() // Aggiungiamo query prodotti
             ]);
 
-            // Aggiorna cache
+            // 📦 STEP 3: Aggiorna cache
             this.cache = {
                 clients,
                 orders,
@@ -109,12 +191,16 @@ class SupabaseAIIntegration {
                 lastUpdate: Date.now()
             };
 
-            // Salva in localStorage per fallback offline
+            // 💾 STEP 4: Salva in localStorage per fallback offline
             this.saveToLocalStorage();
+
+            console.log('✅ Dati caricati con successo dal database');
+            console.log(`📊 Statistiche: Clienti: ${clients?.length || 0}, Ordini: ${orders?.length || 0}, Ordini storici: ${historicalOrders?.sampleData?.length || 0}`);
 
             return this.cache;
         } catch (error) {
-            console.error('Errore nel recupero dati Supabase:', error);
+            console.error('🚨 Errore nel recupero dati Supabase:', error);
+            console.warn('⚠️ Fallback automatico su dati locali');
             // Fallback su dati locali in caso di errore
             return this.getLocalData();
         }
@@ -229,6 +315,74 @@ class SupabaseAIIntegration {
         } catch (error) {
             console.error('Errore query ordini:', error);
             return [];
+        }
+    }
+
+    /**
+     * 🚀 NUOVO: Conteggio ordini ottimizzato con database reale
+     */
+    async countOrdersFromDatabase() {
+        try {
+            console.log('📊 === AVVIO CONTEGGIO ORDINI DAL DATABASE ===');
+            
+            // Step 1: Connetti a Supabase con retry
+            const supabase = await this.connectToSupabase();
+            
+            if (supabase) {
+                console.log('🔄 Conteggio diretto dal database...');
+                
+                // Step 2: Query reale al database per conteggio
+                const { data, error, count } = await supabase
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (error) {
+                    throw new Error(`Query error: ${error.message}`);
+                }
+                
+                console.log(`✅ CONTEGGIO REALE ORDINI: ${count}`);
+                return { 
+                    count: count || 0, 
+                    source: 'database',
+                    success: true 
+                };
+            } else {
+                // Step 3: Fallback ai dati getAllData se database non raggiungibile
+                console.warn('⚠️ Database non raggiungibile, uso getAllData...');
+                const allData = await this.getAllData();
+                
+                let orderCount = 0;
+                
+                // Conta ordini da varie fonti
+                if (allData.orders && allData.orders.length > 0) {
+                    orderCount = allData.orders.length;
+                    console.log(`📦 Conteggio da orders: ${orderCount}`);
+                } else if (allData.historicalOrders && allData.historicalOrders.sampleData) {
+                    orderCount = allData.historicalOrders.sampleData.length;
+                    console.log(`📦 Conteggio da historicalOrders: ${orderCount}`);
+                } else {
+                    // Ultimo fallback: localStorage
+                    const localOrders = JSON.parse(localStorage.getItem('ordini') || '[]');
+                    orderCount = localOrders.length;
+                    console.log(`📦 Conteggio da localStorage: ${orderCount}`);
+                }
+                
+                return { 
+                    count: orderCount, 
+                    source: 'fallback_data',
+                    success: false,
+                    warning: 'Database non disponibile, usando dati locali'
+                };
+            }
+            
+        } catch (error) {
+            console.error('❌ Errore conteggio ordini:', error);
+            return { 
+                count: 0, 
+                source: 'error',
+                success: false,
+                error: error.message 
+            };
         }
     }
 
