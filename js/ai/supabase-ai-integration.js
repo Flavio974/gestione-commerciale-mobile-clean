@@ -1598,5 +1598,15 @@ window.countOrdersFromDb = async function() {
     return await supabaseAI.countOrdersFromDb();
 };
 
+window.testOrderCountFinal = async function() {
+  console.log('📊 === TEST GLOBAL COUNT ORDINI ===');
+  try {
+    const cnt = await countOrdersFromDb();
+    console.log(`✅ testOrderCountFinal: trovati ${cnt} ordini in tabella "orders"`);
+  } catch (err) {
+    console.error('❌ testOrderCountFinal FALLITO:', err);
+  }
+};
+
 // Esporta classe per uso globale
 window.SupabaseAIIntegration = SupabaseAIIntegration;
