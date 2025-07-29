@@ -12,6 +12,15 @@ const SUPABASE_CONNECTION_CONFIG = {
     FALLBACK_WARNING: true    // ✅ Avvisa ma non fallback immediato
 };
 
+// 🗂️ CONFIGURAZIONE TABELLE SUPABASE
+const SUPABASE_TABLES = {
+    ORDERS: 'archivio_ordini_venduto',
+    CLIENTS: 'clients',
+    DOCUMENTS: 'documents',
+    TIMELINE_EVENTS: 'timeline_events',
+    PERCORSI: 'percorsi'
+};
+
 class SupabaseAIIntegration {
     constructor() {
         console.log('🔍 INIT: Inizializzazione SupabaseAIIntegration...');
@@ -73,7 +82,7 @@ class SupabaseAIIntegration {
             
             // Step 2: Testa la connessione con una query semplice
             console.log('🧪 Test connessione database...');
-            const testResult = await supabase.from('orders').select('id', { count: 'exact', head: true });
+            const testResult = await supabase.from(SUPABASE_TABLES.ORDERS).select('id', { count: 'exact', head: true });
             
             if (testResult.error) {
                 throw new Error(`Errore connessione database: ${testResult.error.message}`);
@@ -220,7 +229,7 @@ class SupabaseAIIntegration {
 
             console.log('🔍 CLIENTI: Eseguo query clients...');
             const { data, error } = await this.supabase
-                .from('clients')
+                .from(SUPABASE_TABLES.CLIENTS)
                 .select('*')
                 .order('nome', { ascending: true });
 
@@ -281,7 +290,7 @@ class SupabaseAIIntegration {
 
             console.log('🔢 CLIENTI COUNT: Eseguo query count...');
             const { count, error } = await this.supabase
-                .from('clients')
+                .from(SUPABASE_TABLES.CLIENTS)
                 .select('*', { count: 'exact', head: true });
 
             console.log('🔢 CLIENTI COUNT: Risultato query:', { count, error });
@@ -333,7 +342,7 @@ class SupabaseAIIntegration {
                 
                 // Step 2: Query reale al database per conteggio
                 const { data, error, count } = await supabase
-                    .from('orders')
+                    .from(SUPABASE_TABLES.ORDERS)
                     .select('*', { count: 'exact', head: true });
                 
                 if (error) {
@@ -546,7 +555,7 @@ class SupabaseAIIntegration {
 
             console.log('🔍 PERCORSI: Eseguo query percorsi...');
             const { data, error } = await this.supabase
-                .from('percorsi')
+                .from(SUPABASE_TABLES.PERCORSI)
                 .select('*')
                 .order('data', { ascending: false });
 
@@ -598,7 +607,7 @@ class SupabaseAIIntegration {
             // Prendi TUTTI gli eventi per test (senza filtri di data)
             console.log('🔍 TIMELINE: Eseguo query timeline_events...');
             const { data, error } = await this.supabase
-                .from('timeline_events')
+                .from(SUPABASE_TABLES.TIMELINE_EVENTS)
                 .select('id, date, type, title, description, order_value')
                 .order('date', { ascending: true })
                 .limit(50);
@@ -634,7 +643,7 @@ class SupabaseAIIntegration {
             
             // Prima conta totale record
             const { count, error: countError } = await this.supabase
-                .from('archivio_ordini_venduto')
+                .from(SUPABASE_TABLES.ORDERS)
                 .select('*', { count: 'exact', head: true });
             
             if (countError) {
@@ -653,7 +662,7 @@ class SupabaseAIIntegration {
             
             while (true) {
                 const { data, error } = await this.supabase
-                    .from('archivio_ordini_venduto')
+                    .from(SUPABASE_TABLES.ORDERS)
                     .select('*')
                     .range(from, from + batchSize - 1);
                 
@@ -1230,7 +1239,7 @@ class SupabaseAIIntegration {
 
             // Prima ottieni i percorsi già presenti su Supabase
             const { data: existingPercorsi } = await this.supabase
-                .from('percorsi')
+                .from(SUPABASE_TABLES.PERCORSI)
                 .select('chiave_univoca');
 
             const existingKeys = new Set(existingPercorsi?.map(p => p.chiave_univoca) || []);
@@ -1262,7 +1271,7 @@ class SupabaseAIIntegration {
             }));
 
             const { error } = await this.supabase
-                .from('percorsi')
+                .from(SUPABASE_TABLES.PERCORSI)
                 .insert(percorsiFormatted);
 
             if (error) {
