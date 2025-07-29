@@ -314,16 +314,38 @@ class SupabaseAIIntegration {
     }
 
     /**
-     * Query ordini da Supabase
+     * Query ordini da Supabase (archivio_ordini_venduto)
      */
     async getOrders() {
         try {
-            // Tabella 'orders' non ancora creata - usa dati di fallback
-            console.log('Tabella orders non disponibile, usando dati di fallback');
-            return window.ordersData || [];
+            console.log('🔍 ORDINI: Verifico connessione Supabase...', !!this.supabase);
+            
+            if (!this.supabase) {
+                console.error('❌ ORDINI: Supabase client non disponibile');
+                return window.ordersData || [];
+            }
+
+            console.log('🔍 ORDINI: Eseguo query archivio_ordini_venduto...');
+            const { data, error } = await this.supabase
+                .from(SUPABASE_TABLES.ORDERS)
+                .select('*')
+                .order('data_consegna', { ascending: false })
+                .limit(100); // Limita a ultimi 100 per performance
+
+            console.log('🔍 ORDINI: Risultato query:', { data, error });
+
+            if (error) {
+                console.error('❌ ORDINI: Errore query:', error);
+                // Fallback su window.ordersData
+                return window.ordersData || [];
+            }
+            
+            console.log('✅ ORDINI: Trovati', data?.length || 0, 'ordini da Supabase');
+            return data || [];
+            
         } catch (error) {
-            console.error('Errore query ordini:', error);
-            return [];
+            console.error('❌ ORDINI: Errore generale:', error);
+            return window.ordersData || [];
         }
     }
 
