@@ -82,20 +82,31 @@ function fixSecureStorageCategories() {
   }
 }
 
-// FIX 3: Disabilita temporaneamente provider Gemini
-function fixGeminiProvider() {
+// FIX 3: Configura provider AI corretti
+function fixAIProviders() {
   console.log('🔍 Controllo provider AI...');
   
-  // Rimuove Gemini dalla configurazione
+  // Assicura che solo Anthropic e OpenAI siano disponibili
   if (window.AI_CONFIG?.PROVIDERS) {
-    delete window.AI_CONFIG.PROVIDERS.gemini;
-    console.log('✅ Provider Gemini rimosso dalla configurazione');
+    // Rimuove eventuali provider non esistenti
+    const validProviders = ['anthropic', 'openai'];
+    Object.keys(window.AI_CONFIG.PROVIDERS).forEach(provider => {
+      if (!validProviders.includes(provider)) {
+        delete window.AI_CONFIG.PROVIDERS[provider];
+        console.log(`✅ Provider non valido rimosso: ${provider}`);
+      }
+    });
   }
   
   // Imposta Anthropic come default se disponibile
-  if (window.flavioAI && window.AI_CONFIG?.PROVIDERS?.anthropic) {
-    window.flavioAI.setProvider('anthropic');
-    console.log('✅ Anthropic impostato come provider predefinito');
+  if (window.flavioAI) {
+    if (window.AI_CONFIG?.PROVIDERS?.anthropic) {
+      window.flavioAI.setProvider('anthropic');
+      console.log('✅ Anthropic impostato come provider predefinito');
+    } else if (window.AI_CONFIG?.PROVIDERS?.openai) {
+      window.flavioAI.setProvider('openai');
+      console.log('✅ OpenAI impostato come provider predefinito');
+    }
   }
 }
 
@@ -148,7 +159,7 @@ function applyAllFixes() {
   fixSecureStorageCategories();
   console.log('');
   
-  fixGeminiProvider();
+  fixAIProviders();
   console.log('');
   
   fixGetClientsCount();
@@ -165,7 +176,7 @@ applyAllFixes();
 window.refactoringFixes = {
   fixVocabularyUserStorage,
   fixSecureStorageCategories,
-  fixGeminiProvider,
+  fixAIProviders,
   fixGetClientsCount,
   applyAllFixes
 };

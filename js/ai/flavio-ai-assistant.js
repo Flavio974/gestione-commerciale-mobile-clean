@@ -41,9 +41,11 @@ window.FlavioAIAssistant = (function() {
          */
         setupDefaultProvider() {
             if (this.baseAssistant) {
-                // Prova prima Gemini se disponibile
-                if (this.baseAssistant.setProvider('gemini')) {
-                    console.log('✅ Gemini AI configurato come provider');
+                // Prova prima Anthropic, poi OpenAI
+                if (this.baseAssistant.setProvider('anthropic')) {
+                    console.log('✅ Anthropic AI configurato come provider');
+                } else if (this.baseAssistant.setProvider('openai')) {
+                    console.log('✅ OpenAI configurato come provider');
                 } else {
                     console.warn('⚠️ Nessun provider AI disponibile');
                 }
