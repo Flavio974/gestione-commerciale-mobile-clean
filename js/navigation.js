@@ -212,6 +212,26 @@ const Navigation = {
       // After enter hook
       this.afterEnterTab(tabName);
       
+      // FIX TIMELINE: Se è timeline, forza inizializzazione
+      if (tabName === 'timeline' || tabName === 'timeline-content') {
+        console.log('📅 [NAV FIX] È Timeline! Controllo inizializzazione...');
+        setTimeout(() => {
+          if (window.Timeline && window.Timeline.init) {
+            if (!window.Timeline.elements || !window.Timeline.elements.canvas) {
+              console.log('🔧 [NAV FIX] Timeline non inizializzata, forzo init...');
+              try {
+                window.Timeline.init();
+                console.log('✅ [NAV FIX] Timeline inizializzata da navigation');
+              } catch (e) {
+                console.error('❌ [NAV FIX] Errore init Timeline:', e);
+              }
+            } else {
+              console.log('✅ [NAV FIX] Timeline già inizializzata');
+            }
+          }
+        }, 100);
+      }
+      
       // Aggiorna classe body per controllo voice controls
       this.updateBodyClasses(tabName);
       

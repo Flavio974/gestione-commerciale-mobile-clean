@@ -2625,6 +2625,65 @@
   
   <!-- SafeLoad 2.0 System -->
   <script src="js/modules/ddtft/loader.js"></script>
+  
+  <!-- 🚨 FIX URGENTE - Caricato INLINE per garantire esecuzione -->
+  <script>
+    console.log('🚨🚨🚨 [FIX URGENTE INLINE] ESECUZIONE IMMEDIATA!');
+    
+    // FIX TIMELINE IMMEDIATO
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('📅 [FIX INLINE] DOM Ready, fix Timeline...');
+      
+      // Ogni click su timeline
+      document.addEventListener('click', (e) => {
+        const tab = e.target.closest('[data-tab="timeline"]');
+        if (tab) {
+          console.log('📅 [FIX INLINE] Click su Timeline!');
+          setTimeout(() => {
+            if (window.Timeline && window.Timeline.init) {
+              console.log('🔧 [FIX INLINE] Forzo Timeline.init()');
+              try {
+                window.Timeline.init();
+              } catch (err) {
+                console.error('❌ [FIX INLINE] Errore:', err);
+              }
+            }
+          }, 200);
+        }
+      });
+    });
+    
+    // FIX CHE ORE SONO
+    const fixCheOreSono = setInterval(() => {
+      if (window.aiMiddleware) {
+        console.log('🔧 [FIX INLINE] Patch system_info...');
+        
+        const original = window.aiMiddleware.executeLocalAction;
+        window.aiMiddleware.executeLocalAction = async function(command, message, context) {
+          console.log('🎯 [FIX INLINE] Comando:', command.action);
+          
+          if (command.action === 'system_info') {
+            const now = new Date();
+            const type = command.params?.type || 'time';
+            
+            if (type === 'time') {
+              return `🕐 Sono le ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+            } else {
+              return `📅 Oggi è ${now.toLocaleDateString('it-IT', {weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+            }
+          }
+          
+          return original.call(this, command, message, context);
+        };
+        
+        clearInterval(fixCheOreSono);
+        console.log('✅ [FIX INLINE] system_info patchato!');
+      }
+    }, 500);
+    
+    setTimeout(() => clearInterval(fixCheOreSono), 10000);
+  </script>
+  
   <!-- ⚡ Bootstrap ottimizzato - Ridotte 16 catene a 4 step con caricamento parallelo -->
   <script>
     // 🚀 CARICAMENTO OTTIMIZZATO - Core modules in parallelo, rimozione moduli non essenziali
@@ -2642,7 +2701,9 @@
       safeLoadQueue('js/ai/supabase-ai-init-fix.js?v=' + Date.now()),
       safeLoadQueue('js/debug-query-cliente-fix.js?v=' + Date.now()),
       safeLoadQueue('js/fix-filtri-cliente-bug.js?v=' + Date.now()),
-      safeLoadQueue('js/fix-vocabulary-system-info.js?v=' + Date.now())
+      safeLoadQueue('js/fix-vocabulary-system-info.js?v=' + Date.now()),
+      safeLoadQueue('js/fix-ripristino-sistema-ai.js?v=' + Date.now()),
+      safeLoadQueue('js/fix-navigation-timeline.js?v=' + Date.now())
     ])
     .then(() => {
       // 🔄 CARICAMENTO MIDDLEWARE AI - Sistema di routing intelligente  
@@ -2653,7 +2714,11 @@
         'js/middleware/ai-middleware.js',
         'js/middleware/vocabulary-auto-sync.js',
         'js/middleware/robust-connection-manager.js?v=' + Date.now(),
-        'js/middleware/middleware-integration.js'
+        'js/middleware/middleware-integration.js',
+        'js/fix-remove-stop-definitivo.js?v=' + Date.now(),
+        'js/fix-estrazione-parametri-cliente.js?v=' + Date.now(),
+        'js/fix-sistema-completo-ai.js?v=' + Date.now(),
+        'js/fix-timeline-loading.js?v=' + Date.now()
       );
     })
     .then(() => Promise.all([
@@ -2680,6 +2745,11 @@
           'js/api.js'
         ))
     ]))
+    .then(() => {
+      // 🚨 FIX CRITICO NAVIGAZIONE: Carica subito dopo navigation.js
+      console.log('🚨 Caricamento fix navigazione critico...');
+      return safeLoadQueue('js/fix-navigation-complete.js?v=' + Date.now());
+    })
     .then(() => {
       // 🚀 CARICAMENTO RAPIDO: Solo moduli critici per interfaccia base
       console.log('⚡ Caricamento moduli critici...');
@@ -2843,7 +2913,14 @@
         // Forza inizializzazione moduli principali
         if (window.Timeline && typeof window.Timeline.init === 'function') {
           console.log('⏰ Inizializzazione Timeline...');
-          window.Timeline.init();
+          try {
+            window.Timeline.init();
+            console.log('✅ Timeline inizializzata con successo');
+          } catch (error) {
+            console.error('❌ Errore inizializzazione Timeline:', error);
+          }
+        } else {
+          console.warn('⚠️ Timeline non trovata o init non disponibile');
         }
         
         if (window.Clienti && typeof window.Clienti.init === 'function') {
