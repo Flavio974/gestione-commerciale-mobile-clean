@@ -33,13 +33,29 @@ setTimeout(() => {
                         type: message.includes('ora') ? 'time' : 'date'
                     };
                 } else if (message.includes('fatturato') || message.includes('venduto')) {
-                    transformedCommand.action = 'universal_query';
-                    transformedCommand.params = {
-                        entity: 'orders',
-                        operation: 'sum',
-                        field: 'importo',
-                        filters: {}
-                    };
+    // Prepara i filtri dai parametri estratti
+    const filters = {};
+    
+    // Se ci sono parametri estratti dal vocabolario, usali per i filtri
+    if (command.params && command.params.extracted) {
+        if (command.params.extracted.CLIENTE) {
+            filters.cliente = command.params.extracted.CLIENTE.toUpperCase();
+        }
+        if (command.params.extracted.PRODOTTO) {
+            filters.prodotto = command.params.extracted.PRODOTTO.toUpperCase();
+        }
+        if (command.params.extracted.DATA) {
+            filters.data = command.params.extracted.DATA;
+        }
+    }
+    
+    transformedCommand.action = 'universal_query';
+    transformedCommand.params = {
+        entity: 'orders',
+        operation: 'sum',
+        field: 'importo',
+        filters: filters  // Ora passa i filtri estratti!
+    };
                     if (originalContext?.extractedParams?.cliente) {
                         transformedCommand.params.filters.cliente = originalContext.extractedParams.cliente;
                     }
@@ -74,6 +90,7 @@ setTimeout(() => {
                 }
                 
                 console.log('🔧 Comando trasformato:', transformedCommand);
+                console.log('🔧 FILTRI NEL COMANDO TRASFORMATO:', transformedCommand.params.filters);
                 
                 // Usa il comando trasformato
                 return originalExecuteLocalAction.call(this, transformedCommand, originalMessage, originalContext);

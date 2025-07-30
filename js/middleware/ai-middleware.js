@@ -296,7 +296,17 @@ class OrdersQueryHandler extends BaseQueryHandler {
       case 'list':
         return this.formatOrdersList(orders, filters);
       case 'count':
-        return ResponseFormatter.createResult(orders.length, `Trovati ${orders.length} ordini`, { count: orders.length });
+  // Conta ordini UNICI, non righe
+  const ordiniUnici = new Set(orders.map(o => o.numero_ordine)).size;
+  const clienteMsg = filters.cliente ? ` per ${filters.cliente}` : '';
+  return ResponseFormatter.createResult(
+    ordiniUnici, 
+    `Trovati ${ordiniUnici} ordini${clienteMsg} (${orders.length} righe totali)`, 
+    { 
+      ordiniUnici: ordiniUnici,
+      righeTotali: orders.length 
+    }
+  );
       case 'sum':
         const field = options.field || 'importo';
         const total = orders.reduce((sum, ord) => sum + (ord[field] || 0), 0);

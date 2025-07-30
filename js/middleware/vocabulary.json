@@ -8,8 +8,8 @@
       "commands": [
         {
           "id": "cmd_fatturato_1",
-          "pattern": "dimmi il fatturato del cliente [CLIENTE]",
-          "action": "universal_query",
+          "pattern": "dimmi il fatturato del cliente {cliente}",
+          "action": "calculateRevenue",
           "params": {
             "entity": "orders",
             "operation": "sum",

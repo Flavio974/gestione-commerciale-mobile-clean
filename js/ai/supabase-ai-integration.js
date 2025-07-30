@@ -27,8 +27,29 @@ const SUPABASE_TABLES = {
 class SupabaseAIIntegration {
     constructor() {
         console.log('🔍 INIT: Inizializzazione SupabaseAIIntegration...');
-        this.supabase = window.supabase;
-        console.log('🔍 INIT: Supabase client:', !!this.supabase);
+        
+        // Controllo robusto per il client Supabase
+        if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+            this.supabase = window.supabaseClient;
+            console.log('✅ INIT: Supabase client trovato e valido');
+        } else if (window.supabase && typeof window.supabase.from === 'function') {
+            // Fallback: potrebbe essere già un client inizializzato
+            this.supabase = window.supabase;
+            console.log('✅ INIT: Usando window.supabase come client');
+        } else {
+    console.warn('⚠️ INIT: Supabase client non disponibile al momento');
+    this.supabase = null;
+    
+    // AGGIUNGI QUESTO: Riprova dopo un breve delay
+    setTimeout(() => {
+        if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+            this.supabase = window.supabaseClient;
+            console.log('✅ INIT: Client Supabase assegnato dopo delay');
+        }
+    }, 1000);
+}
+        
+        console.log('🔍 INIT: Supabase client inizializzato:', !!this.supabase);
         this.cache = {
             clients: null,
             orders: null,
@@ -41,25 +62,52 @@ class SupabaseAIIntegration {
         this.connectionRetries = 0; // ✅ Traccia tentativi connessione
     }
 
-    /**
+	cleanProductName(name) {
+    if (!name) return '';
+    
+    // Log per debug
+    console.log('🧹 cleanProductName - Input:', name);
+    
+    // Pulizia: rimuove spazi multipli, trim e uppercase
+    const cleaned = name
+        .toString()
+        .replace(/\s+/g, ' ')  // Sostituisce spazi multipli con uno singolo
+        .trim()                // Rimuove spazi all'inizio e alla fine
+        .toUpperCase();        // Converte in maiuscolo
+    
+    console.log('🧹 cleanProductName - Output:', cleaned);
+    
+    return cleaned;
+}
+
+  /**
      * 🚀 OTTIMIZZATO: Verifica Supabase con retry logic
      */
     async waitForSupabaseReady(maxAttempts = SUPABASE_CONNECTION_CONFIG.RETRY_ATTEMPTS, delay = SUPABASE_CONNECTION_CONFIG.RETRY_DELAY) {
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             console.log(`🔄 Tentativo connessione Supabase ${attempt}/${maxAttempts}...`);
             
-            // Controlla se Supabase è pronto
-            const supabase = window.supabaseClient || window.supabase || this.supabase;
-            
-            if (supabase && typeof supabase.from === 'function') {
-                console.log(`✅ Supabase connesso al tentativo ${attempt}`);
-                this.supabase = supabase; // Aggiorna riferimento
-                this.connectionRetries = 0; // Reset counter
-                return supabase;
+            // Controlla prima window.supabaseClient (prioritario)
+            if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+                console.log(`✅ window.supabaseClient disponibile al tentativo ${attempt}`);
+                this.supabase = window.supabaseClient;
+                this.connectionRetries = 0;
+                return window.supabaseClient;
             }
             
+            // Poi controlla window.supabase
+            if (window.supabase && typeof window.supabase.from === 'function') {
+                console.log(`✅ window.supabase è un client valido al tentativo ${attempt}`);
+                this.supabase = window.supabase;
+                this.connectionRetries = 0;
+                return window.supabase;
+            }
+            
+            // Se non disponibile, aspetta prima del prossimo tentativo
             if (attempt < maxAttempts) {
                 console.log(`⏳ Supabase non pronto, riprovo tra ${delay}ms...`);
+                console.log('  - window.supabaseClient:', !!window.supabaseClient);
+                console.log('  - window.supabase:', !!window.supabase);
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
@@ -110,21 +158,42 @@ class SupabaseAIIntegration {
      * ✅ LEGACY: Mantieni per compatibilità
      */
     isSupabaseAvailable() {
-        const available = this.supabase && typeof this.supabase.from === 'function';
-        if (!available) {
-            console.log('🔍 DEBUG Supabase availability:');
-            console.log('  - this.supabase:', !!this.supabase);
-            console.log('  - this.supabase.from:', typeof this.supabase?.from);
-            console.log('  - window.supabaseClient:', !!window.supabaseClient);
-            
-            // Fallback: usa window.supabaseClient se disponibile
+        // Aggiorna sempre il riferimento se disponibile
+        if (!this.supabase || typeof this.supabase.from !== 'function') {
             if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
-                console.log('🔄 Using window.supabaseClient as fallback');
                 this.supabase = window.supabaseClient;
-                return true;
+            } else if (window.supabase && typeof window.supabase.from === 'function') {
+                this.supabase = window.supabase;
             }
         }
-        return available;
+        
+        // Prima controlla se this.supabase è già valido
+        if (this.supabase && typeof this.supabase.from === 'function') {
+            return true;
+        }
+        
+        console.log('🔍 DEBUG Supabase availability:');
+        console.log('  - this.supabase:', !!this.supabase);
+        console.log('  - this.supabase.from:', typeof this.supabase?.from);
+        console.log('  - window.supabaseClient:', !!window.supabaseClient);
+        console.log('  - window.supabase:', !!window.supabase);
+        
+        // Prova a riaggiornare il riferimento
+        if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+            console.log('🔄 Aggiornamento riferimento a window.supabaseClient');
+            this.supabase = window.supabaseClient;
+            return true;
+        }
+        
+        // Fallback su window.supabase se è un client valido
+        if (window.supabase && typeof window.supabase.from === 'function') {
+            console.log('🔄 Fallback su window.supabase come client');
+            this.supabase = window.supabase;
+            return true;
+        }
+        
+        console.warn('⚠️ Supabase non disponibile');
+        return false;
     }
 
     /**
@@ -151,11 +220,8 @@ class SupabaseAIIntegration {
             console.warn('⚠️ Errore pulizia cache locale:', error);
         }
         
-        // Force re-check di Supabase availability con window.supabaseClient
-        if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
-            console.log('🔄 Re-linking to window.supabaseClient during cache invalidation');
-            this.supabase = window.supabaseClient;
-        }
+        // Force re-check di Supabase availability
+        this.isSupabaseAvailable(); // Questo aggiornerà automaticamente this.supabase se necessario
     }
 
     /**
@@ -225,7 +291,8 @@ class SupabaseAIIntegration {
         try {
             console.log('🔍 CLIENTI: Verifico connessione Supabase...', !!this.supabase);
             
-            if (!this.supabase) {
+            // Verifica disponibilità Supabase con metodo aggiornato
+            if (!this.isSupabaseAvailable()) {
                 console.error('❌ CLIENTI: Supabase client non disponibile');
                 return this.getClientsFromStorage();
             }
@@ -284,7 +351,8 @@ class SupabaseAIIntegration {
         try {
             console.log('🔢 CLIENTI COUNT: Verifico connessione Supabase...', !!this.supabase);
             
-            if (!this.supabase) {
+            // Verifica disponibilità Supabase con metodo aggiornato
+            if (!this.isSupabaseAvailable()) {
                 console.error('❌ CLIENTI COUNT: Supabase client non disponibile');
                 // Fallback su localStorage
                 const localClients = this.getClientsFromStorage();
@@ -323,7 +391,8 @@ class SupabaseAIIntegration {
         try {
             console.log('🔍 ORDINI: Verifico connessione Supabase...', !!this.supabase);
             
-            if (!this.supabase) {
+            // Verifica disponibilità Supabase con metodo aggiornato
+            if (!this.isSupabaseAvailable()) {
                 console.error('❌ ORDINI: Supabase client non disponibile');
                 return window.ordersData || [];
             }
@@ -611,7 +680,8 @@ class SupabaseAIIntegration {
         try {
             console.log('🔍 PERCORSI: Verifico connessione Supabase...', !!this.supabase);
             
-            if (!this.supabase) {
+            // Verifica disponibilità Supabase con metodo aggiornato
+            if (!this.isSupabaseAvailable()) {
                 console.error('❌ PERCORSI: Supabase client non disponibile');
                 return this.getPercorsiFromStorage();
             }
@@ -662,7 +732,8 @@ class SupabaseAIIntegration {
             // DEBUG: Verifica connessione Supabase
             console.log('🔍 TIMELINE: Verifico connessione Supabase...', !!this.supabase);
             
-            if (!this.supabase) {
+            // Verifica disponibilità Supabase con metodo aggiornato
+            if (!this.isSupabaseAvailable()) {
                 console.error('❌ TIMELINE: Supabase client non disponibile');
                 return [];
             }
@@ -697,7 +768,8 @@ class SupabaseAIIntegration {
         try {
             console.log('📊 HISTORICAL: Verifico connessione Supabase...', !!this.supabase);
             
-            if (!this.supabase) {
+            // Verifica disponibilità Supabase con metodo aggiornato
+            if (!this.isSupabaseAvailable()) {
                 console.error('❌ HISTORICAL: Supabase client non disponibile');
                 return [];
             }
