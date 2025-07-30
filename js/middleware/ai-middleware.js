@@ -229,11 +229,15 @@ class BaseQueryHandler {
   }
   
   async getData() {
+    const forceRefresh = this.hasActiveFilters();
+    console.log('🔄 getData - forceRefresh:', forceRefresh, 'filters:', this.params?.filters);
+    
     try {
       if (window.supabaseAI?.getAllData) {
-        return await window.supabaseAI.getAllData();
+        // Usa il formato booleano se getAllData lo supporta
+        return await window.supabaseAI.getAllData(forceRefresh);
       } else if (window.robustConnectionManager?.instances?.supabaseAI?.getAllData) {
-        return await window.robustConnectionManager.instances.supabaseAI.getAllData();
+        return await window.robustConnectionManager.instances.supabaseAI.getAllData(forceRefresh);
       }
     } catch (error) {
       AILogger.log('warn', 'Data access error', error);
@@ -272,12 +276,25 @@ class BaseQueryHandler {
     
     return matches >= Math.min(words1.length, words2.length) / 2;
   }
+  
+  hasActiveFilters() {
+    const hasFilters = this.params?.filters && Object.keys(this.params.filters).length > 0;
+    console.log('🔍 hasActiveFilters:', hasFilters, 'filters:', this.params?.filters);
+    return hasFilters;
+  }
 }
 
 class OrdersQueryHandler extends BaseQueryHandler {
   async handle(operation, filters, options = {}) {
+    this.params = { operation, filters, options }; // CRITICO: Salva params per hasActiveFilters()
+    
+    console.log('📊 OrdersQueryHandler - Parametri ricevuti:', { operation, filters, options });
+    console.log('🔍 FILTRI DETTAGLIO:', JSON.stringify(filters, null, 2));
+    
     const allData = await this.getData();
     let orders = allData.historicalOrders?.sampleData || [];
+    
+    console.log('🔍 Numero ordini PRIMA del filtro:', orders.length);
     
     if (orders.length === 0) {
       return ResponseFormatter.createResult([], "Non ci sono ordini nel database.", { count: 0 });
@@ -285,6 +302,11 @@ class OrdersQueryHandler extends BaseQueryHandler {
     
     // Apply filters
     orders = this.applyFilters(orders, filters);
+    
+    console.log('🔍 Numero ordini DOPO il filtro:', orders.length);
+    if (orders.length === 0 && filters.cliente) {
+        console.warn('⚠️ ATTENZIONE: Nessun ordine trovato per cliente:', filters.cliente);
+    }
     
     AILogger.log('debug', `Orders query ${operation}`, {
       totalOrders: allData.historicalOrders?.sampleData?.length || 0,
@@ -336,6 +358,18 @@ class OrdersQueryHandler extends BaseQueryHandler {
           return DateParser.isSameDay(itemDate, targetDate);
         });
       }
+    }
+    
+    // Filtro aggiuntivo per data semplice
+    if (filters.data) {
+      const filterDate = new Date(filters.data);
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.data_ordine || order.data_consegna || order.data);
+        if (orderDate < filterDate) {
+          return false;
+        }
+        return true;
+      });
     }
     
     return filtered;

@@ -228,6 +228,14 @@ class SupabaseAIIntegration {
      * 🚀 OTTIMIZZATO: Ottieni tutti i dati con connessione robusta
      */
     async getAllData(forceRefresh = false) {
+        console.log('📊 getAllData chiamato - forceRefresh:', forceRefresh);
+        
+        // FORZA sempre refresh se forceRefresh è true
+        if (forceRefresh) {
+            console.log('🔄 FORCE REFRESH RICHIESTO - Bypasso cache');
+            this.cache.lastUpdate = 0; // Invalida la cache
+        }
+        
         // Usa cache se valida e non forzato il refresh
         if (!forceRefresh && this.isCacheValid()) {
             console.log('📦 Uso cache valida per getAllData');
