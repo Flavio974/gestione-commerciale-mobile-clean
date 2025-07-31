@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Schede - Timeline, Ordini, DDT/FT</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin-left: 10px;
+      font-weight: bold;
+    }
+    .status.ok {
+      background: #4CAF50;
+      color: white;
+    }
+    .status.error {
+      background: #f44336;
+      color: white;
+    }
+    .status.loading {
+      background: #ff9800;
+      color: white;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    button {
+      padding: 10px 20px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test Caricamento Schede</h1>
+  
+  <div class="test-section">
+    <h2>Test Moduli Caricati</h2>
+    <div id="module-status"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test Inizializzazione</h2>
+    <button onclick="testInit()">Test Inizializzazione Moduli</button>
+    <div id="init-results"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test Navigazione</h2>
+    <button onclick="testNavigation('timeline')">Apri Timeline</button>
+    <button onclick="testNavigation('orders')">Apri Ordini</button>
+    <button onclick="testNavigation('ddtft')">Apri DDT/FT</button>
+    <div id="nav-results"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Console Log</h2>
+    <pre id="console-log"></pre>
+  </div>
+  
+  <script>
+    const log = [];
+    const originalLog = console.log;
+    const originalError = console.error;
+    
+    console.log = function(...args) {
+      log.push({ type: 'log', message: args.join(' ') });
+      updateConsoleLog();
+      originalLog.apply(console, args);
+    };
+    
+    console.error = function(...args) {
+      log.push({ type: 'error', message: args.join(' ') });
+      updateConsoleLog();
+      originalError.apply(console, args);
+    };
+    
+    function updateConsoleLog() {
+      const el = document.getElementById('console-log');
+      el.innerHTML = log.slice(-20).map(entry => 
+        `<span style="color: ${entry.type === 'error' ? 'red' : 'black'}">${entry.message}</span>`
+      ).join('\n');
+    }
+    
+    function checkModules() {
+      const modules = [
+        { name: 'Timeline', path: 'window.Timeline' },
+        { name: 'TimelineConfig', path: 'window.TimelineConfig' },
+        { name: 'TimelineEvents', path: 'window.TimelineEvents' },
+        { name: 'Ordini', path: 'window.Ordini' },
+        { name: 'OrdiniParser', path: 'window.OrdiniParser' },
+        { name: 'DDTFTCore', path: 'window.DDTFTCore' },
+        { name: 'DDTFT', path: 'window.DDTFT' },
+        { name: 'Navigation', path: 'window.Navigation' },
+        { name: 'App', path: 'window.App' }
+      ];
+      
+      const statusEl = document.getElementById('module-status');
+      statusEl.innerHTML = modules.map(mod => {
+        const exists = eval(mod.path) !== undefined;
+        return `<div>
+          ${mod.name}: 
+          <span class="status ${exists ? 'ok' : 'error'}">
+            ${exists ? 'CARICATO' : 'NON TROVATO'}
+          </span>
+        </div>`;
+      }).join('');
+    }
+    
+    function testInit() {
+      const resultsEl = document.getElementById('init-results');
+      resultsEl.innerHTML = '<div class="status loading">Test in corso...</div>';
+      
+      const results = [];
+      
+      // Test Timeline
+      try {
+        if (window.Timeline && window.Timeline.init) {
+          window.Timeline.init();
+          results.push('✅ Timeline.init() eseguito con successo');
+        } else {
+          results.push('❌ Timeline non disponibile o senza metodo init');
+        }
+      } catch (e) {
+        results.push(`❌ Errore Timeline.init(): ${e.message}`);
+      }
+      
+      // Test Ordini
+      try {
+        if (window.Ordini && window.Ordini.init) {
+          window.Ordini.init();
+          results.push('✅ Ordini.init() eseguito con successo');
+        } else {
+          results.push('❌ Ordini non disponibile o senza metodo init');
+        }
+      } catch (e) {
+        results.push(`❌ Errore Ordini.init(): ${e.message}`);
+      }
+      
+      // Test DDTFT
+      try {
+        if (window.DDTFTCore && window.DDTFTCore.init) {
+          window.DDTFTCore.init();
+          results.push('✅ DDTFTCore.init() eseguito con successo');
+        } else if (window.DDTFT && window.DDTFT.init) {
+          window.DDTFT.init();
+          results.push('✅ DDTFT.init() eseguito con successo');
+        } else {
+          results.push('❌ DDT/FT non disponibile o senza metodo init');
+        }
+      } catch (e) {
+        results.push(`❌ Errore DDT/FT.init(): ${e.message}`);
+      }
+      
+      resultsEl.innerHTML = results.map(r => `<div>${r}</div>`).join('');
+    }
+    
+    function testNavigation(tab) {
+      const resultsEl = document.getElementById('nav-results');
+      
+      try {
+        if (window.Navigation && window.Navigation.switchToTab) {
+          window.Navigation.switchToTab(tab);
+          resultsEl.innerHTML = `<div class="status ok">Navigazione a ${tab} riuscita</div>`;
+        } else {
+          resultsEl.innerHTML = `<div class="status error">Navigation non disponibile</div>`;
+        }
+      } catch (e) {
+        resultsEl.innerHTML = `<div class="status error">Errore navigazione: ${e.message}</div>`;
+      }
+    }
+    
+    // Check iniziale dopo 3 secondi
+    setTimeout(() => {
+      checkModules();
+    }, 3000);
+    
+    // Update periodico
+    setInterval(() => {
+      checkModules();
+    }, 5000);
+  </script>
+</body>
+</html>

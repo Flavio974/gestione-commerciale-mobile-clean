@@ -7,6 +7,42 @@
 
 console.log('🚨 [FIX TIMELINE COMPLETE] Inizializzazione fix completo Timeline...');
 
+// Funzione helper per verificare tutte le dipendenze
+window.checkAllTimelineDependencies = function() {
+    const deps = {
+        'TimelineConfig': window.TimelineConfig,
+        'Timeline': window.Timeline,
+        'TimelineEvents': window.TimelineEvents,
+        'TimelineRendering': window.TimelineRendering,
+        'TimelineUtils': window.TimelineUtils,
+        'TimelineControls': window.TimelineControls
+    };
+    
+    const missing = [];
+    const loaded = [];
+    
+    for (const [name, obj] of Object.entries(deps)) {
+        if (!obj) {
+            missing.push(name);
+        } else {
+            loaded.push(name);
+        }
+    }
+    
+    console.log('📊 [FIX TIMELINE] Stato dipendenze:', {
+        loaded: loaded,
+        missing: missing,
+        allReady: missing.length === 0
+    });
+    
+    return {
+        allReady: missing.length === 0,
+        missing: missing,
+        loaded: loaded,
+        deps: deps
+    };
+};
+
 // Funzione per creare DOM completo Timeline
 window.createTimelineDOM = function() {
     console.log('🔧 [FIX TIMELINE] Creazione DOM Timeline completo...');
@@ -136,7 +172,23 @@ window.initTimelineSafe = function() {
             };
         }
         
+        // Verifica che tutte le dipendenze siano caricate prima di init
+        const deps = window.checkAllTimelineDependencies();
+        if (!deps.allReady) {
+            console.warn('⏳ [FIX TIMELINE] Dipendenze mancanti, posticipo init:', deps.missing);
+            
+            // Usa il sistema lazy init se disponibile
+            if (window.initTimelineWhenReady) {
+                window.initTimelineWhenReady();
+            } else {
+                // Riprova tra poco
+                setTimeout(window.initializeTimeline, 500);
+            }
+            return;
+        }
+        
         // Chiama init
+        console.log('🚀 [FIX TIMELINE] Tutte le dipendenze pronte, chiamo Timeline.init()');
         window.Timeline.init();
         
         // Verifica canvas context

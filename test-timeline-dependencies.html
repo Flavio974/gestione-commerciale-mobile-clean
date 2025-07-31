@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dipendenze Timeline</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .module-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .module-card {
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+            border: 2px solid #ddd;
+        }
+        .module-card.loaded {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+        .module-card.missing {
+            border-color: #dc3545;
+            background: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Dipendenze Timeline</h1>
+        
+        <div id="status" class="status info">Verifica in corso...</div>
+        
+        <div class="module-status" id="moduleStatus"></div>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="checkDependencies()">🔍 Verifica Dipendenze</button>
+            <button onclick="forceLoadConfig()">⚡ Forza Caricamento Config</button>
+            <button onclick="forceInitTimeline()">🚀 Forza Init Timeline</button>
+            <button onclick="testTimelineFlow()">🔄 Test Flusso Completo</button>
+            <button onclick="clearConsole()">🗑️ Pulisci Console</button>
+        </div>
+        
+        <h3>📋 Log Console:</h3>
+        <div id="console" class="log"></div>
+    </div>
+    
+    <script>
+        const logDiv = document.getElementById('console');
+        const statusDiv = document.getElementById('status');
+        const moduleStatusDiv = document.getElementById('moduleStatus');
+        
+        // Override console.log per catturare i messaggi
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog('LOG', args.join(' '), '#333');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog('WARN', args.join(' '), '#ff9800');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('ERROR', args.join(' '), '#f44336');
+        };
+        
+        function addLog(type, message, color) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div style="color: ${color}"><b>[${time}] ${type}:</b> ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearConsole() {
+            logDiv.innerHTML = '';
+            addLog('INFO', 'Console pulita', '#2196f3');
+        }
+        
+        function updateStatus(message, type = 'info') {
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+        
+        function checkDependencies() {
+            console.log('🔍 Verifica dipendenze Timeline...');
+            
+            const modules = {
+                'TimelineConfig': window.TimelineConfig,
+                'Timeline': window.Timeline,
+                'TimelineEvents': window.TimelineEvents,
+                'TimelineRendering': window.TimelineRendering,
+                'TimelineUtils': window.TimelineUtils,
+                'TimelineControls': window.TimelineControls
+            };
+            
+            let html = '';
+            let allLoaded = true;
+            
+            for (const [name, module] of Object.entries(modules)) {
+                const isLoaded = !!module;
+                if (!isLoaded) allLoaded = false;
+                
+                html += `
+                    <div class="module-card ${isLoaded ? 'loaded' : 'missing'}">
+                        <strong>${name}</strong><br>
+                        ${isLoaded ? '✅ Caricato' : '❌ Mancante'}
+                    </div>
+                `;
+                
+                console.log(`${name}: ${isLoaded ? '✅ Caricato' : '❌ Mancante'}`);
+            }
+            
+            moduleStatusDiv.innerHTML = html;
+            
+            if (allLoaded) {
+                updateStatus('✅ Tutte le dipendenze sono caricate!', 'success');
+                
+                // Verifica configurazione
+                if (window.Timeline && window.Timeline.config) {
+                    console.log('📊 Timeline.config presente:', !!window.Timeline.config);
+                    console.log('📊 Timeline.config === TimelineConfig:', window.Timeline.config === window.TimelineConfig);
+                }
+            } else {
+                updateStatus('⚠️ Alcune dipendenze mancano', 'warning');
+            }
+            
+            // Usa la funzione helper se disponibile
+            if (window.checkAllTimelineDependencies) {
+                const deps = window.checkAllTimelineDependencies();
+                console.log('📊 Risultato checkAllTimelineDependencies:', deps);
+            }
+            
+            return allLoaded;
+        }
+        
+        function forceLoadConfig() {
+            console.log('⚡ Tentativo di caricare TimelineConfig...');
+            
+            if (window.TimelineConfig) {
+                console.log('✅ TimelineConfig già caricato');
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = 'js/timeline/timeline-config.js?' + Date.now();
+            script.onload = () => {
+                console.log('✅ timeline-config.js caricato');
+                checkDependencies();
+            };
+            script.onerror = (e) => {
+                console.error('❌ Errore caricamento timeline-config.js:', e);
+            };
+            document.head.appendChild(script);
+        }
+        
+        function forceInitTimeline() {
+            console.log('🚀 Tentativo di inizializzare Timeline...');
+            
+            if (!window.Timeline) {
+                console.error('❌ Timeline non disponibile');
+                updateStatus('❌ Timeline non disponibile', 'error');
+                return;
+            }
+            
+            if (!window.Timeline.init) {
+                console.error('❌ Timeline.init non disponibile');
+                updateStatus('❌ Timeline.init non disponibile', 'error');
+                return;
+            }
+            
+            try {
+                window.Timeline.init();
+                console.log('✅ Timeline.init() chiamato con successo');
+                updateStatus('✅ Timeline inizializzato', 'success');
+            } catch (error) {
+                console.error('❌ Errore in Timeline.init():', error);
+                updateStatus('❌ Errore inizializzazione: ' + error.message, 'error');
+            }
+        }
+        
+        async function testTimelineFlow() {
+            console.log('🔄 Test flusso completo Timeline...');
+            updateStatus('🔄 Test in corso...', 'info');
+            
+            // Step 1: Carica tutti i moduli
+            const modulesToLoad = [
+                'js/timeline/timeline-config.js',
+                'js/timeline/timeline-core.js',
+                'js/timeline/timeline-utils.js',
+                'js/timeline/timeline-rendering.js',
+                'js/timeline/timeline-events.js',
+                'js/timeline/timeline-controls.js'
+            ];
+            
+            for (const modulePath of modulesToLoad) {
+                console.log(`📥 Caricamento ${modulePath}...`);
+                await loadScript(modulePath);
+                await delay(100);
+            }
+            
+            // Step 2: Verifica dipendenze
+            const allLoaded = checkDependencies();
+            
+            if (allLoaded) {
+                // Step 3: Inizializza
+                forceInitTimeline();
+            }
+        }
+        
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src + '?' + Date.now();
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Verifica iniziale dopo 1 secondo
+        setTimeout(() => {
+            console.log('🔍 Verifica iniziale dipendenze...');
+            checkDependencies();
+        }, 1000);
+    </script>
+</body>
+</html>

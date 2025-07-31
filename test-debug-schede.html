@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Debug Schede - Analisi Completa</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .status.success {
+      background: #4CAF50;
+      color: white;
+    }
+    .status.error {
+      background: #f44336;
+      color: white;
+    }
+    .status.warning {
+      background: #ff9800;
+      color: white;
+    }
+    .status.info {
+      background: #2196F3;
+      color: white;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    button {
+      padding: 8px 16px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #1976D2;
+    }
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .log-entry.error {
+      color: #f44336;
+    }
+    .log-entry.warning {
+      color: #ff9800;
+    }
+    .module-check {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Test Debug Completo Schede</h1>
+    
+    <div class="test-section">
+      <h2>🧪 Test Funzioni Debug Disponibili</h2>
+      <div class="grid">
+        <div>
+          <button onclick="runTest('testNavigationComplete')">Test Navigation Complete</button>
+          <button onclick="runTest('testAllTabs')">Test All Tabs</button>
+          <button onclick="runTest('testNavigationFix')">Test Navigation Fix</button>
+          <button onclick="runTest('testTimeline')">Test Timeline</button>
+        </div>
+        <div>
+          <button onclick="runTest('testSistemaAI')">Test Sistema AI</button>
+          <button onclick="runTest('testAllFixes')">Test All Fixes</button>
+          <button onclick="checkAllModules()">Check All Modules</button>
+          <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+      </div>
+      <div id="test-results" style="margin-top: 15px;"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>📊 Stato Moduli</h2>
+      <div id="modules-status"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>🐛 Analisi Problemi Identificati</h2>
+      <div id="problems-analysis"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>📋 Console Log</h2>
+      <div id="console-log" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>🔧 Fix Proposti</h2>
+      <div id="proposed-fixes"></div>
+    </div>
+  </div>
+  
+  <script>
+    const logs = [];
+    const problems = [];
+    
+    // Override console
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    console.log = function(...args) {
+      logs.push({ type: 'log', message: args.join(' '), time: new Date() });
+      updateConsoleLog();
+      originalLog.apply(console, args);
+    };
+    
+    console.error = function(...args) {
+      logs.push({ type: 'error', message: args.join(' '), time: new Date() });
+      problems.push({ type: 'error', message: args.join(' ') });
+      updateConsoleLog();
+      updateProblems();
+      originalError.apply(console, args);
+    };
+    
+    console.warn = function(...args) {
+      logs.push({ type: 'warning', message: args.join(' '), time: new Date() });
+      updateConsoleLog();
+      originalWarn.apply(console, args);
+    };
+    
+    function updateConsoleLog() {
+      const el = document.getElementById('console-log');
+      el.innerHTML = logs.slice(-50).map(entry => 
+        `<div class="log-entry ${entry.type}">
+          [${entry.time.toLocaleTimeString()}] ${entry.message}
+        </div>`
+      ).join('');
+      el.scrollTop = el.scrollHeight;
+    }
+    
+    function clearLogs() {
+      logs.length = 0;
+      problems.length = 0;
+      updateConsoleLog();
+      updateProblems();
+    }
+    
+    function runTest(testName) {
+      const resultsEl = document.getElementById('test-results');
+      resultsEl.innerHTML = `<div class="status info">Running ${testName}...</div>`;
+      
+      try {
+        if (window.parent && window.parent[testName]) {
+          console.log(`🧪 Executing ${testName}...`);
+          const result = window.parent[testName]();
+          
+          if (result instanceof Promise) {
+            result.then(() => {
+              resultsEl.innerHTML = `<div class="status success">${testName} completed</div>`;
+            }).catch(err => {
+              resultsEl.innerHTML = `<div class="status error">${testName} failed: ${err.message}</div>`;
+            });
+          } else {
+            resultsEl.innerHTML = `<div class="status success">${testName} executed</div>`;
+          }
+        } else {
+          resultsEl.innerHTML = `<div class="status error">${testName} not found</div>`;
+          console.error(`Function ${testName} not available`);
+        }
+      } catch (err) {
+        resultsEl.innerHTML = `<div class="status error">Error: ${err.message}</div>`;
+        console.error(`Error running ${testName}:`, err);
+      }
+    }
+    
+    function checkAllModules() {
+      const modules = [
+        // Core modules
+        { name: 'App', path: 'window.App', critical: true },
+        { name: 'Navigation', path: 'window.Navigation', critical: true },
+        { name: 'ModuleLoader', path: 'window.ModuleLoader', critical: true },
+        
+        // Tab modules
+        { name: 'Timeline', path: 'window.Timeline', critical: true },
+        { name: 'TimelineConfig', path: 'window.TimelineConfig' },
+        { name: 'TimelineEvents', path: 'window.TimelineEvents' },
+        { name: 'TimelineRendering', path: 'window.TimelineRendering' },
+        
+        { name: 'Ordini', path: 'window.Ordini', critical: true },
+        { name: 'OrdiniParser', path: 'window.OrdiniParser' },
+        { name: 'OrdiniExportCore', path: 'window.OrdiniExportCore' },
+        { name: 'OrdiniUI', path: 'window.OrdiniUI' },
+        
+        { name: 'DDTFTModule', path: 'window.DDTFTModule', critical: true },
+        { name: 'DDTFTModuleClean', path: 'window.DDTFTModuleClean' },
+        { name: 'getDDTFTModule', path: 'window.getDDTFTModule' },
+        { name: 'DDTFTImport', path: 'window.DDTFTImport' },
+        
+        // Fix modules
+        { name: 'safeLoadQueue', path: 'window.safeLoadQueue', critical: true },
+        { name: 'navigateTo', path: 'window.navigateTo' },
+        { name: 'initializeTimeline', path: 'window.initializeTimeline' }
+      ];
+      
+      const statusEl = document.getElementById('modules-status');
+      const criticalMissing = [];
+      
+      statusEl.innerHTML = modules.map(mod => {
+        let exists = false;
+        try {
+          exists = eval(mod.path) !== undefined;
+        } catch (e) {
+          exists = false;
+        }
+        
+        if (!exists && mod.critical) {
+          criticalMissing.push(mod.name);
+        }
+        
+        return `
+          <div class="module-check">
+            <span>${mod.name}${mod.critical ? ' <span class="status warning">CRITICAL</span>' : ''}</span>
+            <span class="status ${exists ? 'success' : 'error'}">
+              ${exists ? 'LOADED' : 'MISSING'}
+            </span>
+          </div>
+        `;
+      }).join('');
+      
+      if (criticalMissing.length > 0) {
+        problems.push({
+          type: 'critical',
+          message: `Missing critical modules: ${criticalMissing.join(', ')}`
+        });
+        updateProblems();
+      }
+    }
+    
+    function updateProblems() {
+      const el = document.getElementById('problems-analysis');
+      
+      if (problems.length === 0) {
+        el.innerHTML = '<div class="status success">No problems detected</div>';
+        return;
+      }
+      
+      const groupedProblems = {};
+      problems.forEach(p => {
+        if (!groupedProblems[p.type]) {
+          groupedProblems[p.type] = [];
+        }
+        groupedProblems[p.type].push(p.message);
+      });
+      
+      el.innerHTML = Object.entries(groupedProblems).map(([type, messages]) => `
+        <div style="margin: 10px 0;">
+          <h4>${type.toUpperCase()} Issues:</h4>
+          <ul>
+            ${messages.map(m => `<li>${m}</li>`).join('')}
+          </ul>
+        </div>
+      `).join('');
+      
+      updateProposedFixes();
+    }
+    
+    function updateProposedFixes() {
+      const el = document.getElementById('proposed-fixes');
+      const fixes = [];
+      
+      // Analyze problems and propose fixes
+      if (problems.some(p => p.message.includes('safeLoadQueue'))) {
+        fixes.push({
+          problem: 'safeLoadQueue function missing',
+          fix: 'Add safeLoadQueue wrapper function to map to ModuleLoader',
+          code: `window.safeLoadQueue = function(...scripts) {
+  return Promise.all(scripts.map(script => window.ModuleLoader.loadScript(script)));
+};`
+        });
+      }
+      
+      if (problems.some(p => p.message.includes('Timeline') && p.message.includes('init'))) {
+        fixes.push({
+          problem: 'Timeline not initializing properly',
+          fix: 'Force Timeline initialization after navigation',
+          code: `if (window.Timeline && !window.Timeline.elements?.canvas) {
+  window.Timeline.init();
+}`
+        });
+      }
+      
+      if (problems.some(p => p.message.includes('OrdiniUI'))) {
+        fixes.push({
+          problem: 'OrdiniUI module not loaded',
+          fix: 'Check if ordini-ui.js is being loaded correctly',
+          code: `// Verify module loading in ordini.js
+loadOrdersModule('OrdiniUI', 'ordini-ui.js');`
+        });
+      }
+      
+      el.innerHTML = fixes.length > 0 ? fixes.map(f => `
+        <div style="margin: 15px 0; padding: 10px; background: #f0f8ff; border-radius: 4px;">
+          <strong>Problem:</strong> ${f.problem}<br>
+          <strong>Fix:</strong> ${f.fix}<br>
+          <pre>${f.code}</pre>
+        </div>
+      `).join('') : '<div class="status info">No fixes needed</div>';
+    }
+    
+    // Initial check after 2 seconds
+    setTimeout(() => {
+      checkAllModules();
+      
+      // Check if we're in iframe
+      if (window.parent !== window) {
+        console.log('Running in iframe - accessing parent window functions');
+      } else {
+        console.warn('Not in iframe - debug functions may not be available');
+      }
+    }, 2000);
+  </script>
+</body>
+</html>
