@@ -3,27 +3,9 @@
  * Modulo principale che coordina tutti i componenti della timeline
  */
 
-(function() {
-  // Verifica dipendenze prima di creare Timeline
-  if (typeof window.TimelineConfig === 'undefined') {
-    console.warn('[Timeline Core] TimelineConfig non ancora caricato, inizializzazione posticipata');
-    
-    // Riprova tra poco
-    setTimeout(function() {
-      if (typeof window.TimelineConfig !== 'undefined') {
-        console.log('[Timeline Core] TimelineConfig ora disponibile, reinizializzazione...');
-        // Ricarica questo script
-        const script = document.createElement('script');
-        script.src = 'js/timeline/timeline-core.js?' + Date.now();
-        document.body.appendChild(script);
-      }
-    }, 100);
-    return;
-  }
-
-  const Timeline = {
-    // Riferimento alla configurazione
-    config: window.TimelineConfig,
+const Timeline = {
+  // Riferimento alla configurazione
+  config: TimelineConfig,
   
   // Stato del modulo
   state: {
@@ -626,17 +608,5 @@
   }
 };
 
-  // Rendi disponibile globalmente
-  window.Timeline = Timeline;
-  
-  // Log di debug per confermare caricamento
-  console.log('[LOAD] ✅ timeline-core.js caricato correttamente');
-  console.log('[LOAD] Timeline disponibile:', !!window.Timeline);
-  console.log('[LOAD] Dipendenze Timeline:', {
-    TimelineConfig: !!window.TimelineConfig,
-    TimelineEvents: !!window.TimelineEvents,
-    TimelineRendering: !!window.TimelineRendering,
-    TimelineUtils: !!window.TimelineUtils,
-    TimelineControls: !!window.TimelineControls
-  });
-})();
+// Rendi disponibile globalmente
+window.Timeline = Timeline;

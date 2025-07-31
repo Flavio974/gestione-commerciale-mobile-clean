@@ -3,8 +3,7 @@
  * Configurazione centralizzata per il modulo Timeline
  */
 
-(function() {
-  const TimelineConfig = {
+const TimelineConfig = {
   // Dimensioni e margini
   MARGIN: 50,
   LANE_H: 50,
@@ -51,10 +50,5 @@
   }
 };
 
-  // Export per uso globale
-  window.TimelineConfig = TimelineConfig;
-  
-  // Log di debug per confermare caricamento
-  console.log('[LOAD] ✅ timeline-config.js caricato correttamente');
-  console.log('[LOAD] TimelineConfig disponibile:', !!window.TimelineConfig);
-})();
+// Export per uso globale
+window.TimelineConfig = TimelineConfig;
