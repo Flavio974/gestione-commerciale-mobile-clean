@@ -14,7 +14,7 @@ const MODULE_INIT_MAP = {
   'orders': { module: 'Ordini', init: 'init', hasOnEnter: false },
   'travels': { module: 'Percorsi', init: 'init', hasOnEnter: false },
   'worksheet': { module: 'Worksheet', init: 'init', hasOnEnter: false },
-  'ddtft': { module: 'DDTFTModule', init: 'init', hasOnEnter: false },
+  'ddtft': { module: 'getDDTFTModule', init: 'init', hasOnEnter: false, isFunction: true },
   'smart': { module: 'SmartAssistant', init: 'init', hasOnEnter: false },
   'ai': { module: 'FlavioAIAssistant', init: 'init', hasOnEnter: false },
   'comandi': { module: 'ComandiModule', init: 'init', hasOnEnter: true },
@@ -43,7 +43,14 @@ if (window.Navigation && window.Navigation.afterEnterTab) {
         if (tabConfig && !tabConfig.hasOnEnter) {
             console.log(`⚙️ [FIX NAV] Inizializzazione ${tabName}...`);
             
-            const moduleObj = window[tabConfig.module];
+            let moduleObj;
+            
+            // Gestisci moduli che sono funzioni (come getDDTFTModule)
+            if (tabConfig.isFunction && typeof window[tabConfig.module] === 'function') {
+                moduleObj = window[tabConfig.module]();
+            } else {
+                moduleObj = window[tabConfig.module];
+            }
             
             if (moduleObj) {
                 // Se il modulo ha init e non è già inizializzato

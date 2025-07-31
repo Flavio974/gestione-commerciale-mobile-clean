@@ -2686,6 +2686,11 @@
   
   <!-- ⚡ Bootstrap ottimizzato - Ridotte 16 catene a 4 step con caricamento parallelo -->
   <script>
+    // 🚀 FIX: Wrapper per safeLoadQueue mancante
+    window.safeLoadQueue = function(...scripts) {
+      return Promise.all(scripts.map(script => window.ModuleLoader.loadScript(script)));
+    };
+    
     // 🚀 CARICAMENTO OTTIMIZZATO - Core modules in parallelo, rimozione moduli non essenziali
     Promise.all([
       // Core essenziali (parallelo per velocità)
@@ -4199,6 +4204,14 @@
   
   <!-- Fix cleanProductName mancante -->
   <script src="js/fix-clean-product-name.js"></script>
+  
+  <!-- 🚨 FIX CRITICI PER SCHEDE NON FUNZIONANTI -->
+  <script src="js/fix-timeline-dom.js"></script>
+  <script src="js/fix-ordini-ui.js"></script>
+  <script src="js/fix-timeline-complete.js"></script>
+  <script src="js/fix-navigation-unified.js"></script>
+  <script src="js/fix-timeline-navigation-binding.js"></script>
+  <script src="js/fix-timeline-lazy-init.js"></script>
 
 </body>
 </html>
