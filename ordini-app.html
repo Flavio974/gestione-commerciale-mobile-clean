@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="App Gestione Ordini - Import PDF, Export Excel, Tracking">
+  <title>Gestione Ordini - App Standalone</title>
+  
+  <!-- Font Awesome per icone -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- CSS Principale -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/ordini.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <h1>📦 Gestione Ordini</h1>
+      <div class="header-info">
+        <span id="current-date"></span>
+        <span id="orders-counter" class="orders-badge">0 ordini</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-main">
+    <div id="orders-content" class="orders-app-container">
+      <!-- Il contenuto verrà caricato dinamicamente da ordini-ui.js -->
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>&copy; 2025 Gestione Ordini - Versione Standalone</p>
+  </footer>
+
+  <!-- PDF.js per parsing PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <!-- SheetJS per export Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <!-- Moduli JavaScript -->
+  <script src="js/utils.js"></script>
+  <script src="js/ordini-parser.js"></script>
+  <script src="js/ordini-parser-fix.js"></script>
+  <script src="js/ordini-parser-enhanced.js"></script>
+  <script src="js/ordini-parser-alfieri-smart.js"></script>
+  <script src="js/ordini-parser-debug.js"></script>
+  <script src="js/ordini-parser-alfieri-final.js"></script>
+  <script src="js/ordini-parser-debug-lines.js"></script>
+  <script src="js/ordini-parser-alfieri-correct.js"></script>
+  <script src="js/ordini-parser-multipagina.js"></script>
+  <script src="js/ordini-parser-seconda-sezione-fix.js"></script>
+  <script src="js/ordini-parser-alfieri-16-prodotti.js"></script>
+  <script src="js/ordini-parser-completo-16.js"></script>
+  <script src="js/ordini-parser-alfieri-working.js"></script>
+  <script src="js/ordini-parser-alfieri-finale.js"></script>
+  <script src="js/ordini-parser-alfieri-debug-dettagliato.js"></script>
+  <script src="js/ordini-export-utils.js"></script>
+  <script src="js/ordini-export-validation.js"></script>
+  <script src="js/ordini-export-core.js"></script>
+  <script src="js/ordini-export-venduto.js"></script>
+  <script src="js/ordini-export-alias.js"></script>
+  <script src="js/ordini-export-ui.js"></script>
+  <script src="js/ordini-export.js"></script>
+  <script src="js/ordini-supabase-sync.js"></script>
+  <script src="js/ordini-ui.js"></script>
+  <script src="js/ordini.js"></script>
+  <script src="js/app.js"></script>
+  
+  <script>
+    // Inizializza la data corrente
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('it-IT', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  </script>
+</body>
+</html>
